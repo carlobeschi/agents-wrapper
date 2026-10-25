@@ -18,7 +18,9 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); }
   main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
-  h1 { font-size: 18px; margin: 0 0 16px; }
+  header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 16px; }
+  h1 { font-size: 18px; margin: 0; }
+  header a { color: var(--accent); font-size: 13px; }
   h2 { font-size: 14px; margin: 28px 0 8px; color: var(--muted); font-weight: 600; }
   textarea { width: 100%; min-height: 180px; padding: 12px; font: 14px/1.5 ui-monospace, Menlo, monospace;
              background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
@@ -51,7 +53,7 @@
 </head>
 <body>
 <main>
-  <h1>Agent dispatch</h1>
+  <header><h1>Agent dispatch</h1><a href="/talk">Conversation</a></header>
 
   <textarea id="prompt" placeholder="Prompt" autofocus></textarea>
 
