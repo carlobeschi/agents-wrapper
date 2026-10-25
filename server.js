@@ -6,6 +6,9 @@
 // itself. In "background" mode each runs headless and its output goes to a log.
 // Either way it is the CLI's own signed-in session doing the work — no API keys.
 //
+// /talk is the other page: two agents in conversation, one headless call per
+// turn (talk.js).
+//
 // Unrelated to the TPA app. It lives in this repo for convenience only.
 //
 // Unlike bridge.js, the agents here run WITH their tools, in a directory the
@@ -25,14 +28,16 @@ const fs      = require('fs');
 const os      = require('os');
 const path    = require('path');
 const { spawn, execFileSync } = require('child_process');
+const { createTalks } = require('./talk');
 
 const PORT      = Number(process.env.AGENT_DISPATCH_PORT) || 8787;
 const HOME_DIR  = process.env.AGENT_DISPATCH_HOME || path.join(os.homedir(), '.agent-dispatch');
 const RUNS_DIR  = path.join(HOME_DIR, 'runs');
+const TALKS_DIR = path.join(HOME_DIR, 'talks');
 const CONFIG    = process.env.AGENT_DISPATCH_CONFIG
   || (fs.existsSync(path.join(HOME_DIR, 'agents.json')) ? path.join(HOME_DIR, 'agents.json')
                                                          : path.join(__dirname, 'agents.json'));
-const PAGE      = path.join(__dirname, 'index.html');
+const PAGES     = { '/': 'index.html', '/talk': 'talk.html' };
 const TOKEN     = crypto.randomBytes(24).toString('hex');
 const MAX_BODY  = 256 * 1024;
 
@@ -203,6 +208,25 @@ function send(res, status, type, body) {
 }
 const json = (res, status, obj) => send(res, status, 'application/json', JSON.stringify(obj));
 
+const talks = createTalks({ loadConfig, fill, stamp, dir: TALKS_DIR });
+
+// Read a JSON body, then answer with handler(body) -> [status, object].
+function withBody(req, res, handler) {
+  const chunks = []; let size = 0;
+  req.on('data', c => {
+    size += c.length;
+    if (size > MAX_BODY) { json(res, 413, { error: 'Prompt too large.' }); req.destroy(); return; }
+    chunks.push(c);
+  });
+  req.on('end', () => {
+    if (res.headersSent) return;
+    let body;
+    try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { return json(res, 400, { error: 'Bad JSON.' }); }
+    try { const [status, out] = handler(body); json(res, status, out); }
+    catch (e) { json(res, 500, { error: e.message }); }
+  });
+}
+
 const server = http.createServer((req, res) => {
   // DNS rebinding: a hostile name resolving to 127.0.0.1 still sends its own Host.
   if (!new RegExp(`^(localhost|127\\.0\\.0\\.1):${PORT}$`).test(req.headers.host || '')) {
@@ -210,8 +234,8 @@ const server = http.createServer((req, res) => {
   }
   const url = new URL(req.url, `http://${req.headers.host}`);
 
-  if (req.method === 'GET' && url.pathname === '/') {
-    const html = fs.readFileSync(PAGE, 'utf8').replace('__DISPATCH_TOKEN__', TOKEN);
+  if (req.method === 'GET' && PAGES[url.pathname]) {
+    const html = fs.readFileSync(path.join(__dirname, PAGES[url.pathname]), 'utf8').replace('__DISPATCH_TOKEN__', TOKEN);
     return send(res, 200, 'text/html; charset=utf-8', html);
   }
 
@@ -229,22 +253,13 @@ const server = http.createServer((req, res) => {
       const text = readLog(url.searchParams.get('run'), url.searchParams.get('agent'));
       return text === null ? json(res, 404, { error: 'No log.' }) : send(res, 200, 'text/plain; charset=utf-8', text);
     }
-    if (req.method === 'POST' && url.pathname === '/api/dispatch') {
-      const chunks = []; let size = 0;
-      req.on('data', c => {
-        size += c.length;
-        if (size > MAX_BODY) { json(res, 413, { error: 'Prompt too large.' }); req.destroy(); return; }
-        chunks.push(c);
-      });
-      req.on('end', () => {
-        if (res.headersSent) return;
-        let body;
-        try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { return json(res, 400, { error: 'Bad JSON.' }); }
-        try { const [status, out] = dispatch(body); json(res, status, out); }
-        catch (e) { json(res, 500, { error: e.message }); }
-      });
-      return;
-    }
+    if (req.method === 'POST' && url.pathname === '/api/dispatch') return withBody(req, res, dispatch);
+
+    if (req.method === 'GET' && url.pathname === '/api/talks') return json(res, 200, { talks: talks.list() });
+    if (req.method === 'GET' && url.pathname === '/api/talk') return json(res, ...talks.get(url.searchParams.get('id')));
+    if (req.method === 'POST' && url.pathname === '/api/talk') return withBody(req, res, talks.start);
+    const m = url.pathname.match(/^\/api\/talk\/(stop|resume|say)$/);
+    if (req.method === 'POST' && m) return withBody(req, res, body => talks[m[1]](body.id, body));
     json(res, 404, { error: 'Not found' });
   } catch (e) {
     json(res, 500, { error: e.message });
@@ -255,4 +270,5 @@ server.listen(PORT, '127.0.0.1', () => {
   console.log(`Agent dispatch on http://localhost:${PORT}`);
   console.log(`  config: ${CONFIG}`);
   console.log(`  runs:   ${RUNS_DIR}`);
+  console.log(`  talks:  ${TALKS_DIR}`);
 });
