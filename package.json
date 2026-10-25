@@ -1,0 +1,18 @@
+{
+  "name": "agents-wrapper",
+  "version": "0.1.0",
+  "description": "One local prompt box in front of several coding agents (Claude Code, Gemini CLI, Codex, Cursor, web chats). Send to one, or to several to compare.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/carlobeschi/agents-wrapper.git"
+  },
+  "license": "GPL-3.0-only",
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}
