@@ -98,6 +98,8 @@
 
   <h2>Conversations</h2>
   <div id="talks"><div class="hint">None yet.</div></div>
+  <div class="row"><button id="clear" type="button" hidden>Save and clear</button></div>
+  <div class="hint" id="saved"></div>
 </main>
 
 <script>
@@ -199,7 +201,8 @@ async function say() {
 async function refreshTalks() {
   let talks;
   try { ({ talks } = await api('/api/talks')); } catch { return; }
-  if (!talks.length) return;
+  $('clear').hidden = !talks.some(t => t.status !== 'running');
+  if (!talks.length) { $('talks').innerHTML = '<div class="hint">None yet.</div>'; return; }
   $('talks').innerHTML = talks.map(t => `
     <div class="talk" data-id="${esc(t.id)}">
       <span>${esc(t.agents.join(' ↔ '))}</span><span class="s-${esc(t.status)}">${esc(t.status)} · ${t.turns}</span>
@@ -207,6 +210,16 @@ async function refreshTalks() {
     </div>`).join('');
 }
 
+async function clearTalks() {
+  try {
+    const r = await api('/api/talks/clear', {});
+    $('saved').textContent = `Saved ${r.saved.length} to ${r.dir}` + (r.running ? ` · ${r.running} still running` : '');
+    if (current && !(await api('/api/talks')).talks.some(t => t.id === current)) showSetup();
+    refreshTalks();
+  } catch (e) { $('saved').textContent = e.message; }
+}
+
+$('clear').addEventListener('click', clearTalks);
 $('talks').addEventListener('click', e => { const el = e.target.closest('.talk'); if (el) show(el.dataset.id); });
 $('start').addEventListener('click', start);
 $('swap').addEventListener('click', () => { const a = $('a').value; $('a').value = $('b').value; $('b').value = a; });

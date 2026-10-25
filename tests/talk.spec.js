@@ -132,6 +132,20 @@ test('an agent can talk to itself', async ({ page }) => {
   await expect(page.locator('#chat .m .who b')).toHaveText(['Opener', 'Agent A (1)', 'Agent A (2)']);
 });
 
+test('Save and clear writes finished conversations to one folder and empties the page', async ({ page }) => {
+  await begin(page, 'a', 'b', 2, 'Topic to save');
+  await expect(page.locator('#status')).toContainText('done');
+  await page.locator('#clear').click();
+  await expect(page.locator('#saved')).toContainText(`Saved`);
+  await expect(page.locator('#setup')).toBeVisible();
+  await expect(page.locator('#talks')).toHaveText('None yet.');
+  await expect(page.locator('#clear')).toBeHidden();
+  const dir = path.join(home, 'conversations');
+  const file = fs.readdirSync(dir).map(f => path.join(dir, f)).find(f => fs.readFileSync(f, 'utf8').includes('Topic to save'));
+  expect(path.basename(file)).toMatch(/-agent-a-agent-b\.md$/);
+  expect(fs.readFileSync(file, 'utf8')).toMatch(/## Agent A\n\nHello from A\n\n## Agent B\n\nHello from B/);
+});
+
 test('the API needs the token and two agents', async ({ request }) => {
   expect((await request.post(BASE + '/api/talk', { data: { opener: 'x', agents: ['a', 'b'] } })).status()).toBe(403);
   const page = await request.get(BASE + '/talk');

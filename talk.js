@@ -46,7 +46,7 @@ function framing(me, other, opener, turns) {
   return lines.join('\n');
 }
 
-function createTalks({ loadConfig, fill, stamp, dir }) {
+function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
   const talks = new Map();
 
   const transcript = t => [
@@ -202,9 +202,26 @@ function createTalks({ loadConfig, fill, stamp, dir }) {
     turns: t.turns.filter(m => m.agent).length,
   }));
 
+  // Copy every conversation that is not running to savedDir, one Markdown file
+  // each, and drop it from the page. Running ones stay.
+  function clear() {
+    const saved = [];
+    for (const t of talks.values()) {
+      if (t.status === 'running') continue;
+      fs.mkdirSync(savedDir, { recursive: true });
+      const slug = t.agents.map(a => a.label).join(' ').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const file = path.join(savedDir, `${t.id}-${slug}.md`);
+      fs.writeFileSync(file, transcript(t));
+      talks.delete(t.id);
+      saved.push(file);
+    }
+    console.log(`  ↔ saved ${saved.length} to ${savedDir}`);
+    return [200, { saved, dir: savedDir, running: talks.size }];
+  }
+
   const get = id => talks.has(id) ? [200, view(talks.get(id))] : [404, { error: 'No such conversation.' }];
 
-  return { start, stop, resume, say, get, list };
+  return { start, stop, resume, say, get, list, clear };
 }
 
 module.exports = { createTalks, framing };
