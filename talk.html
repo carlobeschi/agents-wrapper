@@ -136,7 +136,7 @@ function render(t) {
     ...t.turns.map(m => m.user ? bubble('you', m.label, m.text)
                                : bubble(side(m.agent), m.label, m.text, `<span>${m.seconds}s</span>`)),
     ...t.queued.map(text => bubble('you', 'You', text, '<span>after this reply</span>')),
-    t.current ? bubble(`${side(t.current.agent)} live`, t.current.label, t.current.text, `<span class="s-running">writing · ${t.current.seconds}s</span>`) : '',
+    t.current ? bubble(`${side(t.current.agent)} live`, t.current.label, t.current.text, `<span class="s-running">${t.current.retry ? 'retrying' : 'writing'} · ${t.current.seconds}s</span>`) : '',
   ].join('');
   const spoken = t.turns.filter(m => m.agent).length;
   const running = t.status === 'running';
@@ -145,6 +145,7 @@ function render(t) {
     + (t.error ? `\n<span class="err">${esc(t.error)}</span>` : '');
   $('stop').hidden = !running;
   $('more').hidden = running;
+  $('resume').textContent = t.status === 'failed' ? 'Retry' : 'Continue';
   if (nearBottom) window.scrollTo(0, document.body.scrollHeight);
 }
 

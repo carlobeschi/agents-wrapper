@@ -15,6 +15,7 @@ const { spawn } = require('child_process');
 
 const MAX_TURNS    = 50;
 const TURN_TIMEOUT = 10 * 60 * 1000;
+const RETRY_DELAY  = Number(process.env.AGENT_DISPATCH_RETRY_MS ?? 3000);
 const USER         = 'You';
 
 // Terminal colour and cursor codes, which some CLIs print even into a pipe.
@@ -58,7 +59,9 @@ function createTalks({ loadConfig, fill, stamp, dir }) {
   }
 
   // Run turns until the budget is spent, the user stops it, or an agent fails.
-  function next(t) {
+  // A failed turn is run once more before the conversation stops: the backends
+  // behind these CLIs return the odd one-off error (Antigravity: NOT_FOUND 404).
+  function next(t, retry = false) {
     if (t.stopRequested || t.turnsLeft <= 0) {
       t.status = t.stopRequested ? 'stopped' : 'done';
       t.current = null;
@@ -67,8 +70,12 @@ function createTalks({ loadConfig, fill, stamp, dir }) {
     const spoken = t.turns.filter(m => m.agent).length;
     const me = t.agents[spoken % 2], other = t.agents[(spoken + 1) % 2];
     const prompt = framing(me.label, other.label, t.opener, t.turns);
+    // Keep what each turn was sent and what it said on stderr, to rerun a failed turn by hand.
+    const base = path.join(t.dir, 'turns', `${String(spoken + 1).padStart(2, '0')}-${me.id.replace(/[^\w-]/g, '_')}`);
+    fs.mkdirSync(path.dirname(base), { recursive: true });
+    fs.writeFileSync(base + '.prompt.md', prompt);
     const [cmd, ...args] = fill(me.headless, prompt);
-    const cur = { agent: me.id, label: me.label, started: Date.now(), out: '', err: '' };
+    const cur = { agent: me.id, label: me.label, started: Date.now(), out: '', err: '', retry };
     t.current = cur;
     t.status = 'running';
 
@@ -79,16 +86,22 @@ function createTalks({ loadConfig, fill, stamp, dir }) {
     cur.child = child;
     const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, TURN_TIMEOUT);
     child.stdout.on('data', d => { cur.out += d; });
-    child.stderr.on('data', d => { cur.err = (cur.err + d).slice(-4000); });
+    child.stderr.on('data', d => { cur.err = (cur.err + d).slice(-64000); });
     child.on('error', e => { cur.spawnError = e.message; });
     child.on('close', code => {
       clearTimeout(timer);
       cur.child = null;
+      if (cur.err) fs.writeFileSync(base + (retry ? '.retry' : '') + '.stderr.txt', cur.err);
       if (t.stopRequested) return next(t);
       const text = stripAnsi(cur.out).trim();
       if (cur.spawnError || code !== 0 || !text) {
         const why = cur.spawnError || (cur.timedOut ? 'timed out' : code !== 0 ? `exit ${code}` : 'empty reply');
         const tail = stripAnsi(cur.err).trim().split('\n').slice(-5).join('\n');
+        if (!retry && !cur.spawnError && !cur.timedOut) {
+          console.warn(`  ↻ ${t.id} ${me.id}: ${why}, retrying`);
+          t.retryTimer = setTimeout(() => next(t, true), RETRY_DELAY);
+          return;
+        }
         return fail(t, `${me.label}: ${why}${tail ? `\n${tail}` : ''}`);
       }
       t.turns.push({ agent: me.id, label: me.label, text, seconds: Math.round((Date.now() - cur.started) / 1000) });
@@ -144,6 +157,7 @@ function createTalks({ loadConfig, fill, stamp, dir }) {
     if (!t) return [404, { error: 'No such conversation.' }];
     if (t.status !== 'running') return [200, view(t)];
     t.stopRequested = true;
+    clearTimeout(t.retryTimer);
     if (t.current?.child) killTree(t.current.child);
     else next(t);
     return [200, view(t)];
@@ -179,7 +193,7 @@ function createTalks({ loadConfig, fill, stamp, dir }) {
     queued: t.queued.map(m => m.text),
     current: t.current && {
       agent: t.current.agent, label: t.current.label, text: stripAnsi(t.current.out),
-      seconds: Math.round((Date.now() - t.current.started) / 1000),
+      seconds: Math.round((Date.now() - t.current.started) / 1000), retry: t.current.retry,
     },
   });
 
