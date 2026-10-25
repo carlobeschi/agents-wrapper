@@ -11,7 +11,7 @@ npm start               # then open http://localhost:8787
 ## Modes
 
 - **Terminal** — each agent opens in its own terminal window, interactive, with the prompt already sent. Inspect and carry on in the tool. When the agent exits, the window stays open in that directory.
-- **Background** — each agent runs headless (`claude -p`, `gemini -p`, `codex exec`, …). Status and output show on the page under Runs.
+- **Background** — each agent runs headless (`claude -p`, `agy -p`, `codex exec`, …). Status and output show on the page under Runs.
 - **Web** agents (Claude, ChatGPT) open a browser tab with the prompt pre-filled. Allow popups for `localhost` to open more than one at once.
 
 **Worktree per agent** — for coding tasks in a git repo. Each agent gets its own worktree and branch (`dispatch/<run>-<agent>`), so parallel agents don't edit the same files. Compare with `git diff main dispatch/<run>-claude`. Clean up with `git worktree remove` and `git branch -D`.

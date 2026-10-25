@@ -8,10 +8,10 @@
       "headless": ["claude", "-p", "{prompt}"]
     },
     {
-      "id": "gemini",
-      "label": "Gemini CLI",
-      "interactive": ["gemini", "-i", "{prompt}"],
-      "headless": ["gemini", "-p", "{prompt}"]
+      "id": "antigravity",
+      "label": "Antigravity CLI",
+      "interactive": ["agy", "-i", "{prompt}"],
+      "headless": ["agy", "-p", "{prompt}"]
     },
     {
       "id": "codex",

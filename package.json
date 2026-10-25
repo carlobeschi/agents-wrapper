@@ -1,7 +1,7 @@
 {
   "name": "agents-wrapper",
   "version": "0.1.0",
-  "description": "One local prompt box in front of several coding agents (Claude Code, Gemini CLI, Codex, Cursor, web chats). Send to one, or to several to compare.",
+  "description": "One local prompt box in front of several coding agents (Claude Code, Antigravity CLI, Codex, Cursor, web chats). Send to one, or to several to compare.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
