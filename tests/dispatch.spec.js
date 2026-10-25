@@ -26,6 +26,7 @@ test.beforeAll(async () => {
       { id: 'b', label: 'Agent B', interactive: write('term-b.txt'), headless: ['sh', '-c', 'printf %s "$1"', 'x', '{prompt}'] },
       { id: 'gone', label: 'Missing', interactive: ['no-such-agent-binary', '{prompt}'] },
       { id: 'web', label: 'Web', type: 'url', url: 'https://example.com/?q={prompt}' },
+      { id: 'paste', label: 'Paste', type: 'url', url: 'about:blank' },
     ],
   }));
   server = spawn('node', [path.join(__dirname, '..', 'server.js')], {
@@ -46,7 +47,7 @@ test.afterAll(() => {
 
 async function load(page) {
   await page.goto(BASE + '/');
-  await expect(page.locator('#agents .agent')).toHaveCount(4);
+  await expect(page.locator('#agents .agent')).toHaveCount(5);
   await page.locator('#none').click();
   await page.locator('#cwd').fill(work);
   await page.locator('#prompt').fill(NASTY);
@@ -106,6 +107,15 @@ test('worktree per agent gives each agent its own branch', async ({ page }) => {
   expect(branches).toHaveLength(2);
   expect(branches.some(b => b.endsWith('-a'))).toBe(true);
   expect(branches.some(b => b.endsWith('-b'))).toBe(true);
+});
+
+test('a web agent without {prompt} in its URL gets the prompt on the clipboard', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await load(page);
+  await page.locator('#agents input[value=paste]').check();
+  await page.locator('#send').click();
+  await expect(page.locator('#msg')).toContainText('Paste: prompt copied');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(NASTY);
 });
 
 test('API refuses a request without the page token, or for a foreign Host', async ({ request }) => {
