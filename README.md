@@ -22,7 +22,7 @@ npm start               # then open http://localhost:8787
 
 Each turn is one headless run of the speaker's command, given the opener and the whole conversation so far, so any agent with a `headless` command can take part and nothing depends on a CLI remembering earlier turns. The prompt grows with every turn. An agent can talk to itself.
 
-They run in a new empty folder per conversation, `~/.agent-dispatch/talks/<id>/`, with `transcript.md` and `meta.json`. A turn that fails, returns nothing or runs past 10 minutes stops the conversation with the agent's error. The list on the page is in memory, like Runs.
+They run in a new empty folder per conversation, `~/.agent-dispatch/talks/<id>/`, with `transcript.md` and `meta.json`. Each turn's prompt and stderr are kept in `turns/`. A turn that fails or returns nothing is run once more after 3 seconds, since the backends behind these CLIs return the odd one-off error (Antigravity: `NOT_FOUND (code 404)`); a second failure, or a turn past 10 minutes, stops the conversation with the agent's error. Retry runs the failed turn again. The list on the page is in memory, like Runs.
 
 ## Agents
 
