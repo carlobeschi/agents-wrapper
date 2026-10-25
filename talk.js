@@ -1,0 +1,196 @@
+// Two agents talking to each other, one headless call per turn.
+//
+// Neither CLI keeps state between calls. Each turn sends the speaker a short
+// framing, the opener, and the whole conversation so far, and takes its stdout
+// as the next message. So any agent with a "headless" command can take part,
+// and the cost is a prompt that grows with every turn — the turn limit bounds it.
+//
+// Each conversation runs in its own empty folder, not in a repo, so the agents
+// have nothing of the user's to edit while they talk.
+
+const crypto = require('crypto');
+const fs     = require('fs');
+const path   = require('path');
+const { spawn } = require('child_process');
+
+const MAX_TURNS    = 50;
+const TURN_TIMEOUT = 10 * 60 * 1000;
+const USER         = 'You';
+
+// Terminal colour and cursor codes, which some CLIs print even into a pipe.
+// Kill the agent and anything it started: a CLI's own child holding stdout open
+// would otherwise keep the turn alive after the CLI itself is gone.
+function killTree(child) {
+  try { process.kill(-child.pid, 'SIGTERM'); } catch { try { child.kill('SIGTERM'); } catch {} }
+}
+
+const stripAnsi = s => s.replace(/\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07/g, '');
+
+function framing(me, other, opener, turns) {
+  const lines = [
+    `You are ${me}, in a conversation with ${other}, another AI agent. A person set this up and is reading along; their messages, if any, are marked "${USER}".`,
+    `Write only your next message to ${other}. No preamble, no name label, no tools unless the conversation needs them. Keep it to a few paragraphs at most.`,
+    '',
+    '## Opener',
+    '',
+    opener,
+    '',
+  ];
+  if (turns.length) {
+    lines.push('## Conversation so far', '');
+    for (const t of turns) lines.push(`### ${t.label}`, '', t.text, '');
+  } else {
+    lines.push(`You speak first.`, '');
+  }
+  return lines.join('\n');
+}
+
+function createTalks({ loadConfig, fill, stamp, dir }) {
+  const talks = new Map();
+
+  const transcript = t => [
+    `# ${t.agents.map(a => a.label).join(' ↔ ')}`, '', `## Opener`, '', t.opener, '',
+    ...t.turns.flatMap(m => [`## ${m.label}`, '', m.text, '']),
+  ].join('\n');
+
+  function save(t) {
+    fs.writeFileSync(path.join(t.dir, 'transcript.md'), transcript(t));
+  }
+
+  // Run turns until the budget is spent, the user stops it, or an agent fails.
+  function next(t) {
+    if (t.stopRequested || t.turnsLeft <= 0) {
+      t.status = t.stopRequested ? 'stopped' : 'done';
+      t.current = null;
+      return;
+    }
+    const spoken = t.turns.filter(m => m.agent).length;
+    const me = t.agents[spoken % 2], other = t.agents[(spoken + 1) % 2];
+    const prompt = framing(me.label, other.label, t.opener, t.turns);
+    const [cmd, ...args] = fill(me.headless, prompt);
+    const cur = { agent: me.id, label: me.label, started: Date.now(), out: '', err: '' };
+    t.current = cur;
+    t.status = 'running';
+
+    let child;
+    try {
+      child = spawn(cmd, args, { cwd: t.dir, env: process.env, shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    } catch (e) { return fail(t, `${me.label}: ${e.message}`); }
+    cur.child = child;
+    const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, TURN_TIMEOUT);
+    child.stdout.on('data', d => { cur.out += d; });
+    child.stderr.on('data', d => { cur.err = (cur.err + d).slice(-4000); });
+    child.on('error', e => { cur.spawnError = e.message; });
+    child.on('close', code => {
+      clearTimeout(timer);
+      cur.child = null;
+      if (t.stopRequested) return next(t);
+      const text = stripAnsi(cur.out).trim();
+      if (cur.spawnError || code !== 0 || !text) {
+        const why = cur.spawnError || (cur.timedOut ? 'timed out' : code !== 0 ? `exit ${code}` : 'empty reply');
+        const tail = stripAnsi(cur.err).trim().split('\n').slice(-5).join('\n');
+        return fail(t, `${me.label}: ${why}${tail ? `\n${tail}` : ''}`);
+      }
+      t.turns.push({ agent: me.id, label: me.label, text, seconds: Math.round((Date.now() - cur.started) / 1000) });
+      // Anything the user said while this agent was writing goes after its reply.
+      t.turns.push(...t.queued.splice(0));
+      t.turnsLeft--;
+      save(t);
+      console.log(`  ↔ ${t.id} ${me.id}: ${text.length} chars`);
+      next(t);
+    });
+  }
+
+  function fail(t, error) {
+    t.status = 'failed';
+    t.error = error;
+    t.current = null;
+    save(t);
+    console.warn(`  ✗ ${t.id} ${error.split('\n')[0]}`);
+  }
+
+  function start(body) {
+    const cfg = loadConfig();
+    const opener = typeof body.opener === 'string' ? body.opener.trim() : '';
+    if (!opener) return [400, { error: 'Empty opener.' }];
+    const ids = Array.isArray(body.agents) ? body.agents : [];
+    if (ids.length !== 2) return [400, { error: 'Pick two agents.' }];
+    const agents = ids.map(id => cfg.agents.find(a => a.id === id && a.type !== 'url'));
+    if (agents.some(a => !a)) return [400, { error: 'Unknown agent.' }];
+    if (agents.some(a => !a.headless)) return [400, { error: `${agents.find(a => !a.headless).label} has no headless command.` }];
+    const turns = Math.min(MAX_TURNS, Math.max(1, Math.floor(Number(body.turns)) || 10));
+
+    const id = stamp() + '-' + crypto.randomBytes(2).toString('hex');
+    const talkDir = path.join(dir, id);
+    fs.mkdirSync(talkDir, { recursive: true });
+    // Same label twice (Claude talking to Claude) would make the transcript unreadable.
+    const labels = agents.map(a => a.label || a.id);
+    if (labels[0] === labels[1]) { labels[0] += ' (1)'; labels[1] += ' (2)'; }
+    const t = {
+      id, dir: talkDir, opener, turns: [], queued: [], turnsLeft: turns, status: 'running',
+      agents: agents.map((a, i) => ({ id: a.id + (ids[0] === ids[1] ? `#${i + 1}` : ''), label: labels[i], headless: a.headless })),
+    };
+    talks.set(id, t);
+    fs.writeFileSync(path.join(talkDir, 'meta.json'),
+      JSON.stringify({ id, agents: ids, turns, at: new Date().toISOString() }, null, 2));
+    save(t);
+    console.log(`  ↔ ${id} ${ids.join(' ↔ ')} (${turns} turns) in ${talkDir}`);
+    next(t);
+    return [200, view(t)];
+  }
+
+  function stop(id) {
+    const t = talks.get(id);
+    if (!t) return [404, { error: 'No such conversation.' }];
+    if (t.status !== 'running') return [200, view(t)];
+    t.stopRequested = true;
+    if (t.current?.child) killTree(t.current.child);
+    else next(t);
+    return [200, view(t)];
+  }
+
+  // Add turns to a stopped, finished or failed conversation and carry on.
+  function resume(id, body) {
+    const t = talks.get(id);
+    if (!t) return [404, { error: 'No such conversation.' }];
+    if (t.status === 'running') return [409, { error: 'Already running.' }];
+    t.turnsLeft = Math.min(MAX_TURNS, Math.max(1, Math.floor(Number(body.turns)) || 2));
+    t.stopRequested = false;
+    t.error = undefined;
+    next(t);
+    return [200, view(t)];
+  }
+
+  function say(id, body) {
+    const t = talks.get(id);
+    if (!t) return [404, { error: 'No such conversation.' }];
+    const text = typeof body.text === 'string' ? body.text.trim() : '';
+    if (!text) return [400, { error: 'Empty message.' }];
+    const m = { user: true, label: USER, text };
+    if (t.current) t.queued.push(m);
+    else { t.turns.push(m); save(t); }
+    return [200, view(t)];
+  }
+
+  const view = t => ({
+    id: t.id, dir: t.dir, opener: t.opener, status: t.status, error: t.error, turnsLeft: t.turnsLeft,
+    agents: t.agents.map(a => ({ id: a.id, label: a.label })),
+    turns: t.turns.map(({ agent, user, label, text, seconds }) => ({ agent, user, label, text, seconds })),
+    queued: t.queued.map(m => m.text),
+    current: t.current && {
+      agent: t.current.agent, label: t.current.label, text: stripAnsi(t.current.out),
+      seconds: Math.round((Date.now() - t.current.started) / 1000),
+    },
+  });
+
+  const list = () => [...talks.values()].reverse().slice(0, 20).map(t => ({
+    id: t.id, status: t.status, agents: t.agents.map(a => a.label), opener: t.opener.slice(0, 120),
+    turns: t.turns.filter(m => m.agent).length,
+  }));
+
+  const get = id => talks.has(id) ? [200, view(talks.get(id))] : [404, { error: 'No such conversation.' }];
+
+  return { start, stop, resume, say, get, list };
+}
+
+module.exports = { createTalks, framing };

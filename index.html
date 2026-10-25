@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="dispatch-token" content="__DISPATCH_TOKEN__">
+<title>Agent dispatch</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --panel: #fff; --text: #1d1d1b; --muted: #6b6b66; --line: #ddddd8;
+    --accent: #2f5bd3; --ok: #237a3b; --bad: #b3261e; --run: #a86b00;
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --panel: #1f1f1e; --text: #ececea; --muted: #9a9a94; --line: #34342f;
+            --accent: #7c9cff; --ok: #6cc785; --bad: #ff8a80; --run: #e8b04a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 16px; }
+  h1 { font-size: 18px; margin: 0; }
+  header a { color: var(--accent); font-size: 13px; }
+  h2 { font-size: 14px; margin: 28px 0 8px; color: var(--muted); font-weight: 600; }
+  textarea { width: 100%; min-height: 180px; padding: 12px; font: 14px/1.5 ui-monospace, Menlo, monospace;
+             background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
+  textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+  .agent { display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px; border: 1px solid var(--line);
+           border-radius: 999px; background: var(--panel); cursor: pointer; user-select: none; }
+  .agent:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .agent.off { opacity: .45; cursor: not-allowed; }
+  .agent small { color: var(--muted); }
+  label.opt { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
+  input[type=text] { flex: 1; min-width: 240px; padding: 7px 10px; font: 13px ui-monospace, Menlo, monospace;
+                     background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 6px; }
+  button { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; font: inherit; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  .linkish { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; font-size: 13px; }
+  #msg { margin-top: 10px; font-size: 13px; color: var(--muted); white-space: pre-wrap; }
+  #msg.err { color: var(--bad); }
+  .run { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+  .run .head { font-size: 12px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+  .run .prompt { margin: 4px 0 8px; font: 13px ui-monospace, Menlo, monospace; white-space: pre-wrap; overflow-wrap: anywhere;
+                 max-height: 3em; overflow: hidden; }
+  .run .agents { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; }
+  .s-running { color: var(--run); } .s-done, .s-opened { color: var(--ok); } .s-failed { color: var(--bad); }
+  pre.log { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px; max-height: 360px;
+            overflow: auto; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0 0; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Agent dispatch</h1><a href="/talk">Conversation</a></header>
+
+  <textarea id="prompt" placeholder="Prompt" autofocus></textarea>
+
+  <div class="row" id="agents"></div>
+  <div class="row">
+    <button class="linkish" id="all" type="button">All</button>
+    <button class="linkish" id="none" type="button">None</button>
+  </div>
+
+  <div class="row">
+    <input type="text" id="cwd" list="cwds" placeholder="Working directory" spellcheck="false">
+    <datalist id="cwds"></datalist>
+  </div>
+
+  <div class="row">
+    <label class="opt"><input type="radio" name="mode" value="terminal" checked> Terminal</label>
+    <label class="opt"><input type="radio" name="mode" value="background"> Background</label>
+    <label class="opt" title="One git worktree and branch per agent, under the run folder"><input type="checkbox" id="isolate"> Worktree per agent</label>
+    <span style="flex:1"></span>
+    <button class="primary" id="send" type="button">Send <small>⌘↵</small></button>
+  </div>
+  <div id="msg"></div>
+
+  <h2>Runs</h2>
+  <div id="runs"><div class="hint">None yet.</div></div>
+  <div class="hint" id="paths"></div>
+</main>
+
+<script>
+const TOKEN = document.querySelector('meta[name=dispatch-token]').content;
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('dispatch.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('dispatch.' + k, JSON.stringify(v)); } catch {} },
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, { ...opts, headers: { 'X-Dispatch-Token': TOKEN, 'Content-Type': 'application/json', ...(opts.headers || {}) } });
+  const type = res.headers.get('content-type') || '';
+  const body = type.includes('json') ? await res.json() : await res.text();
+  if (!res.ok) throw new Error(body.error || body || res.status);
+  return body;
+}
+
+let agents = [];
+const openLogs = new Set();
+
+function renderAgents() {
+  const picked = new Set(store.get('agents', ['claude']));
+  $('agents').innerHTML = agents.map(a => `
+    <label class="agent ${a.available ? '' : 'off'}" title="${a.available ? esc(a.modes.join(', ')) : 'Not on PATH'}">
+      <input type="checkbox" value="${esc(a.id)}" ${a.available && picked.has(a.id) ? 'checked' : ''} ${a.available ? '' : 'disabled'}>
+      ${esc(a.label)} ${a.type === 'url' ? '<small>web</small>' : a.available ? '' : '<small>not found</small>'}
+    </label>`).join('');
+  $('agents').addEventListener('change', saveAgents);
+}
+const selected = () => [...$('agents').querySelectorAll('input:checked')].map(i => i.value);
+const saveAgents = () => store.set('agents', selected());
+
+function setAll(on) {
+  $('agents').querySelectorAll('input:not(:disabled)').forEach(i => { i.checked = on; });
+  saveAgents();
+}
+
+function renderCwds() {
+  $('cwds').innerHTML = store.get('cwds', []).map(c => `<option value="${esc(c)}">`).join('');
+}
+
+function msg(text, err) { $('msg').textContent = text; $('msg').className = err ? 'err' : ''; }
+
+async function send() {
+  const prompt = $('prompt').value;
+  const ids = selected();
+  if (!prompt.trim()) return msg('Empty prompt.', true);
+  if (!ids.length) return msg('No agent selected.', true);
+  const mode = document.querySelector('input[name=mode]:checked').value;
+  const cwd = $('cwd').value.trim();
+  store.set('mode', mode); store.set('isolate', $('isolate').checked);
+  if (cwd) { store.set('cwds', [cwd, ...store.get('cwds', []).filter(c => c !== cwd)].slice(0, 10)); renderCwds(); }
+
+  const web = ids.map(id => agents.find(a => a.id === id)).filter(a => a.type === 'url');
+  const cli = ids.filter(id => agents.find(a => a.id === id).type !== 'url');
+  const lines = [];
+
+  // A URL without {prompt} (Gemini has no prefill parameter) gets the prompt on
+  // the clipboard instead, to paste. Copy before any tab opens and takes focus.
+  const paste = web.filter(a => !a.url.includes('{prompt}'));
+  if (paste.length) {
+    const names = paste.map(a => a.label).join(', ');
+    try { await navigator.clipboard.writeText(prompt); lines.push(`${names}: prompt copied, paste it in the tab`); }
+    catch { lines.push(`${names}: could not copy the prompt, paste it by hand`); }
+  }
+
+  // Web agents open from the page; browsers may block all but the first popup.
+  let blocked = 0;
+  for (const a of web) {
+    if (!window.open(a.url.split('{prompt}').join(encodeURIComponent(prompt)), '_blank', 'noopener')) blocked++;
+  }
+  if (web.length) lines.unshift(`Opened ${web.length - blocked} web tab${web.length - blocked === 1 ? '' : 's'}` + (blocked ? `, ${blocked} blocked — allow popups for localhost` : ''));
+
+  if (cli.length) {
+    $('send').disabled = true;
+    try {
+      const r = await api('/api/dispatch', { method: 'POST', body: JSON.stringify({ prompt, agents: cli, mode, cwd, isolate: $('isolate').checked }) });
+      for (const x of r.results) {
+        lines.push(x.ok ? `${label(x.agent)}: ${mode === 'terminal' ? 'opened' : 'started'} in ${x.cwd}${x.branch ? ` (${x.branch})` : ''}` : `${label(x.agent)}: ${x.error}`);
+      }
+      msg(lines.join('\n'), r.results.some(x => !x.ok));
+      refreshRuns();
+    } catch (e) { lines.push(e.message); msg(lines.join('\n'), true); }
+    finally { $('send').disabled = false; }
+  } else msg(lines.join('\n'), blocked > 0);
+}
+
+const label = id => agents.find(a => a.id === id)?.label || id;
+
+let pollTimer;
+async function refreshRuns() {
+  clearTimeout(pollTimer);
+  let runs;
+  try { ({ runs } = await api('/api/runs')); } catch { return; }
+  if (!runs.length) return;
+  $('runs').innerHTML = runs.map(r => `
+    <div class="run">
+      <div class="head"><span>${esc(r.runId)}</span><span>${esc(r.mode)}</span><span>${esc(r.cwd)}</span></div>
+      <div class="prompt">${esc(r.prompt)}</div>
+      <div class="agents">${Object.entries(r.agents).map(([id, a]) => `
+        <span>${esc(label(id))}: <span class="s-${esc(a.status)}">${esc(a.status)}${a.status === 'running' || a.status === 'done' ? ` · ${a.seconds}s` : ''}${a.error ? ` — ${esc(a.error)}` : ''}</span>
+        ${a.hasLog ? `<button class="linkish" data-log="${esc(r.runId)}|${esc(id)}">${openLogs.has(r.runId + '|' + id) ? 'hide' : 'output'}</button>` : ''}</span>`).join('')}
+      </div>
+      ${Object.keys(r.agents).filter(id => openLogs.has(r.runId + '|' + id)).map(id => `<pre class="log" data-for="${esc(r.runId)}|${esc(id)}"></pre>`).join('')}
+    </div>`).join('');
+  for (const pre of $('runs').querySelectorAll('pre.log')) {
+    const [run, agent] = pre.dataset.for.split('|');
+    api(`/api/log?run=${encodeURIComponent(run)}&agent=${encodeURIComponent(agent)}`)
+      .then(t => { pre.textContent = `── ${label(agent)} ──\n` + (t || '(no output yet)'); })
+      .catch(e => { pre.textContent = e.message; });
+  }
+  if (runs.some(r => Object.values(r.agents).some(a => a.status === 'running'))) pollTimer = setTimeout(refreshRuns, 2000);
+}
+
+$('runs').addEventListener('click', e => {
+  const key = e.target.dataset?.log;
+  if (!key) return;
+  openLogs.has(key) ? openLogs.delete(key) : openLogs.add(key);
+  refreshRuns();
+});
+$('send').addEventListener('click', send);
+$('all').addEventListener('click', () => setAll(true));
+$('none').addEventListener('click', () => setAll(false));
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send(); } });
+
+(async () => {
+  try {
+    const cfg = await api('/api/agents');
+    agents = cfg.agents;
+    renderAgents(); renderCwds();
+    $('cwd').value = store.get('cwds', [])[0] || cfg.defaultCwd;
+    const mode = store.get('mode', 'terminal');
+    document.querySelector(`input[name=mode][value=${mode === 'background' ? 'background' : 'terminal'}]`).checked = true;
+    $('isolate').checked = store.get('isolate', false);
+    $('paths').textContent = `Agents: ${cfg.config} · Runs: ${cfg.runsDir}`;
+    refreshRuns();
+  } catch (e) { msg(e.message, true); }
+})();
+</script>
+</body>
+</html>
