@@ -16,6 +16,14 @@ npm start               # then open http://localhost:8787
 
 **Worktree per agent** — for coding tasks in a git repo. Each agent gets its own worktree and branch (`dispatch/<run>-<agent>`), so parallel agents don't edit the same files. Compare with `git diff main dispatch/<run>-claude`. Clean up with `git worktree remove` and `git branch -D`.
 
+## Conversation
+
+`http://localhost:8787/talk` puts two agents in conversation. Pick the two (the first one speaks first), write an opener that introduces them or sets a topic, set a number of turns, and Start. Each reply shows as it is written. Type a message to add it to the conversation; it reaches the next agent to speak. Stop ends the current reply; Continue adds more turns.
+
+Each turn is one headless run of the speaker's command, given the opener and the whole conversation so far, so any agent with a `headless` command can take part and nothing depends on a CLI remembering earlier turns. The prompt grows with every turn. An agent can talk to itself.
+
+They run in a new empty folder per conversation, `~/.agent-dispatch/talks/<id>/`, with `transcript.md` and `meta.json`. A turn that fails, returns nothing or runs past 10 minutes stops the conversation with the agent's error. The list on the page is in memory, like Runs.
+
 ## Agents
 
 An agent shows as "not found" until its CLI is on `PATH`. Each one uses its own signed-in session, so there are no keys here.
