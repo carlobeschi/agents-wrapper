@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="dispatch-token" content="__DISPATCH_TOKEN__">
+<title>Agent conversation</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --panel: #fff; --text: #1d1d1b; --muted: #6b6b66; --line: #ddddd8;
+    --accent: #2f5bd3; --ok: #237a3b; --bad: #b3261e; --run: #a86b00;
+    --a: #eef2fd; --b: #f2f7ee; --you: #fbf4e6;
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --panel: #1f1f1e; --text: #ececea; --muted: #9a9a94; --line: #34342f;
+            --accent: #7c9cff; --ok: #6cc785; --bad: #ff8a80; --run: #e8b04a;
+            --a: #1f2638; --b: #1f2a1f; --you: #2e2818; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 16px; }
+  h1 { font-size: 18px; margin: 0; }
+  h2 { font-size: 14px; margin: 28px 0 8px; color: var(--muted); font-weight: 600; }
+  a { color: var(--accent); font-size: 13px; }
+  textarea { width: 100%; min-height: 120px; padding: 12px; font: 14px/1.5 ui-monospace, Menlo, monospace;
+             background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+  select, input[type=number], input[type=text] { padding: 7px 10px; font: inherit; font-size: 14px; background: var(--panel); color: var(--text);
+                 border: 1px solid var(--line); border-radius: 6px; }
+  input[type=number] { width: 70px; }
+  input[type=text] { flex: 1; min-width: 200px; }
+  label.opt { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: 14px; }
+  button { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; font: inherit; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  .linkish { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; font-size: 13px; }
+  #msg { margin-top: 10px; font-size: 13px; color: var(--muted); white-space: pre-wrap; }
+  .err { color: var(--bad) !important; }
+
+  #chat { display: flex; flex-direction: column; gap: 10px; }
+  .m { max-width: 82%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); }
+  .m .who { font-size: 12px; color: var(--muted); margin-bottom: 4px; display: flex; gap: 8px; }
+  .m .who b { color: var(--text); font-weight: 600; }
+  .m .text { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .m.a { align-self: flex-start; background: var(--a); }
+  .m.b { align-self: flex-end; background: var(--b); }
+  .m.you { align-self: center; background: var(--you); max-width: 70%; }
+  .m.opener { align-self: stretch; max-width: none; background: var(--panel); }
+  .m.live .text:empty::after { content: "…"; color: var(--muted); }
+  .m.live { border-style: dashed; }
+  .status { font-size: 13px; color: var(--muted); margin-top: 12px; white-space: pre-wrap; }
+  .s-running { color: var(--run); } .s-done { color: var(--ok); } .s-failed { color: var(--bad); }
+  #controls { position: sticky; bottom: 0; background: var(--bg); padding: 8px 0 12px; border-top: 1px solid var(--line); margin-top: 16px; }
+  .talk { font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--line); cursor: pointer; display: flex; gap: 10px; }
+  .talk:hover { color: var(--accent); }
+  .talk .o { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Agent conversation</h1><a href="/">Dispatch</a></header>
+
+  <section id="setup">
+    <div class="row">
+      <select id="a" aria-label="First agent"></select>
+      <button class="linkish" id="swap" type="button" title="Swap who speaks first">⇄</button>
+      <select id="b" aria-label="Second agent"></select>
+      <label class="opt">Turns <input type="number" id="turns" min="1" max="50" value="10"></label>
+    </div>
+    <div class="row">
+      <textarea id="opener" placeholder="Opener: introduce them, or give a topic"></textarea>
+    </div>
+    <div class="row">
+      <span class="hint" style="flex:1">The first agent speaks first. Each turn is one headless run, in an empty folder.</span>
+      <button class="primary" id="start" type="button">Start <small>⌘↵</small></button>
+    </div>
+    <div id="msg"></div>
+  </section>
+
+  <section id="view" hidden>
+    <div class="row" style="margin: 0 0 12px"><button class="linkish" id="new" type="button">New conversation</button></div>
+    <div id="chat"></div>
+    <div class="status" id="status"></div>
+    <div id="controls">
+      <div class="row">
+        <input type="text" id="say" placeholder="Say something to both">
+        <button id="send" type="button">Send</button>
+        <button id="stop" type="button">Stop</button>
+        <span id="more" hidden><button id="resume" type="button">Continue</button> <input type="number" id="moreTurns" min="1" max="50" value="2" aria-label="More turns"></span>
+      </div>
+    </div>
+  </section>
+
+  <h2>Conversations</h2>
+  <div id="talks"><div class="hint">None yet.</div></div>
+</main>
+
+<script>
+const TOKEN = document.querySelector('meta[name=dispatch-token]').content;
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('talk.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('talk.' + k, JSON.stringify(v)); } catch {} },
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+async function api(path, body) {
+  const res = await fetch(path, {
+    method: body ? 'POST' : 'GET',
+    headers: { 'X-Dispatch-Token': TOKEN, 'Content-Type': 'application/json' },
+    body: body && JSON.stringify(body),
+  });
+  const out = await res.json();
+  if (!res.ok) throw new Error(out.error || res.status);
+  return out;
+}
+
+let current = null, timer = null;
+
+function msg(text, err) { $('msg').textContent = text; $('msg').className = err ? 'err' : ''; }
+
+function bubble(cls, who, text, extra = '') {
+  return `<div class="m ${cls}"><div class="who"><b>${esc(who)}</b>${extra}</div><div class="text">${esc(text)}</div></div>`;
+}
+
+function render(t) {
+  const side = id => (id === t.agents[0].id ? 'a' : 'b');
+  const nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 80;
+  $('chat').innerHTML = [
+    bubble('opener', 'Opener', t.opener, `<span>${esc(t.agents.map(a => a.label).join(' ↔ '))}</span>`),
+    ...t.turns.map(m => m.user ? bubble('you', m.label, m.text)
+                               : bubble(side(m.agent), m.label, m.text, `<span>${m.seconds}s</span>`)),
+    ...t.queued.map(text => bubble('you', 'You', text, '<span>after this reply</span>')),
+    t.current ? bubble(`${side(t.current.agent)} live`, t.current.label, t.current.text, `<span class="s-running">writing · ${t.current.seconds}s</span>`) : '',
+  ].join('');
+  const spoken = t.turns.filter(m => m.agent).length;
+  const running = t.status === 'running';
+  $('status').innerHTML = `<span class="s-${esc(t.status)}">${esc(t.status)}</span> · ${spoken} turn${spoken === 1 ? '' : 's'}`
+    + (running ? ` · ${t.turnsLeft} to go` : '') + ` · ${esc(t.dir)}`
+    + (t.error ? `\n<span class="err">${esc(t.error)}</span>` : '');
+  $('stop').hidden = !running;
+  $('more').hidden = running;
+  if (nearBottom) window.scrollTo(0, document.body.scrollHeight);
+}
+
+async function show(id) {
+  clearTimeout(timer);
+  let t;
+  try { t = await api(`/api/talk?id=${encodeURIComponent(id)}`); }
+  catch { store.set('current', null); return showSetup(); }
+  current = id; store.set('current', id);
+  $('setup').hidden = true; $('view').hidden = false;
+  render(t);
+  if (t.status === 'running') timer = setTimeout(() => show(id), 1000);
+  else refreshTalks();
+}
+
+function showSetup() {
+  clearTimeout(timer);
+  current = null; store.set('current', null);
+  $('setup').hidden = false; $('view').hidden = true;
+  $('opener').focus();
+}
+
+async function start() {
+  const opener = $('opener').value;
+  if (!opener.trim()) return msg('Empty opener.', true);
+  const agents = [$('a').value, $('b').value];
+  store.set('pair', agents); store.set('turns', $('turns').value);
+  $('start').disabled = true;
+  try {
+    const t = await api('/api/talk', { opener, agents, turns: Number($('turns').value) });
+    msg('');
+    $('opener').value = '';
+    refreshTalks();
+    show(t.id);
+  } catch (e) { msg(e.message, true); }
+  finally { $('start').disabled = false; }
+}
+
+async function act(path, body) {
+  try { await api(path, { id: current, ...body }); show(current); }
+  catch (e) { $('status').insertAdjacentHTML('beforeend', `\n<span class="err">${esc(e.message)}</span>`); }
+}
+
+async function say() {
+  const text = $('say').value;
+  if (!text.trim()) return;
+  $('say').value = '';
+  await act('/api/talk/say', { text });
+}
+
+async function refreshTalks() {
+  let talks;
+  try { ({ talks } = await api('/api/talks')); } catch { return; }
+  if (!talks.length) return;
+  $('talks').innerHTML = talks.map(t => `
+    <div class="talk" data-id="${esc(t.id)}">
+      <span>${esc(t.agents.join(' ↔ '))}</span><span class="s-${esc(t.status)}">${esc(t.status)} · ${t.turns}</span>
+      <span class="o">${esc(t.opener)}</span>
+    </div>`).join('');
+}
+
+$('talks').addEventListener('click', e => { const el = e.target.closest('.talk'); if (el) show(el.dataset.id); });
+$('start').addEventListener('click', start);
+$('swap').addEventListener('click', () => { const a = $('a').value; $('a').value = $('b').value; $('b').value = a; });
+$('new').addEventListener('click', showSetup);
+$('send').addEventListener('click', say);
+$('say').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); say(); } });
+$('stop').addEventListener('click', () => act('/api/talk/stop'));
+$('resume').addEventListener('click', () => act('/api/talk/resume', { turns: Number($('moreTurns').value) }));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !$('setup').hidden) { e.preventDefault(); start(); }
+});
+
+(async () => {
+  try {
+    const { agents } = await api('/api/agents');
+    const usable = agents.filter(a => a.modes.includes('background'));
+    const options = usable.map(a => `<option value="${esc(a.id)}" ${a.available ? '' : 'disabled'}>${esc(a.label)}${a.available ? '' : ' (not found)'}</option>`).join('');
+    $('a').innerHTML = $('b').innerHTML = options;
+    const ok = usable.filter(a => a.available).map(a => a.id);
+    const [pa, pb] = store.get('pair', []);
+    $('a').value = ok.includes(pa) ? pa : ok[0] || '';
+    $('b').value = ok.includes(pb) ? pb : ok.find(id => id !== $('a').value) || ok[0] || '';
+    $('turns').value = store.get('turns', 10);
+    await refreshTalks();
+    const last = store.get('current', null);
+    last ? show(last) : showSetup();
+  } catch (e) { msg(e.message, true); }
+})();
+</script>
+</body>
+</html>
