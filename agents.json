@@ -32,6 +32,12 @@
       "url": "https://claude.ai/new?q={prompt}"
     },
     {
+      "id": "gemini-web",
+      "label": "Gemini (web)",
+      "type": "url",
+      "url": "https://gemini.google.com/app"
+    },
+    {
       "id": "chatgpt-web",
       "label": "ChatGPT (web)",
       "type": "url",

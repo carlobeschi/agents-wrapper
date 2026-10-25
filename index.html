@@ -137,12 +137,21 @@ async function send() {
   const cli = ids.filter(id => agents.find(a => a.id === id).type !== 'url');
   const lines = [];
 
+  // A URL without {prompt} (Gemini has no prefill parameter) gets the prompt on
+  // the clipboard instead, to paste. Copy before any tab opens and takes focus.
+  const paste = web.filter(a => !a.url.includes('{prompt}'));
+  if (paste.length) {
+    const names = paste.map(a => a.label).join(', ');
+    try { await navigator.clipboard.writeText(prompt); lines.push(`${names}: prompt copied, paste it in the tab`); }
+    catch { lines.push(`${names}: could not copy the prompt, paste it by hand`); }
+  }
+
   // Web agents open from the page; browsers may block all but the first popup.
   let blocked = 0;
   for (const a of web) {
     if (!window.open(a.url.split('{prompt}').join(encodeURIComponent(prompt)), '_blank', 'noopener')) blocked++;
   }
-  if (web.length) lines.push(`Opened ${web.length - blocked} web tab${web.length - blocked === 1 ? '' : 's'}` + (blocked ? `, ${blocked} blocked — allow popups for localhost` : ''));
+  if (web.length) lines.unshift(`Opened ${web.length - blocked} web tab${web.length - blocked === 1 ? '' : 's'}` + (blocked ? `, ${blocked} blocked — allow popups for localhost` : ''));
 
   if (cli.length) {
     $('send').disabled = true;
