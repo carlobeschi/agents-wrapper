@@ -1,0 +1,41 @@
+{
+  "defaultCwd": "~",
+  "agents": [
+    {
+      "id": "claude",
+      "label": "Claude Code",
+      "interactive": ["claude", "{prompt}"],
+      "headless": ["claude", "-p", "{prompt}"]
+    },
+    {
+      "id": "gemini",
+      "label": "Gemini CLI",
+      "interactive": ["gemini", "-i", "{prompt}"],
+      "headless": ["gemini", "-p", "{prompt}"]
+    },
+    {
+      "id": "codex",
+      "label": "Codex CLI",
+      "interactive": ["codex", "{prompt}"],
+      "headless": ["codex", "exec", "{prompt}"]
+    },
+    {
+      "id": "cursor",
+      "label": "Cursor Agent",
+      "interactive": ["cursor-agent", "{prompt}"],
+      "headless": ["cursor-agent", "-p", "{prompt}"]
+    },
+    {
+      "id": "claude-web",
+      "label": "Claude (web)",
+      "type": "url",
+      "url": "https://claude.ai/new?q={prompt}"
+    },
+    {
+      "id": "chatgpt-web",
+      "label": "ChatGPT (web)",
+      "type": "url",
+      "url": "https://chatgpt.com/?q={prompt}"
+    }
+  ]
+}

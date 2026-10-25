@@ -1,0 +1,116 @@
+// @ts-check
+// Agent dispatch (server.js). Runs the real server against fake
+// agents — shell one-liners that write the prompt they were given — so what is
+// checked is that the prompt arrives byte-for-byte, not what any real agent does.
+const { test, expect } = require('@playwright/test');
+const { spawn, execFileSync } = require('child_process');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+const PORT = 8788;
+const BASE = `http://localhost:${PORT}`;
+// Quotes, a command substitution and a newline: anything a shell could mangle.
+const NASTY = `Fix "it" — don't run $(touch pwned) or \`id\`;\nsecond line`;
+
+let server, home, work;
+
+test.beforeAll(async () => {
+  home = fs.mkdtempSync(path.join(os.tmpdir(), 'dispatch-home-'));
+  work = fs.mkdtempSync(path.join(os.tmpdir(), 'dispatch-work-'));
+  const write = name => ['sh', '-c', `printf %s "$1" > ${name}`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({
+    terminal: ['bash', '{script}'],
+    agents: [
+      { id: 'a', label: 'Agent A', interactive: write('term-a.txt'), headless: ['sh', '-c', 'printf %s "$1"; pwd > cwd-a.txt', 'x', '{prompt}'] },
+      { id: 'b', label: 'Agent B', interactive: write('term-b.txt'), headless: ['sh', '-c', 'printf %s "$1"', 'x', '{prompt}'] },
+      { id: 'gone', label: 'Missing', interactive: ['no-such-agent-binary', '{prompt}'] },
+      { id: 'web', label: 'Web', type: 'url', url: 'https://example.com/?q={prompt}' },
+    ],
+  }));
+  server = spawn('node', [path.join(__dirname, '..', 'server.js')], {
+    env: { ...process.env, AGENT_DISPATCH_PORT: String(PORT), AGENT_DISPATCH_HOME: home },
+    stdio: ['ignore', 'pipe', 'inherit'],
+  });
+  await new Promise((resolve, reject) => {
+    server.stdout.on('data', d => { if (String(d).includes('Agent dispatch on')) resolve(undefined); });
+    server.on('exit', code => reject(new Error(`server exited ${code}`)));
+  });
+});
+
+test.afterAll(() => {
+  server?.kill();
+  fs.rmSync(home, { recursive: true, force: true });
+  fs.rmSync(work, { recursive: true, force: true });
+});
+
+async function load(page) {
+  await page.goto(BASE + '/');
+  await expect(page.locator('#agents .agent')).toHaveCount(4);
+  await page.locator('#none').click();
+  await page.locator('#cwd').fill(work);
+  await page.locator('#prompt').fill(NASTY);
+}
+
+test('a missing binary is shown but cannot be picked', async ({ page }) => {
+  await load(page);
+  await expect(page.locator('#agents input[value=gone]')).toBeDisabled();
+  await expect(page.locator('#agents .agent.off')).toContainText('not found');
+});
+
+test('background mode sends the same prompt to every picked agent, unmangled', async ({ page }) => {
+  await load(page);
+  await page.locator('input[name=mode][value=background]').check();
+  await page.locator('#agents input[value=a]').check();
+  await page.locator('#agents input[value=b]').check();
+  await page.locator('#send').click();
+  await expect(page.locator('#msg')).toContainText('Agent B: started');
+  const run = page.locator('.run').first();
+  await expect(run.locator('.s-done')).toHaveCount(2);
+
+  await run.locator('[data-log$="|a"]').click();
+  await expect(page.locator('pre.log')).toContainText('second line');
+  expect(await page.locator('pre.log').textContent()).toContain(NASTY);
+  expect(fs.existsSync(path.join(work, 'pwned'))).toBe(false);
+  expect(fs.readFileSync(path.join(work, 'cwd-a.txt'), 'utf8').trim()).toBe(fs.realpathSync(work));
+});
+
+test('terminal mode runs the interactive command in the chosen directory with the prompt intact', async ({ page }) => {
+  await load(page);
+  await page.locator('input[name=mode][value=terminal]').check();
+  await page.locator('#agents input[value=a]').check();
+  await page.locator('#send').click();
+  await expect(page.locator('#msg')).toContainText('Agent A: opened');
+  const out = path.join(work, 'term-a.txt');
+  await expect.poll(() => fs.existsSync(out)).toBe(true);
+  await expect.poll(() => fs.readFileSync(out, 'utf8')).toBe(NASTY);
+  expect(fs.existsSync(path.join(work, 'pwned'))).toBe(false);
+});
+
+test('worktree per agent gives each agent its own branch', async ({ page }) => {
+  const repo = path.join(work, 'repo');
+  fs.mkdirSync(repo);
+  const git = (...a) => execFileSync('git', ['-C', repo, ...a], { encoding: 'utf8' });
+  git('init', '-q');
+  git('-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'init');
+
+  await load(page);
+  await page.locator('#cwd').fill(repo);
+  await page.locator('input[name=mode][value=background]').check();
+  await page.locator('#isolate').check();
+  await page.locator('#agents input[value=a]').check();
+  await page.locator('#agents input[value=b]').check();
+  await page.locator('#send').click();
+  await expect(page.locator('#msg')).toContainText('Agent B: started');
+  const branches = git('branch', '--list', 'dispatch/*').split('\n').filter(Boolean);
+  expect(branches).toHaveLength(2);
+  expect(branches.some(b => b.endsWith('-a'))).toBe(true);
+  expect(branches.some(b => b.endsWith('-b'))).toBe(true);
+});
+
+test('API refuses a request without the page token, or for a foreign Host', async ({ request }) => {
+  const noToken = await request.post(BASE + '/api/dispatch', { data: { prompt: 'x', agents: ['a'] } });
+  expect(noToken.status()).toBe(403);
+  const badHost = await request.get(BASE + '/', { headers: { Host: `evil.example:${PORT}` } });
+  expect(badHost.status()).toBe(403);
+});
