@@ -34,6 +34,7 @@ const PORT      = Number(process.env.AGENT_DISPATCH_PORT) || 8787;
 const HOME_DIR  = process.env.AGENT_DISPATCH_HOME || path.join(os.homedir(), '.agent-dispatch');
 const RUNS_DIR  = path.join(HOME_DIR, 'runs');
 const TALKS_DIR = path.join(HOME_DIR, 'talks');
+const SAVED_DIR = path.join(HOME_DIR, 'conversations');
 const CONFIG    = process.env.AGENT_DISPATCH_CONFIG
   || (fs.existsSync(path.join(HOME_DIR, 'agents.json')) ? path.join(HOME_DIR, 'agents.json')
                                                          : path.join(__dirname, 'agents.json'));
@@ -208,7 +209,7 @@ function send(res, status, type, body) {
 }
 const json = (res, status, obj) => send(res, status, 'application/json', JSON.stringify(obj));
 
-const talks = createTalks({ loadConfig, fill, stamp, dir: TALKS_DIR });
+const talks = createTalks({ loadConfig, fill, stamp, dir: TALKS_DIR, savedDir: SAVED_DIR });
 
 // Read a JSON body, then answer with handler(body) -> [status, object].
 function withBody(req, res, handler) {
@@ -258,6 +259,7 @@ const server = http.createServer((req, res) => {
     if (req.method === 'GET' && url.pathname === '/api/talks') return json(res, 200, { talks: talks.list() });
     if (req.method === 'GET' && url.pathname === '/api/talk') return json(res, ...talks.get(url.searchParams.get('id')));
     if (req.method === 'POST' && url.pathname === '/api/talk') return withBody(req, res, talks.start);
+    if (req.method === 'POST' && url.pathname === '/api/talks/clear') return json(res, ...talks.clear());
     const m = url.pathname.match(/^\/api\/talk\/(stop|resume|say)$/);
     if (req.method === 'POST' && m) return withBody(req, res, body => talks[m[1]](body.id, body));
     json(res, 404, { error: 'Not found' });
