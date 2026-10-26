@@ -22,6 +22,10 @@
 //   no framing              another site cannot load the page in a frame
 //   ~/.agent-dispatch 0700  prompts, logs and transcripts are not readable by
 //                           other users of the machine
+//   attachments            copied into <conversation>/files/ under names the
+//                           server picks, from a list of types, size-capped,
+//                           never overwriting; agents read them with the
+//                           permissions they already have
 //   argv arrays, no shell   the prompt never reaches a command line; terminal
 //                           mode reads it from a file inside the script
 
@@ -33,6 +37,7 @@ const path    = require('path');
 const { spawn, execFileSync } = require('child_process');
 const { createTalks } = require('./talk');
 const { createStories } = require('./story');
+const attach = require('./attach');
 
 const PORT      = Number(process.env.AGENT_DISPATCH_PORT) || 8787;
 const HOME_DIR  = process.env.AGENT_DISPATCH_HOME || path.join(os.homedir(), '.agent-dispatch');
@@ -221,11 +226,12 @@ const talks = createTalks({ loadConfig, fill, stamp, dir: TALKS_DIR, savedDir: S
 const stories = createStories({ loadConfig, fill, stamp, dir: STORIES_DIR });
 
 // Read a JSON body, then answer with handler(body) -> [status, object].
-function withBody(req, res, handler) {
+// `max` is larger for the routes that take attachments.
+function withBody(req, res, handler, max = MAX_BODY) {
   const chunks = []; let size = 0;
   req.on('data', c => {
     size += c.length;
-    if (size > MAX_BODY) { json(res, 413, { error: 'Prompt too large.' }); req.destroy(); return; }
+    if (size > max) { json(res, 413, { error: max > MAX_BODY ? 'Attachments too large.' : 'Prompt too large.' }); req.destroy(); return; }
     chunks.push(c);
   });
   req.on('end', () => {
@@ -272,16 +278,16 @@ const server = http.createServer((req, res) => {
 
     if (req.method === 'GET' && url.pathname === '/api/talks') return json(res, 200, { talks: talks.list() });
     if (req.method === 'GET' && url.pathname === '/api/talk') return json(res, ...talks.get(url.searchParams.get('id')));
-    if (req.method === 'POST' && url.pathname === '/api/talk') return withBody(req, res, talks.start);
+    if (req.method === 'POST' && url.pathname === '/api/talk') return withBody(req, res, talks.start, attach.MAX_BODY);
     if (req.method === 'POST' && url.pathname === '/api/talks/clear') return json(res, ...talks.clear());
     const m = url.pathname.match(/^\/api\/talk\/(stop|resume|say)$/);
-    if (req.method === 'POST' && m) return withBody(req, res, body => talks[m[1]](body.id, body));
+    if (req.method === 'POST' && m) return withBody(req, res, body => talks[m[1]](body.id, body), m[1] === 'say' ? attach.MAX_BODY : MAX_BODY);
 
     if (req.method === 'GET' && url.pathname === '/api/stories') return json(res, 200, { stories: stories.list() });
     if (req.method === 'GET' && url.pathname === '/api/story') return json(res, ...stories.get(url.searchParams.get('id')));
-    if (req.method === 'POST' && url.pathname === '/api/story') return withBody(req, res, stories.start);
+    if (req.method === 'POST' && url.pathname === '/api/story') return withBody(req, res, stories.start, attach.MAX_BODY);
     const sm = url.pathname.match(/^\/api\/story\/(stop|resume|say)$/);
-    if (req.method === 'POST' && sm) return withBody(req, res, body => stories[sm[1]](body.id, body));
+    if (req.method === 'POST' && sm) return withBody(req, res, body => stories[sm[1]](body.id, body), sm[1] === 'say' ? attach.MAX_BODY : MAX_BODY);
     json(res, 404, { error: 'Not found' });
   } catch (e) {
     json(res, 500, { error: e.message });

@@ -188,3 +188,87 @@ test('the API needs the token and two agents', async ({ request }) => {
   expect(r.status()).toBe(400);
   expect((await r.json()).error).toBe('Pick two agents.');
 });
+
+// Attachments (attach.js): copied into the conversation's files/ folder and listed in the prompt.
+const token = async request => (await (await request.get(BASE + '/talk')).text()).match(/name="dispatch-token" content="([0-9a-f]+)"/)[1];
+const b64 = s => Buffer.from(s).toString('base64');
+
+test('a file attached to the opener is copied into the folder and listed in the prompt', async ({ page }) => {
+  await page.goto(BASE + '/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.locator('#a').selectOption('a');
+  await page.locator('#b').selectOption('b');
+  await page.locator('#turns').fill('1');
+  await page.locator('#opener').fill('Read the notes.');
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('#attachOpener').click();
+  await (await chooser).setFiles({ name: 'notes.md', mimeType: 'text/markdown', buffer: Buffer.from('# Notes\nhello') });
+  await expect(page.locator('#openerFiles .chip')).toContainText('notes.md');
+  await page.locator('#start').click();
+  await expect(page.locator('#status')).toContainText('done');
+  await expect(page.locator('#chat .m.opener .att')).toContainText('files/notes.md');
+
+  const dir = await talkDir(page);
+  const file = path.join(dir, 'files', 'notes.md');
+  expect(fs.readFileSync(file, 'utf8')).toBe('# Notes\nhello');
+  expect(fs.statSync(file).mode & 0o777).toBe(0o600);
+  expect(fs.readFileSync(path.join(dir, 'prompt-a.txt'), 'utf8')).toContain('Read the notes.\n\nAttached (in this folder): files/notes.md (13 B)');
+});
+
+test('a file can be dropped in mid-conversation, without text', async ({ page }) => {
+  await begin(page, 'a', 'b', 1);
+  await expect(page.locator('#status')).toContainText('done');
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('#attachSay').click();
+  await (await chooser).setFiles({ name: 'data.csv', mimeType: 'text/csv', buffer: Buffer.from('a,b\n1,2\n') });
+  await page.locator('#send').click();
+  await expect(page.locator('#chat .m.you .att')).toContainText('files/data.csv');
+  await expect(page.locator('#sayFiles .chip')).toHaveCount(0);
+  await page.locator('#moreTurns').fill('1');
+  await page.locator('#resume').click();
+  await expect(page.locator('#chat .m.b')).toHaveCount(1);
+  const dir = await talkDir(page);
+  expect(fs.readFileSync(path.join(dir, 'files', 'data.csv'), 'utf8')).toBe('a,b\n1,2\n');
+  expect(fs.readFileSync(path.join(dir, 'prompt-b.txt'), 'utf8')).toMatch(/### You\n\nAttached \(in this folder\): files\/data\.csv \(8 B\)\n/);
+});
+
+test('attachments get safe names, never overwrite, and are refused by type, size and count', async ({ request }) => {
+  const headers = { 'X-Dispatch-Token': await token(request) };
+  const post = (url, data) => request.post(BASE + url, { headers, data });
+  const r = await post('/api/talk', { opener: 'x', agents: ['slow', 'a'], turns: 1, files: [
+    { name: '../../../evil one.md', data: b64('1') },
+    { name: 'evil one.md', data: b64('2') },
+  ] });
+  expect(r.status()).toBe(200);
+  const t = await r.json();
+  expect(t.files.map(f => f.path)).toEqual(['files/evil_one.md', 'files/evil_one-2.md']);
+  expect(fs.readdirSync(path.join(t.dir, 'files')).sort()).toEqual(['evil_one-2.md', 'evil_one.md']);
+
+  const refused = async (files, error) => {
+    const res = await post('/api/talk/say', { id: t.id, text: 'x', files });
+    expect(res.status()).toBe(400);
+    expect((await res.json()).error).toContain(error);
+  };
+  await refused([{ name: '.bashrc', data: b64('x') }], 'not a type that can be attached');
+  await refused([{ name: 'run.exe', data: b64('x') }], 'not a type that can be attached');
+  await refused([{ name: 'a.txt', data: 'not base64!' }], 'bad data');
+  await refused(Array.from({ length: 6 }, (_, i) => ({ name: `${i}.txt`, data: b64('x') })), '5 files at most');
+  await refused([{ name: 'big.txt', data: Buffer.alloc(5 * 1024 * 1024 + 1).toString('base64') }], '5.0 MB at most');
+  expect(fs.readdirSync(path.join(t.dir, 'files'))).toHaveLength(2);
+
+  // An agent that swapped files/ for a link elsewhere gets nothing written through it.
+  const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'elsewhere-'));
+  fs.renameSync(path.join(t.dir, 'files'), path.join(t.dir, 'old-files'));
+  fs.symlinkSync(elsewhere, path.join(t.dir, 'files'));
+  const res = await post('/api/talk/say', { id: t.id, text: 'x', files: [{ name: 'a.txt', data: b64('x') }] });
+  expect(res.status()).toBe(500);
+  expect(fs.readdirSync(elsewhere)).toEqual([]);
+  fs.rmSync(elsewhere, { recursive: true, force: true });
+  await post('/api/talk/stop', { id: t.id });
+});
+
+test('attachments need the token', async ({ request }) => {
+  const r = await request.post(BASE + '/api/talk', { data: { opener: 'x', agents: ['a', 'b'], files: [{ name: 'a.txt', data: b64('x') }] } });
+  expect(r.status()).toBe(403);
+});

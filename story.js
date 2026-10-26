@@ -13,6 +13,7 @@ const crypto = require('crypto');
 const fs     = require('fs');
 const path   = require('path');
 const { spawn } = require('child_process');
+const { parseFiles, saveFiles, withFiles, attachedBytes } = require('./attach');
 const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED } = require('./talk');
 
 const MAX_DAYS     = 7;    // to start with; "Another day" can go past it
@@ -21,6 +22,10 @@ const MAX_TURNS    = 20;   // per meeting
 const STEP_TIMEOUT = 10 * 60 * 1000;
 const RETRY_DELAY  = Number(process.env.AGENT_DISPATCH_RETRY_MS ?? 3000);
 const USER         = 'You';
+
+// Attachments live in the meeting folder. Nothing is written to a home folder,
+// which the agent itself can change.
+const AWAY = 'at the meeting, not in this folder';
 
 const clamp = (n, lo, hi, d) => Math.min(hi, Math.max(lo, Math.floor(Number(n)) || d));
 
@@ -40,12 +45,12 @@ function meetingPrompt(s, me, other, day) {
   lines.push(
     `Write only your next message to ${other.label}. No preamble, no name label. Keep it to a few paragraphs at most.`,
     UNATTENDED(other.label),
-    '', '## How it started', '', s.opener, '',
+    '', '## How it started', '', withFiles(s.opener, s.files), '',
     ...journalLines(me, day.n - 1),
   );
   if (day.turns.length) {
     lines.push(`## Today so far`, '');
-    for (const t of day.turns) lines.push(`### ${t.label}`, '', t.text, '');
+    for (const t of day.turns) lines.push(`### ${t.label}`, '', withFiles(t.text, t.files), '');
   } else {
     lines.push(`You speak first today.`, '');
   }
@@ -57,11 +62,11 @@ function eveningPrompt(s, me, other, day) {
     `You are ${me.label}. Day ${day.n}'s meeting with ${other.label} is over and you are home, alone. This folder is yours: anything you left here on earlier evenings is still here. Nobody else sees what you do here, and ${other.label} never will.`,
     `Spend the evening as you like: think, read, write notes, make something. Then reply with your journal entry for today: what happened, what you make of it now, what you want to bring to tomorrow. Your reply is only the journal entry. Tomorrow you will have this journal and this folder, not the transcript.`,
     UNATTENDED(),
-    '', '## How it started', '', s.opener, '',
+    '', '## How it started', '', withFiles(s.opener, s.files, AWAY), '',
     ...journalLines(me, day.n - 1),
     `## Today's meeting`, '',
   ];
-  for (const t of day.turns) lines.push(`### ${t.label}`, '', t.text, '');
+  for (const t of day.turns) lines.push(`### ${t.label}`, '', withFiles(t.text, t.files, AWAY), '');
   return lines.join('\n');
 }
 
@@ -69,10 +74,10 @@ function createStories({ loadConfig, fill, stamp, dir }) {
   const stories = new Map();
 
   const markdown = s => [
-    `# ${s.agents.map(a => a.label).join(' & ')}`, '', '## How it started', '', s.opener, '',
+    `# ${s.agents.map(a => a.label).join(' & ')}`, '', '## How it started', '', withFiles(s.opener, s.files), '',
     ...s.days.flatMap(d => [
       `## Day ${d.n}`, '',
-      ...d.turns.flatMap(t => [`### ${t.label}`, '', t.text, '']),
+      ...d.turns.flatMap(t => [`### ${t.label}`, '', withFiles(t.text, t.files), '']),
       ...(s.agents.some(a => a.journal[d.n - 1] !== undefined) ? [`## Day ${d.n}, evening`, ''] : []),
       ...s.agents.filter(a => a.journal[d.n - 1] !== undefined).flatMap(a => [`### ${a.label}'s journal`, '', a.journal[d.n - 1], '']),
     ]),
@@ -175,6 +180,8 @@ function createStories({ loadConfig, fill, stamp, dir }) {
     if (agents.some(a => !a.headless)) return [400, { error: `${agents.find(a => !a.headless).label} has no headless command.` }];
     const totalDays = clamp(body.days, 1, MAX_DAYS, 3);
     const turnsPerDay = clamp(body.turns, 1, MAX_TURNS, 6);
+    let files;
+    try { files = parseFiles(body.files); } catch (e) { return [400, { error: e.message }]; }
 
     const id = stamp() + '-' + crypto.randomBytes(2).toString('hex');
     const storyDir = path.join(dir, id);
@@ -190,6 +197,7 @@ function createStories({ loadConfig, fill, stamp, dir }) {
       }),
     };
     for (const p of [s.meeting, ...s.agents.map(a => a.home)]) fs.mkdirSync(p, { recursive: true });
+    s.files = saveFiles(s.meeting, files);
     stories.set(id, s);
     fs.writeFileSync(path.join(storyDir, 'meta.json'),
       JSON.stringify({ id, agents: ids, days: totalDays, turnsPerDay, at: new Date().toISOString() }, null, 2));
@@ -227,8 +235,10 @@ function createStories({ loadConfig, fill, stamp, dir }) {
     const s = stories.get(id);
     if (!s) return [404, { error: 'No such story.' }];
     const text = typeof body.text === 'string' ? body.text.trim() : '';
-    if (!text) return [400, { error: 'Empty message.' }];
-    const m = { user: true, label: USER, text };
+    let files;
+    try { files = parseFiles(body.files, attachedBytes([s, ...s.days.flatMap(d => d.turns), ...s.queued])); } catch (e) { return [400, { error: e.message }]; }
+    if (!text && !files.length) return [400, { error: 'Empty message.' }];
+    const m = { user: true, label: USER, text, files: saveFiles(s.meeting, files) };
     const d = today(s);
     if (!s.current && d && spokenToday(d) < s.turnsPerDay) { d.turns.push(m); save(s); }
     else s.queued.push(m);
@@ -240,15 +250,15 @@ function createStories({ loadConfig, fill, stamp, dir }) {
   };
 
   const view = s => ({
-    id: s.id, dir: s.dir, opener: s.opener, status: s.status, error: s.error,
+    id: s.id, dir: s.dir, opener: s.opener, files: s.files, status: s.status, error: s.error,
     totalDays: s.totalDays, turnsPerDay: s.turnsPerDay,
     agents: s.agents.map(a => ({ id: a.id, label: a.label, home: a.home, files: homeFiles(a.home) })),
     days: s.days.map(d => ({
       n: d.n,
-      turns: d.turns.map(({ agent, user, label, text, seconds }) => ({ agent, user, label, text, seconds })),
+      turns: d.turns.map(({ agent, user, label, text, files, seconds }) => ({ agent, user, label, text, files, seconds })),
       journals: s.agents.filter(a => a.journal[d.n - 1] !== undefined).map(a => ({ agent: a.id, label: a.label, text: a.journal[d.n - 1] })),
     })),
-    queued: s.queued.map(m => m.text),
+    queued: s.queued.map(m => withFiles(m.text, m.files)),
     current: s.current && {
       kind: s.current.kind, day: s.current.day, agent: s.current.agent, label: s.current.label,
       text: stripAnsi(s.current.out), seconds: Math.round((Date.now() - s.current.started) / 1000), retry: s.current.retry,

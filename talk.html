@@ -70,6 +70,13 @@
   .go { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 12px; }
   .go label { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
   input[type=number] { width: 72px; }
+  .files { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .files:empty { display: none; }
+  #openerFiles { margin-top: 8px; }
+  #controls .files { max-width: 820px; margin: 0 auto 8px; }
+  .chip { font-size: 12px; padding: 2px 4px 2px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); display: inline-flex; align-items: center; gap: 2px; }
+  .chip button { border: 0; background: none; padding: 0 6px; color: inherit; }
+  .att { margin-top: 6px; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
   #msg { margin-top: 10px; font-size: 13px; color: var(--muted); white-space: pre-wrap; }
 
   #view { display: flex; flex-direction: column; flex: 1; min-height: 100vh; }
@@ -148,8 +155,11 @@
         <label>Replies <select id="b"></select></label>
       </div>
       <textarea id="opener" placeholder="Introduce them, or give a topic"></textarea>
+      <div class="files" id="openerFiles"></div>
       <div class="go">
         <label>Turns <input type="number" id="turns" min="1" max="50" value="10"></label>
+        <span style="flex:1"></span>
+        <button id="attachOpener" type="button" data-for="opener">Attach files</button>
         <button class="primary" id="start" type="button">Start <small>⌘↵</small></button>
       </div>
       <div id="msg"></div>
@@ -168,8 +178,10 @@
     <div id="chat"></div>
     <div id="status"></div>
     <div id="controls">
+      <div class="files" id="sayFiles"></div>
       <div class="row">
         <input type="text" id="say" placeholder="Say something to both">
+        <button id="attachSay" type="button" data-for="say" title="Attach files" aria-label="Attach files">📎</button>
         <button id="send" type="button">Send</button>
         <button id="stop" type="button">Stop</button>
         <span id="more" hidden><button id="resume" type="button">Continue</button><input type="number" id="moreTurns" min="1" max="50" value="2" aria-label="More turns"></span>
@@ -177,6 +189,8 @@
     </div>
   </section>
 </main>
+
+<input type="file" id="pick" multiple hidden>
 
 <script>
 const TOKEN = document.querySelector('meta[name=dispatch-token]').content;
@@ -186,6 +200,28 @@ const store = {
   set(k, v) { try { localStorage.setItem('talk.' + k, JSON.stringify(v)); } catch {} },
 };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// Attachments: picked here, sent as base64, checked and saved by the server
+// into the conversation's files/ folder. The server's list of types decides;
+// `accept` only narrows the picker.
+const ACCEPT = 'txt md markdown csv tsv json yaml yml xml html css log js mjs cjs ts tsx jsx py rb go rs java kt swift c h cpp cs php sql sh pdf png jpg jpeg gif webp';
+const picked = { opener: [], say: [] };
+let picking = null;
+const kb = n => n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`;
+function chips(which) {
+  $(which + 'Files').innerHTML = picked[which].map((f, i) =>
+    `<span class="chip">${esc(f.name)} · ${kb(f.size)}<button type="button" data-for="${which}" data-i="${i}" aria-label="Remove ${esc(f.name)}">×</button></span>`).join('');
+}
+const b64 = f => new Promise((ok, no) => {
+  const r = new FileReader();
+  r.onload = () => ok(String(r.result).split(',')[1] || '');
+  r.onerror = () => no(r.error);
+  r.readAsDataURL(f);
+});
+const encode = which => Promise.all(picked[which].map(async f => ({ name: f.name, data: await b64(f) })));
+const att = files => files?.length
+  ? `<div class="att">📎 ${files.map(f => `${esc(f.path)} · ${kb(f.size)}`).join(', ')}</div>` : '';
+const withFiles = (text, files) => files?.length ? `${text}\n\nAttached: ${files.map(f => f.path).join(', ')}`.trim() : text;
 
 // The Markdown agents write: paragraphs, headings, lists, quotes, code. Every
 // piece of text goes through esc(), so a reply can never become HTML. Links stay text.
@@ -253,8 +289,8 @@ function render(t) {
   const side = id => (id === t.agents[0].id ? 'a' : 'b');
   const nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 120;
   $('chat').innerHTML = [
-    message('opener', 'Opener', md(t.opener), '', '✎'),
-    ...t.turns.map(m => m.user ? message('you', m.label, md(m.text))
+    message('opener', 'Opener', md(t.opener) + att(t.files), '', '✎'),
+    ...t.turns.map(m => m.user ? message('you', m.label, md(m.text) + att(m.files))
                                : message(side(m.agent), m.label, md(m.text), `<span>${m.seconds}s</span>`)),
     ...t.queued.map(text => message('you', 'You', md(text), '<span>after this reply</span>')),
     t.current ? message(`${side(t.current.agent)} live`, t.current.label,
@@ -278,8 +314,8 @@ function render(t) {
 }
 
 function transcript(t) {
-  return [`# ${t.agents.map(a => a.label).join(' ↔ ')}`, '', '## Opener', '', t.opener, '',
-    ...t.turns.flatMap(m => [`## ${m.label}`, '', m.text, ''])].join('\n');
+  return [`# ${t.agents.map(a => a.label).join(' ↔ ')}`, '', '## Opener', '', withFiles(t.opener, t.files), '',
+    ...t.turns.flatMap(m => [`## ${m.label}`, '', withFiles(m.text, m.files), ''])].join('\n');
 }
 
 async function show(id) {
@@ -314,9 +350,10 @@ async function start() {
   store.set('pair', agents); store.set('turns', $('turns').value);
   $('start').disabled = true;
   try {
-    const t = await api('/api/talk', { opener, agents, turns: Number($('turns').value) });
+    const t = await api('/api/talk', { opener, agents, turns: Number($('turns').value), files: await encode('opener') });
     msg('');
     $('opener').value = '';
+    picked.opener = []; chips('opener');
     await refreshTalks();
     show(t.id);
   } catch (e) { msg(e.message, true); }
@@ -330,9 +367,15 @@ async function act(path, body) {
 
 async function say() {
   const text = $('say').value;
-  if (!text.trim()) return;
-  $('say').value = '';
-  await act('/api/talk/say', { text });
+  if (!text.trim() && !picked.say.length) return;
+  $('send').disabled = true;
+  try {
+    await api('/api/talk/say', { id: current, text, files: await encode('say') });
+    $('say').value = '';
+    picked.say = []; chips('say');
+    show(current);
+  } catch (e) { $('status').insertAdjacentHTML('beforeend', `\n<span class="err">${esc(e.message)}</span>`); }
+  finally { $('send').disabled = false; }
 }
 
 async function copy() {
@@ -373,6 +416,21 @@ $('talks').addEventListener('click', e => { const el = e.target.closest('.talk')
 $('start').addEventListener('click', start);
 $('swap').addEventListener('click', () => { const a = $('a').value; $('a').value = $('b').value; $('b').value = a; });
 $('new').addEventListener('click', showSetup);
+for (const b of document.querySelectorAll('#attachOpener, #attachSay')) b.addEventListener('click', () => {
+  picking = b.dataset.for;
+  $('pick').accept = ACCEPT.split(' ').map(e => '.' + e).join(',');
+  $('pick').click();
+});
+$('pick').addEventListener('change', () => {
+  picked[picking].push(...$('pick').files);
+  picked[picking] = picked[picking].slice(0, 5);
+  $('pick').value = '';
+  chips(picking);
+});
+for (const id of ['openerFiles', 'sayFiles']) $(id).addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (b) { picked[b.dataset.for].splice(Number(b.dataset.i), 1); chips(b.dataset.for); }
+});
 $('send').addEventListener('click', say);
 $('copy').addEventListener('click', copy);
 $('say').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); say(); } });
