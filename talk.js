@@ -27,10 +27,28 @@ function killTree(child) {
 
 const stripAnsi = s => s.replace(/\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07/g, '');
 
-function framing(me, other, opener, turns) {
+// Said to every agent: it runs unattended, so a tool that needs permission is
+// refused, and a reply that stops at the refusal would end the conversation.
+const UNATTENDED = other => `You run unattended: any tool that needs permission is refused. If you can't open a link, file or page, say so in a sentence and carry on; ${other} may be able to tell you what it is.`;
+
+// The first line of stderr worth showing: what the CLI said went wrong.
+const failureNote = err => (stripAnsi(err).split('\n').map(l => l.trim()).find(l => /\w/.test(l)) || '').slice(0, 500);
+
+// Added to the prompt of a retried turn, so an agent stopped by a refused tool
+// replies in plain text instead of trying the same thing again.
+function retryNote(why, note) {
+  return [
+    '## Your last attempt failed', '',
+    `It ended with: ${why}${note ? ` — ${note}` : ''}`, '',
+    'Reply with text only this time, no tools. If it was something you tried to do (open a link, read a file, run a command), say briefly that you couldn\'t and carry on the conversation.', '',
+  ].join('\n');
+}
+
+function framing(me, other, opener, turns, retry) {
   const lines = [
     `You are ${me}, in a conversation with ${other}, another AI agent. A person set this up and is reading along; their messages, if any, are marked "${USER}".`,
     `Write only your next message to ${other}. No preamble, no name label, no tools unless the conversation needs them. Keep it to a few paragraphs at most.`,
+    UNATTENDED(other),
     '',
     '## Opener',
     '',
@@ -43,6 +61,7 @@ function framing(me, other, opener, turns) {
   } else {
     lines.push(`You speak first.`, '');
   }
+  if (retry) lines.push(retryNote(retry.why, retry.note));
   return lines.join('\n');
 }
 
@@ -60,8 +79,10 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
 
   // Run turns until the budget is spent, the user stops it, or an agent fails.
   // A failed turn is run once more before the conversation stops: the backends
-  // behind these CLIs return the odd one-off error (Antigravity: NOT_FOUND 404).
-  function next(t, retry = false) {
+  // behind these CLIs return the odd one-off error (Antigravity: NOT_FOUND 404),
+  // and an agent whose tool was refused needs telling to reply without it.
+  // `retry` is { why, note } on that second run.
+  function next(t, retry = null) {
     if (t.stopRequested || t.turnsLeft <= 0) {
       t.status = t.stopRequested ? 'stopped' : 'done';
       t.current = null;
@@ -69,13 +90,13 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
     }
     const spoken = t.turns.filter(m => m.agent).length;
     const me = t.agents[spoken % 2], other = t.agents[(spoken + 1) % 2];
-    const prompt = framing(me.label, other.label, t.opener, t.turns);
+    const prompt = framing(me.label, other.label, t.opener, t.turns, retry);
     // Keep what each turn was sent and what it said on stderr, to rerun a failed turn by hand.
     const base = path.join(t.dir, 'turns', `${String(spoken + 1).padStart(2, '0')}-${me.id.replace(/[^\w-]/g, '_')}`);
     fs.mkdirSync(path.dirname(base), { recursive: true });
-    fs.writeFileSync(base + '.prompt.md', prompt);
+    fs.writeFileSync(base + (retry ? '.retry' : '') + '.prompt.md', prompt);
     const [cmd, ...args] = fill(me.headless, prompt);
-    const cur = { agent: me.id, label: me.label, started: Date.now(), out: '', err: '', retry };
+    const cur = { agent: me.id, label: me.label, started: Date.now(), out: '', err: '', retry: !!retry };
     t.current = cur;
     t.status = 'running';
 
@@ -99,7 +120,7 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
         const tail = stripAnsi(cur.err).trim().split('\n').slice(-5).join('\n');
         if (!retry && !cur.spawnError && !cur.timedOut) {
           console.warn(`  ↻ ${t.id} ${me.id}: ${why}, retrying`);
-          t.retryTimer = setTimeout(() => next(t, true), RETRY_DELAY);
+          t.retryTimer = setTimeout(() => next(t, { why, note: failureNote(cur.err) }), RETRY_DELAY);
           return;
         }
         return fail(t, `${me.label}: ${why}${tail ? `\n${tail}` : ''}`);
@@ -224,4 +245,4 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
   return { start, stop, resume, say, get, list, clear };
 }
 
-module.exports = { createTalks, framing };
+module.exports = { createTalks, framing, retryNote, failureNote, UNATTENDED };
