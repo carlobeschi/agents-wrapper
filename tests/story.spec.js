@@ -24,6 +24,8 @@ test.beforeAll(async () => {
       { id: 'a', label: 'Agent A', headless: fake('a') },
       { id: 'b', label: 'Agent B', headless: fake('b') },
       { id: 'slow', label: 'Slow', headless: ['sh', '-c', `printf 'thinking about it'; sleep 30; echo done`] },
+      // Like agy when a tool is refused: no reply, the reason on stderr. Replies once told why.
+      { id: 'denied', label: 'Denied', headless: ['sh', '-c', 'case "$1" in *"Your last attempt failed"*) echo "I could not open it.";; *) echo "jetski: no output produced — a tool required the \\"command\\" permission" >&2;; esac', 'x', '{prompt}'] },
       { id: 'bad', label: 'Bad', headless: ['sh', '-c', 'echo "no credits" >&2; exit 3'] },
     ],
   }));
@@ -126,6 +128,16 @@ test('a failing agent stops the story with its error, and Retry runs that step a
   await expect(page.locator('#status')).toContainText('no credits');
   await expect(page.locator('#resume')).toHaveText('Retry');
   await expect(page.locator('#chat .m.a')).toHaveCount(1);
+});
+
+test('a step stopped by a refused tool is retried with the reason, and the story carries on', async ({ page }) => {
+  await begin(page, 'denied', 'b', 1, 2);
+  await expect(page.locator('#pill')).toHaveText('done');
+  const dir = await storyDir(page);
+  expect(read(dir, 'steps', 'd01-01-denied.prompt.md')).toContain('You run unattended');
+  expect(read(dir, 'steps', 'd01-01-denied.retry.prompt.md'))
+    .toContain('It ended with: empty reply — jetski: no output produced — a tool required the "command" permission');
+  await expect(page.locator('#chat .m:not(.opener) .text').first()).toHaveText('I could not open it.');
 });
 
 test('/talk and /story link to each other', async ({ page }) => {

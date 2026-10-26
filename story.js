@@ -13,7 +13,7 @@ const crypto = require('crypto');
 const fs     = require('fs');
 const path   = require('path');
 const { spawn } = require('child_process');
-const { killTree, stripAnsi } = require('./talk');
+const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED } = require('./talk');
 
 const MAX_DAYS     = 7;    // to start with; "Another day" can go past it
 const MAX_TOTAL    = 30;
@@ -39,6 +39,7 @@ function meetingPrompt(s, me, other, day) {
   }
   lines.push(
     `Write only your next message to ${other.label}. No preamble, no name label. Keep it to a few paragraphs at most.`,
+    UNATTENDED(other.label),
     '', '## How it started', '', s.opener, '',
     ...journalLines(me, day.n - 1),
   );
@@ -55,6 +56,7 @@ function eveningPrompt(s, me, other, day) {
   const lines = [
     `You are ${me.label}. Day ${day.n}'s meeting with ${other.label} is over and you are home, alone. This folder is yours: anything you left here on earlier evenings is still here. Nobody else sees what you do here, and ${other.label} never will.`,
     `Spend the evening as you like: think, read, write notes, make something. Then reply with your journal entry for today: what happened, what you make of it now, what you want to bring to tomorrow. Your reply is only the journal entry. Tomorrow you will have this journal and this folder, not the transcript.`,
+    UNATTENDED(),
     '', '## How it started', '', s.opener, '',
     ...journalLines(me, day.n - 1),
     `## Today's meeting`, '',
@@ -102,8 +104,9 @@ function createStories({ loadConfig, fill, stamp, dir }) {
   }
 
   // Run steps until the days are spent, the user stops it, or an agent fails.
-  // A failed step is run once more first, as in /talk.
-  function next(s, retry = false) {
+  // A failed step is run once more first, as in /talk, with the reason added
+  // to its prompt. `retry` is { why, note } on that second run.
+  function next(s, retry = null) {
     if (s.stopRequested) { s.status = 'stopped'; s.current = null; return; }
     const st = step(s);
     if (!st) { s.status = 'done'; s.current = null; save(s); return; }
@@ -112,9 +115,10 @@ function createStories({ loadConfig, fill, stamp, dir }) {
 
     const base = path.join(s.dir, 'steps', st.file);
     fs.mkdirSync(path.dirname(base), { recursive: true });
-    fs.writeFileSync(base + '.prompt.md', st.prompt);
-    const [cmd, ...args] = fill(st.me.headless, st.prompt);
-    const cur = { kind: st.kind, day: st.day.n, agent: st.me.id, label: st.me.label, started: Date.now(), out: '', err: '', retry };
+    const prompt = retry ? `${st.prompt}\n${retryNote(retry.why, retry.note)}` : st.prompt;
+    fs.writeFileSync(base + (retry ? '.retry' : '') + '.prompt.md', prompt);
+    const [cmd, ...args] = fill(st.me.headless, prompt);
+    const cur = { kind: st.kind, day: st.day.n, agent: st.me.id, label: st.me.label, started: Date.now(), out: '', err: '', retry: !!retry };
     s.current = cur;
     s.status = 'running';
 
@@ -138,7 +142,7 @@ function createStories({ loadConfig, fill, stamp, dir }) {
         const tail = stripAnsi(cur.err).trim().split('\n').slice(-5).join('\n');
         if (!retry && !cur.spawnError && !cur.timedOut) {
           console.warn(`  ↻ ${s.id} ${st.me.id}: ${why}, retrying`);
-          s.retryTimer = setTimeout(() => next(s, true), RETRY_DELAY);
+          s.retryTimer = setTimeout(() => next(s, { why, note: failureNote(cur.err) }), RETRY_DELAY);
           return;
         }
         return fail(s, `${st.me.label}: ${why}${tail ? `\n${tail}` : ''}`);
