@@ -25,13 +25,15 @@ test.beforeAll(async () => {
       { id: 'b', label: 'Agent B', headless: fake('b', 'Hello from B') },
       // Prints half a reply, then waits: long enough to be seen live and stopped.
       { id: 'slow', label: 'Slow', headless: ['sh', '-c', `printf 'thinking about it'; sleep 30; echo done`] },
+      // Fails its first run in a folder, then works: a one-off backend error.
+      { id: 'flaky', label: 'Flaky', headless: ['sh', '-c', 'if [ -f tried ]; then echo "Second try"; else touch tried; echo "NOT_FOUND" >&2; exit 3; fi'] },
       { id: 'bad', label: 'Bad', headless: ['sh', '-c', 'echo "no credits" >&2; exit 3'] },
       { id: 'term', label: 'Terminal only', interactive: ['true', '{prompt}'] },
       { id: 'web', label: 'Web', type: 'url', url: 'https://example.com/?q={prompt}' },
     ],
   }));
   server = spawn('node', [path.join(__dirname, '..', 'server.js')], {
-    env: { ...process.env, AGENT_DISPATCH_PORT: String(PORT), AGENT_DISPATCH_HOME: home },
+    env: { ...process.env, AGENT_DISPATCH_PORT: String(PORT), AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' },
     stdio: ['ignore', 'pipe', 'inherit'],
   });
   await new Promise((resolve, reject) => {
@@ -62,7 +64,7 @@ const talkDir = async page => (await page.locator('#status').textContent()).matc
 test('only agents with a headless command can be picked', async ({ page }) => {
   await page.goto(BASE + '/talk');
   const ids = await page.locator('#a option').evaluateAll(os => os.map(o => /** @type {HTMLOptionElement} */ (o).value));
-  expect(ids).toEqual(['a', 'b', 'slow', 'bad']);
+  expect(ids).toEqual(['a', 'b', 'slow', 'flaky', 'bad']);
 });
 
 test('two agents take turns, and each sees the conversation so far', async ({ page }) => {
@@ -79,6 +81,7 @@ test('two agents take turns, and each sees the conversation so far', async ({ pa
   expect(b).toContain(`## Opener\n\n${NASTY}\n`);
   expect(b.match(/### Agent [AB]/g)).toEqual(['### Agent A', '### Agent B', '### Agent A']);
   expect(fs.existsSync(path.join(dir, 'pwned'))).toBe(false);
+  expect(fs.readFileSync(path.join(dir, 'turns', '04-b.prompt.md'), 'utf8')).toBe(b);
 
   const transcript = fs.readFileSync(path.join(dir, 'transcript.md'), 'utf8');
   expect(transcript.match(/^## (Agent [AB])$/gm)).toEqual(['## Agent A', '## Agent B', '## Agent A', '## Agent B']);
@@ -113,12 +116,34 @@ test('a failing agent stops the conversation with its error', async ({ page }) =
   await expect(page.locator('#status')).toContainText('Bad: exit 3');
   await expect(page.locator('#status')).toContainText('no credits');
   await expect(page.locator('#chat .m.a')).toHaveCount(1);
+  expect(fs.readFileSync(path.join(await talkDir(page), 'turns', '02-bad.stderr.txt'), 'utf8')).toBe('no credits\n');
+});
+
+test('a failed turn is run once more before the conversation stops', async ({ page }) => {
+  await begin(page, 'flaky', 'a', 2);
+  await expect(page.locator('#status')).toContainText('done');
+  await expect(page.locator('#chat .m:not(.opener) .text')).toHaveText(['Second try', 'Hello from A']);
+  expect(fs.readFileSync(path.join(await talkDir(page), 'turns', '01-flaky.stderr.txt'), 'utf8')).toBe('NOT_FOUND\n');
 });
 
 test('an agent can talk to itself', async ({ page }) => {
   await begin(page, 'a', 'a', 2);
   await expect(page.locator('#status')).toContainText('done');
   await expect(page.locator('#chat .m .who b')).toHaveText(['Opener', 'Agent A (1)', 'Agent A (2)']);
+});
+
+test('Save and clear writes finished conversations to one folder and empties the page', async ({ page }) => {
+  await begin(page, 'a', 'b', 2, 'Topic to save');
+  await expect(page.locator('#status')).toContainText('done');
+  await page.locator('#clear').click();
+  await expect(page.locator('#saved')).toContainText(`Saved`);
+  await expect(page.locator('#setup')).toBeVisible();
+  await expect(page.locator('#talks')).toHaveText('None yet.');
+  await expect(page.locator('#clear')).toBeHidden();
+  const dir = path.join(home, 'conversations');
+  const file = fs.readdirSync(dir).map(f => path.join(dir, f)).find(f => fs.readFileSync(f, 'utf8').includes('Topic to save'));
+  expect(path.basename(file)).toMatch(/-agent-a-agent-b\.md$/);
+  expect(fs.readFileSync(file, 'utf8')).toMatch(/## Agent A\n\nHello from A\n\n## Agent B\n\nHello from B/);
 });
 
 test('the API needs the token and two agents', async ({ request }) => {
