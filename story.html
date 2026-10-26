@@ -107,6 +107,21 @@
   .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
   @keyframes pulse { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
 
+  /* The cast: heads nod to each agent's icon; bodies are stacked layers of weights,
+     indigo near zero to white for large values (after Ethan Mollick's WEIGHTS covers). */
+  #stage { display: flex; justify-content: center; align-items: flex-end; gap: 72px; padding: 18px 20px 0; }
+  .fig { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 12px; color: var(--muted); }
+  .fig svg { width: 84px; height: auto; color: var(--text); overflow: visible; }
+  .fig.on { color: var(--text); font-weight: 600; }
+  .fig.on .who-body { animation: bob 1.4s ease-in-out infinite; }
+  .fig.antigravity .who-body { animation: float 3.2s ease-in-out infinite; }
+  .fig.antigravity.on .who-body { animation: float 1.4s ease-in-out infinite; }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @media (prefers-reduced-motion: reduce) { .fig .who-body { animation: none !important; } }
+  .av svg { width: 32px; height: 32px; }
+  .m .av.drawn { background: none !important; color: var(--text); }
+
   #status { max-width: 820px; width: 100%; margin: 0 auto; padding: 0 20px 8px 62px; font-size: 12px; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
   #controls { position: sticky; bottom: 0; background: linear-gradient(transparent, var(--bg) 20%); padding: 12px 20px 16px; }
   #controls .row { max-width: 820px; margin: 0 auto; display: flex; gap: 8px; align-items: center; }
@@ -126,6 +141,12 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <linearGradient id="arch" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#3b6fe0"/><stop offset=".4" stop-color="#2fa866"/>
+    <stop offset=".7" stop-color="#e9b32a"/><stop offset="1" stop-color="#e0533f"/>
+  </linearGradient>
+</svg>
 <aside>
   <div class="top">
     <div class="brand">Agents story</div>
@@ -169,6 +190,7 @@
       <span class="sp"></span>
       <button id="copy" type="button">Copy story</button>
     </header>
+    <div id="stage" aria-hidden="true"></div>
     <div id="chat"></div>
     <div id="status"></div>
     <div id="controls">
@@ -247,9 +269,86 @@ function msg(text, err) { $('msg').textContent = text; $('msg').className = err 
 
 const initials = label => (label.match(/\b[A-Za-z0-9]/g) || ['?']).slice(0, 2).join('').toUpperCase();
 
-function message(cls, who, html, extra = '', avatar = initials(who)) {
-  return `<div class="m ${cls}"><div class="av" aria-hidden="true">${esc(avatar)}</div>`
+// avatar is HTML: initials by default, or a drawn head (face()).
+function message(cls, who, html, extra = '', avatar = esc(initials(who))) {
+  const drawn = avatar.startsWith('<svg') ? ' drawn' : '';
+  return `<div class="m ${cls}"><div class="av${drawn}" aria-hidden="true">${avatar}</div>`
     + `<div class="body"><div class="who"><b>${esc(who)}</b>${extra}</div><div class="text">${html}</div></div></div>`;
+}
+
+// The cast. Heads are loose nods to each agent's icon, not the logos. Bodies are
+// stacked layers of weights: indigo near zero, white for large values, after the
+// covers of Ethan Mollick's WEIGHTS books. Any other agent gets its initials on
+// a layered body.
+const kind = id => /claude/i.test(id) ? 'claude' : /antigravity|agy/i.test(id) ? 'antigravity' : 'plain';
+const RAYS = [[114, 60], [98, 82], [87, 107], [60, 104], [33, 107], [22, 82], [6, 60], [22, 38], [33, 13], [60, 16], [87, 13], [98, 38]];
+
+function head(id, label, dot) {
+  if (kind(id) === 'claude') return `<g stroke="#d97757" stroke-width="11" stroke-linecap="round">`
+    + RAYS.map(([x, y]) => `<line x1="60" y1="60" x2="${x}" y2="${y}"/>`).join('') + `</g>`
+    + `<circle cx="60" cy="60" r="29" fill="#d97757"/><ellipse cx="50" cy="56" rx="4" ry="6" fill="#faf9f5"/>`
+    + `<ellipse cx="70" cy="56" rx="4" ry="6" fill="#faf9f5"/>`
+    + `<path d="M51 70Q60 77 69 70" stroke="#faf9f5" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  if (kind(id) === 'antigravity')
+    return `<path d="M22 102C30 58 44 20 60 20C76 20 90 58 98 102" stroke="url(#arch)" stroke-width="22" fill="none" stroke-linecap="round"/>`
+    + `<ellipse cx="51" cy="66" rx="4" ry="6" fill="currentColor"/><ellipse cx="69" cy="66" rx="4" ry="6" fill="currentColor"/>`
+    + `<path d="M53 80Q60 85 67 80" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  return `<circle cx="60" cy="60" r="44" style="fill:var(${dot})"/>`
+    + `<text x="60" y="72" text-anchor="middle" font-size="34" font-weight="700" fill="#fff" font-family="sans-serif">${esc(initials(label))}</text>`;
+}
+
+const face = (id, label) => kind(id) === 'plain' ? esc(initials(label)) : `<svg viewBox="0 0 120 120">${head(id, label)}</svg>`;
+
+// The same agent id always draws the same weights.
+function weights(id, n) {
+  let s = [...id].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261) >>> 0;
+  const rnd = () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(s ^ (s >>> 15), s | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 2 ** 32;
+  };
+  return Array.from({ length: n }, () => {
+    const m = Math.min(1, (Math.abs(rnd() + rnd() + rnd() - 1.5) / 1.2) ** 1.6);
+    return `rgb(${[30, 27, 75].map((v, k) => Math.round(v + ([238, 240, 255][k] - v) * m))})`;
+  });
+}
+
+// One standing figure, 200 x 380, feet on y 370. Antigravity floats: its layers
+// drift apart and its shadow stays on the ground.
+function figure(a, dot) {
+  const k = kind(a.id), floats = k === 'antigravity';
+  const gap = floats ? 10 : 3, top = floats ? 138 : 186, headY = floats ? 0 : 60;
+  const dx = floats ? [-8, 10, -6, 8, 0] : [0, 6, -4, 3, -2], rot = floats ? [-4, 3, -2, 4, -1] : [0, 0, 0, 0, 0];
+  const spine = k === 'claude' ? 'fill="#b85c3e"' : floats ? 'fill="#3b6fe0"' : `style="fill:var(${dot})"`;
+  const cells = weights(a.id, 5 * 51);
+  const slabs = dx.map((x, i) => {
+    const y = top + i * (28 + gap);
+    const grid = cells.slice(i * 51, i * 51 + 51)
+      .map((c, j) => `<rect x="${35 + (j % 17) * 8}" y="${y + 4 + Math.floor(j / 17) * 7}" width="7" height="6" fill="${c}"/>`).join('');
+    return `<g transform="translate(${x} 0) rotate(${rot[i]} 100 ${y + 14})"><rect x="25" y="${y}" width="150" height="28" rx="4" fill="#1e1b4b"/>`
+      + `<rect x="25" y="${y}" width="6" height="28" rx="2" ${spine}/>${grid}</g>`;
+  }).join('');
+  const armY = top + 28 + gap + 14, legY = top + 5 * 28 + 4 * gap, lift = floats ? -12 : 8;
+  return `<svg viewBox="0 0 200 380"><ellipse cx="100" cy="372" rx="${floats ? 40 : 65}" ry="${floats ? 4 : 6}" fill="currentColor" opacity="${floats ? .09 : .16}"/>`
+    + `<g class="who-body"><g transform="translate(40 ${headY})">${head(a.id, a.label, dot)}</g>`
+    + (floats ? `<g stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity=".45"><line x1="86" y1="124" x2="86" y2="130"/><line x1="100" y1="122" x2="100" y2="132"/><line x1="114" y1="124" x2="114" y2="130"/></g>` : '')
+    + `<g stroke="currentColor" stroke-width="8" stroke-linecap="round"><line x1="22" y1="${armY}" x2="4" y2="${armY + lift}"/><line x1="178" y1="${armY}" x2="196" y2="${armY + lift}"/></g>`
+    + slabs
+    + `<rect x="74" y="${legY}" width="10" height="${floats ? 22 : 30}" rx="4" fill="currentColor"/><rect x="116" y="${legY}" width="10" height="${floats ? 22 : 30}" rx="4" fill="currentColor"/>`
+    + `</g></svg>`;
+}
+
+// Drawn once per pair, so the animations don't restart on every poll; the agent
+// whose turn it is gets .on.
+function stage(s) {
+  const key = s.agents.map(a => a.id).join('\n');
+  if ($('stage').dataset.key !== key) {
+    $('stage').dataset.key = key;
+    $('stage').innerHTML = s.agents.map((a, i) =>
+      `<div class="fig ${kind(a.id)}" data-id="${esc(a.id)}">${figure(a, i ? '--b-dot' : '--a-dot')}<span>${esc(a.label)}</span></div>`).join('');
+  }
+  for (const f of $('stage').children) f.classList.toggle('on', f.dataset.id === s.current?.agent);
 }
 
 const typing = '<span class="typing"><i></i><i></i><i></i></span>';
@@ -261,23 +360,25 @@ function render(s) {
   const cur = s.current;
   const live = () => message(`${side(cur.agent)} live`, cur.kind === 'evening' ? `${cur.label}'s journal` : cur.label,
     cur.text.trim() ? md(cur.text) : typing,
-    `<span class="s-running">${cur.retry ? 'retrying' : cur.kind === 'evening' ? 'at home' : 'writing'} · ${cur.seconds}s</span>`);
+    `<span class="s-running">${cur.retry ? 'retrying' : cur.kind === 'evening' ? 'at home' : 'writing'} · ${cur.seconds}s</span>`,
+    face(cur.agent, cur.label));
   const nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 120;
   const parts = [message('opener', 'How it started', md(s.opener), '', '✎')];
   for (const d of s.days) {
     parts.push(`<h2 class="day">Day ${d.n}</h2>`);
     parts.push(...d.turns.map(m => m.user ? message('you', m.label, md(m.text))
-                                         : message(side(m.agent), m.label, md(m.text), `<span>${m.seconds}s</span>`)));
+                                         : message(side(m.agent), m.label, md(m.text), `<span>${m.seconds}s</span>`, face(m.agent, m.label))));
     if (cur?.day === d.n && cur.kind === 'meeting') parts.push(live());
     if (d.journals.length || (cur?.day === d.n && cur.kind === 'evening')) {
       parts.push(`<h2 class="day">Day ${d.n}, evening <span>each one alone; the other never reads this</span></h2>`);
-      parts.push(...d.journals.map(j => message(`${side(j.agent)} journal`, `${j.label}'s journal`, md(j.text))));
+      parts.push(...d.journals.map(j => message(`${side(j.agent)} journal`, `${j.label}'s journal`, md(j.text), '', face(j.agent, j.label))));
       if (cur?.day === d.n && cur.kind === 'evening') parts.push(live());
     }
   }
   parts.push(...s.queued.map(text => message('you', 'You', md(text),
     `<span>${cur?.kind === 'meeting' ? 'after this reply' : 'at the next meeting'}</span>`)));
   $('chat').innerHTML = parts.join('');
+  stage(s);
 
   const running = s.status === 'running';
   $('pair').innerHTML = s.agents.map(a => esc(a.label)).join(' <span class="muted">&amp;</span> ');

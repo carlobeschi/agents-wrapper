@@ -23,6 +23,8 @@ test.beforeAll(async () => {
     agents: [
       { id: 'a', label: 'Agent A', headless: fake('a') },
       { id: 'b', label: 'Agent B', headless: fake('b') },
+      { id: 'claude', label: 'Claude Code', headless: fake('claude') },
+      { id: 'antigravity', label: 'Antigravity CLI', headless: fake('antigravity') },
       { id: 'slow', label: 'Slow', headless: ['sh', '-c', `printf 'thinking about it'; sleep 30; echo done`] },
       { id: 'bad', label: 'Bad', headless: ['sh', '-c', 'echo "no credits" >&2; exit 3'] },
     ],
@@ -92,6 +94,20 @@ test('they meet, go home and write a journal, and meet again the next day', asyn
     '## Day 1', '### Agent A', '### Agent B', '## Day 1, evening', "### Agent A's journal", "### Agent B's journal",
     '## Day 2', '### Agent B', '### Agent A', '## Day 2, evening', "### Agent A's journal", "### Agent B's journal",
   ]);
+});
+
+test('Claude and Antigravity are drawn on stage and beside their turns; other agents keep initials', async ({ page }) => {
+  await begin(page, 'claude', 'antigravity', 1, 2);
+  await expect(page.locator('#pill')).toHaveText('done');
+  await expect(page.locator('#stage .fig')).toHaveCount(2);
+  await expect(page.locator('#stage .fig.claude')).toContainText('Claude Code');
+  await expect(page.locator('#stage .fig.antigravity')).toContainText('Antigravity CLI');
+  await expect(page.locator('#chat .m.a .av.drawn svg').first()).toBeVisible();
+  await expect(page.locator('#chat .m.b .av.drawn svg').first()).toBeVisible();
+
+  await begin(page, 'a', 'b', 1, 1);
+  await expect(page.locator('#stage .fig.plain')).toHaveCount(2);
+  await expect(page.locator('#chat .m.a .av').first()).toHaveText('AA');
 });
 
 test('a message sent after the day ends reaches the next meeting, and Another day adds one', async ({ page }) => {

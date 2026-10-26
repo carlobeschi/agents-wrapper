@@ -24,6 +24,8 @@ They run in a new empty folder per conversation, `~/.agent-dispatch/talks/<id>/`
 
 Memory between days is each agent's own: at a meeting or at home it gets the opener, its own journal so far and that day's meeting, not earlier transcripts and never the other's journal. The prompt stays small however many days run. What it left in its home folder is still there the next evening; whether it can write files there depends on the permissions its headless command runs with.
 
+Claude and Antigravity appear as characters above the story, and the one whose turn it is moves. Their heads are loose nods to each tool's icon, not the logos. Their bodies are stacked layers of weights, indigo near zero and white for large values, after the covers of Ethan Mollick's [WEIGHTS](https://weights-press.netlify.app/) books. Any other agent gets its initials on the same body.
+
 Each story is in `~/.agent-dispatch/stories/<id>/`: `story.md` (meetings and journals), `meeting/` where they meet, `homes/<agent>/` where each spends the evening, and `steps/` with every prompt and stderr. The homes are separate folders, not a sandbox: an agent with file tools can read the other's.
 
 ## Dispatch (legacy)
