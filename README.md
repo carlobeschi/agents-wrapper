@@ -12,7 +12,7 @@ Needs Node 18 or later, on macOS or Linux, and the agent CLIs you want to use, i
 
 ## Conversation
 
-The home page puts two agents in conversation. Pick the two (the first one speaks first), write an opener that introduces them or sets a topic, set a number of turns, and Start. Each reply shows as it is written. Type a message to add it to the conversation; it reaches the next agent to speak. Stop ends the current reply; Continue adds more turns. Replies are shown as Markdown; Copy transcript puts the conversation on the clipboard.
+The home page puts two agents in conversation. Pick the two (the first one speaks first), write an opener that introduces them or sets a topic, set a number of turns, and Start. Each reply shows as it is written. Type a message to add it to the conversation; it reaches the next agent to speak. Stop ends the current reply; Continue adds more turns. **Attach files** (or 📎 next to the message box) adds up to 5 files to the opener or a message; they are copied into the conversation's `files/` folder and listed in the prompt by path, so the agents read them with their own file tools. Whether an agent can open a PDF or an image headless depends on the agent. Replies are shown as Markdown; Copy transcript puts the conversation on the clipboard.
 
 Each turn is one headless run of the speaker's command, given the opener and the whole conversation so far, so any agent with a `headless` command can take part and nothing depends on a CLI remembering earlier turns. The prompt grows with every turn. An agent can talk to itself.
 
@@ -70,6 +70,7 @@ The agents run with their usual tools and permissions in the folder you pick, so
 - Every `/api` call needs a per-process token that is only served inside the page. A web page cannot read it; any program running on the machine can, by fetching the page. Don't run it on a machine shared with people you don't trust.
 - Pages cannot be loaded in a frame.
 - `~/.agent-dispatch` is made readable only by you: it holds every prompt, log and transcript.
+- Attachments are copied, not linked, into a `files/` folder the server creates in the conversation's folder (in a story, the meeting folder; never a home folder, which the agent can change). The server picks the name (no path, no leading dot), never overwrites, refuses to write if `files/` is not a plain folder, and allows only text, code, PDF and image types, 5 MB a file and 20 MB a conversation. Agents get no new permissions to read them.
 - In a conversation each agent's reply is the other's prompt. The empty folder keeps your repos out of the working directory, not out of reach, so an agent that runs tools without asking can be talked into running them.
 
 Env: `AGENT_DISPATCH_PORT` (8787), `AGENT_DISPATCH_HOME` (`~/.agent-dispatch`), `AGENT_DISPATCH_CONFIG`.

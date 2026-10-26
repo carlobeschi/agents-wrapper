@@ -156,3 +156,27 @@ test('the story API needs the token and two agents', async ({ request }) => {
   expect(r.status()).toBe(400);
   expect((await r.json()).error).toBe('Pick two agents.');
 });
+
+test('a file attached to the opener goes to the meeting folder, never to a home', async ({ page }) => {
+  await page.goto(BASE + '/story');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.locator('#a').selectOption('a');
+  await page.locator('#b').selectOption('b');
+  await page.locator('#days').fill('1');
+  await page.locator('#turns').fill('1');
+  await page.locator('#opener').fill('They read a letter.');
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('#attachOpener').click();
+  await (await chooser).setFiles({ name: 'letter.txt', mimeType: 'text/plain', buffer: Buffer.from('Dear A') });
+  await page.locator('#start').click();
+  await expect(page.locator('#pill')).toHaveText('done');
+  await expect(page.locator('#chat .m.opener .att')).toContainText('files/letter.txt');
+
+  const dir = await storyDir(page);
+  expect(fs.readFileSync(path.join(dir, 'meeting', 'files', 'letter.txt'), 'utf8')).toBe('Dear A');
+  expect(fs.readFileSync(path.join(dir, 'meeting', 'prompt-a.txt'), 'utf8')).toContain('Attached (in this folder): files/letter.txt');
+  const evening = fs.readFileSync(path.join(dir, 'homes', 'a', 'prompt-a.txt'), 'utf8');
+  expect(evening).toContain('Attached (at the meeting, not in this folder): files/letter.txt');
+  expect(fs.existsSync(path.join(dir, 'homes', 'a', 'files'))).toBe(false);
+});

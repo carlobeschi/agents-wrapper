@@ -12,6 +12,7 @@ const crypto = require('crypto');
 const fs     = require('fs');
 const path   = require('path');
 const { spawn } = require('child_process');
+const { parseFiles, saveFiles, withFiles, attachedBytes } = require('./attach');
 
 const MAX_TURNS    = 50;
 const TURN_TIMEOUT = 10 * 60 * 1000;
@@ -69,8 +70,8 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
   const talks = new Map();
 
   const transcript = t => [
-    `# ${t.agents.map(a => a.label).join(' ↔ ')}`, '', `## Opener`, '', t.opener, '',
-    ...t.turns.flatMap(m => [`## ${m.label}`, '', m.text, '']),
+    `# ${t.agents.map(a => a.label).join(' ↔ ')}`, '', `## Opener`, '', withFiles(t.opener, t.files), '',
+    ...t.turns.flatMap(m => [`## ${m.label}`, '', withFiles(m.text, m.files), '']),
   ].join('\n');
 
   function save(t) {
@@ -90,7 +91,8 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
     }
     const spoken = t.turns.filter(m => m.agent).length;
     const me = t.agents[spoken % 2], other = t.agents[(spoken + 1) % 2];
-    const prompt = framing(me.label, other.label, t.opener, t.turns, retry);
+    const prompt = framing(me.label, other.label, withFiles(t.opener, t.files),
+      t.turns.map(m => ({ label: m.label, text: withFiles(m.text, m.files) })), retry);
     // Keep what each turn was sent and what it said on stderr, to rerun a failed turn by hand.
     const base = path.join(t.dir, 'turns', `${String(spoken + 1).padStart(2, '0')}-${me.id.replace(/[^\w-]/g, '_')}`);
     fs.mkdirSync(path.dirname(base), { recursive: true });
@@ -153,15 +155,18 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
     if (agents.some(a => !a)) return [400, { error: 'Unknown agent.' }];
     if (agents.some(a => !a.headless)) return [400, { error: `${agents.find(a => !a.headless).label} has no headless command.` }];
     const turns = Math.min(MAX_TURNS, Math.max(1, Math.floor(Number(body.turns)) || 10));
+    let files;
+    try { files = parseFiles(body.files); } catch (e) { return [400, { error: e.message }]; }
 
     const id = stamp() + '-' + crypto.randomBytes(2).toString('hex');
     const talkDir = path.join(dir, id);
     fs.mkdirSync(talkDir, { recursive: true });
+    const saved = saveFiles(talkDir, files);
     // Same label twice (Claude talking to Claude) would make the transcript unreadable.
     const labels = agents.map(a => a.label || a.id);
     if (labels[0] === labels[1]) { labels[0] += ' (1)'; labels[1] += ' (2)'; }
     const t = {
-      id, dir: talkDir, opener, turns: [], queued: [], turnsLeft: turns, status: 'running',
+      id, dir: talkDir, opener, files: saved, turns: [], queued: [], turnsLeft: turns, status: 'running',
       agents: agents.map((a, i) => ({ id: a.id + (ids[0] === ids[1] ? `#${i + 1}` : ''), label: labels[i], headless: a.headless })),
     };
     talks.set(id, t);
@@ -200,18 +205,20 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
     const t = talks.get(id);
     if (!t) return [404, { error: 'No such conversation.' }];
     const text = typeof body.text === 'string' ? body.text.trim() : '';
-    if (!text) return [400, { error: 'Empty message.' }];
-    const m = { user: true, label: USER, text };
+    let files;
+    try { files = parseFiles(body.files, attachedBytes([t, ...t.turns, ...t.queued])); } catch (e) { return [400, { error: e.message }]; }
+    if (!text && !files.length) return [400, { error: 'Empty message.' }];
+    const m = { user: true, label: USER, text, files: saveFiles(t.dir, files) };
     if (t.current) t.queued.push(m);
     else { t.turns.push(m); save(t); }
     return [200, view(t)];
   }
 
   const view = t => ({
-    id: t.id, dir: t.dir, opener: t.opener, status: t.status, error: t.error, turnsLeft: t.turnsLeft,
+    id: t.id, dir: t.dir, opener: t.opener, files: t.files, status: t.status, error: t.error, turnsLeft: t.turnsLeft,
     agents: t.agents.map(a => ({ id: a.id, label: a.label })),
-    turns: t.turns.map(({ agent, user, label, text, seconds }) => ({ agent, user, label, text, seconds })),
-    queued: t.queued.map(m => m.text),
+    turns: t.turns.map(({ agent, user, label, text, files, seconds }) => ({ agent, user, label, text, files, seconds })),
+    queued: t.queued.map(m => withFiles(m.text, m.files)),
     current: t.current && {
       agent: t.current.agent, label: t.current.label, text: stripAnsi(t.current.out),
       seconds: Math.round((Date.now() - t.current.started) / 1000), retry: t.current.retry,
