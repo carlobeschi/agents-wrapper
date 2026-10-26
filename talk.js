@@ -34,6 +34,20 @@ const UNATTENDED = other => `You run unattended: any tool that needs permission 
 // The first line of stderr worth showing: what the CLI said went wrong.
 const failureNote = err => (stripAnsi(err).split('\n').map(l => l.trim()).find(l => /\w/.test(l)) || '').slice(0, 500);
 
+// The tool a headless CLI refused, if that is why it stopped. Antigravity says
+// 'a tool required the "write_file" permission that headless mode cannot prompt for'.
+function refusedTool(err) {
+  const e = stripAnsi(err || '');
+  const m = e.match(/required the "([^"]+)" permission/);
+  if (m) return m[1];
+  return /auto-denied|permission (was )?denied|cannot prompt for/i.test(e) ? 'a tool' : null;
+}
+
+// What stands in for a turn an agent couldn't take because a tool was refused,
+// so the other agent knows and the conversation goes on.
+const skippedText = (label, tool) =>
+  `(No reply: ${label} tried to use ${tool === 'a tool' ? 'a tool' : `\`${tool}\``}, which needs a permission it can't get here.)`;
+
 // Added to the prompt of a retried turn, so an agent stopped by a refused tool
 // replies in plain text instead of trying the same thing again.
 function retryNote(why, note) {
@@ -123,7 +137,17 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
           t.retryTimer = setTimeout(() => next(t, { why, note: failureNote(cur.err) }), RETRY_DELAY);
           return;
         }
-        return fail(t, `${me.label}: ${why}${tail ? `\n${tail}` : ''}`);
+        // Refused a tool twice: skip the turn with a note and let the other agent
+        // go on, unless the last turn was skipped too, which would go round in circles.
+        const tool = refusedTool(cur.err);
+        const prev = t.turns.filter(m => m.agent).pop();
+        if (!tool || prev?.skipped) return fail(t, `${me.label}: ${why}${tail ? `\n${tail}` : ''}`);
+        console.warn(`  ⤳ ${t.id} ${me.id}: refused ${tool}, turn skipped`);
+        t.turns.push({ agent: me.id, label: me.label, text: skippedText(me.label, tool), skipped: true, seconds: Math.round((Date.now() - cur.started) / 1000) });
+        t.turns.push(...t.queued.splice(0));
+        t.turnsLeft--;
+        save(t);
+        return next(t);
       }
       t.turns.push({ agent: me.id, label: me.label, text, seconds: Math.round((Date.now() - cur.started) / 1000) });
       // Anything the user said while this agent was writing goes after its reply.
@@ -210,7 +234,7 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
   const view = t => ({
     id: t.id, dir: t.dir, opener: t.opener, status: t.status, error: t.error, turnsLeft: t.turnsLeft,
     agents: t.agents.map(a => ({ id: a.id, label: a.label })),
-    turns: t.turns.map(({ agent, user, label, text, seconds }) => ({ agent, user, label, text, seconds })),
+    turns: t.turns.map(({ agent, user, label, text, seconds, skipped }) => ({ agent, user, label, text, seconds, skipped })),
     queued: t.queued.map(m => m.text),
     current: t.current && {
       agent: t.current.agent, label: t.current.label, text: stripAnsi(t.current.out),
@@ -245,4 +269,4 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
   return { start, stop, resume, say, get, list, clear };
 }
 
-module.exports = { createTalks, framing, killTree, stripAnsi, retryNote, failureNote, UNATTENDED };
+module.exports = { createTalks, framing, killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText };

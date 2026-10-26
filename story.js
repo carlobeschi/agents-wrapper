@@ -13,7 +13,7 @@ const crypto = require('crypto');
 const fs     = require('fs');
 const path   = require('path');
 const { spawn } = require('child_process');
-const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED } = require('./talk');
+const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText } = require('./talk');
 
 const MAX_DAYS     = 7;    // to start with; "Another day" can go past it
 const MAX_TOTAL    = 30;
@@ -145,7 +145,17 @@ function createStories({ loadConfig, fill, stamp, dir }) {
           s.retryTimer = setTimeout(() => next(s, { why, note: failureNote(cur.err) }), RETRY_DELAY);
           return;
         }
-        return fail(s, `${st.me.label}: ${why}${tail ? `\n${tail}` : ''}`);
+        // Refused a tool twice: as in /talk, a note stands in for the turn or the
+        // journal entry and the story goes on, unless the last meeting turn was skipped too.
+        const tool = refusedTool(cur.err);
+        const prev = st.day.turns.filter(m => m.agent).pop();
+        if (!tool || (st.kind === 'meeting' && prev?.skipped)) return fail(s, `${st.me.label}: ${why}${tail ? `\n${tail}` : ''}`);
+        console.warn(`  ⤳ ${s.id} day ${st.day.n} ${st.kind} ${st.me.id}: refused ${tool}, skipped`);
+        const seconds = Math.round((Date.now() - cur.started) / 1000);
+        if (st.kind === 'meeting') st.day.turns.push({ agent: st.me.id, label: st.me.label, text: skippedText(st.me.label, tool), skipped: true, seconds });
+        else st.me.journal[st.day.n - 1] = skippedText(st.me.label, tool).replace('No reply', 'No journal entry');
+        save(s);
+        return next(s);
       }
       const seconds = Math.round((Date.now() - cur.started) / 1000);
       if (st.kind === 'meeting') st.day.turns.push({ agent: st.me.id, label: st.me.label, text, seconds });
@@ -245,7 +255,7 @@ function createStories({ loadConfig, fill, stamp, dir }) {
     agents: s.agents.map(a => ({ id: a.id, label: a.label, home: a.home, files: homeFiles(a.home) })),
     days: s.days.map(d => ({
       n: d.n,
-      turns: d.turns.map(({ agent, user, label, text, seconds }) => ({ agent, user, label, text, seconds })),
+      turns: d.turns.map(({ agent, user, label, text, seconds, skipped }) => ({ agent, user, label, text, seconds, skipped })),
       journals: s.agents.filter(a => a.journal[d.n - 1] !== undefined).map(a => ({ agent: a.id, label: a.label, text: a.journal[d.n - 1] })),
     })),
     queued: s.queued.map(m => m.text),

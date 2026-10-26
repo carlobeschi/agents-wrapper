@@ -26,6 +26,8 @@ test.beforeAll(async () => {
       // Prints half a reply, then waits: long enough to be seen live and stopped.
       { id: 'slow', label: 'Slow', headless: ['sh', '-c', `printf 'thinking about it'; sleep 30; echo done`] },
       // Fails its first run in a folder, then works: a one-off backend error.
+      // Always refused, even when told why.
+      { id: 'stuck', label: 'Stuck', headless: ['sh', '-c', 'echo "jetski: no output produced — a tool required the \\"write_file\\" permission that headless mode cannot prompt for" >&2'] },
       // Like agy when a tool is refused: no reply, the reason on stderr. Replies once told why.
       { id: 'denied', label: 'Denied', headless: ['sh', '-c', 'case "$1" in *"Your last attempt failed"*) echo "I could not open it. What is in it?";; *) echo "jetski: no output produced — a tool required the \\"command\\" permission" >&2;; esac', 'x', '{prompt}'] },
       { id: 'flaky', label: 'Flaky', headless: ['sh', '-c', 'if [ -f tried ]; then echo "Second try"; else touch tried; echo "NOT_FOUND" >&2; exit 3; fi'] },
@@ -68,7 +70,7 @@ const talkDir = async page => (await page.locator('#status').textContent()).matc
 test('only agents with a headless command can be picked', async ({ page }) => {
   await page.goto(BASE + '/');
   const ids = await page.locator('#a option').evaluateAll(os => os.map(o => /** @type {HTMLOptionElement} */ (o).value));
-  expect(ids).toEqual(['a', 'b', 'slow', 'denied', 'flaky', 'md', 'bad']);
+  expect(ids).toEqual(['a', 'b', 'slow', 'stuck', 'denied', 'flaky', 'md', 'bad']);
 });
 
 test('two agents take turns, and each sees the conversation so far', async ({ page }) => {
@@ -133,6 +135,22 @@ test('a turn stopped by a refused tool is retried with the reason, and the agent
   expect(first).not.toContain('Your last attempt failed');
   const retry = fs.readFileSync(path.join(dir, 'turns', '01-denied.retry.prompt.md'), 'utf8');
   expect(retry).toContain('It ended with: empty reply — jetski: no output produced — a tool required the "command" permission');
+});
+
+test('an agent refused a tool twice has its turn skipped with a note, and the other carries on', async ({ page }) => {
+  await begin(page, 'stuck', 'a', 3);
+  await expect(page.locator('#pill')).toHaveText('done');
+  await expect(page.locator('#chat .m.skipped .text')).toHaveText(['(No reply: Stuck tried to use write_file, which needs a permission it can\'t get here.)', '(No reply: Stuck tried to use write_file, which needs a permission it can\'t get here.)']);
+  await expect(page.locator('#chat .m.b .text')).toHaveText(['Hello from A']);
+  const a = fs.readFileSync(path.join(await talkDir(page), 'prompt-a.txt'), 'utf8');
+  expect(a).toContain('### Stuck\n\n(No reply: Stuck tried to use `write_file`');
+});
+
+test('two skipped turns in a row stop the conversation', async ({ page }) => {
+  await begin(page, 'stuck', 'stuck', 4);
+  await expect(page.locator('#pill')).toHaveText('failed');
+  await expect(page.locator('#chat .m.skipped')).toHaveCount(1);
+  await expect(page.locator('#status')).toContainText('write_file');
 });
 
 test('a failed turn is run once more before the conversation stops', async ({ page }) => {
