@@ -27,6 +27,8 @@ test.beforeAll(async () => {
       { id: 'slow', label: 'Slow', headless: ['sh', '-c', `printf 'thinking about it'; sleep 30; echo done`] },
       // Fails its first run in a folder, then works: a one-off backend error.
       { id: 'flaky', label: 'Flaky', headless: ['sh', '-c', 'if [ -f tried ]; then echo "Second try"; else touch tried; echo "NOT_FOUND" >&2; exit 3; fi'] },
+      // Markdown, plus HTML that must stay text.
+      { id: 'md', label: 'Marker', headless: ['sh', '-c', `printf '%s\n' '**Bold** and \`code\`' '' '- one' '- two' '' '<img src=x onerror="document.title=1">'`] },
       { id: 'bad', label: 'Bad', headless: ['sh', '-c', 'echo "no credits" >&2; exit 3'] },
       { id: 'term', label: 'Terminal only', interactive: ['true', '{prompt}'] },
       { id: 'web', label: 'Web', type: 'url', url: 'https://example.com/?q={prompt}' },
@@ -48,7 +50,7 @@ test.afterAll(() => {
 });
 
 async function begin(page, a, b, turns, opener = NASTY) {
-  await page.goto(BASE + '/talk');
+  await page.goto(BASE + '/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.locator('#a').selectOption(a);
@@ -62,9 +64,9 @@ async function begin(page, a, b, turns, opener = NASTY) {
 const talkDir = async page => (await page.locator('#status').textContent()).match(/· (\/\S+)$/m)[1];
 
 test('only agents with a headless command can be picked', async ({ page }) => {
-  await page.goto(BASE + '/talk');
+  await page.goto(BASE + '/');
   const ids = await page.locator('#a option').evaluateAll(os => os.map(o => /** @type {HTMLOptionElement} */ (o).value));
-  expect(ids).toEqual(['a', 'b', 'slow', 'flaky', 'bad']);
+  expect(ids).toEqual(['a', 'b', 'slow', 'flaky', 'md', 'bad']);
 });
 
 test('two agents take turns, and each sees the conversation so far', async ({ page }) => {
@@ -126,6 +128,24 @@ test('a failed turn is run once more before the conversation stops', async ({ pa
   expect(fs.readFileSync(path.join(await talkDir(page), 'turns', '01-flaky.stderr.txt'), 'utf8')).toBe('NOT_FOUND\n');
 });
 
+test('replies are formatted as Markdown and never as HTML', async ({ page }) => {
+  await begin(page, 'md', 'a', 1);
+  await expect(page.locator('#pill')).toHaveText('done');
+  const reply = page.locator('#chat .m.a .text');
+  await expect(reply.locator('strong')).toHaveText('Bold');
+  await expect(reply.locator('code')).toHaveText('code');
+  await expect(reply.locator('li')).toHaveText(['one', 'two']);
+  await expect(reply.locator('img')).toHaveCount(0);
+  await expect(reply).toContainText('<img src=x onerror="document.title=1">');
+});
+
+test('the home page is the conversation page, and dispatch moved to /dispatch', async ({ page }) => {
+  await page.goto(BASE + '/');
+  await expect(page.locator('#setup h1')).toHaveText('New conversation');
+  await page.locator('a[href="/dispatch"]').click();
+  await expect(page.locator('h1')).toHaveText('Agent dispatch');
+});
+
 test('an agent can talk to itself', async ({ page }) => {
   await begin(page, 'a', 'a', 2);
   await expect(page.locator('#status')).toContainText('done');
@@ -138,7 +158,7 @@ test('Save and clear writes finished conversations to one folder and empties the
   await page.locator('#clear').click();
   await expect(page.locator('#saved')).toContainText(`Saved`);
   await expect(page.locator('#setup')).toBeVisible();
-  await expect(page.locator('#talks')).toHaveText('None yet.');
+  await expect(page.locator('#talks')).toHaveText('No conversations yet.');
   await expect(page.locator('#clear')).toBeHidden();
   const dir = path.join(home, 'conversations');
   const file = fs.readdirSync(dir).map(f => path.join(dir, f)).find(f => fs.readFileSync(f, 'utf8').includes('Topic to save'));

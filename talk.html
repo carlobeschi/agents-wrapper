@@ -4,102 +4,177 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="dispatch-token" content="__DISPATCH_TOKEN__">
-<title>Agent conversation</title>
+<title>Agents talk</title>
 <style>
   :root {
-    --bg: #f7f7f5; --panel: #fff; --text: #1d1d1b; --muted: #6b6b66; --line: #ddddd8;
+    --bg: #f6f6f3; --panel: #fff; --side: #efefeb; --text: #1d1d1b; --muted: #6b6b66; --line: #e0e0da;
     --accent: #2f5bd3; --ok: #237a3b; --bad: #b3261e; --run: #a86b00;
-    --a: #eef2fd; --b: #f2f7ee; --you: #fbf4e6;
-    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --a: #eef2fd; --a-dot: #3d63d6; --b: #eef6ea; --b-dot: #2f8a4a; --you: #fbf3e2; --you-dot: #b07a12;
+    --code: #f0f0ec;
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #161615; --panel: #1f1f1e; --text: #ececea; --muted: #9a9a94; --line: #34342f;
+    :root { --bg: #151514; --panel: #1e1e1d; --side: #1a1a19; --text: #ececea; --muted: #9a9a94; --line: #30302c;
             --accent: #7c9cff; --ok: #6cc785; --bad: #ff8a80; --run: #e8b04a;
-            --a: #1f2638; --b: #1f2a1f; --you: #2e2818; }
+            --a: #1d2436; --a-dot: #7c9cff; --b: #1c281d; --b-dot: #6cc785; --you: #2c2617; --you-dot: #e8b04a;
+            --code: #262624; }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); }
-  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
-  header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 16px; }
-  h1 { font-size: 18px; margin: 0; }
-  h2 { font-size: 14px; margin: 28px 0 8px; color: var(--muted); font-weight: 600; }
-  a { color: var(--accent); font-size: 13px; }
-  textarea { width: 100%; min-height: 120px; padding: 12px; font: 14px/1.5 ui-monospace, Menlo, monospace;
-             background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
-  textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
-  select, input[type=number], input[type=text] { padding: 7px 10px; font: inherit; font-size: 14px; background: var(--panel); color: var(--text);
-                 border: 1px solid var(--line); border-radius: 6px; }
-  input[type=number] { width: 70px; }
-  input[type=text] { flex: 1; min-width: 200px; }
-  label.opt { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: 14px; }
-  button { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; font: inherit; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); display: grid; grid-template-columns: 270px 1fr; }
+  [hidden] { display: none !important; }
+  button { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text);
+           cursor: pointer; font: inherit; font-size: 14px; }
+  button:hover:not(:disabled) { border-color: var(--muted); }
   button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
   button:disabled { opacity: .5; cursor: default; }
-  .linkish { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; font-size: 13px; }
-  #msg { margin-top: 10px; font-size: 13px; color: var(--muted); white-space: pre-wrap; }
+  .icon { padding: 6px 10px; }
+  select, input[type=number], input[type=text], textarea {
+    padding: 8px 10px; font: inherit; font-size: 14px; background: var(--panel); color: var(--text);
+    border: 1px solid var(--line); border-radius: 8px; }
+  textarea:focus, input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .muted { color: var(--muted); }
   .err { color: var(--bad) !important; }
 
-  #chat { display: flex; flex-direction: column; gap: 10px; }
-  .m { max-width: 82%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); }
-  .m .who { font-size: 12px; color: var(--muted); margin-bottom: 4px; display: flex; gap: 8px; }
-  .m .who b { color: var(--text); font-weight: 600; }
-  .m .text { white-space: pre-wrap; overflow-wrap: anywhere; }
-  .m.a { align-self: flex-start; background: var(--a); }
-  .m.b { align-self: flex-end; background: var(--b); }
-  .m.you { align-self: center; background: var(--you); max-width: 70%; }
-  .m.opener { align-self: stretch; max-width: none; background: var(--panel); }
-  .m.live .text:empty::after { content: "…"; color: var(--muted); }
-  .m.live { border-style: dashed; }
-  .status { font-size: 13px; color: var(--muted); margin-top: 12px; white-space: pre-wrap; }
-  .s-running { color: var(--run); } .s-done { color: var(--ok); } .s-failed { color: var(--bad); }
-  #controls { position: sticky; bottom: 0; background: var(--bg); padding: 8px 0 12px; border-top: 1px solid var(--line); margin-top: 16px; }
-  .talk { font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--line); cursor: pointer; display: flex; gap: 10px; }
-  .talk:hover { color: var(--accent); }
-  .talk .o { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
-  [hidden] { display: none !important; }
+  /* Sidebar: conversations */
+  aside { background: var(--side); border-right: 1px solid var(--line); display: flex; flex-direction: column; height: 100vh;
+          position: sticky; top: 0; }
+  aside .top { padding: 16px 14px 10px; display: flex; flex-direction: column; gap: 12px; }
+  aside .brand { font-weight: 700; font-size: 15px; }
+  #talks { flex: 1; overflow: auto; padding: 0 8px; }
+  .talk { padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; margin-bottom: 2px; }
+  .talk:hover { background: var(--panel); }
+  .talk.on { background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+  .talk .t1 { display: flex; gap: 6px; align-items: center; font-weight: 600; }
+  .talk .t2 { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--muted); }
+  .dot.running { background: var(--run); animation: pulse 1.2s infinite; } .dot.done { background: var(--ok); }
+  .dot.failed { background: var(--bad); }
+  aside .bottom { padding: 10px 14px 14px; border-top: 1px solid var(--line); font-size: 12px; display: flex; flex-direction: column; gap: 8px; }
+  aside .bottom a { color: var(--muted); }
+  #saved { overflow-wrap: anywhere; }
+  .hint { font-size: 12px; color: var(--muted); padding: 4px 10px; }
+
+  /* Main */
+  main { min-width: 0; display: flex; flex-direction: column; min-height: 100vh; }
+  .menu { display: none; }
+
+  #setup { max-width: 640px; width: 100%; margin: 8vh auto 0; padding: 0 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .card h1 { font-size: 18px; margin: 0 0 16px; }
+  .pair { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
+  .pair label { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+  .pair select { width: 100%; }
+  #swap { margin-top: 18px; }
+  #opener { width: 100%; min-height: 140px; margin-top: 14px; resize: vertical; line-height: 1.5; }
+  .go { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 12px; }
+  .go label { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+  input[type=number] { width: 72px; }
+  #msg { margin-top: 10px; font-size: 13px; color: var(--muted); white-space: pre-wrap; }
+
+  #view { display: flex; flex-direction: column; flex: 1; min-height: 100vh; }
+  header.bar { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--line);
+               background: var(--bg); position: sticky; top: 0; z-index: 2; flex-wrap: wrap; }
+  header.bar .who { font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .pill { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
+  .s-running { color: var(--run); } .s-done { color: var(--ok); } .s-failed { color: var(--bad); } .s-stopped { color: var(--muted); }
+  #progress { font-size: 13px; color: var(--muted); }
+  header.bar .sp { flex: 1; }
+
+  #chat { max-width: 820px; width: 100%; margin: 0 auto; padding: 20px 20px 8px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+  .m { display: grid; grid-template-columns: 32px 1fr; gap: 10px; }
+  .av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff; }
+  .m.a .av { background: var(--a-dot); } .m.b .av { background: var(--b-dot); } .m.you .av { background: var(--you-dot); }
+  .m.opener .av { background: var(--muted); }
+  .m .body { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; min-width: 0; }
+  .m.a .body { background: var(--a); } .m.b .body { background: var(--b); } .m.you .body { background: var(--you); }
+  .m .who { font-size: 12px; color: var(--muted); margin-bottom: 2px; display: flex; gap: 8px; align-items: baseline; }
+  .m .who b { color: var(--text); font-size: 13px; }
+  .m.live .body { border-style: dashed; }
+  .text { overflow-wrap: anywhere; }
+  .text > :first-child { margin-top: 0; } .text > :last-child { margin-bottom: 0; }
+  .text p, .text ul, .text ol, .text pre, .text blockquote { margin: 0 0 .6em; }
+  .text ul, .text ol { padding-left: 1.4em; }
+  .text h4 { margin: .8em 0 .3em; font-size: 15px; }
+  .text code { background: var(--code); padding: 1px 4px; border-radius: 4px; font: 13px ui-monospace, Menlo, monospace; }
+  .text pre { background: var(--code); padding: 10px 12px; border-radius: 8px; overflow: auto; }
+  .text pre code { background: none; padding: 0; }
+  .text blockquote { border-left: 3px solid var(--line); padding-left: 10px; color: var(--muted); }
+  .typing { display: inline-flex; gap: 3px; } .typing i { width: 5px; height: 5px; border-radius: 50%; background: var(--run); animation: pulse 1.2s infinite; }
+  .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+  @keyframes pulse { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+
+  #status { max-width: 820px; width: 100%; margin: 0 auto; padding: 0 20px 8px 62px; font-size: 12px; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+  #controls { position: sticky; bottom: 0; background: linear-gradient(transparent, var(--bg) 20%); padding: 12px 20px 16px; }
+  #controls .row { max-width: 820px; margin: 0 auto; display: flex; gap: 8px; align-items: center; }
+  #say { flex: 1; min-width: 0; }
+  #more { display: inline-flex; gap: 6px; align-items: center; }
+  #moreTurns { width: 60px; }
+
+  @media (max-width: 760px) {
+    body { grid-template-columns: 1fr; }
+    aside { position: fixed; inset: 0 auto 0 0; width: 280px; z-index: 5; transform: translateX(-100%); transition: transform .2s; }
+    body.nav aside { transform: none; box-shadow: 0 0 0 100vmax rgba(0,0,0,.3); }
+    .menu { display: inline-block; }
+    #setup .menu { margin-bottom: 12px; }
+    #status { padding-left: 20px; }
+    #controls .row { flex-wrap: wrap; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <header><h1>Agent conversation</h1><a href="/">Dispatch</a></header>
+<aside>
+  <div class="top">
+    <div class="brand">Agents talk</div>
+    <button id="new" type="button">+ New conversation</button>
+  </div>
+  <div id="talks"><div class="hint">No conversations yet.</div></div>
+  <div class="bottom">
+    <button id="clear" type="button" hidden>Save and clear</button>
+    <div id="saved" class="muted"></div>
+    <a href="/dispatch">Dispatch (legacy)</a>
+  </div>
+</aside>
 
+<main>
   <section id="setup">
-    <div class="row">
-      <select id="a" aria-label="First agent"></select>
-      <button class="linkish" id="swap" type="button" title="Swap who speaks first">⇄</button>
-      <select id="b" aria-label="Second agent"></select>
-      <label class="opt">Turns <input type="number" id="turns" min="1" max="50" value="10"></label>
+    <button class="menu icon" type="button" aria-label="Conversations">☰</button>
+    <div class="card">
+      <h1>New conversation</h1>
+      <div class="pair">
+        <label>Speaks first <select id="a"></select></label>
+        <button class="icon" id="swap" type="button" title="Swap">⇄</button>
+        <label>Replies <select id="b"></select></label>
+      </div>
+      <textarea id="opener" placeholder="Introduce them, or give a topic"></textarea>
+      <div class="go">
+        <label>Turns <input type="number" id="turns" min="1" max="50" value="10"></label>
+        <button class="primary" id="start" type="button">Start <small>⌘↵</small></button>
+      </div>
+      <div id="msg"></div>
     </div>
-    <div class="row">
-      <textarea id="opener" placeholder="Opener: introduce them, or give a topic"></textarea>
-    </div>
-    <div class="row">
-      <span class="hint" style="flex:1">The first agent speaks first. Each turn is one headless run, in an empty folder.</span>
-      <button class="primary" id="start" type="button">Start <small>⌘↵</small></button>
-    </div>
-    <div id="msg"></div>
   </section>
 
   <section id="view" hidden>
-    <div class="row" style="margin: 0 0 12px"><button class="linkish" id="new" type="button">New conversation</button></div>
+    <header class="bar">
+      <button class="menu icon" type="button" aria-label="Conversations">☰</button>
+      <span class="who" id="pair"></span>
+      <span class="pill" id="pill"></span>
+      <span id="progress"></span>
+      <span class="sp"></span>
+      <button id="copy" type="button">Copy transcript</button>
+    </header>
     <div id="chat"></div>
-    <div class="status" id="status"></div>
+    <div id="status"></div>
     <div id="controls">
       <div class="row">
         <input type="text" id="say" placeholder="Say something to both">
         <button id="send" type="button">Send</button>
         <button id="stop" type="button">Stop</button>
-        <span id="more" hidden><button id="resume" type="button">Continue</button> <input type="number" id="moreTurns" min="1" max="50" value="2" aria-label="More turns"></span>
+        <span id="more" hidden><button id="resume" type="button">Continue</button><input type="number" id="moreTurns" min="1" max="50" value="2" aria-label="More turns"></span>
       </div>
     </div>
   </section>
-
-  <h2>Conversations</h2>
-  <div id="talks"><div class="hint">None yet.</div></div>
-  <div class="row"><button id="clear" type="button" hidden>Save and clear</button></div>
-  <div class="hint" id="saved"></div>
 </main>
 
 <script>
@@ -110,6 +185,45 @@ const store = {
   set(k, v) { try { localStorage.setItem('talk.' + k, JSON.stringify(v)); } catch {} },
 };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// The Markdown agents write: paragraphs, headings, lists, quotes, code. Every
+// piece of text goes through esc(), so a reply can never become HTML. Links stay text.
+function inline(s) {
+  return String(s).split(/(`[^`\n]+`)/).map((p, i) => i % 2 ? `<code>${esc(p.slice(1, -1))}</code>`
+    : esc(p).replace(/\*\*(\S(?:.*?\S)?)\*\*/g, '<strong>$1</strong>')
+            .replace(/(^|[\s(])[*_](\S(?:.*?\S)?)[*_](?=[\s).,;:!?]|$)/g, '$1<em>$2</em>')).join('');
+}
+function md(src) {
+  const lines = String(src).replace(/\r\n?/g, '\n').split('\n'), out = [];
+  let para = [];
+  const flush = () => { if (para.length) out.push(`<p>${para.map(inline).join('<br>')}</p>`); para = []; };
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    if (/^\s*```/.test(l)) {
+      flush();
+      const code = [];
+      while (++i < lines.length && !/^\s*```/.test(lines[i])) code.push(lines[i]);
+      out.push(`<pre><code>${esc(code.join('\n'))}</code></pre>`);
+    } else if (/^#{1,6}\s/.test(l)) {
+      flush(); out.push(`<h4>${inline(l.replace(/^#+\s*/, ''))}</h4>`);
+    } else if (/^\s*([-*+]|\d+[.)])\s+/.test(l)) {
+      flush();
+      const ordered = /^\s*\d/.test(l), re = ordered ? /^\s*\d+[.)]\s+/ : /^\s*[-*+]\s+/, items = [];
+      for (; i < lines.length && re.test(lines[i]); i++) items.push(`<li>${inline(lines[i].replace(re, ''))}</li>`);
+      i--;
+      out.push(ordered ? `<ol>${items.join('')}</ol>` : `<ul>${items.join('')}</ul>`);
+    } else if (/^>\s?/.test(l)) {
+      flush();
+      const q = [];
+      for (; i < lines.length && /^>\s?/.test(lines[i]); i++) q.push(inline(lines[i].replace(/^>\s?/, '')));
+      i--;
+      out.push(`<blockquote>${q.join('<br>')}</blockquote>`);
+    } else if (!l.trim()) flush();
+    else para.push(l);
+  }
+  flush();
+  return out.join('');
+}
 
 async function api(path, body) {
   const res = await fetch(path, {
@@ -122,33 +236,49 @@ async function api(path, body) {
   return out;
 }
 
-let current = null, timer = null;
+let current = null, timer = null, last = null;
 
 function msg(text, err) { $('msg').textContent = text; $('msg').className = err ? 'err' : ''; }
 
-function bubble(cls, who, text, extra = '') {
-  return `<div class="m ${cls}"><div class="who"><b>${esc(who)}</b>${extra}</div><div class="text">${esc(text)}</div></div>`;
+const initials = label => (label.match(/\b[A-Za-z0-9]/g) || ['?']).slice(0, 2).join('').toUpperCase();
+
+function message(cls, who, html, extra = '', avatar = initials(who)) {
+  return `<div class="m ${cls}"><div class="av" aria-hidden="true">${esc(avatar)}</div>`
+    + `<div class="body"><div class="who"><b>${esc(who)}</b>${extra}</div><div class="text">${html}</div></div></div>`;
 }
 
 function render(t) {
+  last = t;
   const side = id => (id === t.agents[0].id ? 'a' : 'b');
-  const nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 80;
+  const nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 120;
   $('chat').innerHTML = [
-    bubble('opener', 'Opener', t.opener, `<span>${esc(t.agents.map(a => a.label).join(' ↔ '))}</span>`),
-    ...t.turns.map(m => m.user ? bubble('you', m.label, m.text)
-                               : bubble(side(m.agent), m.label, m.text, `<span>${m.seconds}s</span>`)),
-    ...t.queued.map(text => bubble('you', 'You', text, '<span>after this reply</span>')),
-    t.current ? bubble(`${side(t.current.agent)} live`, t.current.label, t.current.text, `<span class="s-running">${t.current.retry ? 'retrying' : 'writing'} · ${t.current.seconds}s</span>`) : '',
+    message('opener', 'Opener', md(t.opener), '', '✎'),
+    ...t.turns.map(m => m.user ? message('you', m.label, md(m.text))
+                               : message(side(m.agent), m.label, md(m.text), `<span>${m.seconds}s</span>`)),
+    ...t.queued.map(text => message('you', 'You', md(text), '<span>after this reply</span>')),
+    t.current ? message(`${side(t.current.agent)} live`, t.current.label,
+      t.current.text.trim() ? md(t.current.text) : '<span class="typing"><i></i><i></i><i></i></span>',
+      `<span class="s-running">${t.current.retry ? 'retrying' : 'writing'} · ${t.current.seconds}s</span>`) : '',
   ].join('');
   const spoken = t.turns.filter(m => m.agent).length;
   const running = t.status === 'running';
+  $('pair').innerHTML = t.agents.map(a => esc(a.label)).join(' <span class="muted">↔</span> ');
+  $('pill').textContent = t.status;
+  $('pill').className = `pill s-${t.status}`;
+  $('progress').textContent = running ? `turn ${spoken + 1} of ${spoken + t.turnsLeft}` : `${spoken} turn${spoken === 1 ? '' : 's'}`;
   $('status').innerHTML = `<span class="s-${esc(t.status)}">${esc(t.status)}</span> · ${spoken} turn${spoken === 1 ? '' : 's'}`
     + (running ? ` · ${t.turnsLeft} to go` : '') + ` · ${esc(t.dir)}`
     + (t.error ? `\n<span class="err">${esc(t.error)}</span>` : '');
   $('stop').hidden = !running;
   $('more').hidden = running;
   $('resume').textContent = t.status === 'failed' ? 'Retry' : 'Continue';
+  document.title = `${t.agents.map(a => a.label).join(' ↔ ')} · Agents talk`;
   if (nearBottom) window.scrollTo(0, document.body.scrollHeight);
+}
+
+function transcript(t) {
+  return [`# ${t.agents.map(a => a.label).join(' ↔ ')}`, '', '## Opener', '', t.opener, '',
+    ...t.turns.flatMap(m => [`## ${m.label}`, '', m.text, ''])].join('\n');
 }
 
 async function show(id) {
@@ -156,9 +286,12 @@ async function show(id) {
   let t;
   try { t = await api(`/api/talk?id=${encodeURIComponent(id)}`); }
   catch { store.set('current', null); return showSetup(); }
+  const switched = current !== id;
   current = id; store.set('current', id);
   $('setup').hidden = true; $('view').hidden = false;
+  document.body.classList.remove('nav');
   render(t);
+  if (switched) { window.scrollTo(0, document.body.scrollHeight); markActive(); }
   if (t.status === 'running') timer = setTimeout(() => show(id), 1000);
   else refreshTalks();
 }
@@ -167,6 +300,9 @@ function showSetup() {
   clearTimeout(timer);
   current = null; store.set('current', null);
   $('setup').hidden = false; $('view').hidden = true;
+  document.body.classList.remove('nav');
+  document.title = 'Agents talk';
+  markActive();
   $('opener').focus();
 }
 
@@ -180,7 +316,7 @@ async function start() {
     const t = await api('/api/talk', { opener, agents, turns: Number($('turns').value) });
     msg('');
     $('opener').value = '';
-    refreshTalks();
+    await refreshTalks();
     show(t.id);
   } catch (e) { msg(e.message, true); }
   finally { $('start').disabled = false; }
@@ -198,16 +334,28 @@ async function say() {
   await act('/api/talk/say', { text });
 }
 
+async function copy() {
+  if (!last) return;
+  try { await navigator.clipboard.writeText(transcript(last)); $('copy').textContent = 'Copied'; }
+  catch { $('copy').textContent = 'Copy failed'; }
+  setTimeout(() => { $('copy').textContent = 'Copy transcript'; }, 1500);
+}
+
+function markActive() {
+  for (const el of $('talks').querySelectorAll('.talk')) el.classList.toggle('on', el.dataset.id === current);
+}
+
 async function refreshTalks() {
   let talks;
   try { ({ talks } = await api('/api/talks')); } catch { return; }
   $('clear').hidden = !talks.some(t => t.status !== 'running');
-  if (!talks.length) { $('talks').innerHTML = '<div class="hint">None yet.</div>'; return; }
+  if (!talks.length) { $('talks').innerHTML = '<div class="hint">No conversations yet.</div>'; return; }
   $('talks').innerHTML = talks.map(t => `
-    <div class="talk" data-id="${esc(t.id)}">
-      <span>${esc(t.agents.join(' ↔ '))}</span><span class="s-${esc(t.status)}">${esc(t.status)} · ${t.turns}</span>
-      <span class="o">${esc(t.opener)}</span>
+    <div class="talk" data-id="${esc(t.id)}" title="${esc(t.status)} · ${t.turns} turns">
+      <div class="t1"><span class="dot ${esc(t.status)}"></span>${esc(t.agents.join(' ↔ '))}</div>
+      <div class="t2">${esc(t.opener)}</div>
     </div>`).join('');
+  markActive();
 }
 
 async function clearTalks() {
@@ -225,9 +373,11 @@ $('start').addEventListener('click', start);
 $('swap').addEventListener('click', () => { const a = $('a').value; $('a').value = $('b').value; $('b').value = a; });
 $('new').addEventListener('click', showSetup);
 $('send').addEventListener('click', say);
+$('copy').addEventListener('click', copy);
 $('say').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); say(); } });
 $('stop').addEventListener('click', () => act('/api/talk/stop'));
 $('resume').addEventListener('click', () => act('/api/talk/resume', { turns: Number($('moreTurns').value) }));
+for (const b of document.querySelectorAll('.menu')) b.addEventListener('click', () => document.body.classList.toggle('nav'));
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !$('setup').hidden) { e.preventDefault(); start(); }
 });
@@ -244,8 +394,8 @@ document.addEventListener('keydown', e => {
     $('b').value = ok.includes(pb) ? pb : ok.find(id => id !== $('a').value) || ok[0] || '';
     $('turns').value = store.get('turns', 10);
     await refreshTalks();
-    const last = store.get('current', null);
-    last ? show(last) : showSetup();
+    const id = store.get('current', null);
+    id ? show(id) : showSetup();
   } catch (e) { msg(e.message, true); }
 })();
 </script>

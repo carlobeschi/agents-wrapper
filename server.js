@@ -6,8 +6,8 @@
 // itself. In "background" mode each runs headless and its output goes to a log.
 // Either way it is the CLI's own signed-in session doing the work — no API keys.
 //
-// /talk is the other page: two agents in conversation, one headless call per
-// turn (talk.js).
+// The home page is talk.html: two agents in conversation, one headless call per
+// turn (talk.js). The dispatch page is at /dispatch, kept as legacy.
 //
 // Unrelated to the TPA app. It lives in this repo for convenience only.
 //
@@ -38,7 +38,7 @@ const SAVED_DIR = path.join(HOME_DIR, 'conversations');
 const CONFIG    = process.env.AGENT_DISPATCH_CONFIG
   || (fs.existsSync(path.join(HOME_DIR, 'agents.json')) ? path.join(HOME_DIR, 'agents.json')
                                                          : path.join(__dirname, 'agents.json'));
-const PAGES     = { '/': 'index.html', '/talk': 'talk.html' };
+const PAGES     = { '/': 'talk.html', '/talk': 'talk.html', '/dispatch': 'dispatch.html' };
 const TOKEN     = crypto.randomBytes(24).toString('hex');
 const MAX_BODY  = 256 * 1024;
 
