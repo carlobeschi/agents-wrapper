@@ -27,6 +27,21 @@ const USER         = 'You';
 // which the agent itself can change.
 const AWAY = 'at the meeting, not in this folder';
 
+const MAX_DRAWING  = 200 * 1024;
+
+// The evening reply is a journal entry and, after it, one SVG of the day. Split
+// them: the SVG (fenced or bare) becomes the drawing, the rest the journal.
+// The page shows it as an <img>, where an SVG cannot run scripts or load anything.
+function splitDrawing(text) {
+  const m = text.match(/```[\w-]*\s*(<svg[\s>][\s\S]*?<\/svg>)\s*```/i) || text.match(/<svg[\s>][\s\S]*?<\/svg>/i);
+  if (!m) return { journal: text };
+  // An <img> shows an SVG only with its namespace, which a drawing written inline often leaves out.
+  const svg = (m[1] || m[0]).replace(/^<svg(?![^>]*\sxmlns=)/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+  const journal = (text.slice(0, m.index) + text.slice(m.index + m[0].length)).trim();
+  if (svg.length > MAX_DRAWING || !journal) return { journal: text };
+  return { journal, svg };
+}
+
 const clamp = (n, lo, hi, d) => Math.min(hi, Math.max(lo, Math.floor(Number(n)) || d));
 
 function journalLines(me, n) {
@@ -60,7 +75,8 @@ function meetingPrompt(s, me, other, day) {
 function eveningPrompt(s, me, other, day) {
   const lines = [
     `You are ${me.label}. Day ${day.n}'s meeting with ${other.label} is over and you are home, alone. This folder is yours: anything you left here on earlier evenings is still here. Nobody else sees what you do here, and ${other.label} never will.`,
-    `Spend the evening as you like: think, read, write notes, make something. Then reply with your journal entry for today: what happened, what you make of it now, what you want to bring to tomorrow. Your reply is only the journal entry. Tomorrow you will have this journal and this folder, not the transcript.`,
+    `Spend the evening as you like: think, read, write notes, make something. Then reply with your journal entry for today: what happened, what you make of it now, what you want to bring to tomorrow. Tomorrow you will have this journal and this folder, not the transcript.`,
+    `After the entry, draw a picture of what the day looked like: one self-contained SVG, written straight into your reply (not to a file), in an \`\`\`svg block. Shapes, colour and text only; no scripts, links or external images. Your reply is the journal entry, then the drawing, nothing else.`,
     UNATTENDED(),
     '', '## How it started', '', withFiles(s.opener, s.files, AWAY), '',
     ...journalLines(me, day.n - 1),
@@ -79,7 +95,8 @@ function createStories({ loadConfig, fill, stamp, dir }) {
       `## Day ${d.n}`, '',
       ...d.turns.flatMap(t => [`### ${t.label}`, '', withFiles(t.text, t.files), '']),
       ...(s.agents.some(a => a.journal[d.n - 1] !== undefined) ? [`## Day ${d.n}, evening`, ''] : []),
-      ...s.agents.filter(a => a.journal[d.n - 1] !== undefined).flatMap(a => [`### ${a.label}'s journal`, '', a.journal[d.n - 1], '']),
+      ...s.agents.filter(a => a.journal[d.n - 1] !== undefined).flatMap(a => [`### ${a.label}'s journal`, '', a.journal[d.n - 1], '',
+        ...(a.drawings[d.n - 1] ? [`![${a.label}, day ${d.n}](${a.drawings[d.n - 1].file})`, ''] : [])]),
     ]),
   ].join('\n');
 
@@ -154,7 +171,17 @@ function createStories({ loadConfig, fill, stamp, dir }) {
       }
       const seconds = Math.round((Date.now() - cur.started) / 1000);
       if (st.kind === 'meeting') st.day.turns.push({ agent: st.me.id, label: st.me.label, text, seconds });
-      else st.me.journal[st.day.n - 1] = text;
+      else {
+        const { journal, svg } = splitDrawing(text);
+        st.me.journal[st.day.n - 1] = journal;
+        if (svg) {
+          // In the story folder, not at home, where the agent could change it later.
+          const file = `drawings/${st.file}.svg`;
+          fs.mkdirSync(path.join(s.dir, 'drawings'), { recursive: true });
+          fs.writeFileSync(path.join(s.dir, file), svg);
+          st.me.drawings[st.day.n - 1] = { file, svg };
+        }
+      }
       save(s);
       console.log(`  ☾ ${s.id} day ${st.day.n} ${st.kind} ${st.me.id}: ${text.length} chars`);
       next(s);
@@ -193,7 +220,7 @@ function createStories({ loadConfig, fill, stamp, dir }) {
       agents: agents.map((a, i) => {
         const aid = a.id + (ids[0] === ids[1] ? `#${i + 1}` : '');
         const slug = aid.replace(/[^\w-]/g, '_');
-        return { id: aid, slug, label: labels[i], headless: a.headless, home: path.join(storyDir, 'homes', slug), journal: [] };
+        return { id: aid, slug, label: labels[i], headless: a.headless, home: path.join(storyDir, 'homes', slug), journal: [], drawings: [] };
       }),
     };
     for (const p of [s.meeting, ...s.agents.map(a => a.home)]) fs.mkdirSync(p, { recursive: true });
@@ -256,7 +283,10 @@ function createStories({ loadConfig, fill, stamp, dir }) {
     days: s.days.map(d => ({
       n: d.n,
       turns: d.turns.map(({ agent, user, label, text, files, seconds }) => ({ agent, user, label, text, files, seconds })),
-      journals: s.agents.filter(a => a.journal[d.n - 1] !== undefined).map(a => ({ agent: a.id, label: a.label, text: a.journal[d.n - 1] })),
+      journals: s.agents.filter(a => a.journal[d.n - 1] !== undefined).map(a => ({
+        agent: a.id, label: a.label, text: a.journal[d.n - 1],
+        drawing: a.drawings[d.n - 1],
+      })),
     })),
     queued: s.queued.map(m => withFiles(m.text, m.files)),
     current: s.current && {
@@ -275,4 +305,4 @@ function createStories({ loadConfig, fill, stamp, dir }) {
   return { start, stop, resume, say, get, list };
 }
 
-module.exports = { createStories, meetingPrompt, eveningPrompt };
+module.exports = { createStories, meetingPrompt, eveningPrompt, splitDrawing };
