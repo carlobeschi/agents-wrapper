@@ -1,5 +1,5 @@
 // Agent dispatch — one prompt box in front of the coding agents on this laptop.
-// Usage: npm run dispatch     then open http://localhost:8787
+// Usage: npm start     then open http://localhost:8787
 //
 // Each selected agent gets the same prompt. In "terminal" mode each one opens in
 // its own terminal window, interactive, so the result is inspected in the tool
@@ -9,16 +9,17 @@
 // The home page is talk.html: two agents in conversation, one headless call per
 // turn (talk.js). The dispatch page is at /dispatch, kept as legacy.
 //
-// Unrelated to the TPA app. It lives in this repo for convenience only.
-//
-// Unlike bridge.js, the agents here run WITH their tools, in a directory the
-// user picks. That is the point of the thing, so the bounds are on who can
+// The agents run WITH their tools, in a directory the user picks. That is the point of the thing, so the bounds are on who can
 // trigger a dispatch, not on what the agent can do once started:
 //   127.0.0.1 only          not reachable from the network
 //   Host header checked     a DNS-rebound page cannot talk to this port
 //   per-process token       served inside the page only; every POST must carry
 //                           it as X-Dispatch-Token, so another site cannot
 //                           forge a dispatch (it cannot read the page)
+//   Origin checked          a POST from another site is refused even with a token
+//   no framing              another site cannot load the page in a frame
+//   ~/.agent-dispatch 0700  prompts, logs and transcripts are not readable by
+//                           other users of the machine
 //   argv arrays, no shell   the prompt never reaches a command line; terminal
 //                           mode reads it from a file inside the script
 
@@ -204,7 +205,10 @@ function readLog(runId, agentId) {
 }
 
 function send(res, status, type, body) {
-  res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+  res.writeHead(status, {
+    'Content-Type': type, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY', 'Content-Security-Policy': "frame-ancestors 'none'",
+  });
   res.end(body);
 }
 const json = (res, status, obj) => send(res, status, 'application/json', JSON.stringify(obj));
@@ -232,6 +236,11 @@ const server = http.createServer((req, res) => {
   // DNS rebinding: a hostile name resolving to 127.0.0.1 still sends its own Host.
   if (!new RegExp(`^(localhost|127\\.0\\.0\\.1):${PORT}$`).test(req.headers.host || '')) {
     return send(res, 403, 'text/plain', 'Forbidden host');
+  }
+  // Browsers send Origin on every cross-site request and on same-origin POSTs.
+  const origin = req.headers.origin;
+  if (origin && !new RegExp(`^http://(localhost|127\\.0\\.0\\.1):${PORT}$`).test(origin)) {
+    return send(res, 403, 'text/plain', 'Forbidden origin');
   }
   const url = new URL(req.url, `http://${req.headers.host}`);
 
@@ -267,6 +276,10 @@ const server = http.createServer((req, res) => {
     json(res, 500, { error: e.message });
   }
 });
+
+// Private to this user: everything below it holds prompts and agent output.
+fs.mkdirSync(HOME_DIR, { recursive: true, mode: 0o700 });
+fs.chmodSync(HOME_DIR, 0o700);
 
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`Agent dispatch on http://localhost:${PORT}`);

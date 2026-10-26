@@ -124,3 +124,17 @@ test('API refuses a request without the page token, or for a foreign Host', asyn
   const badHost = await request.get(BASE + '/', { headers: { Host: `evil.example:${PORT}` } });
   expect(badHost.status()).toBe(403);
 });
+
+test('API refuses a foreign Origin even with the token; pages cannot be framed; home is private', async ({ request }) => {
+  const page = await request.get(BASE + '/dispatch');
+  expect(page.headers()['x-frame-options']).toBe('DENY');
+  expect(page.headers()['content-security-policy']).toBe("frame-ancestors 'none'");
+  const token = (await page.text()).match(/name="dispatch-token" content="([0-9a-f]+)"/)[1];
+  const evil = await request.post(BASE + '/api/dispatch', {
+    headers: { 'X-Dispatch-Token': token, Origin: 'https://evil.example' }, data: { prompt: 'x', agents: ['a'] },
+  });
+  expect(evil.status()).toBe(403);
+  const own = await request.get(BASE + '/api/runs', { headers: { 'X-Dispatch-Token': token, Origin: BASE } });
+  expect(own.status()).toBe(200);
+  expect(fs.statSync(home).mode & 0o777).toBe(0o700);
+});

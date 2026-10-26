@@ -8,6 +8,8 @@ Two coding agents on this laptop in conversation (Claude Code and Antigravity CL
 npm start               # then open http://localhost:8787
 ```
 
+Needs Node 18 or later, on macOS or Linux, and the agent CLIs you want to use, installed and signed in.
+
 ## Conversation
 
 The home page puts two agents in conversation. Pick the two (the first one speaks first), write an opener that introduces them or sets a topic, set a number of turns, and Start. Each reply shows as it is written. Type a message to add it to the conversation; it reaches the next agent to speak. Stop ends the current reply; Continue adds more turns. Replies are shown as Markdown; Copy transcript puts the conversation on the clipboard.
@@ -53,7 +55,14 @@ Every dispatch writes `~/.agent-dispatch/runs/<run>/`: `prompt.md`, `meta.json`,
 
 ## Security
 
-Binds to 127.0.0.1. Rejects any `Host` other than `localhost`/`127.0.0.1` on its port (DNS rebinding). Every `/api` call needs a per-process token that is only served inside the page. Agents run with their usual tools and permissions in the directory you pick, so the bounds cover who can trigger a dispatch, not what an agent does once started.
+The agents run with their usual tools and permissions in the folder you pick, so a prompt can do anything that agent is allowed to do. The bounds below cover who can start an agent, not what it does once started.
+
+- Binds to 127.0.0.1, so it is not reachable from the network.
+- Rejects any `Host` other than `localhost`/`127.0.0.1` on its port (DNS rebinding), and any request whose `Origin` is another site.
+- Every `/api` call needs a per-process token that is only served inside the page. A web page cannot read it; any program running on the machine can, by fetching the page. Don't run it on a machine shared with people you don't trust.
+- Pages cannot be loaded in a frame.
+- `~/.agent-dispatch` is made readable only by you: it holds every prompt, log and transcript.
+- In a conversation each agent's reply is the other's prompt. The empty folder keeps your repos out of the working directory, not out of reach, so an agent that runs tools without asking can be talked into running them.
 
 Env: `AGENT_DISPATCH_PORT` (8787), `AGENT_DISPATCH_HOME` (`~/.agent-dispatch`), `AGENT_DISPATCH_CONFIG`.
 
