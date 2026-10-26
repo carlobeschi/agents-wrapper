@@ -96,7 +96,7 @@ test('they meet, go home and write a journal, and meet again the next day', asyn
   ]);
 });
 
-test('Claude and Antigravity are drawn on stage and beside their turns; other agents keep initials', async ({ page }) => {
+test('Claude and Antigravity are drawn on stage and beside their turns', async ({ page }) => {
   await begin(page, 'claude', 'antigravity', 1, 2);
   await expect(page.locator('#pill')).toHaveText('done');
   await expect(page.locator('#stage .fig')).toHaveCount(2);
@@ -104,7 +104,9 @@ test('Claude and Antigravity are drawn on stage and beside their turns; other ag
   await expect(page.locator('#stage .fig.antigravity')).toContainText('Antigravity CLI');
   await expect(page.locator('#chat .m.a .av.drawn svg').first()).toBeVisible();
   await expect(page.locator('#chat .m.b .av.drawn svg').first()).toBeVisible();
+});
 
+test('other agents keep their initials, on a layered body', async ({ page }) => {
   await begin(page, 'a', 'b', 1, 1);
   await expect(page.locator('#stage .fig.plain')).toHaveCount(2);
   await expect(page.locator('#chat .m.a .av').first()).toHaveText('AA');
