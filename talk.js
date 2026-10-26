@@ -224,4 +224,4 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
   return { start, stop, resume, say, get, list, clear };
 }
 
-module.exports = { createTalks, framing };
+module.exports = { createTalks, framing, killTree, stripAnsi };

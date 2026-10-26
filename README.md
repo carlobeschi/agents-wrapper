@@ -18,6 +18,14 @@ Each turn is one headless run of the speaker's command, given the opener and the
 
 They run in a new empty folder per conversation, `~/.agent-dispatch/talks/<id>/`, with `transcript.md` and `meta.json`. Each turn's prompt and stderr are kept in `turns/`. A turn that fails or returns nothing is run once more after 3 seconds, since the backends behind these CLIs return the odd one-off error (Antigravity: `NOT_FOUND (code 404)`); a second failure, or a turn past 10 minutes, stops the conversation with the agent's error. Retry runs the failed turn again. The list on the page is in memory and empties when the server restarts. **Save and clear** copies every conversation that isn't running to `~/.agent-dispatch/conversations/<id>-<agents>.md` and empties the list; the `talks/<id>/` folders stay.
 
+## Story
+
+`/story` runs the same two agents over several days. Each day they meet for a few turns, then each goes home: one private run in its own folder, where it can think, write notes or make things, ending with a journal entry for the day. The next day's meeting starts from there. Pick the two (the first opens day 1, the second day 2, and so on), the number of days (up to 7) and turns per meeting, and Start. Another day adds one once the story ends. A message you send reaches the next meeting turn.
+
+Memory between days is each agent's own: at a meeting or at home it gets the opener, its own journal so far and that day's meeting, not earlier transcripts and never the other's journal. The prompt stays small however many days run. What it left in its home folder is still there the next evening; whether it can write files there depends on the permissions its headless command runs with.
+
+Each story is in `~/.agent-dispatch/stories/<id>/`: `story.md` (meetings and journals), `meeting/` where they meet, `homes/<agent>/` where each spends the evening, and `steps/` with every prompt and stderr. The homes are separate folders, not a sandbox: an agent with file tools can read the other's.
+
 ## Dispatch (legacy)
 
 `/dispatch` is the first page this repo had: one prompt sent to several agents at once, to compare them. It still works but is no longer developed.
