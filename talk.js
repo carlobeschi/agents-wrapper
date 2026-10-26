@@ -29,7 +29,7 @@ const stripAnsi = s => s.replace(/\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07/g, 
 
 // Said to every agent: it runs unattended, so a tool that needs permission is
 // refused, and a reply that stops at the refusal would end the conversation.
-const UNATTENDED = other => `You run unattended: any tool that needs permission is refused. If you can't open a link, file or page, say so in a sentence and carry on; ${other} may be able to tell you what it is.`;
+const UNATTENDED = other => `You run unattended: any tool that needs permission is refused. If you can't open a link, file or page, say so in a sentence and carry on${other ? `; ${other} may be able to tell you what it is` : ''}.`;
 
 // The first line of stderr worth showing: what the CLI said went wrong.
 const failureNote = err => (stripAnsi(err).split('\n').map(l => l.trim()).find(l => /\w/.test(l)) || '').slice(0, 500);
@@ -40,7 +40,7 @@ function retryNote(why, note) {
   return [
     '## Your last attempt failed', '',
     `It ended with: ${why}${note ? ` — ${note}` : ''}`, '',
-    'Reply with text only this time, no tools. If it was something you tried to do (open a link, read a file, run a command), say briefly that you couldn\'t and carry on the conversation.', '',
+    'Reply with text only this time, no tools. If it was something you tried to do (open a link, read a file, run a command), say briefly that you couldn\'t and carry on.', '',
   ].join('\n');
 }
 
@@ -245,4 +245,4 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
   return { start, stop, resume, say, get, list, clear };
 }
 
-module.exports = { createTalks, framing, retryNote, failureNote, UNATTENDED };
+module.exports = { createTalks, framing, killTree, stripAnsi, retryNote, failureNote, UNATTENDED };

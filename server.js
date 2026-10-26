@@ -7,7 +7,9 @@
 // Either way it is the CLI's own signed-in session doing the work — no API keys.
 //
 // The home page is talk.html: two agents in conversation, one headless call per
-// turn (talk.js). The dispatch page is at /dispatch, kept as legacy.
+// turn (talk.js). /story runs the same pair over several days, with a private
+// evening at home between meetings (story.js). The dispatch page is at
+// /dispatch, kept as legacy.
 //
 // The agents run WITH their tools, in a directory the user picks. That is the point of the thing, so the bounds are on who can
 // trigger a dispatch, not on what the agent can do once started:
@@ -30,16 +32,18 @@ const os      = require('os');
 const path    = require('path');
 const { spawn, execFileSync } = require('child_process');
 const { createTalks } = require('./talk');
+const { createStories } = require('./story');
 
 const PORT      = Number(process.env.AGENT_DISPATCH_PORT) || 8787;
 const HOME_DIR  = process.env.AGENT_DISPATCH_HOME || path.join(os.homedir(), '.agent-dispatch');
 const RUNS_DIR  = path.join(HOME_DIR, 'runs');
 const TALKS_DIR = path.join(HOME_DIR, 'talks');
+const STORIES_DIR = path.join(HOME_DIR, 'stories');
 const SAVED_DIR = path.join(HOME_DIR, 'conversations');
 const CONFIG    = process.env.AGENT_DISPATCH_CONFIG
   || (fs.existsSync(path.join(HOME_DIR, 'agents.json')) ? path.join(HOME_DIR, 'agents.json')
                                                          : path.join(__dirname, 'agents.json'));
-const PAGES     = { '/': 'talk.html', '/talk': 'talk.html', '/dispatch': 'dispatch.html' };
+const PAGES     = { '/': 'talk.html', '/talk': 'talk.html', '/story': 'story.html', '/dispatch': 'dispatch.html' };
 const TOKEN     = crypto.randomBytes(24).toString('hex');
 const MAX_BODY  = 256 * 1024;
 
@@ -214,6 +218,7 @@ function send(res, status, type, body) {
 const json = (res, status, obj) => send(res, status, 'application/json', JSON.stringify(obj));
 
 const talks = createTalks({ loadConfig, fill, stamp, dir: TALKS_DIR, savedDir: SAVED_DIR });
+const stories = createStories({ loadConfig, fill, stamp, dir: STORIES_DIR });
 
 // Read a JSON body, then answer with handler(body) -> [status, object].
 function withBody(req, res, handler) {
@@ -271,6 +276,12 @@ const server = http.createServer((req, res) => {
     if (req.method === 'POST' && url.pathname === '/api/talks/clear') return json(res, ...talks.clear());
     const m = url.pathname.match(/^\/api\/talk\/(stop|resume|say)$/);
     if (req.method === 'POST' && m) return withBody(req, res, body => talks[m[1]](body.id, body));
+
+    if (req.method === 'GET' && url.pathname === '/api/stories') return json(res, 200, { stories: stories.list() });
+    if (req.method === 'GET' && url.pathname === '/api/story') return json(res, ...stories.get(url.searchParams.get('id')));
+    if (req.method === 'POST' && url.pathname === '/api/story') return withBody(req, res, stories.start);
+    const sm = url.pathname.match(/^\/api\/story\/(stop|resume|say)$/);
+    if (req.method === 'POST' && sm) return withBody(req, res, body => stories[sm[1]](body.id, body));
     json(res, 404, { error: 'Not found' });
   } catch (e) {
     json(res, 500, { error: e.message });
@@ -286,4 +297,5 @@ server.listen(PORT, '127.0.0.1', () => {
   console.log(`  config: ${CONFIG}`);
   console.log(`  runs:   ${RUNS_DIR}`);
   console.log(`  talks:  ${TALKS_DIR}`);
+  console.log(`  stories: ${STORIES_DIR}`);
 });
