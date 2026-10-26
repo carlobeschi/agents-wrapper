@@ -46,7 +46,7 @@ test.afterAll(() => {
 });
 
 async function load(page) {
-  await page.goto(BASE + '/');
+  await page.goto(BASE + '/dispatch');
   await expect(page.locator('#agents .agent')).toHaveCount(5);
   await page.locator('#none').click();
   await page.locator('#cwd').fill(work);
