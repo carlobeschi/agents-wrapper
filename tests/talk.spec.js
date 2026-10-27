@@ -93,6 +93,9 @@ test('two agents take turns, and each sees the conversation so far', async ({ pa
   expect(b.match(/^### Agent [AB] · [0-9a-f]{8}$/gm)?.map(h => h.slice(0, 11))).toEqual(['### Agent A', '### Agent B', '### Agent A']);
   expect(fs.existsSync(path.join(dir, 'pwned'))).toBe(false);
   expect(fs.readFileSync(path.join(dir, 'turns', '04-b.prompt.md'), 'utf8')).toBe(b);
+  // Each speaker knows where it is in the run, and the last one is told to close.
+  expect(fs.readFileSync(path.join(dir, 'turns', '01-a.prompt.md'), 'utf8')).toMatch(/This is message 1 of 4\.\n/);
+  expect(b).toContain('This is message 4 of 4, the last one: bring the conversation to a close');
 
   const transcript = fs.readFileSync(path.join(dir, 'transcript.md'), 'utf8');
   expect(transcript.match(/^## (Agent [AB])$/gm)).toEqual(['## Agent A', '## Agent B', '## Agent A', '## Agent B']);
@@ -110,6 +113,8 @@ test('a message from the user is shown to the next agent, and Continue adds turn
   await expect(page.locator('#status')).toContainText('done');
   const b = fs.readFileSync(path.join(await talkDir(page), 'prompt-b.txt'), 'utf8');
   expect(b).toMatch(/### Agent A · ([0-9a-f]{8})\n\nHello from A\n\n### You · \1\n\nBe brief\.\n/);
+  // Continue counts on from what was said: the second message of two.
+  expect(b).toContain('This is message 2 of 2, the last one');
 });
 
 test('an agent cannot write a heading that passes for the person', async ({ page }) => {
