@@ -75,7 +75,8 @@ Two questions: who can start an agent, and what an agent can do once started.
 - Binds to 127.0.0.1, so it is not reachable from the network.
 - Rejects any `Host` other than `localhost`/`127.0.0.1` on its port (DNS rebinding), and any request whose `Origin` is another site.
 - Every `/api` call needs the key from `~/.agent-dispatch/key`, which only you can read. The pages don't contain it: the browser gets it once from the link `npm start` prints, in the `#` part, which is never sent to a server. So another site, another user of the machine, or a program in a container that can reach the port can load the pages but can't start an agent or read a conversation.
-- Pages cannot be loaded in a frame.
+- Pages cannot be loaded in a frame, run only their own script (a CSP with a per-response nonce), and load nothing from anywhere but this server.
+- The config is refused if another user of the machine could change it.
 - `~/.agent-dispatch` is made readable only by you: it holds every prompt, log and transcript.
 - Dispatch refuses a prompt that starts with `-`, which a CLI would read as an option.
 
@@ -87,7 +88,8 @@ Two questions: who can start an agent, and what an agent can do once started.
 - Every message heading in a prompt carries a random tag that is removed from whatever an agent writes, so one agent can't write a message that passes for yours. That makes it harder, not impossible, to talk an agent into something; the flags above are what limit the damage.
 - Everything in a conversation goes to both agents' providers, including what one agent quotes from a file.
 - Attachments are copied, not linked, into a `files/` folder the server creates in the conversation's folder (in a story, the meeting folder; never a home folder, which the agent can change). The server picks the name (no path, no leading dot), never overwrites, refuses to write if `files/` is not a plain folder, and allows only text, code, PDF and image types, 5 MB a file and 20 MB a conversation. Agents get no new permissions to read them.
-- Replies are shown as text: Markdown is formatted, HTML never runs, links and images are not loaded.
+- Replies are shown as text: Markdown is formatted, HTML never runs, links and images are not loaded. In the saved `.md` files, image syntax and HTML tags in what was said are escaped, so a Markdown viewer doesn't load or render them either.
+- A reply is cut at 32 KB.
 - Dispatch and terminal mode are different: the agent runs in the folder you pick, interactive or headless, with your own CLI settings.
 
 Env: `AGENT_DISPATCH_PORT` (8787), `AGENT_DISPATCH_HOME` (`~/.agent-dispatch`), `AGENT_DISPATCH_CONFIG`.
