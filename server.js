@@ -175,6 +175,9 @@ function dispatch(body) {
   const cfg = loadConfig();
   const prompt = typeof body.prompt === 'string' ? body.prompt : '';
   if (!prompt.trim()) return [400, { error: 'Empty prompt.' }];
+  // The prompt is one argument: starting with "-", a CLI would take it as an option
+  // (`claude --dangerously-skip-permissions`).
+  if (prompt.startsWith('-')) return [400, { error: 'A prompt can\'t start with "-": the agent would read it as an option.' }];
   const ids = Array.isArray(body.agents) ? body.agents : [];
   const agents = ids.map(id => cfg.agents.find(a => a.id === id && a.type !== 'url'));
   if (!agents.length || agents.some(a => !a)) return [400, { error: 'Unknown or missing agent.' }];

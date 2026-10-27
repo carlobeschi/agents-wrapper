@@ -152,6 +152,14 @@ test('the key is only in the printed link: pages hold none, and the browser keep
   await expect(page.locator('#a option')).not.toHaveCount(0);
 });
 
+test('a prompt that starts with "-" is refused, so it never reaches a CLI as an option', async ({ request }) => {
+  const r = await request.post(BASE + '/api/dispatch', {
+    headers: { 'X-Dispatch-Token': key }, data: { prompt: '--dangerously-skip-permissions', agents: ['a'], mode: 'background', cwd: work },
+  });
+  expect(r.status()).toBe(400);
+  expect((await r.json()).error).toContain('can\'t start with "-"');
+});
+
 test('without the key a page says where to get it', async ({ page }) => {
   await page.goto(BASE + '/dispatch');
   await expect(page.locator('body')).toContainText('Open the link that npm start printed.');
