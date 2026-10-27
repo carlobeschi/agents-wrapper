@@ -35,6 +35,8 @@ test.beforeAll(async () => {
         `n=$(ls prompt-keeper-*.txt 2>/dev/null | wc -l); printf %s "$1" > prompt-keeper-$((n + 1)).txt; case "$1" in *"Day 1's meeting"*) printf '%s\n' 'Journal of keeper.' '' '## Notes to keep' '' '- treaty v1';; *"you are home"*) echo 'Second journal.';; *) echo "Hello from keeper";; esac`,
         'x', '{prompt}'] },
       { id: 'slow', label: 'Slow', headless: ['sh', '-c', `printf 'thinking about it'; sleep 30; echo done`] },
+      // Always refused, even when told why.
+      { id: 'stuck', label: 'Stuck', headless: ['sh', '-c', 'echo "jetski: no output produced — a tool required the \\"write_file\\" permission that headless mode cannot prompt for" >&2'] },
       // Like agy when a tool is refused: no reply, the reason on stderr. Replies once told why.
       { id: 'denied', label: 'Denied', headless: ['sh', '-c', 'case "$1" in *"Your last attempt failed"*) echo "I could not open it.";; *) echo "jetski: no output produced — a tool required the \\"command\\" permission" >&2;; esac', 'x', '{prompt}'] },
       { id: 'bad', label: 'Bad', headless: ['sh', '-c', 'echo "no credits" >&2; exit 3'] },
@@ -205,6 +207,13 @@ test('a step stopped by a refused tool is retried with the reason, and the story
   expect(read(dir, 'steps', 'd01-01-denied.retry.prompt.md'))
     .toContain('It ended with: empty reply — jetski: no output produced — a tool required the "command" permission');
   await expect(page.locator('#chat .m:not(.opener) .text').first()).toHaveText('I could not open it.');
+});
+
+test('a step refused a tool twice is skipped with a note, and the story carries on', async ({ page }) => {
+  await begin(page, 'stuck', 'b', 1, 2);
+  await expect(page.locator('#pill')).toHaveText('done');
+  await expect(page.locator('#chat .m.skipped')).toHaveCount(1);
+  await expect(page.locator('#chat .m.journal .text').first()).toContainText('No journal entry: Stuck tried to use write_file');
 });
 
 test('/talk and /story link to each other', async ({ page }) => {
