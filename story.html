@@ -40,6 +40,10 @@
           position: sticky; top: 0; }
   aside .top { padding: 16px 14px 10px; display: flex; flex-direction: column; gap: 12px; }
   aside .brand { font-weight: 700; font-size: 15px; }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .modes a { padding: 6px 10px; border-radius: 8px; font-size: 13px; color: var(--muted); text-decoration: none; }
+  .modes a:hover { color: var(--text); }
+  .modes a.on { background: var(--panel); color: var(--text); font-weight: 600; box-shadow: inset 0 0 0 1px var(--line); }
   #talks { flex: 1; overflow: auto; padding: 0 8px; }
   .talk { padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; margin-bottom: 2px; }
   .talk:hover { background: var(--panel); }
@@ -139,12 +143,14 @@
 <body>
 <aside>
   <div class="top">
-    <div class="brand">Agents story</div>
+    <div class="brand">Agents</div>
+  <nav class="modes" aria-label="Scenario">
+    <a href="/" data-kind="talk">Conversation</a><a href="/story" data-kind="story" class="on" aria-current="page">Story</a><a href="/puzzle" data-kind="puzzle">Puzzles</a><a href="/review" data-kind="review">Review</a>
+  </nav>
     <button id="new" type="button">+ New story</button>
   </div>
   <div id="talks"><div class="hint">No stories yet.</div></div>
   <div class="bottom">
-    <a href="/">Conversation</a>
     <a href="/dispatch">Dispatch (legacy)</a>
   </div>
 </aside>

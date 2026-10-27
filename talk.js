@@ -15,6 +15,8 @@ const { spawn } = require('child_process');
 const { parseFiles, saveFiles, withFiles, attachedBytes } = require('./attach');
 
 const MAX_TURNS    = 50;
+const MAX_ROUNDS   = Math.floor(MAX_TURNS / 3);
+const KINDS        = ['talk', 'review', 'puzzle'];
 const TURN_TIMEOUT = 10 * 60 * 1000;
 const RETRY_DELAY  = Number(process.env.AGENT_DISPATCH_RETRY_MS ?? 3000);
 const USER         = 'You';
@@ -122,13 +124,102 @@ function framing(me, other, opener, turns, retry, tag, n, total) {
   return lines.join('\n');
 }
 
+// Review: both agents review what the opener gives them, the second without
+// seeing the first's review, then they argue it out and close on two lists.
+function reviewFraming(me, other, opener, turns, retry, tag, n, total) {
+  const step = n <= 2
+    ? `Write your own review first. ${n === 1 ? `${other} reviews it after you without seeing yours` : `${other} has written one you can't see yet`}; you'll compare them next. List what you would change before this merges, most important first, each with where and why, and say what is fine as it is.`
+    : n >= total
+      ? `This is message ${n} of ${total}, the last one. Reply to ${other}'s last point, then end with two lists: "Agreed" (the changes you would both ask for, most important first) and "Still disagree" (each point, with both positions in a line).`
+      : `This is message ${n} of ${total}. Both reviews are above. Take the points where you and ${other} differ, one or two at a time: argue them, and concede when you're convinced. Don't repeat points you agree on.`;
+  const lines = [
+    `You are ${me}, reviewing with ${other}, another AI agent. A person set this up and is reading along; their messages, if any, are marked "${USER}".`,
+    SPEAKERS(tag),
+    `Write only your next message. No preamble, no name label, no praise.`,
+    UNATTENDED(other),
+    step,
+    '',
+    '## What to review',
+    '',
+    opener,
+    '',
+  ];
+  if (turns.length) {
+    lines.push('## Conversation so far', '');
+    for (const t of turns) lines.push(heading(t.label, tag), '', untag(t.text, tag), '');
+  }
+  if (retry) lines.push(retryNote(retry.why, retry.note));
+  return lines.join('\n');
+}
+
+// Puzzles: rounds of three turns. The setter writes a puzzle and its answer, the
+// solver answers, the setter grades. The answer is cut from the reply and kept
+// out of every prompt but the grader's until the round is graded. Roles swap
+// every round.
+const STEPS = ['puzzle', 'answer', 'grade'];
+const ANSWER = /^[ \t]*(?:#{1,6}[ \t]*|\*\*)answer\b.*$/im;
+const VERDICT = /verdict\W*(not solved|solved)/gi;
+
+// { puzzle, secret } from a setter's reply; secret is '' when there is no answer heading.
+function splitAnswer(text) {
+  const m = ANSWER.exec(text);
+  return m ? { puzzle: text.slice(0, m.index).trim(), secret: text.slice(m.index + m[0].length).trim() } : { puzzle: text, secret: '' };
+}
+function verdict(text) {
+  const all = [...String(text).matchAll(VERDICT)];
+  return all.length ? all[all.length - 1][1].toLowerCase() === 'solved' : null;
+}
+
+// Speaker and step for the (spoken + 1)th agent turn.
+function puzzleTurn(agents, spoken) {
+  const round = Math.floor(spoken / 3) + 1, step = STEPS[spoken % 3];
+  const setter = agents[(round - 1) % 2], solver = agents[round % 2];
+  return { round, step, me: step === 'answer' ? solver : setter, other: step === 'answer' ? setter : solver };
+}
+
+function puzzleFraming(me, other, opener, turns, retry, tag, { round, rounds, step, secret, score }) {
+  const task = {
+    puzzle: `You set this round's puzzle and ${other} solves it. Write one new puzzle that can be solved by reasoning alone, in text, with no tools, files or web, and that has one answer you can check. Make it hard but fair, and not a well-known puzzle. After the puzzle, write a line "## Answer" and under it the answer and a short worked solution. The app cuts everything from that line on before ${other} sees the puzzle, so don't hint at the answer above it.`,
+    answer: `${other} set the puzzle in its last message; solve it. You get one attempt. Show your reasoning briefly, then give your final answer on a line starting "Answer:".`,
+    grade: `You set this round's puzzle and ${other} has answered it. Grade the answer against yours: say whether it is right and why, then explain your solution. If your puzzle turned out ambiguous or wrong, say so and grade fairly. End with a line that is exactly "Verdict: solved" or "Verdict: not solved".`,
+  }[step];
+  const lines = [
+    `You are ${me}, playing a puzzle game with ${other}, another AI agent: you take turns setting puzzles for each other. A person set this up and is reading along; their messages, if any, are marked "${USER}".`,
+    SPEAKERS(tag),
+    `Write only your next message. No preamble, no name label.`,
+    UNATTENDED(other),
+    `Round ${round} of ${rounds}. Puzzles solved so far: ${score}.`,
+    task,
+    '',
+    '## Opener',
+    '',
+    opener,
+    '',
+  ];
+  if (turns.length) {
+    lines.push('## Game so far', '');
+    for (const t of turns) lines.push(heading(t.label, tag), '', untag(t.text, tag), '');
+  }
+  if (step === 'grade') lines.push('## Your answer to this round\'s puzzle (not shown to ' + other + ')', '', secret || '(You gave none; grade on the merits.)', '');
+  if (retry) lines.push(retryNote(retry.why, retry.note));
+  return lines.join('\n');
+}
+
 function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
   const talks = new Map();
 
-  const transcript = t => [
+  // An answer is written out only once its round is graded, unless `all` (saving
+  // on Save and clear, when nothing runs): until then no file holds it.
+  const transcript = (t, all = false) => [
     `# ${t.agents.map(a => a.label).join(' ↔ ')}`, '', `## Opener`, '', withFiles(t.opener, t.files), '',
-    ...t.turns.flatMap(m => [`## ${m.label}`, '', withFiles(inert(m.text), m.files), '']),
+    ...t.turns.flatMap(m => [`## ${title(m)}`, '', withFiles(inert(shown(t, m, all)), m.files), '']),
   ].join('\n');
+
+  const title = m => m.step ? `${m.label} (round ${m.round}, ${m.step})` : m.label;
+  const revealed = (t, m) => m.step === 'puzzle' && t.turns.some(g => g.step === 'grade' && g.round === m.round);
+  const shown = (t, m, all = false) => m.secret && (all || revealed(t, m))
+    ? `${m.text}\n\n**Answer (hidden until graded)**\n\n${m.secret}` : m.text;
+  const score = t => t.agents.map(a => `${a.label} ${t.turns.filter(m => m.step === 'grade' && m.solver === a.id && m.solved).length}`).join(', ');
 
   function save(t) {
     fs.writeFileSync(path.join(t.dir, 'transcript.md'), transcript(t));
@@ -146,22 +237,30 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
       return;
     }
     const spoken = t.turns.filter(m => m.agent).length;
-    const me = t.agents[spoken % 2], other = t.agents[(spoken + 1) % 2];
-    const prompt = framing(me.label, other.label, withFiles(t.opener, t.files),
-      t.turns.map(m => ({ label: m.label, text: withFiles(m.text, m.files) })), retry, t.tag,
-      spoken + 1, spoken + t.turnsLeft);
+    const pz = t.kind === 'puzzle' && puzzleTurn(t.agents, spoken);
+    const me = pz ? pz.me : t.agents[spoken % 2], other = pz ? pz.other : t.agents[(spoken + 1) % 2];
+    const opener = withFiles(t.opener, t.files);
+    // The second review is written without the first.
+    const seen = t.kind === 'review' && spoken === 1 ? t.turns.filter(m => !m.agent) : t.turns;
+    const past = seen.map(m => ({ label: title(m), text: withFiles(shown(t, m), m.files) }));
+    const prompt = pz
+      ? puzzleFraming(me.label, other.label, opener, past, retry, t.tag, {
+          round: pz.round, rounds: t.rounds, step: pz.step, score: score(t),
+          secret: pz.step === 'grade' ? t.turns.find(m => m.step === 'puzzle' && m.round === pz.round)?.secret : '' })
+      : (t.kind === 'review' ? reviewFraming : framing)(me.label, other.label, opener, past, retry, t.tag,
+          spoken + 1, spoken + t.turnsLeft);
     // Keep what each turn was sent and what it said on stderr, to rerun a failed turn by hand.
     const base = path.join(t.dir, 'turns', `${String(spoken + 1).padStart(2, '0')}-${me.id.replace(/[^\w-]/g, '_')}`);
     fs.mkdirSync(path.dirname(base), { recursive: true });
     fs.writeFileSync(base + (retry ? '.retry' : '') + '.prompt.md', prompt);
     const [cmd, ...args] = fill(me.headless, prompt);
-    const cur = { agent: me.id, label: me.label, started: Date.now(), out: '', err: '', retry: !!retry };
+    const cur = { agent: me.id, label: me.label, started: Date.now(), out: '', err: '', retry: !!retry, step: pz && pz.step, round: pz && pz.round };
     t.current = cur;
     t.status = 'running';
 
     let child;
     try {
-      child = spawn(cmd, args, { cwd: t.dir, env: agentEnv(me.env), shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+      child = spawn(cmd, args, { cwd: t.work, env: agentEnv(me.env), shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
     } catch (e) { return fail(t, `${me.label}: ${e.message}`); }
     cur.child = child;
     const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, TURN_TIMEOUT);
@@ -173,9 +272,12 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
       cur.child = null;
       if (cur.err) fs.writeFileSync(base + (retry ? '.retry' : '') + '.stderr.txt', cur.err);
       if (t.stopRequested) return next(t);
-      const text = stripAnsi(cur.out).trim() && stripAnsi(cur.out).trim() + cutNote(cur);
-      if (cur.spawnError || code !== 0 || !text) {
-        const why = cur.spawnError || (cur.timedOut ? 'timed out' : code !== 0 ? `exit ${code}` : 'empty reply');
+      let text = stripAnsi(cur.out).trim() && stripAnsi(cur.out).trim() + cutNote(cur);
+      const split = pz && pz.step === 'puzzle' && text ? splitAnswer(text) : null;
+      const noAnswer = split && (!split.secret || !split.puzzle);
+      if (cur.spawnError || code !== 0 || !text || noAnswer) {
+        const why = cur.spawnError || (cur.timedOut ? 'timed out' : code !== 0 ? `exit ${code}` : !text ? 'empty reply'
+          : !split.puzzle ? 'no puzzle before the "## Answer" line' : 'no "## Answer" line after the puzzle');
         const tail = stripAnsi(cur.err).trim().split('\n').slice(-5).join('\n');
         if (!retry && !cur.spawnError && !cur.timedOut) {
           console.warn(`  ↻ ${t.id} ${me.id}: ${why}, retrying`);
@@ -188,13 +290,17 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
         const prev = t.turns.filter(m => m.agent).pop();
         if (!tool || prev?.skipped) return fail(t, `${me.label}: ${why}${tail ? `\n${tail}` : ''}`);
         console.warn(`  ⤳ ${t.id} ${me.id}: refused ${tool}, turn skipped`);
-        t.turns.push({ agent: me.id, label: me.label, text: skippedText(me.label, tool), skipped: true, seconds: Math.round((Date.now() - cur.started) / 1000) });
+        t.turns.push({ agent: me.id, label: me.label, text: skippedText(me.label, tool), skipped: true, ...(pz && { step: pz.step, round: pz.round }), seconds: Math.round((Date.now() - cur.started) / 1000) });
         t.turns.push(...t.queued.splice(0));
         t.turnsLeft--;
         save(t);
         return next(t);
       }
-      t.turns.push({ agent: me.id, label: me.label, text, seconds: Math.round((Date.now() - cur.started) / 1000) });
+      const m = { agent: me.id, label: me.label, text, seconds: Math.round((Date.now() - cur.started) / 1000) };
+      if (pz) Object.assign(m, { step: pz.step, round: pz.round });
+      if (split) Object.assign(m, { text: split.puzzle, secret: split.secret });
+      if (pz && pz.step === 'grade') Object.assign(m, { solver: other.id, solved: verdict(text) });
+      t.turns.push(m);
       // Anything the user said while this agent was writing goes after its reply.
       t.turns.push(...t.queued.splice(0));
       t.turnsLeft--;
@@ -214,33 +320,40 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
 
   function start(body) {
     const cfg = loadConfig();
-    const opener = typeof body.opener === 'string' ? body.opener.trim() : '';
+    const kind = KINDS.includes(body.kind) ? body.kind : 'talk';
+    const opener = (typeof body.opener === 'string' ? body.opener.trim() : '') || (kind === 'puzzle' ? 'Any kind of puzzle.' : '');
     if (!opener) return [400, { error: 'Empty opener.' }];
     const ids = Array.isArray(body.agents) ? body.agents : [];
     if (ids.length !== 2) return [400, { error: 'Pick two agents.' }];
     const agents = ids.map(id => cfg.agents.find(a => a.id === id && a.type !== 'url'));
     if (agents.some(a => !a)) return [400, { error: 'Unknown agent.' }];
     if (agents.some(a => !a.headless)) return [400, { error: `${agents.find(a => !a.headless).label} has no headless command.` }];
-    const turns = Math.min(MAX_TURNS, Math.max(1, Math.floor(Number(body.turns)) || 10));
+    // Puzzles count rounds of three turns; a review needs two reviews and a reply.
+    const rounds = kind === 'puzzle' ? Math.min(MAX_ROUNDS, Math.max(1, Math.floor(Number(body.turns)) || 6)) : 0;
+    const turns = kind === 'puzzle' ? rounds * 3
+      : Math.min(MAX_TURNS, Math.max(kind === 'review' ? 3 : 1, Math.floor(Number(body.turns)) || (kind === 'review' ? 6 : 10)));
     let files;
     try { files = parseFiles(body.files); } catch (e) { return [400, { error: e.message }]; }
 
     const id = stamp() + '-' + crypto.randomBytes(2).toString('hex');
     const talkDir = path.join(dir, id);
-    fs.mkdirSync(talkDir, { recursive: true });
-    const saved = saveFiles(talkDir, files);
+    // A review or a game runs in table/, away from the transcript and the
+    // prompts, which hold what the other agent isn't meant to see yet.
+    const work = kind === 'talk' ? talkDir : path.join(talkDir, 'table');
+    fs.mkdirSync(work, { recursive: true });
+    const saved = saveFiles(work, files);
     // Same label twice (Claude talking to Claude) would make the transcript unreadable.
     const labels = agents.map(a => a.label || a.id);
     if (labels[0] === labels[1]) { labels[0] += ' (1)'; labels[1] += ' (2)'; }
     const t = {
-      id, dir: talkDir, tag: newTag(), opener, files: saved, turns: [], queued: [], turnsLeft: turns, status: 'running',
+      id, kind, rounds, dir: talkDir, work, tag: newTag(), opener, files: saved, turns: [], queued: [], turnsLeft: turns, status: 'running',
       agents: agents.map((a, i) => ({ id: a.id + (ids[0] === ids[1] ? `#${i + 1}` : ''), label: labels[i], headless: a.headless, env: a.env })),
     };
     talks.set(id, t);
     fs.writeFileSync(path.join(talkDir, 'meta.json'),
-      JSON.stringify({ id, agents: ids, turns, at: new Date().toISOString() }, null, 2));
+      JSON.stringify({ id, kind, agents: ids, turns, at: new Date().toISOString() }, null, 2));
     save(t);
-    console.log(`  ↔ ${id} ${ids.join(' ↔ ')} (${turns} turns) in ${talkDir}`);
+    console.log(`  ↔ ${id} ${kind} ${ids.join(' ↔ ')} (${turns} turns) in ${talkDir}`);
     next(t);
     return [200, view(t)];
   }
@@ -261,7 +374,12 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
     const t = talks.get(id);
     if (!t) return [404, { error: 'No such conversation.' }];
     if (t.status === 'running') return [409, { error: 'Already running.' }];
-    t.turnsLeft = Math.min(MAX_TURNS, Math.max(1, Math.floor(Number(body.turns)) || 2));
+    if (t.kind === 'puzzle') {
+      // Finish the round in progress, then play the rounds asked for.
+      const spoken = t.turns.filter(m => m.agent).length, more = Math.min(MAX_ROUNDS, Math.max(1, Math.floor(Number(body.turns)) || 2));
+      t.turnsLeft = (3 - spoken % 3) % 3 + more * 3;
+      t.rounds = Math.ceil((spoken + t.turnsLeft) / 3);
+    } else t.turnsLeft = Math.min(MAX_TURNS, Math.max(1, Math.floor(Number(body.turns)) || 2));
     t.stopRequested = false;
     t.error = undefined;
     next(t);
@@ -275,25 +393,32 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
     let files;
     try { files = parseFiles(body.files, attachedBytes([t, ...t.turns, ...t.queued])); } catch (e) { return [400, { error: e.message }]; }
     if (!text && !files.length) return [400, { error: 'Empty message.' }];
-    const m = { user: true, label: USER, text, files: saveFiles(t.dir, files) };
+    const m = { user: true, label: USER, text, files: saveFiles(t.work, files) };
     if (t.current) t.queued.push(m);
     else { t.turns.push(m); save(t); }
     return [200, view(t)];
   }
 
+  // The page doesn't get an answer before its round is graded either, live or kept.
   const view = t => ({
-    id: t.id, dir: t.dir, opener: t.opener, files: t.files, status: t.status, error: t.error, turnsLeft: t.turnsLeft,
+    id: t.id, kind: t.kind, rounds: t.rounds, dir: t.dir, opener: t.opener, files: t.files, status: t.status, error: t.error, turnsLeft: t.turnsLeft,
     agents: t.agents.map(a => ({ id: a.id, label: a.label })),
-    turns: t.turns.map(({ agent, user, label, text, files, seconds, skipped }) => ({ agent, user, label, text, files, seconds, skipped })),
+    turns: t.turns.map(m => {
+      const { agent, user, label, text, files, seconds, skipped, step, round, solved } = m;
+      return { agent, user, label, text, files, seconds, skipped, step, round, solved,
+        answer: revealed(t, m) ? m.secret : undefined, hidden: !!m.secret && !revealed(t, m) };
+    }),
     queued: t.queued.map(m => withFiles(m.text, m.files)),
+    score: t.kind === 'puzzle' ? t.agents.map(a => t.turns.filter(m => m.step === 'grade' && m.solver === a.id && m.solved).length) : undefined,
     current: t.current && {
-      agent: t.current.agent, label: t.current.label, text: stripAnsi(t.current.out),
+      agent: t.current.agent, label: t.current.label, step: t.current.step, round: t.current.round,
+      text: t.current.step === 'puzzle' ? splitAnswer(stripAnsi(t.current.out)).puzzle : stripAnsi(t.current.out),
       seconds: Math.round((Date.now() - t.current.started) / 1000), retry: t.current.retry,
     },
   });
 
   const list = () => [...talks.values()].reverse().slice(0, 20).map(t => ({
-    id: t.id, status: t.status, agents: t.agents.map(a => a.label), opener: t.opener.slice(0, 120),
+    id: t.id, kind: t.kind, status: t.status, agents: t.agents.map(a => a.label), opener: t.opener.slice(0, 120),
     turns: t.turns.filter(m => m.agent).length,
   }));
 
@@ -306,7 +431,7 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
       fs.mkdirSync(savedDir, { recursive: true });
       const slug = t.agents.map(a => a.label).join(' ').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       const file = path.join(savedDir, `${t.id}-${slug}.md`);
-      fs.writeFileSync(file, transcript(t));
+      fs.writeFileSync(file, transcript(t, true));
       talks.delete(t.id);
       saved.push(file);
     }
@@ -319,4 +444,4 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
   return { start, stop, resume, say, get, list, clear };
 }
 
-module.exports = { createTalks, framing, position, killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS };
+module.exports = { createTalks, framing, reviewFraming, puzzleFraming, splitAnswer, verdict, position, killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS };

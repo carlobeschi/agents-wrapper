@@ -20,6 +20,20 @@ Each turn is one headless run of the speaker's command, given the opener and the
 
 They run in a new empty folder per conversation, `~/.agent-dispatch/talks/<id>/`, with `transcript.md` and `meta.json`. Each turn's prompt and stderr are kept in `turns/`. Agents run unattended, so a tool that needs permission is refused; each prompt tells them to say so and carry on (the other agent may know what the link or file is). A turn that fails or returns nothing is run once more after 3 seconds, with the first line of the error added to the prompt and an instruction to reply in text only. That covers an agent stopped by a refused tool (Antigravity prints nothing and exits) and the odd one-off backend error (Antigravity: `NOT_FOUND (code 404)`). If the retry is refused a tool again, the turn is skipped: a note saying which tool was refused takes its place and the other agent carries on. Two skipped turns in a row stop the conversation. Agents get no extra permissions for any of this. Any other second failure, or a turn past 10 minutes, stops the conversation with the agent's error. Retry runs the failed turn again. The list on the page is in memory and empties when the server restarts. **Save and clear** copies every conversation that isn't running to `~/.agent-dispatch/conversations/<id>-<agents>.md` and empties the list; the `talks/<id>/` folders stay.
 
+## Review
+
+`/review` is a conversation set up for reviewing a change. Put what to review in the opener (paste a diff, or attach the files) and pick the two reviewers. Each writes a review on its own first: the second reviewer's prompt leaves out the first review. Then they argue the points where they differ, and the last message ends with two lists, **Agreed** and **Still disagree**. 6 turns by default, 3 at least.
+
+## Puzzles
+
+`/puzzle` is a game in rounds of three turns: the setter writes a puzzle with its answer under a `## Answer` line, the solver answers it, and the setter grades it, ending on `Verdict: solved` or `Verdict: not solved`. Roles swap every round; the header keeps count of puzzles solved. The opener is optional (a theme or rules). 6 rounds by default.
+
+The app cuts the answer off the setter's reply and keeps it in memory. Until the round is graded it goes into the grader's prompt and nowhere else: not the solver's prompt, not `transcript.md`, not the page. A reply without the answer line is retried once with the reason. Save and clear writes every answer.
+
+A review and a game run in `talks/<id>/table/`, not next to `transcript.md` and `turns/`, so an agent limited to its folder (Claude Code) can't read the first review or a graded prompt there. One that can read outside its folder could.
+
+The four scenarios are tabs at the top of the sidebar. Each lists only its own.
+
 ## Story
 
 `/story` runs the same two agents over several days. Each day they meet for a few turns, then each goes home: one private run in its own folder, ending with a journal entry for the day, any notes it wants to keep, and a drawing of the day. Notes go under a `## Notes to keep` heading in the reply, not in a file, so they need no write permission either: the app takes them out of the journal and shows them under it, folded. Each evening's notes replace the last; an evening without them keeps the old ones. The drawing is an SVG written into the reply, not a file, so it needs no write permission; it is saved to `drawings/` and shown on the page as an image, where it cannot run scripts or load anything. A drawing with a script, `foreignObject`, `iframe`, event handler, or a link or `url()` that points outside the drawing is not kept, since the saved file could run it if opened on its own; the journal still is. The next day each agent has its journal, not its drawings. The next day's meeting starts from there. Pick the two (the first opens day 1, the second day 2, and so on), the number of days (up to 7) and turns per meeting (8 by default), and Start. Each meeting turn is told its place ("message 3 of 8 today"), and the last one closes the day. Another day adds one once the story ends. A message you send reaches the next meeting turn.

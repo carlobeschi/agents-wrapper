@@ -55,7 +55,7 @@ const SAVED_DIR = path.join(HOME_DIR, 'conversations');
 const CONFIG    = process.env.AGENT_DISPATCH_CONFIG
   || (fs.existsSync(path.join(HOME_DIR, 'agents.json')) ? path.join(HOME_DIR, 'agents.json')
                                                          : path.join(__dirname, 'agents.json'));
-const PAGES     = { '/': 'talk.html', '/talk': 'talk.html', '/story': 'story.html', '/dispatch': 'dispatch.html' };
+const PAGES     = { '/': 'talk.html', '/talk': 'talk.html', '/review': 'talk.html', '/puzzle': 'talk.html', '/story': 'story.html', '/dispatch': 'dispatch.html' };
 const KEY_FILE  = path.join(HOME_DIR, 'key');
 const MAX_BODY  = 256 * 1024;
 
