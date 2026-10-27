@@ -40,6 +40,10 @@
           position: sticky; top: 0; }
   aside .top { padding: 16px 14px 10px; display: flex; flex-direction: column; gap: 12px; }
   aside .brand { font-weight: 700; font-size: 15px; }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .modes a { padding: 6px 10px; border-radius: 8px; font-size: 13px; color: var(--muted); text-decoration: none; }
+  .modes a:hover { color: var(--text); }
+  .modes a.on { background: var(--panel); color: var(--text); font-weight: 600; box-shadow: inset 0 0 0 1px var(--line); }
   #talks { flex: 1; overflow: auto; padding: 0 8px; }
   .talk { padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; margin-bottom: 2px; }
   .talk:hover { background: var(--panel); }
@@ -61,6 +65,8 @@
   #setup { max-width: 640px; width: 100%; margin: 8vh auto 0; padding: 0 16px; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
   .card h1 { font-size: 18px; margin: 0 0 16px; }
+  .answer { margin-top: 8px; font-size: 13px; }
+  .answer summary { cursor: pointer; color: var(--muted); }
   .pair { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
   .pair label { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
   .pair select { width: 100%; }
@@ -131,14 +137,16 @@
 <body>
 <aside>
   <div class="top">
-    <div class="brand">Agents talk</div>
+    <div class="brand">Agents</div>
+  <nav class="modes" aria-label="Scenario">
+    <a href="/" data-kind="talk">Conversation</a><a href="/story" data-kind="story">Story</a><a href="/puzzle" data-kind="puzzle">Puzzles</a><a href="/review" data-kind="review">Review</a>
+  </nav>
     <button id="new" type="button">+ New conversation</button>
   </div>
   <div id="talks"><div class="hint">No conversations yet.</div></div>
   <div class="bottom">
     <button id="clear" type="button" hidden>Save and clear</button>
     <div id="saved" class="muted"></div>
-    <a href="/story">Story (over several days)</a>
     <a href="/dispatch">Dispatch (legacy)</a>
   </div>
 </aside>
@@ -147,16 +155,16 @@
   <section id="setup">
     <button class="menu icon" type="button" aria-label="Conversations">☰</button>
     <div class="card">
-      <h1>New conversation</h1>
+      <h1 id="h1">New conversation</h1>
       <div class="pair">
-        <label>Speaks first <select id="a"></select></label>
+        <label><span id="firstLabel">Speaks first</span> <select id="a"></select></label>
         <button class="icon" id="swap" type="button" title="Swap">⇄</button>
-        <label>Replies <select id="b"></select></label>
+        <label><span id="secondLabel">Replies</span> <select id="b"></select></label>
       </div>
       <textarea id="opener" placeholder="Introduce them, or give a topic"></textarea>
       <div class="files" id="openerFiles"></div>
       <div class="go">
-        <label>Turns <input type="number" id="turns" min="1" max="50" value="10"></label>
+        <label><span id="countLabel">Turns</span> <input type="number" id="turns" min="1" max="50" value="10"></label>
         <span style="flex:1"></span>
         <button id="attachOpener" type="button" data-for="opener">Attach files</button>
         <button class="primary" id="start" type="button">Start <small>⌘↵</small></button>
@@ -201,10 +209,21 @@ const TOKEN = (() => {
   } catch { return m ? m[1] : ''; }
 })();
 const $ = id => document.getElementById(id);
+// One page, three scenarios, picked by the path. Each keeps its own setup and list.
+const KIND = { '/review': 'review', '/puzzle': 'puzzle' }[location.pathname] || 'talk';
+const MODE = {
+  talk:   { title: 'Conversation', h1: 'New conversation', first: 'Speaks first', second: 'Replies', count: 'Turns', turns: 10, min: 1, max: 50,
+            placeholder: 'Introduce them, or give a topic', none: 'No conversations yet.' },
+  review: { title: 'Review', h1: 'New review', first: 'Reviews first', second: 'Reviews second', count: 'Turns', turns: 6, min: 3, max: 50,
+            placeholder: 'What to review and what the change is for. Paste a diff, or attach the files.', none: 'No reviews yet.' },
+  puzzle: { title: 'Puzzles', h1: 'New puzzle game', first: 'Sets first', second: 'Solves first', count: 'Rounds', turns: 6, min: 1, max: 16,
+            placeholder: 'Optional: a theme or rules, e.g. logic puzzles only', none: 'No games yet.' },
+}[KIND];
 const store = {
-  get(k, d) { try { const v = localStorage.getItem('talk.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem('talk.' + k, JSON.stringify(v)); } catch {} },
+  get(k, d) { try { const v = localStorage.getItem(key(k)); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(key(k), JSON.stringify(v)); } catch {} },
 };
+function key(k) { return 'talk.' + (KIND === 'talk' || k === 'pair' ? k : `${KIND}.${k}`); }
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 // Attachments: picked here, sent as base64, checked and saved by the server
@@ -290,6 +309,11 @@ function message(cls, who, html, extra = '', avatar = initials(who)) {
     + `<div class="body"><div class="who"><b>${esc(who)}</b>${extra}</div><div class="text">${html}</div></div></div>`;
 }
 
+// A puzzle round's step, and once graded, its verdict and the setter's answer.
+const stepNote = m => m.step ? `<span>round ${m.round} · ${m.step}${m.step === 'grade' && m.solved != null ? (m.solved ? ' · solved' : ' · not solved') : ''}</span>` : '';
+const answer = m => m.answer ? `<details class="answer"><summary>Answer</summary><div class="text">${md(m.answer)}</div></details>`
+  : m.hidden ? '<div class="answer muted">Answer hidden until graded.</div>' : '';
+
 function render(t) {
   last = t;
   const side = id => (id === t.agents[0].id ? 'a' : 'b');
@@ -297,31 +321,34 @@ function render(t) {
   $('chat').innerHTML = [
     message('opener', 'Opener', md(t.opener) + att(t.files), '', '✎'),
     ...t.turns.map(m => m.user ? message('you', m.label, md(m.text) + att(m.files))
-                               : message(side(m.agent), m.label, md(m.text), `<span>${m.seconds}s</span>`)),
+                               : message(side(m.agent), m.label, md(m.text) + answer(m), `${stepNote(m)}<span>${m.seconds}s</span>`)),
     ...t.queued.map(text => message('you', 'You', md(text), '<span>after this reply</span>')),
     t.current ? message(`${side(t.current.agent)} live`, t.current.label,
       t.current.text.trim() ? md(t.current.text) : '<span class="typing"><i></i><i></i><i></i></span>',
-      `<span class="s-running">${t.current.retry ? 'retrying' : 'writing'} · ${t.current.seconds}s</span>`) : '',
+      `${stepNote(t.current)}<span class="s-running">${t.current.retry ? 'retrying' : 'writing'} · ${t.current.seconds}s</span>`) : '',
   ].join('');
   const spoken = t.turns.filter(m => m.agent).length;
   const running = t.status === 'running';
   $('pair').innerHTML = t.agents.map(a => esc(a.label)).join(' <span class="muted">↔</span> ');
   $('pill').textContent = t.status;
   $('pill').className = `pill s-${t.status}`;
-  $('progress').textContent = running ? `turn ${spoken + 1} of ${spoken + t.turnsLeft}` : `${spoken} turn${spoken === 1 ? '' : 's'}`;
+  $('progress').textContent = t.kind === 'puzzle'
+    ? `round ${Math.min(t.rounds, Math.floor(spoken / 3) + (running ? 1 : 0)) || 1} of ${t.rounds} · solved ${t.agents.map((a, i) => `${a.label} ${t.score[i]}`).join(', ')}`
+    : running ? `turn ${spoken + 1} of ${spoken + t.turnsLeft}` : `${spoken} turn${spoken === 1 ? '' : 's'}`;
   $('status').innerHTML = `<span class="s-${esc(t.status)}">${esc(t.status)}</span> · ${spoken} turn${spoken === 1 ? '' : 's'}`
     + (running ? ` · ${t.turnsLeft} to go` : '') + ` · ${esc(t.dir)}`
     + (t.error ? `\n<span class="err">${esc(t.error)}</span>` : '');
   $('stop').hidden = !running;
   $('more').hidden = running;
   $('resume').textContent = t.status === 'failed' ? 'Retry' : 'Continue';
-  document.title = `${t.agents.map(a => a.label).join(' ↔ ')} · Agents talk`;
+  document.title = `${t.agents.map(a => a.label).join(' ↔ ')} · ${MODE.title}`;
   if (nearBottom) window.scrollTo(0, document.body.scrollHeight);
 }
 
 function transcript(t) {
   return [`# ${t.agents.map(a => a.label).join(' ↔ ')}`, '', '## Opener', '', withFiles(t.opener, t.files), '',
-    ...t.turns.flatMap(m => [`## ${m.label}`, '', withFiles(m.text, m.files), ''])].join('\n');
+    ...t.turns.flatMap(m => [`## ${m.label}${m.step ? ` (round ${m.round}, ${m.step})` : ''}`, '',
+      withFiles(m.answer ? `${m.text}\n\n**Answer**\n\n${m.answer}` : m.text, m.files), ''])].join('\n');
 }
 
 async function show(id) {
@@ -344,19 +371,19 @@ function showSetup() {
   current = null; store.set('current', null);
   $('setup').hidden = false; $('view').hidden = true;
   document.body.classList.remove('nav');
-  document.title = 'Agents talk';
+  document.title = MODE.title;
   markActive();
   $('opener').focus();
 }
 
 async function start() {
   const opener = $('opener').value;
-  if (!opener.trim()) return msg('Empty opener.', true);
+  if (!opener.trim() && KIND !== 'puzzle') return msg('Empty opener.', true);
   const agents = [$('a').value, $('b').value];
   store.set('pair', agents); store.set('turns', $('turns').value);
   $('start').disabled = true;
   try {
-    const t = await api('/api/talk', { opener, agents, turns: Number($('turns').value), files: await encode('opener') });
+    const t = await api('/api/talk', { kind: KIND, opener, agents, turns: Number($('turns').value), files: await encode('opener') });
     msg('');
     $('opener').value = '';
     picked.opener = []; chips('opener');
@@ -399,7 +426,8 @@ async function refreshTalks() {
   let talks;
   try { ({ talks } = await api('/api/talks')); } catch { return; }
   $('clear').hidden = !talks.some(t => t.status !== 'running');
-  if (!talks.length) { $('talks').innerHTML = '<div class="hint">No conversations yet.</div>'; return; }
+  talks = talks.filter(t => (t.kind || 'talk') === KIND);
+  if (!talks.length) { $('talks').innerHTML = `<div class="hint">${esc(MODE.none)}</div>`; return; }
   $('talks').innerHTML = talks.map(t => `
     <div class="talk" data-id="${esc(t.id)}" title="${esc(t.status)} · ${t.turns} turns">
       <div class="t1"><span class="dot ${esc(t.status)}"></span>${esc(t.agents.join(' ↔ '))}</div>
@@ -447,6 +475,15 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !$('setup').hidden) { e.preventDefault(); start(); }
 });
 
+for (const a of document.querySelectorAll('.modes a')) if (a.dataset.kind === KIND) { a.classList.add('on'); a.setAttribute('aria-current', 'page'); }
+$('h1').textContent = MODE.h1;
+$('new').textContent = '+ ' + MODE.h1;
+$('firstLabel').textContent = MODE.first; $('secondLabel').textContent = MODE.second;
+$('countLabel').textContent = MODE.count;
+$('opener').placeholder = MODE.placeholder;
+Object.assign($('turns'), { min: MODE.min, max: MODE.max });
+$('moreTurns').setAttribute('aria-label', `More ${MODE.count.toLowerCase()}`);
+
 (async () => {
   try {
     const { agents } = await api('/api/agents');
@@ -457,7 +494,7 @@ document.addEventListener('keydown', e => {
     const [pa, pb] = store.get('pair', []);
     $('a').value = ok.includes(pa) ? pa : ok[0] || '';
     $('b').value = ok.includes(pb) ? pb : ok.find(id => id !== $('a').value) || ok[0] || '';
-    $('turns').value = store.get('turns', 10);
+    $('turns').value = store.get('turns', MODE.turns);
     await refreshTalks();
     const id = store.get('current', null);
     id ? show(id) : showSetup();
