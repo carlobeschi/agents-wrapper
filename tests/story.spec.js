@@ -22,6 +22,13 @@ test.beforeAll(async () => {
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({
     agents: [
       { id: 'a', label: 'Agent A', headless: fake('a') },
+      // At home: a journal, then a drawing. The painter's is plain; the vandal's tries to run a script.
+      { id: 'painter', label: 'Painter', headless: ['sh', '-c',
+        `case "$1" in *"you are home"*) printf '%s\n' 'A good day.' '' '\`\`\`svg' '<svg viewBox="0 0 10 10"><defs><linearGradient id="g"/></defs><circle cx="5" cy="5" r="4" fill="url(#g)"/></svg>' '\`\`\`';; *) echo "Hello from painter";; esac`,
+        'x', '{prompt}'] },
+      { id: 'vandal', label: 'Vandal', headless: ['sh', '-c',
+        `case "$1" in *"you are home"*) printf '%s\n' 'A bad day.' '' '<svg viewBox="0 0 10 10" onload="document.title=1"><script>document.title=2</script><circle cx="5" cy="5" r="4"/></svg>';; *) echo "Hello from vandal";; esac`,
+        'x', '{prompt}'] },
       { id: 'b', label: 'Agent B', headless: fake('b') },
       { id: 'slow', label: 'Slow', headless: ['sh', '-c', `printf 'thinking about it'; sleep 30; echo done`] },
       // Like agy when a tool is refused: no reply, the reason on stderr. Replies once told why.
@@ -94,6 +101,39 @@ test('they meet, go home and write a journal, and meet again the next day', asyn
     '## Day 1', '### Agent A', '### Agent B', '## Day 1, evening', "### Agent A's journal", "### Agent B's journal",
     '## Day 2', '### Agent B', '### Agent A', '## Day 2, evening', "### Agent A's journal", "### Agent B's journal",
   ]);
+});
+
+test('at home each agent can draw the day; the drawing is saved and shown as an image', async ({ page }) => {
+  await begin(page, 'painter', 'b', 1, 2);
+  await expect(page.locator('#pill')).toHaveText('done');
+  const dir = await storyDir(page);
+  expect(read(dir, 'homes', 'b', 'prompt-b.txt')).toContain('draw a picture of what the day looked like');
+
+  const journal = page.locator('#chat .m.journal').first();
+  await expect(journal.locator('.text p')).toHaveText('A good day.');
+  await expect(journal).not.toContainText('svg');
+  const img = journal.locator('.drawing img');
+  await expect(img).toHaveAttribute('src', /^data:image\/svg\+xml/);
+  await expect(img).toHaveJSProperty('naturalWidth', 150);   // it rendered: the namespace was added
+  await expect(page.locator('#chat .m.journal').nth(1).locator('.drawing')).toHaveCount(0);   // B wrote no drawing
+
+  const svg = read(dir, 'drawings', 'd01-home-painter.svg');
+  expect(svg).toMatch(/^<svg xmlns="http:\/\/www.w3.org\/2000\/svg" viewBox/);
+  const story = read(dir, 'story.md');
+  expect(story).toContain("### Painter's journal\n\nA good day.\n\n![Painter, day 1](drawings/d01-home-painter.svg)\n");
+  expect(story).not.toContain('<svg');
+});
+
+test('a drawing that could run a script when opened is dropped, and the journal kept', async ({ page }) => {
+  await begin(page, 'vandal', 'b', 1, 2);
+  await expect(page.locator('#pill')).toHaveText('done');
+  const journal = page.locator('#chat .m.journal').first();
+  await expect(journal.locator('.text p')).toHaveText('A bad day.');
+  await expect(journal.locator('.drawing')).toHaveCount(0);
+  expect(await page.title()).toBe('Vandal & Agent B · Agents story');
+  const dir = await storyDir(page);
+  expect(fs.existsSync(path.join(dir, 'drawings'))).toBe(false);
+  expect(read(dir, 'story.md')).not.toMatch(/<svg|!\[Vandal/);
 });
 
 test('a message sent after the day ends reaches the next meeting, and Another day adds one', async ({ page }) => {
