@@ -14,7 +14,7 @@ const fs     = require('fs');
 const path   = require('path');
 const { spawn } = require('child_process');
 const { parseFiles, saveFiles, withFiles, attachedBytes } = require('./attach');
-const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, newTag, untag, heading, SPEAKERS } = require('./talk');
+const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, inert, newTag, untag, heading, SPEAKERS } = require('./talk');
 
 const MAX_DAYS     = 7;    // to start with; "Another day" can go past it
 const MAX_TOTAL    = 30;
@@ -79,9 +79,9 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
     `# ${s.agents.map(a => a.label).join(' & ')}`, '', '## How it started', '', withFiles(s.opener, s.files), '',
     ...s.days.flatMap(d => [
       `## Day ${d.n}`, '',
-      ...d.turns.flatMap(t => [`### ${t.label}`, '', withFiles(t.text, t.files), '']),
+      ...d.turns.flatMap(t => [`### ${t.label}`, '', withFiles(inert(t.text), t.files), '']),
       ...(s.agents.some(a => a.journal[d.n - 1] !== undefined) ? [`## Day ${d.n}, evening`, ''] : []),
-      ...s.agents.filter(a => a.journal[d.n - 1] !== undefined).flatMap(a => [`### ${a.label}'s journal`, '', a.journal[d.n - 1], '']),
+      ...s.agents.filter(a => a.journal[d.n - 1] !== undefined).flatMap(a => [`### ${a.label}'s journal`, '', inert(a.journal[d.n - 1]), '']),
     ]),
   ].join('\n');
 

@@ -173,6 +173,10 @@ test('replies are formatted as Markdown and never as HTML', async ({ page }) => 
   await expect(reply.locator('li')).toHaveText(['one', 'two']);
   await expect(reply.locator('img')).toHaveCount(0);
   await expect(reply).toContainText('<img src=x onerror="document.title=1">');
+  // In the saved file the tag is escaped, so a Markdown viewer shows it as text too.
+  const saved = fs.readFileSync(path.join(await talkDir(page), 'transcript.md'), 'utf8');
+  expect(saved).toContain('\\<img src=x onerror="document.title=1">');
+  expect(saved).toContain('**Bold** and `code`');
 });
 
 test('the home page is the conversation page, and dispatch moved to /dispatch', async ({ page }) => {
