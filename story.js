@@ -32,6 +32,16 @@ const MAX_DRAWING  = 200 * 1024;
 // The evening reply is a journal entry and, after it, one SVG of the day. Split
 // them: the SVG (fenced or bare) becomes the drawing, the rest the journal.
 // The page shows it as an <img>, where an SVG cannot run scripts or load anything.
+// The saved file can be opened on its own, so a drawing that could run or load
+// anything there is dropped, not cleaned: the journal stays, the drawing goes.
+const UNSAFE_SVG = [
+  /<\s*(script|foreignObject|iframe)\b/i,
+  /\son[a-z]+\s*=/i,
+  /\b(xlink:)?href\s*=\s*(?!["']#)/i,
+  /url\(\s*(?!["']?#)/i,
+  /@import/i,
+];
+
 function splitDrawing(text) {
   const m = text.match(/```[\w-]*\s*(<svg[\s>][\s\S]*?<\/svg>)\s*```/i) || text.match(/<svg[\s>][\s\S]*?<\/svg>/i);
   if (!m) return { journal: text };
@@ -39,6 +49,7 @@ function splitDrawing(text) {
   const svg = (m[1] || m[0]).replace(/^<svg(?![^>]*\sxmlns=)/i, '<svg xmlns="http://www.w3.org/2000/svg"');
   const journal = (text.slice(0, m.index) + text.slice(m.index + m[0].length)).trim();
   if (svg.length > MAX_DRAWING || !journal) return { journal: text };
+  if (UNSAFE_SVG.some(re => re.test(svg))) return { journal };
   return { journal, svg };
 }
 
