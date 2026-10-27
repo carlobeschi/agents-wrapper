@@ -109,6 +109,8 @@
            display: flex; gap: 10px; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
   h2.day span { text-transform: none; letter-spacing: 0; font-weight: 400; }
   .m.journal .body { background: var(--panel); border-style: dotted; }
+  .notes { margin: 10px 0 0; }
+  .notes summary { cursor: pointer; color: var(--muted); }
   .drawing { margin: 10px 0 0; }
   .drawing img { display: block; max-width: 100%; max-height: 320px; border-radius: 8px; border: 1px solid var(--line); background: #fff; }
   .typing { display: inline-flex; gap: 3px; } .typing i { width: 5px; height: 5px; border-radius: 50%; background: var(--run); animation: pulse 1.2s infinite; }
@@ -161,7 +163,7 @@
       <div class="go">
         <span style="display:flex; gap:14px">
           <label>Days <input type="number" id="days" min="1" max="7" value="3"></label>
-          <label>Turns a day <input type="number" id="turns" min="1" max="20" value="6"></label>
+          <label>Turns a day <input type="number" id="turns" min="1" max="20" value="8"></label>
         </span>
         <span style="flex:1"></span>
         <button id="attachOpener" type="button" data-for="opener">Attach files</button>
@@ -303,6 +305,7 @@ const drawing = (j, alt) => j.drawing
   ? `<figure class="drawing"><img alt="${esc(alt)}" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(j.drawing.svg)}"></figure>` : '';
 // While a journal is being written, the drawing after it shows as a placeholder, not as source.
 const unsvg = t => { const i = t.search(/```[\w-]*\s*<svg|<svg[\s>]/i); return i < 0 ? t : t.slice(0, i) + '\n\n*drawing…*'; };
+const notes = j => j.notes === undefined ? '' : `<details class="notes"><summary>Notes kept</summary>${md(j.notes)}</details>`;
 const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
 function render(s) {
@@ -322,7 +325,7 @@ function render(s) {
     if (d.journals.length || (cur?.day === d.n && cur.kind === 'evening')) {
       parts.push(`<h2 class="day">Day ${d.n}, evening <span>each one alone; the other never reads this</span></h2>`);
       parts.push(...d.journals.map(j => message(`${side(j.agent)} journal`, `${j.label}'s journal`,
-        md(j.text) + drawing(j, `${j.label}'s drawing of day ${d.n}`))));
+        md(j.text) + notes(j) + drawing(j, `${j.label}'s drawing of day ${d.n}`))));
       if (cur?.day === d.n && cur.kind === 'evening') parts.push(live());
     }
   }
@@ -354,6 +357,7 @@ function transcript(s) {
     ...s.days.flatMap(d => [`## Day ${d.n}`, '', ...d.turns.flatMap(m => [`### ${m.label}`, '', withFiles(m.text, m.files), '']),
       ...(d.journals.length ? [`## Day ${d.n}, evening`, ''] : []),
       ...d.journals.flatMap(j => [`### ${j.label}'s journal`, '', j.text, '',
+        ...(j.notes !== undefined ? [`#### ${j.label}'s notes`, '', j.notes, ''] : []),
         ...(j.drawing ? [`![${j.label}, day ${d.n}](${j.drawing.file})`, ''] : [])])])].join('\n');
 }
 
@@ -479,7 +483,7 @@ document.addEventListener('keydown', e => {
     const [pa, pb] = store.get('pair', []);
     $('a').value = ok.includes(pa) ? pa : ok[0] || '';
     $('b').value = ok.includes(pb) ? pb : ok.find(id => id !== $('a').value) || ok[0] || '';
-    $('turns').value = store.get('turns', 6);
+    $('turns').value = store.get('turns', 8);
     $('days').value = store.get('days', 3);
     await refreshTalks();
     const id = store.get('current', null);
