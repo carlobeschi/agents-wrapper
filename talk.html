@@ -103,6 +103,7 @@
   .m .who { font-size: 12px; color: var(--muted); margin-bottom: 2px; display: flex; gap: 8px; align-items: baseline; }
   .m .who b { color: var(--text); font-size: 13px; }
   .m.live .body { border-style: dashed; }
+  .m.skipped .body { background: var(--panel); border-style: dashed; } .m.skipped .text { color: var(--muted); font-style: italic; }
   .text { overflow-wrap: anywhere; }
   .text > :first-child { margin-top: 0; } .text > :last-child { margin-bottom: 0; }
   .text p, .text ul, .text ol, .text pre, .text blockquote { margin: 0 0 .6em; }
@@ -321,7 +322,7 @@ function render(t) {
   $('chat').innerHTML = [
     message('opener', 'Opener', md(t.opener) + att(t.files), '', '✎'),
     ...t.turns.map(m => m.user ? message('you', m.label, md(m.text) + att(m.files))
-                               : message(side(m.agent), m.label, md(m.text) + answer(m), `${stepNote(m)}<span>${m.seconds}s</span>`)),
+                               : message(side(m.agent) + (m.skipped ? ' skipped' : ''), m.label, md(m.text) + answer(m), `${stepNote(m)}<span>${m.skipped ? 'no reply' : `${m.seconds}s`}</span>`)),
     ...t.queued.map(text => message('you', 'You', md(text), '<span>after this reply</span>')),
     t.current ? message(`${side(t.current.agent)} live`, t.current.label,
       t.current.text.trim() ? md(t.current.text) : '<span class="typing"><i></i><i></i><i></i></span>',
