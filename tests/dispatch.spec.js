@@ -164,6 +164,17 @@ test('a prompt that starts with "-" is refused, so it never reaches a CLI as an 
   expect((await r.json()).error).toContain('can\'t start with "-"');
 });
 
+test('a config other users can change is refused', async ({ request }) => {
+  const cfg = path.join(home, 'agents.json');
+  fs.chmodSync(cfg, 0o666);
+  try {
+    const r = await request.get(BASE + '/api/agents', { headers: { 'X-Dispatch-Token': key } });
+    expect(r.status()).toBe(500);
+    expect((await r.json()).error).toContain('chmod go-w');
+  } finally { fs.chmodSync(cfg, 0o644); }
+  expect((await request.get(BASE + '/api/agents', { headers: { 'X-Dispatch-Token': key } })).status()).toBe(200);
+});
+
 test('without the key a page says where to get it', async ({ page }) => {
   await page.goto(BASE + '/dispatch');
   await expect(page.locator('body')).toContainText('Open the link that npm start printed.');

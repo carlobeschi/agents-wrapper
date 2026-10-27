@@ -63,6 +63,13 @@ const MAX_BODY  = 256 * 1024;
 const runs = new Map();
 
 function loadConfig() {
+  // The config decides what runs, so only its owner may be able to change it.
+  const st = fs.statSync(CONFIG);
+  // Group-writable is fine when the group is the user's own (a umask of 002).
+  const groupWrite = (st.mode & 0o020) && !(process.getgid && st.gid === process.getgid());
+  if ((process.getuid && st.uid !== process.getuid()) || (st.mode & 0o002) || groupWrite) {
+    throw new Error(`${CONFIG} can be changed by other users of this machine; make it yours and run chmod go-w on it.`);
+  }
   const cfg = JSON.parse(fs.readFileSync(CONFIG, 'utf8'));
   if (!Array.isArray(cfg.agents)) throw new Error(`${CONFIG}: "agents" must be an array`);
   return cfg;
