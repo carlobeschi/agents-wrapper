@@ -70,7 +70,7 @@ function eveningPrompt(s, me, other, day) {
   return lines.join('\n');
 }
 
-function createStories({ loadConfig, fill, stamp, dir }) {
+function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
   const stories = new Map();
 
   const markdown = s => [
@@ -129,7 +129,7 @@ function createStories({ loadConfig, fill, stamp, dir }) {
 
     let child;
     try {
-      child = spawn(cmd, args, { cwd: st.cwd, env: process.env, shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+      child = spawn(cmd, args, { cwd: st.cwd, env: agentEnv(st.me.env), shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
     } catch (e) { return fail(s, `${st.me.label}: ${e.message}`); }
     cur.child = child;
     const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, STEP_TIMEOUT);
@@ -193,7 +193,7 @@ function createStories({ loadConfig, fill, stamp, dir }) {
       agents: agents.map((a, i) => {
         const aid = a.id + (ids[0] === ids[1] ? `#${i + 1}` : '');
         const slug = aid.replace(/[^\w-]/g, '_');
-        return { id: aid, slug, label: labels[i], headless: a.headless, home: path.join(storyDir, 'homes', slug), journal: [] };
+        return { id: aid, slug, label: labels[i], headless: a.headless, env: a.env, home: path.join(storyDir, 'homes', slug), journal: [] };
       }),
     };
     for (const p of [s.meeting, ...s.agents.map(a => a.home)]) fs.mkdirSync(p, { recursive: true });

@@ -66,7 +66,7 @@ function framing(me, other, opener, turns, retry) {
   return lines.join('\n');
 }
 
-function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
+function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
   const talks = new Map();
 
   const transcript = t => [
@@ -104,7 +104,7 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
 
     let child;
     try {
-      child = spawn(cmd, args, { cwd: t.dir, env: process.env, shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+      child = spawn(cmd, args, { cwd: t.dir, env: agentEnv(me.env), shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
     } catch (e) { return fail(t, `${me.label}: ${e.message}`); }
     cur.child = child;
     const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, TURN_TIMEOUT);
@@ -167,7 +167,7 @@ function createTalks({ loadConfig, fill, stamp, dir, savedDir }) {
     if (labels[0] === labels[1]) { labels[0] += ' (1)'; labels[1] += ' (2)'; }
     const t = {
       id, dir: talkDir, opener, files: saved, turns: [], queued: [], turnsLeft: turns, status: 'running',
-      agents: agents.map((a, i) => ({ id: a.id + (ids[0] === ids[1] ? `#${i + 1}` : ''), label: labels[i], headless: a.headless })),
+      agents: agents.map((a, i) => ({ id: a.id + (ids[0] === ids[1] ? `#${i + 1}` : ''), label: labels[i], headless: a.headless, env: a.env })),
     };
     talks.set(id, t);
     fs.writeFileSync(path.join(talkDir, 'meta.json'),

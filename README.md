@@ -49,11 +49,14 @@ Defaults are in `agents.json`. To change them, copy that file to `~/.agent-dispa
   "agents": [
     { "id": "claude", "label": "Claude Code",
       "interactive": ["claude", "--model", "opus", "{prompt}"],
-      "headless":    ["claude", "-p", "{prompt}"] },
+      "headless":    ["claude", "-p", "--tools", "Read,Glob,Grep", "--permission-mode", "dontAsk", "--strict-mcp-config", "--", "{prompt}"],
+      "env":         ["ANTHROPIC_API_KEY"] },
     { "id": "claude-web", "label": "Claude (web)", "type": "url", "url": "https://claude.ai/new?q={prompt}" }
   ]
 }
 ```
+
+The headless commands that ship here are capped: Claude Code gets only its file-reading tools (`--tools Read,Glob,Grep`), no MCP servers, and refuses anything not pre-approved (`--permission-mode dontAsk`); Codex runs in its read-only sandbox. Those flags override whatever your own CLI settings allow, so a conversation can't run commands or write files even if your everyday setup does. Antigravity and Cursor run with their own headless defaults. Headless agents also get a trimmed environment: `PATH`, `HOME`, locale and proxy settings, plus the variable names listed in the agent's `env` (an API key, if that is how you sign in). Other variables in the shell that ran `npm start` don't reach them.
 
 `{prompt}` is replaced in argv, or URL-encoded into a web agent's `url`. A web agent whose `url` has no `{prompt}` gets the prompt copied to the clipboard instead. Nothing goes through a shell. `terminal` defaults to Terminal.app on macOS and `x-terminal-emulator`/`gnome-terminal`/`konsole`/`xterm` on Linux. The config is read on every request, so edits apply on page reload.
 

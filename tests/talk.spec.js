@@ -32,12 +32,14 @@ test.beforeAll(async () => {
       // Markdown, plus HTML that must stay text.
       { id: 'md', label: 'Marker', headless: ['sh', '-c', `printf '%s\n' '**Bold** and \`code\`' '' '- one' '- two' '' '<img src=x onerror="document.title=1">'`] },
       { id: 'bad', label: 'Bad', headless: ['sh', '-c', 'echo "no credits" >&2; exit 3'] },
+      // Prints what it can see of two variables: only the one its "env" lists gets through.
+      { id: 'envy', label: 'Envy', headless: ['sh', '-c', 'echo "secret=${TALK_SECRET:-none} key=${TALK_KEY:-none}"'], env: ['TALK_KEY'] },
       { id: 'term', label: 'Terminal only', interactive: ['true', '{prompt}'] },
       { id: 'web', label: 'Web', type: 'url', url: 'https://example.com/?q={prompt}' },
     ],
   }));
   server = spawn('node', [path.join(__dirname, '..', 'server.js')], {
-    env: { ...process.env, AGENT_DISPATCH_PORT: String(PORT), AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' },
+    env: { ...process.env, AGENT_DISPATCH_PORT: String(PORT), AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0', TALK_SECRET: 's3cret', TALK_KEY: 'k3y' },
     stdio: ['ignore', 'pipe', 'inherit'],
   });
   await new Promise((resolve, reject) => {
@@ -68,7 +70,7 @@ const talkDir = async page => (await page.locator('#status').textContent()).matc
 test('only agents with a headless command can be picked', async ({ page }) => {
   await page.goto(BASE + '/');
   const ids = await page.locator('#a option').evaluateAll(os => os.map(o => /** @type {HTMLOptionElement} */ (o).value));
-  expect(ids).toEqual(['a', 'b', 'slow', 'denied', 'flaky', 'md', 'bad']);
+  expect(ids).toEqual(['a', 'b', 'slow', 'denied', 'flaky', 'md', 'bad', 'envy']);
 });
 
 test('two agents take turns, and each sees the conversation so far', async ({ page }) => {
@@ -103,6 +105,12 @@ test('a message from the user is shown to the next agent, and Continue adds turn
   await expect(page.locator('#status')).toContainText('done');
   const b = fs.readFileSync(path.join(await talkDir(page), 'prompt-b.txt'), 'utf8');
   expect(b).toMatch(/### Agent A\n\nHello from A\n\n### You\n\nBe brief\.\n/);
+});
+
+test('an agent gets a trimmed environment: the variables its env lists, not the rest', async ({ page }) => {
+  await begin(page, 'envy', 'a', 1);
+  await expect(page.locator('#pill')).toHaveText('done');
+  await expect(page.locator('#chat .m.a .text')).toHaveText('secret=none key=k3y');
 });
 
 test('a reply in progress shows live, and Stop ends it', async ({ page }) => {

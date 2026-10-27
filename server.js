@@ -28,6 +28,8 @@
 //                           permissions they already have
 //   argv arrays, no shell   the prompt never reaches a command line; terminal
 //                           mode reads it from a file inside the script
+//   trimmed environment     headless agents get PATH, HOME, locale and proxy
+//                           settings, plus the names their "env" lists
 
 const http    = require('http');
 const crypto  = require('crypto');
@@ -83,6 +85,18 @@ function describeAgents(cfg) {
 }
 
 const fill = (args, prompt) => args.map(s => s.split('{prompt}').join(prompt));
+
+// What an agent is given of this process's environment: enough to run and reach
+// the network, plus the names its "env" in agents.json lists (an API key, say).
+// Not the rest: tokens and keys in the shell that ran `npm start` stay out of
+// reach of an agent that can be talked into printing them.
+const BASE_ENV = [
+  'PATH', 'HOME', 'USER', 'LOGNAME', 'SHELL', 'TERM', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TMPDIR', 'TZ',
+  'XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_CACHE_HOME', 'XDG_RUNTIME_DIR', 'DBUS_SESSION_BUS_ADDRESS',
+  'HTTPS_PROXY', 'HTTP_PROXY', 'NO_PROXY', 'https_proxy', 'http_proxy', 'no_proxy', 'NODE_EXTRA_CA_CERTS', 'SSL_CERT_FILE',
+];
+const agentEnv = names => Object.fromEntries([...BASE_ENV, ...(Array.isArray(names) ? names : [])]
+  .filter(k => typeof k === 'string' && process.env[k] !== undefined).map(k => [k, process.env[k]]));
 
 // POSIX single-quote, for the one place a value has to sit inside a shell script.
 const sq = s => `'${String(s).replace(/'/g, `'\\''`)}'`;
@@ -140,7 +154,7 @@ function launchBackground(agent, prompt, cwd, runDir, runId) {
   const log = path.join(runDir, `${agent.id}.log`);
   const out = fs.openSync(log, 'a');
   const [cmd, ...args] = fill(agent.headless, prompt);
-  const child = spawn(cmd, args, { cwd, env: process.env, shell: false, stdio: ['ignore', out, out] });
+  const child = spawn(cmd, args, { cwd, env: agentEnv(agent.env), shell: false, stdio: ['ignore', out, out] });
   const entry = { status: 'running', started: Date.now(), log, pid: child.pid };
   runs.get(runId).agents[agent.id] = entry;
   child.on('error', e => { fs.appendFileSync(log, `\n[dispatch] ${e.message}\n`); entry.status = 'failed'; });
@@ -222,8 +236,8 @@ function send(res, status, type, body) {
 }
 const json = (res, status, obj) => send(res, status, 'application/json', JSON.stringify(obj));
 
-const talks = createTalks({ loadConfig, fill, stamp, dir: TALKS_DIR, savedDir: SAVED_DIR });
-const stories = createStories({ loadConfig, fill, stamp, dir: STORIES_DIR });
+const talks = createTalks({ loadConfig, fill, agentEnv, stamp, dir: TALKS_DIR, savedDir: SAVED_DIR });
+const stories = createStories({ loadConfig, fill, agentEnv, stamp, dir: STORIES_DIR });
 
 // Read a JSON body, then answer with handler(body) -> [status, object].
 // `max` is larger for the routes that take attachments.
