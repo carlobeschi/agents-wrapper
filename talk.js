@@ -18,6 +18,9 @@ const MAX_TURNS    = 50;
 const TURN_TIMEOUT = 10 * 60 * 1000;
 const RETRY_DELAY  = Number(process.env.AGENT_DISPATCH_RETRY_MS ?? 3000);
 const USER         = 'You';
+// A reply past this is cut: it goes whole into every later prompt, which is one
+// command-line argument, and an agent shouldn't be able to stall the rest by flooding it.
+const MAX_REPLY    = 32 * 1024;
 
 // Terminal colour and cursor codes, which some CLIs print even into a pipe.
 // Kill the agent and anything it started: a CLI's own child holding stdout open
@@ -25,6 +28,14 @@ const USER         = 'You';
 function killTree(child) {
   try { process.kill(-child.pid, 'SIGTERM'); } catch { try { child.kill('SIGTERM'); } catch {} }
 }
+
+// Append a chunk of stdout, keeping at most MAX_REPLY characters.
+function take(cur, chunk) {
+  if (cur.out.length >= MAX_REPLY) { cur.cut = true; return; }
+  cur.out += chunk;
+  if (cur.out.length > MAX_REPLY) { cur.out = cur.out.slice(0, MAX_REPLY); cur.cut = true; }
+}
+const cutNote = cur => cur.cut ? `\n\n(cut at ${MAX_REPLY / 1024} KB)` : '';
 
 const stripAnsi = s => s.replace(/\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07/g, '');
 
@@ -128,7 +139,7 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
     } catch (e) { return fail(t, `${me.label}: ${e.message}`); }
     cur.child = child;
     const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, TURN_TIMEOUT);
-    child.stdout.on('data', d => { cur.out += d; });
+    child.stdout.on('data', d => take(cur, d));
     child.stderr.on('data', d => { cur.err = (cur.err + d).slice(-64000); });
     child.on('error', e => { cur.spawnError = e.message; });
     child.on('close', code => {
@@ -136,7 +147,7 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
       cur.child = null;
       if (cur.err) fs.writeFileSync(base + (retry ? '.retry' : '') + '.stderr.txt', cur.err);
       if (t.stopRequested) return next(t);
-      const text = stripAnsi(cur.out).trim();
+      const text = stripAnsi(cur.out).trim() && stripAnsi(cur.out).trim() + cutNote(cur);
       if (cur.spawnError || code !== 0 || !text) {
         const why = cur.spawnError || (cur.timedOut ? 'timed out' : code !== 0 ? `exit ${code}` : 'empty reply');
         const tail = stripAnsi(cur.err).trim().split('\n').slice(-5).join('\n');
@@ -272,4 +283,4 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
   return { start, stop, resume, say, get, list, clear };
 }
 
-module.exports = { createTalks, framing, killTree, stripAnsi, retryNote, failureNote, UNATTENDED, inert, newTag, untag, heading, SPEAKERS };
+module.exports = { createTalks, framing, killTree, stripAnsi, retryNote, failureNote, UNATTENDED, take, cutNote, inert, newTag, untag, heading, SPEAKERS };

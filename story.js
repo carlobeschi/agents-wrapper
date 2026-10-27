@@ -14,7 +14,7 @@ const fs     = require('fs');
 const path   = require('path');
 const { spawn } = require('child_process');
 const { parseFiles, saveFiles, withFiles, attachedBytes } = require('./attach');
-const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, inert, newTag, untag, heading, SPEAKERS } = require('./talk');
+const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, take, cutNote, inert, newTag, untag, heading, SPEAKERS } = require('./talk');
 
 const MAX_DAYS     = 7;    // to start with; "Another day" can go past it
 const MAX_TOTAL    = 30;
@@ -135,7 +135,7 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
     } catch (e) { return fail(s, `${st.me.label}: ${e.message}`); }
     cur.child = child;
     const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, STEP_TIMEOUT);
-    child.stdout.on('data', c => { cur.out += c; });
+    child.stdout.on('data', c => take(cur, c));
     child.stderr.on('data', c => { cur.err = (cur.err + c).slice(-64000); });
     child.on('error', e => { cur.spawnError = e.message; });
     child.on('close', code => {
@@ -143,7 +143,7 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
       cur.child = null;
       if (cur.err) fs.writeFileSync(base + (retry ? '.retry' : '') + '.stderr.txt', cur.err);
       if (s.stopRequested) return next(s);
-      const text = stripAnsi(cur.out).trim();
+      const text = stripAnsi(cur.out).trim() && stripAnsi(cur.out).trim() + cutNote(cur);
       if (cur.spawnError || code !== 0 || !text) {
         const why = cur.spawnError || (cur.timedOut ? 'timed out' : code !== 0 ? `exit ${code}` : 'empty reply');
         const tail = stripAnsi(cur.err).trim().split('\n').slice(-5).join('\n');
