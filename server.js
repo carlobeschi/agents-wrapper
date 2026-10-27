@@ -23,6 +23,8 @@
 //                           program or user on the machine can get it from them
 //   Origin checked          a POST from another site is refused even with a token
 //   no framing              another site cannot load the page in a frame
+//   CSP                     only the page's own script runs, and the page
+//                           loads nothing from anywhere but this server
 //   ~/.agent-dispatch 0700  prompts, logs and transcripts are not readable by
 //                           other users of the machine
 //   attachments            copied into <conversation>/files/ under names the
@@ -233,10 +235,18 @@ function readLog(runId, agentId) {
   return buf.length > 512 * 1024 ? buf.subarray(buf.length - 512 * 1024).toString('utf8') : buf.toString('utf8');
 }
 
-function send(res, status, type, body) {
+// Only the page's own script runs (it carries this response's nonce), and the
+// page can reach nothing but this server: no image, font or request leaves it.
+const csp = nonce => [
+  "default-src 'none'", nonce ? `script-src 'nonce-${nonce}'` : '', "style-src 'unsafe-inline'", "img-src data:",
+  "connect-src 'self'", "base-uri 'none'", "form-action 'none'", "frame-ancestors 'none'",
+].filter(Boolean).join('; ');
+
+function send(res, status, type, body, nonce) {
   res.writeHead(status, {
     'Content-Type': type, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY', 'Content-Security-Policy': "frame-ancestors 'none'",
+    'X-Frame-Options': 'DENY', 'Content-Security-Policy': csp(nonce),
+    'Referrer-Policy': 'no-referrer', 'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Resource-Policy': 'same-origin',
   });
   res.end(body);
 }
@@ -276,7 +286,9 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   if (req.method === 'GET' && PAGES[url.pathname]) {
-    return send(res, 200, 'text/html; charset=utf-8', fs.readFileSync(path.join(__dirname, PAGES[url.pathname])));
+    const nonce = crypto.randomBytes(16).toString('base64');
+    const html = fs.readFileSync(path.join(__dirname, PAGES[url.pathname]), 'utf8').replace('<script>', `<script nonce="${nonce}">`);
+    return send(res, 200, 'text/html; charset=utf-8', html, nonce);
   }
 
   // Everything under /api needs the token — reads included, since logs carry the prompts.

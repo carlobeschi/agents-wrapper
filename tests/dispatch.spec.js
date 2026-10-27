@@ -129,7 +129,11 @@ test('API refuses a request without the page token, or for a foreign Host', asyn
 test('API refuses a foreign Origin even with the token; pages cannot be framed; home is private', async ({ request }) => {
   const page = await request.get(BASE + '/dispatch');
   expect(page.headers()['x-frame-options']).toBe('DENY');
-  expect(page.headers()['content-security-policy']).toBe("frame-ancestors 'none'");
+  const csp = page.headers()['content-security-policy'];
+  expect(csp).toContain("frame-ancestors 'none'");
+  expect(csp).toMatch(/script-src 'nonce-[A-Za-z0-9+/=]+'/);
+  expect(csp).toContain("default-src 'none'");
+  expect(await page.text()).toContain(`<script nonce="${csp.match(/'nonce-([^']+)'/)[1]}">`);
   const token = key;
   const evil = await request.post(BASE + '/api/dispatch', {
     headers: { 'X-Dispatch-Token': token, Origin: 'https://evil.example' }, data: { prompt: 'x', agents: ['a'] },
