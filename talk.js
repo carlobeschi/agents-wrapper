@@ -29,13 +29,15 @@ function killTree(child) {
   try { process.kill(-child.pid, 'SIGTERM'); } catch { try { child.kill('SIGTERM'); } catch {} }
 }
 
-// Append a chunk of stdout, keeping at most MAX_REPLY characters.
+// Append a chunk of stdout, keeping at most cur.max (MAX_REPLY) characters.
 function take(cur, chunk) {
-  if (cur.out.length >= MAX_REPLY) { cur.cut = true; return; }
+  const max = cur.max || MAX_REPLY;
+  if (cur.out.length >= max) { cur.cut = true; return; }
   cur.out += chunk;
-  if (cur.out.length > MAX_REPLY) { cur.out = cur.out.slice(0, MAX_REPLY); cur.cut = true; }
+  if (cur.out.length > max) { cur.out = cur.out.slice(0, max); cur.cut = true; }
 }
-const cutNote = cur => cur.cut ? `\n\n(cut at ${MAX_REPLY / 1024} KB)` : '';
+const cutAt = max => `\n\n(cut at ${Math.round(max / 1024)} KB)`;
+const cutNote = cur => cur.cut ? cutAt(cur.max || MAX_REPLY) : '';
 
 const stripAnsi = s => s.replace(/\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07/g, '');
 
@@ -283,4 +285,4 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
   return { start, stop, resume, say, get, list, clear };
 }
 
-module.exports = { createTalks, framing, killTree, stripAnsi, retryNote, failureNote, UNATTENDED, take, cutNote, inert, newTag, untag, heading, SPEAKERS };
+module.exports = { createTalks, framing, killTree, stripAnsi, retryNote, failureNote, UNATTENDED, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS };
