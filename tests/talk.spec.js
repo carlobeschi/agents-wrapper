@@ -12,7 +12,7 @@ const PORT = 8789;
 const BASE = `http://localhost:${PORT}`;
 const NASTY = `Talk about "quotes" — and $(touch pwned) or \`id\`;\nsecond line`;
 
-let server, home;
+let server, home, key;
 
 // Saves its prompt to prompt-<name>.txt in its working directory, then replies.
 const fake = (name, reply) => ['sh', '-c', `printf %s "$1" > prompt-${name}.txt; printf '%s\\n' "${reply}"`, 'x', '{prompt}'];
@@ -46,6 +46,7 @@ test.beforeAll(async () => {
     server.stdout.on('data', d => { if (String(d).includes('Agent dispatch on')) resolve(undefined); });
     server.on('exit', code => reject(new Error(`server exited ${code}`)));
   });
+  key = fs.readFileSync(path.join(home, 'key'), 'utf8');
 });
 
 test.afterAll(() => {
@@ -54,8 +55,8 @@ test.afterAll(() => {
 });
 
 async function begin(page, a, b, turns, opener = NASTY) {
-  await page.goto(BASE + '/');
-  await page.evaluate(() => localStorage.clear());
+  await page.goto(BASE + '/#k=' + key);
+  await page.evaluate(() => Object.keys(localStorage).filter(k => k !== 'agents.key').forEach(k => localStorage.removeItem(k)));
   await page.reload();
   await page.locator('#a').selectOption(a);
   await page.locator('#b').selectOption(b);
@@ -68,7 +69,7 @@ async function begin(page, a, b, turns, opener = NASTY) {
 const talkDir = async page => (await page.locator('#status').textContent()).match(/· (\/\S+)$/m)[1];
 
 test('only agents with a headless command can be picked', async ({ page }) => {
-  await page.goto(BASE + '/');
+  await page.goto(BASE + '/#k=' + key);
   const ids = await page.locator('#a option').evaluateAll(os => os.map(o => /** @type {HTMLOptionElement} */ (o).value));
   expect(ids).toEqual(['a', 'b', 'slow', 'denied', 'flaky', 'md', 'bad', 'envy']);
 });
@@ -162,7 +163,7 @@ test('replies are formatted as Markdown and never as HTML', async ({ page }) => 
 });
 
 test('the home page is the conversation page, and dispatch moved to /dispatch', async ({ page }) => {
-  await page.goto(BASE + '/');
+  await page.goto(BASE + '/#k=' + key);
   await expect(page.locator('#setup h1')).toHaveText('New conversation');
   await page.locator('a[href="/dispatch"]').click();
   await expect(page.locator('h1')).toHaveText('Agent dispatch');
@@ -191,19 +192,19 @@ test('Save and clear writes finished conversations to one folder and empties the
 test('the API needs the token and two agents', async ({ request }) => {
   expect((await request.post(BASE + '/api/talk', { data: { opener: 'x', agents: ['a', 'b'] } })).status()).toBe(403);
   const page = await request.get(BASE + '/talk');
-  const token = (await page.text()).match(/name="dispatch-token" content="([0-9a-f]+)"/)[1];
+  const token = key;
   const r = await request.post(BASE + '/api/talk', { headers: { 'X-Dispatch-Token': token }, data: { opener: 'x', agents: ['a'] } });
   expect(r.status()).toBe(400);
   expect((await r.json()).error).toBe('Pick two agents.');
 });
 
 // Attachments (attach.js): copied into the conversation's files/ folder and listed in the prompt.
-const token = async request => (await (await request.get(BASE + '/talk')).text()).match(/name="dispatch-token" content="([0-9a-f]+)"/)[1];
+const token = async () => key;
 const b64 = s => Buffer.from(s).toString('base64');
 
 test('a file attached to the opener is copied into the folder and listed in the prompt', async ({ page }) => {
-  await page.goto(BASE + '/');
-  await page.evaluate(() => localStorage.clear());
+  await page.goto(BASE + '/#k=' + key);
+  await page.evaluate(() => Object.keys(localStorage).filter(k => k !== 'agents.key').forEach(k => localStorage.removeItem(k)));
   await page.reload();
   await page.locator('#a').selectOption('a');
   await page.locator('#b').selectOption('b');

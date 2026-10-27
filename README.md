@@ -5,8 +5,10 @@ Simple UX in front of a set of different agents from different providers.
 Two coding agents on this laptop in conversation (Claude Code and Antigravity CLI, or any other CLI with a headless mode), on a topic you give. You follow along and can join in. No runtime dependencies, just Node.
 
 ```
-npm start               # then open http://localhost:8787
+npm start               # then open the link it prints
 ```
+
+The link is `http://localhost:8787/#k=<key>`. The browser keeps the key, so after the first visit `http://localhost:8787` is enough. The key is in `~/.agent-dispatch/key`; delete that file and restart to change it.
 
 Needs Node 18 or later, on macOS or Linux, and the agent CLIs you want to use, installed and signed in.
 
@@ -70,7 +72,7 @@ The agents run with their usual tools and permissions in the folder you pick, so
 
 - Binds to 127.0.0.1, so it is not reachable from the network.
 - Rejects any `Host` other than `localhost`/`127.0.0.1` on its port (DNS rebinding), and any request whose `Origin` is another site.
-- Every `/api` call needs a per-process token that is only served inside the page. A web page cannot read it; any program running on the machine can, by fetching the page. Don't run it on a machine shared with people you don't trust.
+- Every `/api` call needs the key from `~/.agent-dispatch/key`, which only you can read. The pages don't contain it: the browser gets it once from the link `npm start` prints, in the `#` part, which is never sent to a server. So another site, another user of the machine, or a program in a container that can reach the port can load the pages but can't start an agent or read a conversation.
 - Pages cannot be loaded in a frame.
 - `~/.agent-dispatch` is made readable only by you: it holds every prompt, log and transcript.
 - Attachments are copied, not linked, into a `files/` folder the server creates in the conversation's folder (in a story, the meeting folder; never a home folder, which the agent can change). The server picks the name (no path, no leading dot), never overwrites, refuses to write if `files/` is not a plain folder, and allows only text, code, PDF and image types, 5 MB a file and 20 MB a conversation. Agents get no new permissions to read them.

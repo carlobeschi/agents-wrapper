@@ -11,7 +11,7 @@ const path = require('path');
 const PORT = 8790;
 const BASE = `http://localhost:${PORT}`;
 
-let server, home;
+let server, home, key;
 
 const fake = name => ['sh', '-c',
   `printf %s "$1" > prompt-${name}.txt; case "$1" in *"you are home"*) echo "Journal of ${name}";; *) echo "Hello from ${name}";; esac`,
@@ -37,6 +37,7 @@ test.beforeAll(async () => {
     server.stdout.on('data', d => { if (String(d).includes('Agent dispatch on')) resolve(undefined); });
     server.on('exit', code => reject(new Error(`server exited ${code}`)));
   });
+  key = fs.readFileSync(path.join(home, 'key'), 'utf8');
 });
 
 test.afterAll(() => {
@@ -45,8 +46,8 @@ test.afterAll(() => {
 });
 
 async function begin(page, a, b, days, turns, opener = 'Two old friends meet at a café.') {
-  await page.goto(BASE + '/story');
-  await page.evaluate(() => localStorage.clear());
+  await page.goto(BASE + '/story#k=' + key);
+  await page.evaluate(() => Object.keys(localStorage).filter(k => k !== 'agents.key').forEach(k => localStorage.removeItem(k)));
   await page.reload();
   await page.locator('#a').selectOption(a);
   await page.locator('#b').selectOption(b);
@@ -141,7 +142,7 @@ test('a step stopped by a refused tool is retried with the reason, and the story
 });
 
 test('/talk and /story link to each other', async ({ page }) => {
-  await page.goto(BASE + '/');
+  await page.goto(BASE + '/#k=' + key);
   await page.locator('a[href="/story"]').click();
   await expect(page.locator('#setup h1')).toHaveText('New story');
   await page.locator('a[href="/"]').click();
@@ -151,15 +152,15 @@ test('/talk and /story link to each other', async ({ page }) => {
 test('the story API needs the token and two agents', async ({ request }) => {
   expect((await request.post(BASE + '/api/story', { data: { opener: 'x', agents: ['a', 'b'] } })).status()).toBe(403);
   const page = await request.get(BASE + '/story');
-  const token = (await page.text()).match(/name="dispatch-token" content="([0-9a-f]+)"/)[1];
+  const token = key;
   const r = await request.post(BASE + '/api/story', { headers: { 'X-Dispatch-Token': token }, data: { opener: 'x', agents: ['a'] } });
   expect(r.status()).toBe(400);
   expect((await r.json()).error).toBe('Pick two agents.');
 });
 
 test('a file attached to the opener goes to the meeting folder, never to a home', async ({ page }) => {
-  await page.goto(BASE + '/story');
-  await page.evaluate(() => localStorage.clear());
+  await page.goto(BASE + '/story#k=' + key);
+  await page.evaluate(() => Object.keys(localStorage).filter(k => k !== 'agents.key').forEach(k => localStorage.removeItem(k)));
   await page.reload();
   await page.locator('#a').selectOption('a');
   await page.locator('#b').selectOption('b');

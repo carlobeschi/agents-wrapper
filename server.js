@@ -15,9 +15,12 @@
 // trigger a dispatch, not on what the agent can do once started:
 //   127.0.0.1 only          not reachable from the network
 //   Host header checked     a DNS-rebound page cannot talk to this port
-//   per-process token       served inside the page only; every POST must carry
-//                           it as X-Dispatch-Token, so another site cannot
-//                           forge a dispatch (it cannot read the page)
+//   key                     in ~/.agent-dispatch/key (0600), handed to the
+//                           browser only in the link printed at start
+//                           (#k=…, a fragment, so never sent back); every /api
+//                           call must carry it as X-Dispatch-Token. Pages hold
+//                           no secret, so neither another site nor another
+//                           program or user on the machine can get it from them
 //   Origin checked          a POST from another site is refused even with a token
 //   no framing              another site cannot load the page in a frame
 //   ~/.agent-dispatch 0700  prompts, logs and transcripts are not readable by
@@ -51,7 +54,7 @@ const CONFIG    = process.env.AGENT_DISPATCH_CONFIG
   || (fs.existsSync(path.join(HOME_DIR, 'agents.json')) ? path.join(HOME_DIR, 'agents.json')
                                                          : path.join(__dirname, 'agents.json'));
 const PAGES     = { '/': 'talk.html', '/talk': 'talk.html', '/story': 'story.html', '/dispatch': 'dispatch.html' };
-const TOKEN     = crypto.randomBytes(24).toString('hex');
+const KEY_FILE  = path.join(HOME_DIR, 'key');
 const MAX_BODY  = 256 * 1024;
 
 // Background runs, by run id then agent id. In memory only; the logs are on disk.
@@ -270,13 +273,15 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   if (req.method === 'GET' && PAGES[url.pathname]) {
-    const html = fs.readFileSync(path.join(__dirname, PAGES[url.pathname]), 'utf8').replace('__DISPATCH_TOKEN__', TOKEN);
-    return send(res, 200, 'text/html; charset=utf-8', html);
+    return send(res, 200, 'text/html; charset=utf-8', fs.readFileSync(path.join(__dirname, PAGES[url.pathname])));
   }
 
   // Everything under /api needs the token — reads included, since logs carry the prompts.
   if (!url.pathname.startsWith('/api/')) return send(res, 404, 'text/plain', 'Not found');
-  if (req.headers['x-dispatch-token'] !== TOKEN) return json(res, 403, { error: 'Bad token. Reload the page.' });
+  const given = Buffer.from(String(req.headers['x-dispatch-token'] || ''));
+  if (given.length !== TOKEN.length || !crypto.timingSafeEqual(given, TOKEN)) {
+    return json(res, 403, { error: 'No key. Open the link that npm start printed.' });
+  }
 
   try {
     if (req.method === 'GET' && url.pathname === '/api/agents') {
@@ -312,8 +317,24 @@ const server = http.createServer((req, res) => {
 fs.mkdirSync(HOME_DIR, { recursive: true, mode: 0o700 });
 fs.chmodSync(HOME_DIR, 0o700);
 
+// The key is kept across restarts, so the browser keeps it too. Delete the file to change it.
+function loadKey() {
+  try {
+    const fd = fs.openSync(KEY_FILE, 'wx', 0o600);
+    fs.writeSync(fd, crypto.randomBytes(24).toString('hex'));
+    fs.closeSync(fd);
+  } catch (e) { if (e.code !== 'EEXIST') throw e; }
+  const st = fs.lstatSync(KEY_FILE);
+  if (!st.isFile() || (process.getuid && st.uid !== process.getuid())) throw new Error(`${KEY_FILE} is not a file of yours. Delete it and start again.`);
+  fs.chmodSync(KEY_FILE, 0o600);
+  const key = fs.readFileSync(KEY_FILE, 'utf8').trim();
+  if (!/^[0-9a-f]{32,}$/.test(key)) throw new Error(`${KEY_FILE} is not a key. Delete it and start again.`);
+  return Buffer.from(key);
+}
+const TOKEN = loadKey();
+
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`Agent dispatch on http://localhost:${PORT}`);
+  console.log(`Agent dispatch on http://localhost:${PORT}/#k=${TOKEN}`);
   console.log(`  config: ${CONFIG}`);
   console.log(`  runs:   ${RUNS_DIR}`);
   console.log(`  talks:  ${TALKS_DIR}`);
