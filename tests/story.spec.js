@@ -74,17 +74,17 @@ test('they meet, go home and write a journal, and meet again the next day', asyn
   // A's last meeting turn (day 2): its own journal, today's turns, nothing of B's journal or of day 1's meeting.
   const meet = read(dir, 'meeting', 'prompt-a.txt');
   expect(meet).toContain('this is day 2');
-  expect(meet).toContain('## Your journal\n\n### Evening of day 1\n\nJournal of a\n');
+  expect(meet).toMatch(/## Your journal\n\n### Evening of day 1 · [0-9a-f]{8}\n\nJournal of a\n/);
   expect(meet).not.toContain('Journal of b');
-  expect(meet.match(/^### Agent [AB]$/gm)).toEqual(['### Agent B']);
+  expect(meet.match(/^### Agent [AB] · [0-9a-f]{8}$/gm)?.map(h => h.slice(0, 11))).toEqual(['### Agent B']);
   expect(read(dir, 'steps', 'd02-02-a.prompt.md')).toBe(meet);
 
   // B's last evening: at home, its day-1 journal and today's meeting in full.
   const evening = read(dir, 'homes', 'b', 'prompt-b.txt');
   expect(evening).toContain("Day 2's meeting with Agent A is over and you are home");
-  expect(evening).toContain('### Evening of day 1\n\nJournal of b\n');
+  expect(evening).toMatch(/### Evening of day 1 · [0-9a-f]{8}\n\nJournal of b\n/);
   expect(evening).not.toContain('Journal of a');
-  expect(evening).toMatch(/## Today's meeting\n\n### Agent B\n\nHello from b\n\n### Agent A\n\nHello from a\n/);
+  expect(evening).toMatch(/## Today's meeting\n\n### Agent B · [0-9a-f]{8}\n\nHello from b\n\n### Agent A · [0-9a-f]{8}\n\nHello from a\n/);
 
   // What each left at home is listed on the page.
   await expect(page.locator('#status')).toContainText('Agent A at home: prompt-a.txt');
@@ -110,7 +110,7 @@ test('a message sent after the day ends reaches the next meeting, and Another da
   await expect(page.locator('#pill')).toHaveText('done');
   const meet = read(await storyDir(page), 'meeting', 'prompt-b.txt');
   expect(meet).toContain('this is day 2');
-  expect(meet).toMatch(/## Today so far\n\n### You\n\nTalk about the weather\.\n/);
+  expect(meet).toMatch(/## Today so far\n\n### You · [0-9a-f]{8}\n\nTalk about the weather\.\n/);
 });
 
 test('a meeting turn in progress shows live, and Stop ends it', async ({ page }) => {

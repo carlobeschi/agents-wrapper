@@ -14,7 +14,7 @@ const fs     = require('fs');
 const path   = require('path');
 const { spawn } = require('child_process');
 const { parseFiles, saveFiles, withFiles, attachedBytes } = require('./attach');
-const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED } = require('./talk');
+const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, newTag, untag, heading, SPEAKERS } = require('./talk');
 
 const MAX_DAYS     = 7;    // to start with; "Another day" can go past it
 const MAX_TOTAL    = 30;
@@ -29,15 +29,16 @@ const AWAY = 'at the meeting, not in this folder';
 
 const clamp = (n, lo, hi, d) => Math.min(hi, Math.max(lo, Math.floor(Number(n)) || d));
 
-function journalLines(me, n) {
+function journalLines(me, n, tag) {
   const own = me.journal.slice(0, n);
   if (!own.length) return [];
-  return ['## Your journal', '', ...own.flatMap((text, i) => [`### Evening of day ${i + 1}`, '', text, ''])];
+  return ['## Your journal', '', ...own.flatMap((text, i) => [heading(`Evening of day ${i + 1}`, tag), '', untag(text, tag), ''])];
 }
 
 function meetingPrompt(s, me, other, day) {
   const lines = [
     `You are ${me.label}. You and ${other.label}, another AI agent, meet once a day; this is day ${day.n}. A person set this up and is reading along; their messages, if any, are marked "${USER}".`,
+    SPEAKERS(s.tag),
   ];
   if (day.n > 1) {
     lines.push(`You remember earlier days only through your own journal below, and whatever you left at home in ${me.home}. ${other.label} has its own journal, which you have not read.`);
@@ -46,11 +47,11 @@ function meetingPrompt(s, me, other, day) {
     `Write only your next message to ${other.label}. No preamble, no name label. Keep it to a few paragraphs at most.`,
     UNATTENDED(other.label),
     '', '## How it started', '', withFiles(s.opener, s.files), '',
-    ...journalLines(me, day.n - 1),
+    ...journalLines(me, day.n - 1, s.tag),
   );
   if (day.turns.length) {
     lines.push(`## Today so far`, '');
-    for (const t of day.turns) lines.push(`### ${t.label}`, '', withFiles(t.text, t.files), '');
+    for (const t of day.turns) lines.push(heading(t.label, s.tag), '', untag(withFiles(t.text, t.files), s.tag), '');
   } else {
     lines.push(`You speak first today.`, '');
   }
@@ -60,13 +61,14 @@ function meetingPrompt(s, me, other, day) {
 function eveningPrompt(s, me, other, day) {
   const lines = [
     `You are ${me.label}. Day ${day.n}'s meeting with ${other.label} is over and you are home, alone. This folder is yours: anything you left here on earlier evenings is still here. Nobody else sees what you do here, and ${other.label} never will.`,
+    SPEAKERS(s.tag),
     `Spend the evening as you like: think, read, write notes, make something. Then reply with your journal entry for today: what happened, what you make of it now, what you want to bring to tomorrow. Your reply is only the journal entry. Tomorrow you will have this journal and this folder, not the transcript.`,
     UNATTENDED(),
     '', '## How it started', '', withFiles(s.opener, s.files, AWAY), '',
-    ...journalLines(me, day.n - 1),
+    ...journalLines(me, day.n - 1, s.tag),
     `## Today's meeting`, '',
   ];
-  for (const t of day.turns) lines.push(`### ${t.label}`, '', withFiles(t.text, t.files, AWAY), '');
+  for (const t of day.turns) lines.push(heading(t.label, s.tag), '', untag(withFiles(t.text, t.files, AWAY), s.tag), '');
   return lines.join('\n');
 }
 
@@ -188,7 +190,7 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
     const labels = agents.map(a => a.label || a.id);
     if (labels[0] === labels[1]) { labels[0] += ' (1)'; labels[1] += ' (2)'; }
     const s = {
-      id, dir: storyDir, meeting: path.join(storyDir, 'meeting'), opener, totalDays, turnsPerDay,
+      id, dir: storyDir, tag: newTag(), meeting: path.join(storyDir, 'meeting'), opener, totalDays, turnsPerDay,
       days: [], queued: [], status: 'running',
       agents: agents.map((a, i) => {
         const aid = a.id + (ids[0] === ids[1] ? `#${i + 1}` : '');
