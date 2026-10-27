@@ -5,25 +5,29 @@
       "id": "claude",
       "label": "Claude Code",
       "interactive": ["claude", "{prompt}"],
-      "headless": ["claude", "-p", "{prompt}"]
+      "headless": ["claude", "-p", "--tools", "Read,Glob,Grep", "--permission-mode", "dontAsk", "--strict-mcp-config", "--", "{prompt}"],
+      "env": ["ANTHROPIC_API_KEY", "CLAUDE_CONFIG_DIR"]
     },
     {
       "id": "antigravity",
       "label": "Antigravity CLI",
       "interactive": ["agy", "-i", "{prompt}"],
-      "headless": ["agy", "-p", "{prompt}"]
+      "headless": ["agy", "-p", "{prompt}"],
+      "env": ["GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_CLOUD_PROJECT"]
     },
     {
       "id": "codex",
       "label": "Codex CLI",
       "interactive": ["codex", "{prompt}"],
-      "headless": ["codex", "exec", "{prompt}"]
+      "headless": ["codex", "exec", "--sandbox", "read-only", "--", "{prompt}"],
+      "env": ["OPENAI_API_KEY", "CODEX_HOME"]
     },
     {
       "id": "cursor",
       "label": "Cursor Agent",
       "interactive": ["cursor-agent", "{prompt}"],
-      "headless": ["cursor-agent", "-p", "{prompt}"]
+      "headless": ["cursor-agent", "-p", "{prompt}"],
+      "env": ["CURSOR_API_KEY"]
     },
     {
       "id": "claude-web",

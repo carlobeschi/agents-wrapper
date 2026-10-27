@@ -13,7 +13,7 @@ const BASE = `http://localhost:${PORT}`;
 // Quotes, a command substitution and a newline: anything a shell could mangle.
 const NASTY = `Fix "it" — don't run $(touch pwned) or \`id\`;\nsecond line`;
 
-let server, home, work;
+let server, home, key, work;
 
 test.beforeAll(async () => {
   home = fs.mkdtempSync(path.join(os.tmpdir(), 'dispatch-home-'));
@@ -37,6 +37,7 @@ test.beforeAll(async () => {
     server.stdout.on('data', d => { if (String(d).includes('Agent dispatch on')) resolve(undefined); });
     server.on('exit', code => reject(new Error(`server exited ${code}`)));
   });
+  key = fs.readFileSync(path.join(home, 'key'), 'utf8');
 });
 
 test.afterAll(() => {
@@ -46,7 +47,7 @@ test.afterAll(() => {
 });
 
 async function load(page) {
-  await page.goto(BASE + '/dispatch');
+  await page.goto(BASE + '/dispatch#k=' + key);
   await expect(page.locator('#agents .agent')).toHaveCount(5);
   await page.locator('#none').click();
   await page.locator('#cwd').fill(work);
@@ -128,8 +129,12 @@ test('API refuses a request without the page token, or for a foreign Host', asyn
 test('API refuses a foreign Origin even with the token; pages cannot be framed; home is private', async ({ request }) => {
   const page = await request.get(BASE + '/dispatch');
   expect(page.headers()['x-frame-options']).toBe('DENY');
-  expect(page.headers()['content-security-policy']).toBe("frame-ancestors 'none'");
-  const token = (await page.text()).match(/name="dispatch-token" content="([0-9a-f]+)"/)[1];
+  const csp = page.headers()['content-security-policy'];
+  expect(csp).toContain("frame-ancestors 'none'");
+  expect(csp).toMatch(/script-src 'nonce-[A-Za-z0-9+/=]+'/);
+  expect(csp).toContain("default-src 'none'");
+  expect(await page.text()).toContain(`<script nonce="${csp.match(/'nonce-([^']+)'/)[1]}">`);
+  const token = key;
   const evil = await request.post(BASE + '/api/dispatch', {
     headers: { 'X-Dispatch-Token': token, Origin: 'https://evil.example' }, data: { prompt: 'x', agents: ['a'] },
   });
@@ -137,4 +142,40 @@ test('API refuses a foreign Origin even with the token; pages cannot be framed; 
   const own = await request.get(BASE + '/api/runs', { headers: { 'X-Dispatch-Token': token, Origin: BASE } });
   expect(own.status()).toBe(200);
   expect(fs.statSync(home).mode & 0o777).toBe(0o700);
+});
+
+test('the key is only in the printed link: pages hold none, and the browser keeps it from the link', async ({ page, request }) => {
+  for (const p of ['/', '/talk', '/story', '/dispatch']) expect(await (await request.get(BASE + p)).text()).not.toContain(key);
+  expect(fs.statSync(path.join(home, 'key')).mode & 0o777).toBe(0o600);
+  expect((await request.get(BASE + '/api/runs', { headers: { 'X-Dispatch-Token': key.slice(0, -1) } })).status()).toBe(403);
+
+  await page.goto(BASE + '/dispatch#k=' + key);
+  await expect(page.locator('#agents .agent')).toHaveCount(5);
+  expect(page.url()).toBe(BASE + '/dispatch');
+  await page.goto(BASE + '/story');                         // a later visit without the link
+  await expect(page.locator('#a option')).not.toHaveCount(0);
+});
+
+test('a prompt that starts with "-" is refused, so it never reaches a CLI as an option', async ({ request }) => {
+  const r = await request.post(BASE + '/api/dispatch', {
+    headers: { 'X-Dispatch-Token': key }, data: { prompt: '--dangerously-skip-permissions', agents: ['a'], mode: 'background', cwd: work },
+  });
+  expect(r.status()).toBe(400);
+  expect((await r.json()).error).toContain('can\'t start with "-"');
+});
+
+test('a config other users can change is refused', async ({ request }) => {
+  const cfg = path.join(home, 'agents.json');
+  fs.chmodSync(cfg, 0o666);
+  try {
+    const r = await request.get(BASE + '/api/agents', { headers: { 'X-Dispatch-Token': key } });
+    expect(r.status()).toBe(500);
+    expect((await r.json()).error).toContain('chmod go-w');
+  } finally { fs.chmodSync(cfg, 0o644); }
+  expect((await request.get(BASE + '/api/agents', { headers: { 'X-Dispatch-Token': key } })).status()).toBe(200);
+});
+
+test('without the key a page says where to get it', async ({ page }) => {
+  await page.goto(BASE + '/dispatch');
+  await expect(page.locator('body')).toContainText('Open the link that npm start printed.');
 });

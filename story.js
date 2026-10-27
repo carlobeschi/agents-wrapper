@@ -14,7 +14,7 @@ const fs     = require('fs');
 const path   = require('path');
 const { spawn } = require('child_process');
 const { parseFiles, saveFiles, withFiles, attachedBytes } = require('./attach');
-const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED } = require('./talk');
+const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS } = require('./talk');
 
 const MAX_DAYS     = 7;    // to start with; "Another day" can go past it
 const MAX_TOTAL    = 30;
@@ -55,15 +55,16 @@ function splitDrawing(text) {
 
 const clamp = (n, lo, hi, d) => Math.min(hi, Math.max(lo, Math.floor(Number(n)) || d));
 
-function journalLines(me, n) {
+function journalLines(me, n, tag) {
   const own = me.journal.slice(0, n);
   if (!own.length) return [];
-  return ['## Your journal', '', ...own.flatMap((text, i) => [`### Evening of day ${i + 1}`, '', text, ''])];
+  return ['## Your journal', '', ...own.flatMap((text, i) => [heading(`Evening of day ${i + 1}`, tag), '', untag(text, tag), ''])];
 }
 
 function meetingPrompt(s, me, other, day) {
   const lines = [
     `You are ${me.label}. You and ${other.label}, another AI agent, meet once a day; this is day ${day.n}. A person set this up and is reading along; their messages, if any, are marked "${USER}".`,
+    SPEAKERS(s.tag),
   ];
   if (day.n > 1) {
     lines.push(`You remember earlier days only through your own journal below, and whatever you left at home in ${me.home}. ${other.label} has its own journal, which you have not read.`);
@@ -72,11 +73,11 @@ function meetingPrompt(s, me, other, day) {
     `Write only your next message to ${other.label}. No preamble, no name label. Keep it to a few paragraphs at most.`,
     UNATTENDED(other.label),
     '', '## How it started', '', withFiles(s.opener, s.files), '',
-    ...journalLines(me, day.n - 1),
+    ...journalLines(me, day.n - 1, s.tag),
   );
   if (day.turns.length) {
     lines.push(`## Today so far`, '');
-    for (const t of day.turns) lines.push(`### ${t.label}`, '', withFiles(t.text, t.files), '');
+    for (const t of day.turns) lines.push(heading(t.label, s.tag), '', untag(withFiles(t.text, t.files), s.tag), '');
   } else {
     lines.push(`You speak first today.`, '');
   }
@@ -86,27 +87,28 @@ function meetingPrompt(s, me, other, day) {
 function eveningPrompt(s, me, other, day) {
   const lines = [
     `You are ${me.label}. Day ${day.n}'s meeting with ${other.label} is over and you are home, alone. This folder is yours: anything you left here on earlier evenings is still here. Nobody else sees what you do here, and ${other.label} never will.`,
+    SPEAKERS(s.tag),
     `Spend the evening as you like: think, read, write notes, make something. Then reply with your journal entry for today: what happened, what you make of it now, what you want to bring to tomorrow. Tomorrow you will have this journal and this folder, not the transcript.`,
     `After the entry, draw a picture of what the day looked like: one self-contained SVG, written straight into your reply (not to a file), in an \`\`\`svg block. Shapes, colour and text only; no scripts, links or external images. Your reply is the journal entry, then the drawing, nothing else.`,
     UNATTENDED(),
     '', '## How it started', '', withFiles(s.opener, s.files, AWAY), '',
-    ...journalLines(me, day.n - 1),
+    ...journalLines(me, day.n - 1, s.tag),
     `## Today's meeting`, '',
   ];
-  for (const t of day.turns) lines.push(`### ${t.label}`, '', withFiles(t.text, t.files, AWAY), '');
+  for (const t of day.turns) lines.push(heading(t.label, s.tag), '', untag(withFiles(t.text, t.files, AWAY), s.tag), '');
   return lines.join('\n');
 }
 
-function createStories({ loadConfig, fill, stamp, dir }) {
+function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
   const stories = new Map();
 
   const markdown = s => [
     `# ${s.agents.map(a => a.label).join(' & ')}`, '', '## How it started', '', withFiles(s.opener, s.files), '',
     ...s.days.flatMap(d => [
       `## Day ${d.n}`, '',
-      ...d.turns.flatMap(t => [`### ${t.label}`, '', withFiles(t.text, t.files), '']),
+      ...d.turns.flatMap(t => [`### ${t.label}`, '', withFiles(inert(t.text), t.files), '']),
       ...(s.agents.some(a => a.journal[d.n - 1] !== undefined) ? [`## Day ${d.n}, evening`, ''] : []),
-      ...s.agents.filter(a => a.journal[d.n - 1] !== undefined).flatMap(a => [`### ${a.label}'s journal`, '', a.journal[d.n - 1], '',
+      ...s.agents.filter(a => a.journal[d.n - 1] !== undefined).flatMap(a => [`### ${a.label}'s journal`, '', inert(a.journal[d.n - 1]), '',
         ...(a.drawings[d.n - 1] ? [`![${a.label}, day ${d.n}](${a.drawings[d.n - 1].file})`, ''] : [])]),
     ]),
   ].join('\n');
@@ -151,17 +153,19 @@ function createStories({ loadConfig, fill, stamp, dir }) {
     const prompt = retry ? `${st.prompt}\n${retryNote(retry.why, retry.note)}` : st.prompt;
     fs.writeFileSync(base + (retry ? '.retry' : '') + '.prompt.md', prompt);
     const [cmd, ...args] = fill(st.me.headless, prompt);
-    const cur = { kind: st.kind, day: st.day.n, agent: st.me.id, label: st.me.label, started: Date.now(), out: '', err: '', retry: !!retry };
+    const cur = { kind: st.kind, day: st.day.n, agent: st.me.id, label: st.me.label, started: Date.now(), out: '', err: '', retry: !!retry,
+                  // An evening reply carries a drawing too, which never goes back into a prompt.
+                  max: st.kind === 'evening' ? MAX_REPLY + MAX_DRAWING : MAX_REPLY };
     s.current = cur;
     s.status = 'running';
 
     let child;
     try {
-      child = spawn(cmd, args, { cwd: st.cwd, env: process.env, shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+      child = spawn(cmd, args, { cwd: st.cwd, env: agentEnv(st.me.env), shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
     } catch (e) { return fail(s, `${st.me.label}: ${e.message}`); }
     cur.child = child;
     const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, STEP_TIMEOUT);
-    child.stdout.on('data', c => { cur.out += c; });
+    child.stdout.on('data', c => take(cur, c));
     child.stderr.on('data', c => { cur.err = (cur.err + c).slice(-64000); });
     child.on('error', e => { cur.spawnError = e.message; });
     child.on('close', code => {
@@ -169,7 +173,7 @@ function createStories({ loadConfig, fill, stamp, dir }) {
       cur.child = null;
       if (cur.err) fs.writeFileSync(base + (retry ? '.retry' : '') + '.stderr.txt', cur.err);
       if (s.stopRequested) return next(s);
-      const text = stripAnsi(cur.out).trim();
+      const text = stripAnsi(cur.out).trim() && stripAnsi(cur.out).trim() + cutNote(cur);
       if (cur.spawnError || code !== 0 || !text) {
         const why = cur.spawnError || (cur.timedOut ? 'timed out' : code !== 0 ? `exit ${code}` : 'empty reply');
         const tail = stripAnsi(cur.err).trim().split('\n').slice(-5).join('\n');
@@ -184,7 +188,7 @@ function createStories({ loadConfig, fill, stamp, dir }) {
       if (st.kind === 'meeting') st.day.turns.push({ agent: st.me.id, label: st.me.label, text, seconds });
       else {
         const { journal, svg } = splitDrawing(text);
-        st.me.journal[st.day.n - 1] = journal;
+        st.me.journal[st.day.n - 1] = journal.length > MAX_REPLY ? journal.slice(0, MAX_REPLY) + cutAt(MAX_REPLY) : journal;
         if (svg) {
           // In the story folder, not at home, where the agent could change it later.
           const file = `drawings/${st.file}.svg`;
@@ -226,12 +230,12 @@ function createStories({ loadConfig, fill, stamp, dir }) {
     const labels = agents.map(a => a.label || a.id);
     if (labels[0] === labels[1]) { labels[0] += ' (1)'; labels[1] += ' (2)'; }
     const s = {
-      id, dir: storyDir, meeting: path.join(storyDir, 'meeting'), opener, totalDays, turnsPerDay,
+      id, dir: storyDir, tag: newTag(), meeting: path.join(storyDir, 'meeting'), opener, totalDays, turnsPerDay,
       days: [], queued: [], status: 'running',
       agents: agents.map((a, i) => {
         const aid = a.id + (ids[0] === ids[1] ? `#${i + 1}` : '');
         const slug = aid.replace(/[^\w-]/g, '_');
-        return { id: aid, slug, label: labels[i], headless: a.headless, home: path.join(storyDir, 'homes', slug), journal: [], drawings: [] };
+        return { id: aid, slug, label: labels[i], headless: a.headless, env: a.env, home: path.join(storyDir, 'homes', slug), journal: [], drawings: [] };
       }),
     };
     for (const p of [s.meeting, ...s.agents.map(a => a.home)]) fs.mkdirSync(p, { recursive: true });
