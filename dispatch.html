@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="dispatch-token" content="__DISPATCH_TOKEN__">
 <title>Agent dispatch</title>
 <style>
   :root {
@@ -83,7 +82,14 @@
 </main>
 
 <script>
-const TOKEN = document.querySelector('meta[name=dispatch-token]').content;
+// The key comes in the link npm start prints (#k=…) and is kept for this origin.
+const TOKEN = (() => {
+  const m = location.hash.match(/^#k=([0-9a-f]+)$/);
+  try {
+    if (m) { localStorage.setItem('agents.key', m[1]); history.replaceState(null, '', location.pathname + location.search); }
+    return localStorage.getItem('agents.key') || (m ? m[1] : '');
+  } catch { return m ? m[1] : ''; }
+})();
 const $ = id => document.getElementById(id);
 const store = {
   get(k, d) { try { const v = localStorage.getItem('dispatch.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },

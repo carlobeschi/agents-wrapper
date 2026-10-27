@@ -15,15 +15,26 @@
 // trigger a dispatch, not on what the agent can do once started:
 //   127.0.0.1 only          not reachable from the network
 //   Host header checked     a DNS-rebound page cannot talk to this port
-//   per-process token       served inside the page only; every POST must carry
-//                           it as X-Dispatch-Token, so another site cannot
-//                           forge a dispatch (it cannot read the page)
+//   key                     in ~/.agent-dispatch/key (0600), handed to the
+//                           browser only in the link printed at start
+//                           (#k=…, a fragment, so never sent back); every /api
+//                           call must carry it as X-Dispatch-Token. Pages hold
+//                           no secret, so neither another site nor another
+//                           program or user on the machine can get it from them
 //   Origin checked          a POST from another site is refused even with a token
 //   no framing              another site cannot load the page in a frame
+//   CSP                     only the page's own script runs, and the page
+//                           loads nothing from anywhere but this server
 //   ~/.agent-dispatch 0700  prompts, logs and transcripts are not readable by
 //                           other users of the machine
+//   attachments            copied into <conversation>/files/ under names the
+//                           server picks, from a list of types, size-capped,
+//                           never overwriting; agents read them with the
+//                           permissions they already have
 //   argv arrays, no shell   the prompt never reaches a command line; terminal
 //                           mode reads it from a file inside the script
+//   trimmed environment     headless agents get PATH, HOME, locale and proxy
+//                           settings, plus the names their "env" lists
 
 const http    = require('http');
 const crypto  = require('crypto');
@@ -33,6 +44,7 @@ const path    = require('path');
 const { spawn, execFileSync } = require('child_process');
 const { createTalks } = require('./talk');
 const { createStories } = require('./story');
+const attach = require('./attach');
 
 const PORT      = Number(process.env.AGENT_DISPATCH_PORT) || 8787;
 const HOME_DIR  = process.env.AGENT_DISPATCH_HOME || path.join(os.homedir(), '.agent-dispatch');
@@ -44,13 +56,20 @@ const CONFIG    = process.env.AGENT_DISPATCH_CONFIG
   || (fs.existsSync(path.join(HOME_DIR, 'agents.json')) ? path.join(HOME_DIR, 'agents.json')
                                                          : path.join(__dirname, 'agents.json'));
 const PAGES     = { '/': 'talk.html', '/talk': 'talk.html', '/story': 'story.html', '/dispatch': 'dispatch.html' };
-const TOKEN     = crypto.randomBytes(24).toString('hex');
+const KEY_FILE  = path.join(HOME_DIR, 'key');
 const MAX_BODY  = 256 * 1024;
 
 // Background runs, by run id then agent id. In memory only; the logs are on disk.
 const runs = new Map();
 
 function loadConfig() {
+  // The config decides what runs, so only its owner may be able to change it.
+  const st = fs.statSync(CONFIG);
+  // Group-writable is fine when the group is the user's own (a umask of 002).
+  const groupWrite = (st.mode & 0o020) && !(process.getgid && st.gid === process.getgid());
+  if ((process.getuid && st.uid !== process.getuid()) || (st.mode & 0o002) || groupWrite) {
+    throw new Error(`${CONFIG} can be changed by other users of this machine; make it yours and run chmod go-w on it.`);
+  }
   const cfg = JSON.parse(fs.readFileSync(CONFIG, 'utf8'));
   if (!Array.isArray(cfg.agents)) throw new Error(`${CONFIG}: "agents" must be an array`);
   return cfg;
@@ -78,6 +97,18 @@ function describeAgents(cfg) {
 }
 
 const fill = (args, prompt) => args.map(s => s.split('{prompt}').join(prompt));
+
+// What an agent is given of this process's environment: enough to run and reach
+// the network, plus the names its "env" in agents.json lists (an API key, say).
+// Not the rest: tokens and keys in the shell that ran `npm start` stay out of
+// reach of an agent that can be talked into printing them.
+const BASE_ENV = [
+  'PATH', 'HOME', 'USER', 'LOGNAME', 'SHELL', 'TERM', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TMPDIR', 'TZ',
+  'XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_CACHE_HOME', 'XDG_RUNTIME_DIR', 'DBUS_SESSION_BUS_ADDRESS',
+  'HTTPS_PROXY', 'HTTP_PROXY', 'NO_PROXY', 'https_proxy', 'http_proxy', 'no_proxy', 'NODE_EXTRA_CA_CERTS', 'SSL_CERT_FILE',
+];
+const agentEnv = names => Object.fromEntries([...BASE_ENV, ...(Array.isArray(names) ? names : [])]
+  .filter(k => typeof k === 'string' && process.env[k] !== undefined).map(k => [k, process.env[k]]));
 
 // POSIX single-quote, for the one place a value has to sit inside a shell script.
 const sq = s => `'${String(s).replace(/'/g, `'\\''`)}'`;
@@ -135,7 +166,7 @@ function launchBackground(agent, prompt, cwd, runDir, runId) {
   const log = path.join(runDir, `${agent.id}.log`);
   const out = fs.openSync(log, 'a');
   const [cmd, ...args] = fill(agent.headless, prompt);
-  const child = spawn(cmd, args, { cwd, env: process.env, shell: false, stdio: ['ignore', out, out] });
+  const child = spawn(cmd, args, { cwd, env: agentEnv(agent.env), shell: false, stdio: ['ignore', out, out] });
   const entry = { status: 'running', started: Date.now(), log, pid: child.pid };
   runs.get(runId).agents[agent.id] = entry;
   child.on('error', e => { fs.appendFileSync(log, `\n[dispatch] ${e.message}\n`); entry.status = 'failed'; });
@@ -153,6 +184,9 @@ function dispatch(body) {
   const cfg = loadConfig();
   const prompt = typeof body.prompt === 'string' ? body.prompt : '';
   if (!prompt.trim()) return [400, { error: 'Empty prompt.' }];
+  // The prompt is one argument: starting with "-", a CLI would take it as an option
+  // (`claude --dangerously-skip-permissions`).
+  if (prompt.startsWith('-')) return [400, { error: 'A prompt can\'t start with "-": the agent would read it as an option.' }];
   const ids = Array.isArray(body.agents) ? body.agents : [];
   const agents = ids.map(id => cfg.agents.find(a => a.id === id && a.type !== 'url'));
   if (!agents.length || agents.some(a => !a)) return [400, { error: 'Unknown or missing agent.' }];
@@ -208,24 +242,33 @@ function readLog(runId, agentId) {
   return buf.length > 512 * 1024 ? buf.subarray(buf.length - 512 * 1024).toString('utf8') : buf.toString('utf8');
 }
 
-function send(res, status, type, body) {
+// Only the page's own script runs (it carries this response's nonce), and the
+// page can reach nothing but this server: no image, font or request leaves it.
+const csp = nonce => [
+  "default-src 'none'", nonce ? `script-src 'nonce-${nonce}'` : '', "style-src 'unsafe-inline'", "img-src data:",
+  "connect-src 'self'", "base-uri 'none'", "form-action 'none'", "frame-ancestors 'none'",
+].filter(Boolean).join('; ');
+
+function send(res, status, type, body, nonce) {
   res.writeHead(status, {
     'Content-Type': type, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY', 'Content-Security-Policy': "frame-ancestors 'none'",
+    'X-Frame-Options': 'DENY', 'Content-Security-Policy': csp(nonce),
+    'Referrer-Policy': 'no-referrer', 'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Resource-Policy': 'same-origin',
   });
   res.end(body);
 }
 const json = (res, status, obj) => send(res, status, 'application/json', JSON.stringify(obj));
 
-const talks = createTalks({ loadConfig, fill, stamp, dir: TALKS_DIR, savedDir: SAVED_DIR });
-const stories = createStories({ loadConfig, fill, stamp, dir: STORIES_DIR });
+const talks = createTalks({ loadConfig, fill, agentEnv, stamp, dir: TALKS_DIR, savedDir: SAVED_DIR });
+const stories = createStories({ loadConfig, fill, agentEnv, stamp, dir: STORIES_DIR });
 
 // Read a JSON body, then answer with handler(body) -> [status, object].
-function withBody(req, res, handler) {
+// `max` is larger for the routes that take attachments.
+function withBody(req, res, handler, max = MAX_BODY) {
   const chunks = []; let size = 0;
   req.on('data', c => {
     size += c.length;
-    if (size > MAX_BODY) { json(res, 413, { error: 'Prompt too large.' }); req.destroy(); return; }
+    if (size > max) { json(res, 413, { error: max > MAX_BODY ? 'Attachments too large.' : 'Prompt too large.' }); req.destroy(); return; }
     chunks.push(c);
   });
   req.on('end', () => {
@@ -250,13 +293,17 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   if (req.method === 'GET' && PAGES[url.pathname]) {
-    const html = fs.readFileSync(path.join(__dirname, PAGES[url.pathname]), 'utf8').replace('__DISPATCH_TOKEN__', TOKEN);
-    return send(res, 200, 'text/html; charset=utf-8', html);
+    const nonce = crypto.randomBytes(16).toString('base64');
+    const html = fs.readFileSync(path.join(__dirname, PAGES[url.pathname]), 'utf8').replace('<script>', `<script nonce="${nonce}">`);
+    return send(res, 200, 'text/html; charset=utf-8', html, nonce);
   }
 
   // Everything under /api needs the token — reads included, since logs carry the prompts.
   if (!url.pathname.startsWith('/api/')) return send(res, 404, 'text/plain', 'Not found');
-  if (req.headers['x-dispatch-token'] !== TOKEN) return json(res, 403, { error: 'Bad token. Reload the page.' });
+  const given = Buffer.from(String(req.headers['x-dispatch-token'] || ''));
+  if (given.length !== TOKEN.length || !crypto.timingSafeEqual(given, TOKEN)) {
+    return json(res, 403, { error: 'No key. Open the link that npm start printed.' });
+  }
 
   try {
     if (req.method === 'GET' && url.pathname === '/api/agents') {
@@ -272,16 +319,16 @@ const server = http.createServer((req, res) => {
 
     if (req.method === 'GET' && url.pathname === '/api/talks') return json(res, 200, { talks: talks.list() });
     if (req.method === 'GET' && url.pathname === '/api/talk') return json(res, ...talks.get(url.searchParams.get('id')));
-    if (req.method === 'POST' && url.pathname === '/api/talk') return withBody(req, res, talks.start);
+    if (req.method === 'POST' && url.pathname === '/api/talk') return withBody(req, res, talks.start, attach.MAX_BODY);
     if (req.method === 'POST' && url.pathname === '/api/talks/clear') return json(res, ...talks.clear());
     const m = url.pathname.match(/^\/api\/talk\/(stop|resume|say)$/);
-    if (req.method === 'POST' && m) return withBody(req, res, body => talks[m[1]](body.id, body));
+    if (req.method === 'POST' && m) return withBody(req, res, body => talks[m[1]](body.id, body), m[1] === 'say' ? attach.MAX_BODY : MAX_BODY);
 
     if (req.method === 'GET' && url.pathname === '/api/stories') return json(res, 200, { stories: stories.list() });
     if (req.method === 'GET' && url.pathname === '/api/story') return json(res, ...stories.get(url.searchParams.get('id')));
-    if (req.method === 'POST' && url.pathname === '/api/story') return withBody(req, res, stories.start);
+    if (req.method === 'POST' && url.pathname === '/api/story') return withBody(req, res, stories.start, attach.MAX_BODY);
     const sm = url.pathname.match(/^\/api\/story\/(stop|resume|say)$/);
-    if (req.method === 'POST' && sm) return withBody(req, res, body => stories[sm[1]](body.id, body));
+    if (req.method === 'POST' && sm) return withBody(req, res, body => stories[sm[1]](body.id, body), sm[1] === 'say' ? attach.MAX_BODY : MAX_BODY);
     json(res, 404, { error: 'Not found' });
   } catch (e) {
     json(res, 500, { error: e.message });
@@ -292,8 +339,24 @@ const server = http.createServer((req, res) => {
 fs.mkdirSync(HOME_DIR, { recursive: true, mode: 0o700 });
 fs.chmodSync(HOME_DIR, 0o700);
 
+// The key is kept across restarts, so the browser keeps it too. Delete the file to change it.
+function loadKey() {
+  try {
+    const fd = fs.openSync(KEY_FILE, 'wx', 0o600);
+    fs.writeSync(fd, crypto.randomBytes(24).toString('hex'));
+    fs.closeSync(fd);
+  } catch (e) { if (e.code !== 'EEXIST') throw e; }
+  const st = fs.lstatSync(KEY_FILE);
+  if (!st.isFile() || (process.getuid && st.uid !== process.getuid())) throw new Error(`${KEY_FILE} is not a file of yours. Delete it and start again.`);
+  fs.chmodSync(KEY_FILE, 0o600);
+  const key = fs.readFileSync(KEY_FILE, 'utf8').trim();
+  if (!/^[0-9a-f]{32,}$/.test(key)) throw new Error(`${KEY_FILE} is not a key. Delete it and start again.`);
+  return Buffer.from(key);
+}
+const TOKEN = loadKey();
+
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`Agent dispatch on http://localhost:${PORT}`);
+  console.log(`Agent dispatch on http://localhost:${PORT}/#k=${TOKEN}`);
   console.log(`  config: ${CONFIG}`);
   console.log(`  runs:   ${RUNS_DIR}`);
   console.log(`  talks:  ${TALKS_DIR}`);

@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="dispatch-token" content="__DISPATCH_TOKEN__">
 <title>Agents story</title>
 <style>
   :root {
@@ -69,6 +68,13 @@
   .go { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 12px; }
   .go label { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
   input[type=number] { width: 72px; }
+  .files { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .files:empty { display: none; }
+  #openerFiles { margin-top: 8px; }
+  #controls .files { max-width: 820px; margin: 0 auto 8px; }
+  .chip { font-size: 12px; padding: 2px 4px 2px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); display: inline-flex; align-items: center; gap: 2px; }
+  .chip button { border: 0; background: none; padding: 0 6px; color: inherit; }
+  .att { margin-top: 6px; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
   #msg { margin-top: 10px; font-size: 13px; color: var(--muted); white-space: pre-wrap; }
 
   #view { display: flex; flex-direction: column; flex: 1; min-height: 100vh; }
@@ -104,6 +110,8 @@
            display: flex; gap: 10px; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
   h2.day span { text-transform: none; letter-spacing: 0; font-weight: 400; }
   .m.journal .body { background: var(--panel); border-style: dotted; }
+  .drawing { margin: 10px 0 0; }
+  .drawing img { display: block; max-width: 100%; max-height: 320px; border-radius: 8px; border: 1px solid var(--line); background: #fff; }
   .typing { display: inline-flex; gap: 3px; } .typing i { width: 5px; height: 5px; border-radius: 50%; background: var(--run); animation: pulse 1.2s infinite; }
   .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
   @keyframes pulse { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
@@ -150,11 +158,14 @@
         <label>Opens day 2 <select id="b"></select></label>
       </div>
       <textarea id="opener" placeholder="Who they are, where they meet, what about"></textarea>
+      <div class="files" id="openerFiles"></div>
       <div class="go">
         <span style="display:flex; gap:14px">
           <label>Days <input type="number" id="days" min="1" max="7" value="3"></label>
           <label>Turns a day <input type="number" id="turns" min="1" max="20" value="6"></label>
         </span>
+        <span style="flex:1"></span>
+        <button id="attachOpener" type="button" data-for="opener">Attach files</button>
         <button class="primary" id="start" type="button">Start <small>⌘↵</small></button>
       </div>
       <div id="msg"></div>
@@ -173,8 +184,10 @@
     <div id="chat"></div>
     <div id="status"></div>
     <div id="controls">
+      <div class="files" id="sayFiles"></div>
       <div class="row">
         <input type="text" id="say" placeholder="Say something to both, at the meeting">
+        <button id="attachSay" type="button" data-for="say" title="Attach files" aria-label="Attach files">📎</button>
         <button id="send" type="button">Send</button>
         <button id="stop" type="button">Stop</button>
         <span id="more" hidden><button id="resume" type="button">Continue</button><input type="number" id="moreDays" min="1" max="7" value="1" aria-label="More days"></span>
@@ -183,14 +196,45 @@
   </section>
 </main>
 
+<input type="file" id="pick" multiple hidden>
+
 <script>
-const TOKEN = document.querySelector('meta[name=dispatch-token]').content;
+// The key comes in the link npm start prints (#k=…) and is kept for this origin.
+const TOKEN = (() => {
+  const m = location.hash.match(/^#k=([0-9a-f]+)$/);
+  try {
+    if (m) { localStorage.setItem('agents.key', m[1]); history.replaceState(null, '', location.pathname + location.search); }
+    return localStorage.getItem('agents.key') || (m ? m[1] : '');
+  } catch { return m ? m[1] : ''; }
+})();
 const $ = id => document.getElementById(id);
 const store = {
   get(k, d) { try { const v = localStorage.getItem('story.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem('story.' + k, JSON.stringify(v)); } catch {} },
 };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// Attachments: picked here, sent as base64, checked and saved by the server
+// into the conversation's files/ folder. The server's list of types decides;
+// `accept` only narrows the picker.
+const ACCEPT = 'txt md markdown csv tsv json yaml yml xml html css log js mjs cjs ts tsx jsx py rb go rs java kt swift c h cpp cs php sql sh pdf png jpg jpeg gif webp';
+const picked = { opener: [], say: [] };
+let picking = null;
+const kb = n => n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`;
+function chips(which) {
+  $(which + 'Files').innerHTML = picked[which].map((f, i) =>
+    `<span class="chip">${esc(f.name)} · ${kb(f.size)}<button type="button" data-for="${which}" data-i="${i}" aria-label="Remove ${esc(f.name)}">×</button></span>`).join('');
+}
+const b64 = f => new Promise((ok, no) => {
+  const r = new FileReader();
+  r.onload = () => ok(String(r.result).split(',')[1] || '');
+  r.onerror = () => no(r.error);
+  r.readAsDataURL(f);
+});
+const encode = which => Promise.all(picked[which].map(async f => ({ name: f.name, data: await b64(f) })));
+const att = files => files?.length
+  ? `<div class="att">📎 ${files.map(f => `${esc(f.path)} · ${kb(f.size)}`).join(', ')}</div>` : '';
+const withFiles = (text, files) => files?.length ? `${text}\n\nAttached: ${files.map(f => f.path).join(', ')}`.trim() : text;
 
 // The Markdown agents write: paragraphs, headings, lists, quotes, code. Every
 // piece of text goes through esc(), so a reply can never become HTML. Links stay text.
@@ -254,6 +298,12 @@ function message(cls, who, html, extra = '', avatar = initials(who)) {
 }
 
 const typing = '<span class="typing"><i></i><i></i><i></i></span>';
+// A drawing is shown as an image, never inlined: in an <img> an SVG cannot run
+// scripts or load anything.
+const drawing = (j, alt) => j.drawing
+  ? `<figure class="drawing"><img alt="${esc(alt)}" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(j.drawing.svg)}"></figure>` : '';
+// While a journal is being written, the drawing after it shows as a placeholder, not as source.
+const unsvg = t => { const i = t.search(/```[\w-]*\s*<svg|<svg[\s>]/i); return i < 0 ? t : t.slice(0, i) + '\n\n*drawing…*'; };
 const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
 function render(s) {
@@ -261,18 +311,19 @@ function render(s) {
   const side = id => (id === s.agents[0].id ? 'a' : 'b');
   const cur = s.current;
   const live = () => message(`${side(cur.agent)} live`, cur.kind === 'evening' ? `${cur.label}'s journal` : cur.label,
-    cur.text.trim() ? md(cur.text) : typing,
+    cur.text.trim() ? md(cur.kind === 'evening' ? unsvg(cur.text) : cur.text) : typing,
     `<span class="s-running">${cur.retry ? 'retrying' : cur.kind === 'evening' ? 'at home' : 'writing'} · ${cur.seconds}s</span>`);
   const nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 120;
-  const parts = [message('opener', 'How it started', md(s.opener), '', '✎')];
+  const parts = [message('opener', 'How it started', md(s.opener) + att(s.files), '', '✎')];
   for (const d of s.days) {
     parts.push(`<h2 class="day">Day ${d.n}</h2>`);
-    parts.push(...d.turns.map(m => m.user ? message('you', m.label, md(m.text))
+    parts.push(...d.turns.map(m => m.user ? message('you', m.label, md(m.text) + att(m.files))
                                          : message(side(m.agent) + (m.skipped ? ' skipped' : ''), m.label, md(m.text), `<span>${m.skipped ? 'no reply' : `${m.seconds}s`}</span>`)));
     if (cur?.day === d.n && cur.kind === 'meeting') parts.push(live());
     if (d.journals.length || (cur?.day === d.n && cur.kind === 'evening')) {
       parts.push(`<h2 class="day">Day ${d.n}, evening <span>each one alone; the other never reads this</span></h2>`);
-      parts.push(...d.journals.map(j => message(`${side(j.agent)} journal`, `${j.label}'s journal`, md(j.text))));
+      parts.push(...d.journals.map(j => message(`${side(j.agent)} journal`, `${j.label}'s journal`,
+        md(j.text) + drawing(j, `${j.label}'s drawing of day ${d.n}`))));
       if (cur?.day === d.n && cur.kind === 'evening') parts.push(live());
     }
   }
@@ -300,10 +351,11 @@ function render(s) {
 }
 
 function transcript(s) {
-  return [`# ${s.agents.map(a => a.label).join(' & ')}`, '', '## How it started', '', s.opener, '',
-    ...s.days.flatMap(d => [`## Day ${d.n}`, '', ...d.turns.flatMap(m => [`### ${m.label}`, '', m.text, '']),
+  return [`# ${s.agents.map(a => a.label).join(' & ')}`, '', '## How it started', '', withFiles(s.opener, s.files), '',
+    ...s.days.flatMap(d => [`## Day ${d.n}`, '', ...d.turns.flatMap(m => [`### ${m.label}`, '', withFiles(m.text, m.files), '']),
       ...(d.journals.length ? [`## Day ${d.n}, evening`, ''] : []),
-      ...d.journals.flatMap(j => [`### ${j.label}'s journal`, '', j.text, ''])])].join('\n');
+      ...d.journals.flatMap(j => [`### ${j.label}'s journal`, '', j.text, '',
+        ...(j.drawing ? [`![${j.label}, day ${d.n}](${j.drawing.file})`, ''] : [])])])].join('\n');
 }
 
 async function show(id) {
@@ -338,9 +390,10 @@ async function start() {
   store.set('pair', agents); store.set('turns', $('turns').value); store.set('days', $('days').value);
   $('start').disabled = true;
   try {
-    const t = await api('/api/story', { opener, agents, days: Number($('days').value), turns: Number($('turns').value) });
+    const t = await api('/api/story', { opener, agents, days: Number($('days').value), turns: Number($('turns').value), files: await encode('opener') });
     msg('');
     $('opener').value = '';
+    picked.opener = []; chips('opener');
     await refreshTalks();
     show(t.id);
   } catch (e) { msg(e.message, true); }
@@ -354,9 +407,15 @@ async function act(path, body) {
 
 async function say() {
   const text = $('say').value;
-  if (!text.trim()) return;
-  $('say').value = '';
-  await act('/api/story/say', { text });
+  if (!text.trim() && !picked.say.length) return;
+  $('send').disabled = true;
+  try {
+    await api('/api/story/say', { id: current, text, files: await encode('say') });
+    $('say').value = '';
+    picked.say = []; chips('say');
+    show(current);
+  } catch (e) { $('status').insertAdjacentHTML('beforeend', `\n<span class="err">${esc(e.message)}</span>`); }
+  finally { $('send').disabled = false; }
 }
 
 async function copy() {
@@ -386,6 +445,21 @@ $('talks').addEventListener('click', e => { const el = e.target.closest('.talk')
 $('start').addEventListener('click', start);
 $('swap').addEventListener('click', () => { const a = $('a').value; $('a').value = $('b').value; $('b').value = a; });
 $('new').addEventListener('click', showSetup);
+for (const b of document.querySelectorAll('#attachOpener, #attachSay')) b.addEventListener('click', () => {
+  picking = b.dataset.for;
+  $('pick').accept = ACCEPT.split(' ').map(e => '.' + e).join(',');
+  $('pick').click();
+});
+$('pick').addEventListener('change', () => {
+  picked[picking].push(...$('pick').files);
+  picked[picking] = picked[picking].slice(0, 5);
+  $('pick').value = '';
+  chips(picking);
+});
+for (const id of ['openerFiles', 'sayFiles']) $(id).addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (b) { picked[b.dataset.for].splice(Number(b.dataset.i), 1); chips(b.dataset.for); }
+});
 $('send').addEventListener('click', say);
 $('copy').addEventListener('click', copy);
 $('say').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); say(); } });
