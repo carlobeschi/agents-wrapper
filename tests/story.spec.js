@@ -30,6 +30,10 @@ test.beforeAll(async () => {
         `case "$1" in *"you are home"*) printf '%s\n' 'A bad day.' '' '<svg viewBox="0 0 10 10" onload="document.title=1"><script>document.title=2</script><circle cx="5" cy="5" r="4"/></svg>';; *) echo "Hello from vandal";; esac`,
         'x', '{prompt}'] },
       { id: 'b', label: 'Agent B', headless: fake('b') },
+      // Keeps notes on day 1's evening only; saves what each prompt says so a later one doesn't overwrite it.
+      { id: 'keeper', label: 'Keeper', headless: ['sh', '-c',
+        `n=$(ls prompt-keeper-*.txt 2>/dev/null | wc -l); printf %s "$1" > prompt-keeper-$((n + 1)).txt; case "$1" in *"Day 1's meeting"*) printf '%s\n' 'Journal of keeper.' '' '## Notes to keep' '' '- treaty v1';; *"you are home"*) echo 'Second journal.';; *) echo "Hello from keeper";; esac`,
+        'x', '{prompt}'] },
       { id: 'slow', label: 'Slow', headless: ['sh', '-c', `printf 'thinking about it'; sleep 30; echo done`] },
       // Like agy when a tool is refused: no reply, the reason on stderr. Replies once told why.
       { id: 'denied', label: 'Denied', headless: ['sh', '-c', 'case "$1" in *"Your last attempt failed"*) echo "I could not open it.";; *) echo "jetski: no output produced — a tool required the \\"command\\" permission" >&2;; esac', 'x', '{prompt}'] },
@@ -80,7 +84,9 @@ test('they meet, go home and write a journal, and meet again the next day', asyn
   const dir = await storyDir(page);
   // A's last meeting turn (day 2): its own journal, today's turns, nothing of B's journal or of day 1's meeting.
   const meet = read(dir, 'meeting', 'prompt-a.txt');
-  expect(meet).toContain('this is day 2');
+  expect(meet).toContain('this is day 2 of 2');
+  expect(meet).toContain('This is message 2 of 2 today, the last one: bring today\'s meeting to a close');
+  expect(read(dir, 'steps', 'd02-01-b.prompt.md')).toMatch(/This is message 1 of 2 today\.\n/);
   expect(meet).toMatch(/## Your journal\n\n### Evening of day 1 · [0-9a-f]{8}\n\nJournal of a\n/);
   expect(meet).not.toContain('Journal of b');
   expect(meet.match(/^### Agent [AB] · [0-9a-f]{8}$/gm)?.map(h => h.slice(0, 11))).toEqual(['### Agent B']);
@@ -102,6 +108,26 @@ test('they meet, go home and write a journal, and meet again the next day', asyn
     '## Day 1', '### Agent A', '### Agent B', '## Day 1, evening', "### Agent A's journal", "### Agent B's journal",
     '## Day 2', '### Agent B', '### Agent A', '## Day 2, evening', "### Agent A's journal", "### Agent B's journal",
   ]);
+});
+
+test('notes kept at home are taken out of the journal and given back on later days', async ({ page }) => {
+  await begin(page, 'keeper', 'b', 3, 2);
+  await expect(page.locator('#pill')).toHaveText('done');
+  const dir = await storyDir(page);
+  const homeDir = path.join(dir, 'homes', 'keeper');
+  const prompts = fs.readdirSync(homeDir).sort().map(f => read(homeDir, f));
+  expect(prompts[0]).toContain('"## Notes to keep"');
+  expect(prompts[0]).not.toContain('## Your notes');
+  // Day 2's evening left the notes out, so day 3 still has day 1's.
+  expect(prompts[1]).toContain('## Your notes\n\n- treaty v1');
+  const meeting = read(dir, 'steps', 'd03-01-keeper.prompt.md');
+  expect(meeting).toMatch(/### Evening of day 1 · [0-9a-f]{8}\n\nJournal of keeper\.\n\n### Evening of day 2 · [0-9a-f]{8}\n\nSecond journal\.\n\n## Your notes\n\n- treaty v1\n/);
+
+  const journal = page.locator('#chat .m.journal').first();
+  await expect(journal.locator('.text > p')).toHaveText('Journal of keeper.');
+  await expect(journal.locator('details.notes summary')).toHaveText('Notes kept');
+  await expect(page.locator('#chat details.notes')).toHaveCount(1);
+  expect(read(dir, 'story.md')).toContain("### Keeper's journal\n\nJournal of keeper.\n\n#### Keeper's notes\n\n- treaty v1\n");
 });
 
 test('at home each agent can draw the day; the drawing is saved and shown as an image', async ({ page }) => {
