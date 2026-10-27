@@ -28,6 +28,22 @@ const USER         = 'You';
 const AWAY = 'at the meeting, not in this folder';
 
 const MAX_DRAWING  = 200 * 1024;
+const MAX_NOTES    = 16 * 1024;
+
+// Headless agents can't write files, so what one wants to keep goes at the end
+// of its journal under this heading. The app takes it out of the journal, keeps
+// it, and puts it in the agent's later prompts. Each evening's notes replace the last.
+const NOTES = 'Notes to keep';
+const NOTES_RE = new RegExp(`^(?:#{1,6}[ \\t]*)?\\**${NOTES}:?\\**:?[ \\t]*$`, 'im');
+
+function splitNotes(journal) {
+  const m = journal.match(NOTES_RE);
+  if (!m) return { journal };
+  const notes = journal.slice(m.index + m[0].length).trim();
+  const rest = journal.slice(0, m.index).trim();
+  if (!rest) return { journal };
+  return { journal: rest, notes: notes.length > MAX_NOTES ? notes.slice(0, MAX_NOTES) + cutAt(MAX_NOTES) : notes };
+}
 
 // The evening reply is a journal entry and, after it, one SVG of the day. Split
 // them: the SVG (fenced or bare) becomes the drawing, the rest the journal.
@@ -58,20 +74,31 @@ const clamp = (n, lo, hi, d) => Math.min(hi, Math.max(lo, Math.floor(Number(n)) 
 function journalLines(me, n, tag) {
   const own = me.journal.slice(0, n);
   if (!own.length) return [];
-  return ['## Your journal', '', ...own.flatMap((text, i) => [heading(`Evening of day ${i + 1}`, tag), '', untag(text, tag), ''])];
+  const notes = me.notes.slice(0, n).filter(x => x !== undefined).pop();
+  return ['## Your journal', '', ...own.flatMap((text, i) => [heading(`Evening of day ${i + 1}`, tag), '', untag(text, tag), '']),
+    ...(notes ? ['## Your notes', '', untag(notes, tag), ''] : [])];
+}
+
+// Where this message falls in the day's meeting, so the last one closes it
+// instead of leaving a question for tomorrow.
+function position(n, total) {
+  return n >= total
+    ? `This is message ${n} of ${total} today, the last one: bring today's meeting to a close, without a question back.`
+    : `This is message ${n} of ${total} today.`;
 }
 
 function meetingPrompt(s, me, other, day) {
   const lines = [
-    `You are ${me.label}. You and ${other.label}, another AI agent, meet once a day; this is day ${day.n}. A person set this up and is reading along; their messages, if any, are marked "${USER}".`,
+    `You are ${me.label}. You and ${other.label}, another AI agent, meet once a day; this is day ${day.n} of ${s.totalDays}. A person set this up and is reading along; their messages, if any, are marked "${USER}".`,
     SPEAKERS(s.tag),
   ];
   if (day.n > 1) {
-    lines.push(`You remember earlier days only through your own journal below, and whatever you left at home in ${me.home}. ${other.label} has its own journal, which you have not read.`);
+    lines.push(`You remember earlier days only through your own journal and notes below. ${other.label} has its own, which you have not read.`);
   }
   lines.push(
     `Write only your next message to ${other.label}. No preamble, no name label. Keep it to a few paragraphs at most.`,
     UNATTENDED(other.label),
+    position(day.turns.filter(t => t.agent).length + 1, s.turnsPerDay),
     '', '## How it started', '', withFiles(s.opener, s.files), '',
     ...journalLines(me, day.n - 1, s.tag),
   );
@@ -86,10 +113,11 @@ function meetingPrompt(s, me, other, day) {
 
 function eveningPrompt(s, me, other, day) {
   const lines = [
-    `You are ${me.label}. Day ${day.n}'s meeting with ${other.label} is over and you are home, alone. This folder is yours: anything you left here on earlier evenings is still here. Nobody else sees what you do here, and ${other.label} never will.`,
+    `You are ${me.label}. Day ${day.n}'s meeting with ${other.label} is over and you are home, alone. Nobody else sees what you do here, and ${other.label} never will.`,
     SPEAKERS(s.tag),
-    `Spend the evening as you like: think, read, write notes, make something. Then reply with your journal entry for today: what happened, what you make of it now, what you want to bring to tomorrow. Tomorrow you will have this journal and this folder, not the transcript.`,
-    `After the entry, draw a picture of what the day looked like: one self-contained SVG, written straight into your reply (not to a file), in an \`\`\`svg block. Shapes, colour and text only; no scripts, links or external images. Your reply is the journal entry, then the drawing, nothing else.`,
+    `Spend the evening as you like. Then reply with your journal entry for today: what happened, what you make of it now, what you want to bring to tomorrow. Tomorrow you will have your journal and notes, not the transcript.`,
+    `Don't write files: anything you want to keep (lists, drafts, things you made) goes after the entry under a heading "## ${NOTES}". It replaces your notes from earlier evenings, so write out all of it, not just what changed. Leave it out to keep yesterday's notes as they are.`,
+    `After the entry and any notes, draw a picture of what the day looked like: one self-contained SVG, written straight into your reply (not to a file), in an \`\`\`svg block. Shapes, colour and text only; no scripts, links or external images. Your reply is the journal entry, then any notes, then the drawing, nothing else.`,
     UNATTENDED(),
     '', '## How it started', '', withFiles(s.opener, s.files, AWAY), '',
     ...journalLines(me, day.n - 1, s.tag),
@@ -109,6 +137,7 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
       ...d.turns.flatMap(t => [`### ${t.label}`, '', withFiles(inert(t.text), t.files), '']),
       ...(s.agents.some(a => a.journal[d.n - 1] !== undefined) ? [`## Day ${d.n}, evening`, ''] : []),
       ...s.agents.filter(a => a.journal[d.n - 1] !== undefined).flatMap(a => [`### ${a.label}'s journal`, '', inert(a.journal[d.n - 1]), '',
+        ...(a.notes[d.n - 1] !== undefined ? [`#### ${a.label}'s notes`, '', inert(a.notes[d.n - 1]), ''] : []),
         ...(a.drawings[d.n - 1] ? [`![${a.label}, day ${d.n}](${a.drawings[d.n - 1].file})`, ''] : [])]),
     ]),
   ].join('\n');
@@ -197,8 +226,10 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
       const seconds = Math.round((Date.now() - cur.started) / 1000);
       if (st.kind === 'meeting') st.day.turns.push({ agent: st.me.id, label: st.me.label, text, seconds });
       else {
-        const { journal, svg } = splitDrawing(text);
+        const { journal: entry, svg } = splitDrawing(text);
+        const { journal, notes } = splitNotes(entry);
         st.me.journal[st.day.n - 1] = journal.length > MAX_REPLY ? journal.slice(0, MAX_REPLY) + cutAt(MAX_REPLY) : journal;
+        if (notes !== undefined) st.me.notes[st.day.n - 1] = notes;
         if (svg) {
           // In the story folder, not at home, where the agent could change it later.
           const file = `drawings/${st.file}.svg`;
@@ -231,7 +262,7 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
     if (agents.some(a => !a)) return [400, { error: 'Unknown agent.' }];
     if (agents.some(a => !a.headless)) return [400, { error: `${agents.find(a => !a.headless).label} has no headless command.` }];
     const totalDays = clamp(body.days, 1, MAX_DAYS, 3);
-    const turnsPerDay = clamp(body.turns, 1, MAX_TURNS, 6);
+    const turnsPerDay = clamp(body.turns, 1, MAX_TURNS, 8);
     let files;
     try { files = parseFiles(body.files); } catch (e) { return [400, { error: e.message }]; }
 
@@ -245,7 +276,7 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
       agents: agents.map((a, i) => {
         const aid = a.id + (ids[0] === ids[1] ? `#${i + 1}` : '');
         const slug = aid.replace(/[^\w-]/g, '_');
-        return { id: aid, slug, label: labels[i], headless: a.headless, env: a.env, home: path.join(storyDir, 'homes', slug), journal: [], drawings: [] };
+        return { id: aid, slug, label: labels[i], headless: a.headless, env: a.env, home: path.join(storyDir, 'homes', slug), journal: [], notes: [], drawings: [] };
       }),
     };
     for (const p of [s.meeting, ...s.agents.map(a => a.home)]) fs.mkdirSync(p, { recursive: true });
@@ -309,7 +340,7 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
       n: d.n,
       turns: d.turns.map(({ agent, user, label, text, files, seconds, skipped }) => ({ agent, user, label, text, files, seconds, skipped })),
       journals: s.agents.filter(a => a.journal[d.n - 1] !== undefined).map(a => ({
-        agent: a.id, label: a.label, text: a.journal[d.n - 1],
+        agent: a.id, label: a.label, text: a.journal[d.n - 1], notes: a.notes[d.n - 1],
         drawing: a.drawings[d.n - 1],
       })),
     })),
@@ -330,4 +361,4 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
   return { start, stop, resume, say, get, list };
 }
 
-module.exports = { createStories, meetingPrompt, eveningPrompt, splitDrawing };
+module.exports = { createStories, meetingPrompt, eveningPrompt, splitDrawing, splitNotes };

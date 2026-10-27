@@ -91,12 +91,21 @@ function inert(text) {
   }).join('\n');
 }
 
-function framing(me, other, opener, turns, retry, tag) {
+// Where this message falls in the run, so a speaker can leave room for a reply
+// and close on the last one instead of asking a question nobody answers.
+function position(n, total) {
+  return n >= total
+    ? `This is message ${n} of ${total}, the last one: bring the conversation to a close, without a question back.`
+    : `This is message ${n} of ${total}.`;
+}
+
+function framing(me, other, opener, turns, retry, tag, n, total) {
   const lines = [
     `You are ${me}, in a conversation with ${other}, another AI agent. A person set this up and is reading along; their messages, if any, are marked "${USER}".`,
     SPEAKERS(tag),
-    `Write only your next message to ${other}. No preamble, no name label, no tools unless the conversation needs them. Keep it to a few paragraphs at most.`,
+    `Write only your next message to ${other}. No preamble, no name label, no tools unless the conversation needs them. Match the length to the moment, from a line to a few paragraphs. Don't open by quoting or praising ${other}'s last message, and don't end every message with a question.`,
     UNATTENDED(other),
+    ...(n ? [position(n, total)] : []),
     '',
     '## Opener',
     '',
@@ -139,7 +148,8 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
     const spoken = t.turns.filter(m => m.agent).length;
     const me = t.agents[spoken % 2], other = t.agents[(spoken + 1) % 2];
     const prompt = framing(me.label, other.label, withFiles(t.opener, t.files),
-      t.turns.map(m => ({ label: m.label, text: withFiles(m.text, m.files) })), retry, t.tag);
+      t.turns.map(m => ({ label: m.label, text: withFiles(m.text, m.files) })), retry, t.tag,
+      spoken + 1, spoken + t.turnsLeft);
     // Keep what each turn was sent and what it said on stderr, to rerun a failed turn by hand.
     const base = path.join(t.dir, 'turns', `${String(spoken + 1).padStart(2, '0')}-${me.id.replace(/[^\w-]/g, '_')}`);
     fs.mkdirSync(path.dirname(base), { recursive: true });
@@ -309,4 +319,4 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
   return { start, stop, resume, say, get, list, clear };
 }
 
-module.exports = { createTalks, framing, killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS };
+module.exports = { createTalks, framing, position, killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS };
