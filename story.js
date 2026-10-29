@@ -14,7 +14,7 @@ const fs     = require('fs');
 const path   = require('path');
 const { spawn } = require('child_process');
 const { parseFiles, saveFiles, withFiles, attachedBytes } = require('./attach');
-const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS } = require('./talk');
+const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS, modelLine } = require('./talk');
 
 const MAX_DAYS     = 7;    // to start with; "Another day" can go past it
 const MAX_TOTAL    = 30;
@@ -131,7 +131,7 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
   const stories = new Map();
 
   const markdown = s => [
-    `# ${s.agents.map(a => a.label).join(' & ')}`, '', '## How it started', '', withFiles(s.opener, s.files), '',
+    `# ${s.agents.map(a => a.label).join(' & ')}`, '', ...(modelLine(s.agents) ? [modelLine(s.agents), ''] : []), '## How it started', '', withFiles(s.opener, s.files), '',
     ...s.days.flatMap(d => [
       `## Day ${d.n}`, '',
       ...d.turns.flatMap(t => [`### ${t.label}`, '', withFiles(inert(t.text), t.files), '']),
@@ -181,7 +181,7 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
     fs.mkdirSync(path.dirname(base), { recursive: true });
     const prompt = retry ? `${st.prompt}\n${retryNote(retry.why, retry.note)}` : st.prompt;
     fs.writeFileSync(base + (retry ? '.retry' : '') + '.prompt.md', prompt);
-    const [cmd, ...args] = fill(st.me.headless, prompt);
+    const [cmd, ...args] = fill(st.me.headless, prompt, st.me.model);
     const cur = { kind: st.kind, day: st.day.n, agent: st.me.id, label: st.me.label, started: Date.now(), out: '', err: '', retry: !!retry,
                   // An evening reply carries a drawing too, which never goes back into a prompt.
                   max: st.kind === 'evening' ? MAX_REPLY + MAX_DRAWING : MAX_REPLY };
@@ -276,14 +276,14 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
       agents: agents.map((a, i) => {
         const aid = a.id + (ids[0] === ids[1] ? `#${i + 1}` : '');
         const slug = aid.replace(/[^\w-]/g, '_');
-        return { id: aid, slug, label: labels[i], headless: a.headless, env: a.env, home: path.join(storyDir, 'homes', slug), journal: [], notes: [], drawings: [] };
+        return { id: aid, slug, label: labels[i], model: a.model, headless: a.headless, env: a.env, home: path.join(storyDir, 'homes', slug), journal: [], notes: [], drawings: [] };
       }),
     };
     for (const p of [s.meeting, ...s.agents.map(a => a.home)]) fs.mkdirSync(p, { recursive: true });
     s.files = saveFiles(s.meeting, files);
     stories.set(id, s);
     fs.writeFileSync(path.join(storyDir, 'meta.json'),
-      JSON.stringify({ id, agents: ids, days: totalDays, turnsPerDay, at: new Date().toISOString() }, null, 2));
+      JSON.stringify({ id, agents: ids, models: s.agents.map(a => a.model || null), days: totalDays, turnsPerDay, at: new Date().toISOString() }, null, 2));
     save(s);
     console.log(`  ☾ ${id} ${ids.join(' & ')} (${totalDays} days × ${turnsPerDay} turns) in ${storyDir}`);
     next(s);
@@ -335,7 +335,7 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
   const view = s => ({
     id: s.id, dir: s.dir, opener: s.opener, files: s.files, status: s.status, error: s.error,
     totalDays: s.totalDays, turnsPerDay: s.turnsPerDay,
-    agents: s.agents.map(a => ({ id: a.id, label: a.label, home: a.home, files: homeFiles(a.home) })),
+    agents: s.agents.map(a => ({ id: a.id, label: a.label, model: a.model, home: a.home, files: homeFiles(a.home) })),
     days: s.days.map(d => ({
       n: d.n,
       turns: d.turns.map(({ agent, user, label, text, files, seconds, skipped }) => ({ agent, user, label, text, files, seconds, skipped })),

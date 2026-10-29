@@ -341,7 +341,7 @@ function render(s) {
   $('chat').innerHTML = parts.join('');
 
   const running = s.status === 'running';
-  $('pair').innerHTML = s.agents.map(a => esc(a.label)).join(' <span class="muted">&amp;</span> ');
+  $('pair').innerHTML = s.agents.map(a => esc(a.label) + (a.model ? ` <span class="muted">${esc(a.model)}</span>` : '')).join(' <span class="muted">&amp;</span> ');
   $('pill').textContent = s.status;
   $('pill').className = `pill s-${s.status}`;
   $('progress').textContent = cur
@@ -359,8 +359,12 @@ function render(s) {
   if (nearBottom) window.scrollTo(0, document.body.scrollHeight);
 }
 
+// As in the saved files: which model each agent ran, if any is pinned.
+const modelLine = agents => agents.some(a => a.model)
+  ? [`Models: ${agents.map(a => `${a.label} ${a.model || '(CLI default)'}`).join(' · ')}`, ''] : [];
+
 function transcript(s) {
-  return [`# ${s.agents.map(a => a.label).join(' & ')}`, '', '## How it started', '', withFiles(s.opener, s.files), '',
+  return [`# ${s.agents.map(a => a.label).join(' & ')}`, '', ...modelLine(s.agents), '## How it started', '', withFiles(s.opener, s.files), '',
     ...s.days.flatMap(d => [`## Day ${d.n}`, '', ...d.turns.flatMap(m => [`### ${m.label}`, '', withFiles(m.text, m.files), '']),
       ...(d.journals.length ? [`## Day ${d.n}, evening`, ''] : []),
       ...d.journals.flatMap(j => [`### ${j.label}'s journal`, '', j.text, '',

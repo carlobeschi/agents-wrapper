@@ -54,7 +54,7 @@ Each story is in `~/.agent-dispatch/stories/<id>/`: `story.md` (meetings, journa
 
 ## Agents
 
-An agent shows as "not found" until its CLI is on `PATH`. Each one uses its own signed-in session, so there are no keys here.
+An agent shows as "not found" until its CLI is on `PATH`. Each one signs in its own way (a session, or an API key named in its `env`); no keys are stored here.
 
 Defaults are in `agents.json`. To change them, copy that file to `~/.agent-dispatch/agents.json`, which takes precedence:
 
@@ -64,7 +64,8 @@ Defaults are in `agents.json`. To change them, copy that file to `~/.agent-dispa
   "terminal": ["open", "-a", "iTerm", "{script}"],
   "agents": [
     { "id": "claude", "label": "Claude Code",
-      "interactive": ["claude", "--model", "opus", "{prompt}"],
+      "model": "claude-opus-5-5",
+      "interactive": ["claude", "--model", "{model}", "{prompt}"],
       "headless":    ["claude", "-p", "--tools", "Read,Glob,Grep", "--permission-mode", "dontAsk", "--strict-mcp-config", "--", "{prompt}"],
       "env":         ["ANTHROPIC_API_KEY"] },
     { "id": "claude-web", "label": "Claude (web)", "type": "url", "url": "https://claude.ai/new?q={prompt}" }
@@ -73,6 +74,10 @@ Defaults are in `agents.json`. To change them, copy that file to `~/.agent-dispa
 ```
 
 The headless commands that ship here are capped: Claude Code gets only its file-reading tools (`--tools Read,Glob,Grep`), no MCP servers, and refuses anything not pre-approved (`--permission-mode dontAsk`); Codex runs in its read-only sandbox; Antigravity runs with `--sandbox` (terminal restrictions) and without slash commands. The Claude and Codex flags override whatever your own CLI settings allow, so a conversation can't run commands or write files even if your everyday setup does. Antigravity has no flag that overrides your allow rules: headless, it refuses commands, file writes and file reads unless `permissions.allow` in its settings lets them through, so keep that list empty or narrow. Cursor runs with its own headless defaults, untested here. Headless agents also get a trimmed environment: `PATH`, `HOME`, locale and proxy settings, plus the variable names listed in the agent's `env` (an API key, if that is how you sign in). Other variables in the shell that ran `npm start` don't reach them.
+
+**Models.** An agent's `model` is the exact model it runs, put in place of `{model}` in its commands. The shipped config pins Claude Code to `claude-opus-5-5` and Antigravity to `gemini-4-argon`, so a conversation never runs on whatever a CLI defaults to. Check the Antigravity name with `agy models`. A command that uses `{model}` without a `model` is refused. The model shows next to each agent's name on the page, at the top of `transcript.md` and `story.md` (`Models: …`), and in `meta.json`; it records what was asked for, since not every CLI reports what it ran.
+
+**Antigravity with an API key.** Gemini 4 Argon is a paid-tier model. To run Antigravity on a paid Gemini API key instead of your Google sign-in, set `{ "modelProvider": "gemini" }` in `~/.gemini/antigravity-cli/settings.json` and export `GEMINI_API_KEY` in the shell that runs `npm start`; the shipped config passes that one variable through. If you keep your own `~/.agent-dispatch/agents.json`, add the `model` and `--model {model}` there too.
 
 `{prompt}` is replaced in argv, or URL-encoded into a web agent's `url`. A web agent whose `url` has no `{prompt}` gets the prompt copied to the clipboard instead. Nothing goes through a shell. `terminal` defaults to Terminal.app on macOS and `x-terminal-emulator`/`gnome-terminal`/`konsole`/`xterm` on Linux. The config is read on every request, so edits apply on page reload.
 

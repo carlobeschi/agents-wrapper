@@ -4,15 +4,17 @@
     {
       "id": "claude",
       "label": "Claude Code",
-      "interactive": ["claude", "{prompt}"],
-      "headless": ["claude", "-p", "--tools", "Read,Glob,Grep", "--permission-mode", "dontAsk", "--strict-mcp-config", "--", "{prompt}"],
+      "model": "claude-opus-5-5",
+      "interactive": ["claude", "--model", "{model}", "{prompt}"],
+      "headless": ["claude", "-p", "--model", "{model}", "--tools", "Read,Glob,Grep", "--permission-mode", "dontAsk", "--strict-mcp-config", "--", "{prompt}"],
       "env": ["ANTHROPIC_API_KEY", "CLAUDE_CONFIG_DIR"]
     },
     {
       "id": "antigravity",
       "label": "Antigravity CLI",
-      "interactive": ["agy", "-i", "{prompt}"],
-      "headless": ["agy", "--sandbox", "--disable-slash-commands", "-p", "{prompt}"],
+      "model": "gemini-4-argon",
+      "interactive": ["agy", "--model", "{model}", "-i", "{prompt}"],
+      "headless": ["agy", "--model", "{model}", "--sandbox", "--disable-slash-commands", "-p", "{prompt}"],
       "env": ["GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_CLOUD_PROJECT"]
     },
     {
