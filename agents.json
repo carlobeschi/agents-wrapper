@@ -12,7 +12,7 @@
     {
       "id": "antigravity",
       "label": "Antigravity CLI",
-      "model": "gemini-4-argon",
+      "model": "gemini-4-argon-medium",
       "interactive": ["agy", "--model", "{model}", "-i", "{prompt}"],
       "headless": ["agy", "--model", "{model}", "--sandbox", "--disable-slash-commands", "-p", "{prompt}"],
       "env": ["GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_CLOUD_PROJECT"]
