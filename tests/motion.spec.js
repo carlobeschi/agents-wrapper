@@ -53,37 +53,32 @@ test('runs openings, four turns and closings, each private piece kept from the o
   expect(md).toContain('# This house believes tests are optional.');
 });
 
-test('when both open on the same side, one is picked to argue the other, and the episode says so', () => {
+test('sides swap each week, and the side for the motion opens the debate', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-home-'));
-  const against = name => ['sh', '-c',
-    `case "$1" in *"Before you meet"*) printf 'Against\\nNo from ${name}.\\n';; *"you are alone"*) echo "CLOSE-${name}";; *) echo "TURN-${name}";; esac`,
-    'x', '{prompt}'];
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
-    { id: 'a', label: 'Agent A', headless: against('a') },
-    { id: 'b', label: 'Agent B', headless: against('b') },
+    { id: 'a', label: 'Agent A', headless: fake('a') },
+    { id: 'b', label: 'Agent B', headless: fake('b') },
   ] }));
   const motion = path.join(home, 'm2.json');
-  fs.writeFileSync(motion, JSON.stringify({ motion: 'tabs beat spaces.', brief: 'B.', agents: ['a', 'b'] }));
-  const out = execFileSync('node', [path.join(__dirname, '..', 'motion.js'), motion],
+  fs.writeFileSync(motion, JSON.stringify({ number: 2, motion: 'tabs beat spaces.', brief: 'B.', agents: ['a', 'b'] }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'motion.js'), motion, '--local'],
     { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
   const dir = out.match(/Run folder: (.+)/)[1].trim();
   const ep = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
-  const sides = ep.agents.map(x => x.side);
-  expect(sides.filter(Boolean)).toEqual(['for']);
-  // The stance line becomes a label; the published text starts after it.
-  expect(ep.agents.map(x => [x.before, x.opening])).toEqual([['against', 'No from a.'], ['against', 'No from b.']]);
-  const picked = ep.agents.find(x => x.side).id;
+  // Motion 2: the first agent argues against, so the second opens.
+  expect(ep.agents.map(x => [x.id, x.side])).toEqual([['a', 'against'], ['b', 'for']]);
+  expect(ep.turns.map(t => t.by)).toEqual(['b', 'a', 'b', 'a']);
   const read = f => fs.readFileSync(path.join(dir, 'steps', f), 'utf8');
-  const turn = fs.readdirSync(path.join(dir, 'steps')).find(f => f.startsWith('1-turn-') && f.endsWith(`-${picked}.prompt.md`));
-  expect(read(turn)).toContain('you argue for the motion');
-  expect(read(`2-close-${picked}.prompt.md`)).toContain('assigned to argue for the motion');
-  expect(fs.readFileSync(path.join(dir, 'episode.md'), 'utf8')).toContain('argues for the motion, by lot');
+  expect(read('0-open-a.prompt.md')).toContain('You argue against the motion; Agent B argues for.');
+  expect(read('1-turn-2-a.prompt.md')).toContain('You argue against the motion');
+  expect(read('2-close-a.prompt.md')).toContain('In the room you argued against the motion.');
+  expect(fs.readFileSync(path.join(dir, 'episode.md'), 'utf8')).toContain('### Agent A (argues against)');
 });
 
 test('with a number, writes the episode file for the show site, with a summary from the editor', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-home-'));
   const agent = name => ['sh', '-c',
-    `case "$1" in *"Before you meet"*) printf 'Split\\nOn the fence, ${name}.\\n';; *"you are alone"*) printf 'For\\nNow for, ${name}.\\n';; *"You are the editor"*) echo "A short summary.";; *) echo "Turn by ${name} with a <b>tag</b>";; esac`,
+    `case "$1" in *"Before you meet"*) echo "On the fence, ${name}.";; *"you are alone"*) echo "Now for, ${name}.";; *"You are the editor"*) echo "A short summary.";; *) echo "Turn by ${name} with a <b>tag</b>";; esac`,
     'x', '{prompt}'];
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
     { id: 'claude', label: 'Claude Code', model: 'm-1', headless: agent('claude') },
@@ -101,10 +96,10 @@ test('with a number, writes the episode file for the show site, with a summary f
   expect(md).toContain('summary: "A short summary."');
   expect(md).toContain('  claude: "m-1"');
   expect(md).toContain('  url: "https://example.com/n"');
-  // Both split: one argues for, the other against.
-  expect(md).toMatch(/lot:\n  by: "(claude|antigravity)"\n  side: "(for|against)"/);
-  expect(md).toMatch(/before:\n  claude:\n    stance: "split"\n    text: "On the fence, claude."/);
-  expect(md).toMatch(/after:\n  claude:\n    stance: "for"\n    text: "Now for, claude."/);
+  // Motion 3 is odd: the first agent argues for.
+  expect(md).toContain('sides:\n  claude: "for"\n  antigravity: "against"');
+  expect(md).toContain('before:\n  claude: "On the fence, claude."');
+  expect(md).toContain('after:\n  claude: "Now for, claude."');
   // Agent text is made inert for kramdown.
   expect(md).toContain('Turn by claude with a \\\\<b>tag\\\\</b>');
   expect(md).not.toContain('Turn by claude with a <b>');
