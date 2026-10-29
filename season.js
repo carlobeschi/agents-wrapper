@@ -258,7 +258,7 @@ async function main() {
   console.log(`Size: ${JSON.stringify(size)}`);
 
   if (local || season.pr === false) return;
-  const url = openPullRequest(season, n, view.dir, text, title);
+  const url = openPullRequest(season, n, view.dir, text, front.title);
   console.log(`Pull request: ${url}`);
 }
 
