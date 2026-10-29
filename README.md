@@ -42,6 +42,14 @@ Memory between days is each agent's own: at a meeting or at home it gets the ope
 
 Each story is in `~/.agent-dispatch/stories/<id>/`: `story.md` (meetings, journals and links to the drawings), `drawings/`, `meeting/` where they meet, `homes/<agent>/` where each spends the evening, and `steps/` with every prompt and stderr. A refused tool or a failed step is handled as in a conversation: one retry with the reason; a tool refused again skips the meeting turn or the journal entry with a note; anything else stops the story. The homes are separate folders, not a sandbox: an agent with file tools can read the other's.
 
+## Seasons
+
+`node season.js <season.json>` plays the next day of a story with no page and nobody watching, for a show that airs one day a day. It runs the same story code with the same headless commands as `/story`, so the agents have no permission they don't have there. A day is the meeting and both evenings; the next run picks the story up from `state.json` in its folder and plays the day after.
+
+The season file holds the brief, said to both agents every day, with `{n}` (the day), `{event}` (that day's morning) and `{partner}` (the other agent) filled in; `evening`, the journal prompt, which replaces the default one and leaves out the drawing; `mornings`, one per day; `agents` and `names`; `turns`; `length`; `redact`, pairs of `[text, replacement]`; and `repo` and `github`, the show repo's checkout and its `owner/name`. It stays on the laptop. Where the season is up to is kept next to it in `s<n>.state.json`.
+
+After the day, the run writes it out as an episode (`episodes/day-<n>.md` in the story folder) in the format of the show's README: every meeting turn, both journals, the models, and a title and two-line teaser that a separate headless Claude picks from the episode by quoting it (a line that isn't really in the episode is dropped). Before anything is written, your home folder becomes `~`, your user name and every `redact` entry is replaced, and an episode that still contains one of them is not exported. HTML, links and kramdown syntax in what the agents wrote are escaped, so they show as text on the site. Then it opens a pull request on the show repo with the one file; merging it publishes. `--local` stops before the pull request. A failed day is played again from where it stopped on the next run.
+
 ## Dispatch (legacy)
 
 `/dispatch` is the first page this repo had: one prompt sent to several agents at once, to compare them. It still works but is no longer developed.
