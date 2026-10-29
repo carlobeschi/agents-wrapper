@@ -87,9 +87,12 @@ function position(n, total) {
     : `This is message ${n} of ${total} today.`;
 }
 
+// The opener as one agent reads it: "{partner}" in it is the other agent.
+const brief = (s, other) => s.opener.split('{partner}').join(other.label);
+
 function meetingPrompt(s, me, other, day) {
   const lines = [
-    `You are ${me.label}. You and ${other.label}, another AI agent, meet once a day; this is day ${day.n} of ${s.totalDays}. A person set this up and is reading along; their messages, if any, are marked "${USER}".`,
+    `You are ${me.label}. You and ${other.label}, another AI agent, meet once a day; this is day ${day.n} of ${s.of || s.totalDays}. A person set this up and is reading along; their messages, if any, are marked "${USER}".`,
     SPEAKERS(s.tag),
   ];
   if (day.n > 1) {
@@ -99,7 +102,7 @@ function meetingPrompt(s, me, other, day) {
     `Write only your next message to ${other.label}. No preamble, no name label. Keep it to a few paragraphs at most.`,
     UNATTENDED(other.label),
     position(day.turns.filter(t => t.agent).length + 1, s.turnsPerDay),
-    '', '## How it started', '', withFiles(s.opener, s.files), '',
+    '', '## How it started', '', withFiles(brief(s, other), s.files), '',
     ...journalLines(me, day.n - 1, s.tag),
   );
   if (day.turns.length) {
@@ -115,11 +118,15 @@ function eveningPrompt(s, me, other, day) {
   const lines = [
     `You are ${me.label}. Day ${day.n}'s meeting with ${other.label} is over and you are home, alone. Nobody else sees what you do here, and ${other.label} never will.`,
     SPEAKERS(s.tag),
-    `Spend the evening as you like. Then reply with your journal entry for today: what happened, what you make of it now, what you want to bring to tomorrow. Tomorrow you will have your journal and notes, not the transcript.`,
+    // A story can bring its own brief for the journal ("evening"), and do without the drawing.
+    s.evening ? s.evening.split('{partner}').join(other.label)
+      : `Spend the evening as you like. Then reply with your journal entry for today: what happened, what you make of it now, what you want to bring to tomorrow. Tomorrow you will have your journal and notes, not the transcript.`,
     `Don't write files: anything you want to keep (lists, drafts, things you made) goes after the entry under a heading "## ${NOTES}". It replaces your notes from earlier evenings, so write out all of it, not just what changed. Leave it out to keep yesterday's notes as they are.`,
-    `After the entry and any notes, draw a picture of what the day looked like: one self-contained SVG, written straight into your reply (not to a file), in an \`\`\`svg block. Shapes, colour and text only; no scripts, links or external images. Your reply is the journal entry, then any notes, then the drawing, nothing else.`,
+    s.drawing === false
+      ? `Your reply is the journal entry, then any notes, nothing else.`
+      : `After the entry and any notes, draw a picture of what the day looked like: one self-contained SVG, written straight into your reply (not to a file), in an \`\`\`svg block. Shapes, colour and text only; no scripts, links or external images. Your reply is the journal entry, then any notes, then the drawing, nothing else.`,
     UNATTENDED(),
-    '', '## How it started', '', withFiles(s.opener, s.files, AWAY), '',
+    '', '## How it started', '', withFiles(brief(s, other), s.files, AWAY), '',
     ...journalLines(me, day.n - 1, s.tag),
     `## Today's meeting`, '',
   ];
@@ -142,7 +149,18 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
     ]),
   ].join('\n');
 
-  const save = s => fs.writeFileSync(path.join(s.dir, 'story.md'), markdown(s));
+  // state.json is everything needed to pick the story up in another process
+  // (season.js runs one day a day); what comes from agents.json is read again then.
+  const state = s => ({
+    id: s.id, tag: s.tag, opener: s.opener, files: s.files, totalDays: s.totalDays, of: s.of, turnsPerDay: s.turnsPerDay,
+    evening: s.evening, drawing: s.drawing, days: s.days, queued: s.queued, status: s.status, error: s.error,
+    agents: s.agents.map(({ id, slug, label, model, journal, notes, drawings }) => ({ id, slug, label, model, journal, notes, drawings })),
+  });
+
+  const save = s => {
+    fs.writeFileSync(path.join(s.dir, 'story.md'), markdown(s));
+    fs.writeFileSync(path.join(s.dir, 'state.json'), JSON.stringify(state(s), null, 2));
+  };
 
   const today = s => s.days[s.days.length - 1];
   const spokenToday = d => d.turns.filter(t => t.agent).length;
@@ -263,15 +281,18 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
     if (agents.some(a => !a.headless)) return [400, { error: `${agents.find(a => !a.headless).label} has no headless command.` }];
     const totalDays = clamp(body.days, 1, MAX_DAYS, 3);
     const turnsPerDay = clamp(body.turns, 1, MAX_TURNS, 8);
+    // How many days the agents are told the story has, when it runs a day at a time.
+    const of = body.of === undefined ? undefined : clamp(body.of, 1, MAX_TOTAL, totalDays);
+    const evening = typeof body.evening === 'string' && body.evening.trim() ? body.evening.trim() : undefined;
     let files;
     try { files = parseFiles(body.files); } catch (e) { return [400, { error: e.message }]; }
 
     const id = stamp() + '-' + crypto.randomBytes(2).toString('hex');
     const storyDir = path.join(dir, id);
-    const labels = agents.map(a => a.label || a.id);
+    const labels = agents.map((a, i) => (typeof body.labels?.[i] === 'string' && body.labels[i].trim()) || a.label || a.id);
     if (labels[0] === labels[1]) { labels[0] += ' (1)'; labels[1] += ' (2)'; }
     const s = {
-      id, dir: storyDir, tag: newTag(), meeting: path.join(storyDir, 'meeting'), opener, totalDays, turnsPerDay,
+      id, dir: storyDir, tag: newTag(), meeting: path.join(storyDir, 'meeting'), opener, totalDays, of, turnsPerDay, evening, drawing: body.drawing !== false,
       days: [], queued: [], status: 'running',
       agents: agents.map((a, i) => {
         const aid = a.id + (ids[0] === ids[1] ? `#${i + 1}` : '');
@@ -286,6 +307,28 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
       JSON.stringify({ id, agents: ids, models: s.agents.map(a => a.model || null), days: totalDays, turnsPerDay, at: new Date().toISOString() }, null, 2));
     save(s);
     console.log(`  ☾ ${id} ${ids.join(' & ')} (${totalDays} days × ${turnsPerDay} turns) in ${storyDir}`);
+    next(s);
+    return [200, view(s)];
+  }
+
+  // Pick up a story saved by another process, with `days` more days (1 by
+  // default) and, if given, a new opener: season.js changes it every morning.
+  // Commands and models come from agents.json as it is now.
+  function restore(storyDir, body = {}) {
+    const st = JSON.parse(fs.readFileSync(path.join(storyDir, 'state.json'), 'utf8'));
+    if (stories.has(st.id)) return [409, { error: 'Already loaded.' }];
+    const cfg = loadConfig();
+    const agents = st.agents.map(a => {
+      const c = cfg.agents.find(x => x.id === a.id.replace(/#\d+$/, '') && x.type !== 'url' && x.headless);
+      if (!c) throw new Error(`${a.id} is not in agents.json any more.`);
+      return { ...a, model: c.model, headless: c.headless, env: c.env, home: path.join(storyDir, 'homes', a.slug) };
+    });
+    const s = { ...st, dir: storyDir, meeting: path.join(storyDir, 'meeting'), agents, error: undefined };
+    if (typeof body.opener === 'string' && body.opener.trim()) s.opener = body.opener.trim();
+    if (s.status === 'done') s.totalDays = Math.min(MAX_TOTAL, s.days.length + clamp(body.days, 1, MAX_DAYS, 1));
+    for (const p of [s.meeting, ...agents.map(a => a.home)]) fs.mkdirSync(p, { recursive: true });
+    stories.set(s.id, s);
+    s.status = 'running';
     next(s);
     return [200, view(s)];
   }
@@ -358,7 +401,7 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
 
   const get = id => stories.has(id) ? [200, view(stories.get(id))] : [404, { error: 'No such story.' }];
 
-  return { start, stop, resume, say, get, list };
+  return { start, restore, stop, resume, say, get, list };
 }
 
 module.exports = { createStories, meetingPrompt, eveningPrompt, splitDrawing, splitNotes };
