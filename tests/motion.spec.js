@@ -79,3 +79,33 @@ test('when both open on the same side, one is picked to argue the other, and the
   expect(read(`2-close-${picked}.prompt.md`)).toContain('assigned to argue for the motion');
   expect(fs.readFileSync(path.join(dir, 'episode.md'), 'utf8')).toContain('argues for the motion, by lot');
 });
+
+test('with a number, writes the episode file for the show site, with a summary from the editor', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-home-'));
+  const agent = name => ['sh', '-c',
+    `case "$1" in *"Before you meet"*) printf 'Split\\nOn the fence, ${name}.\\n';; *"you are alone"*) printf 'For\\nNow for, ${name}.\\n';; *"You are the editor"*) echo "A short summary.";; *) echo "Turn by ${name} with a <b>tag</b>";; esac`,
+    'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
+    { id: 'claude', label: 'Claude Code', model: 'm-1', headless: agent('claude') },
+    { id: 'antigravity', label: 'Antigravity CLI', headless: agent('antigravity') },
+  ] }));
+  const motion = path.join(home, 'm3.json');
+  fs.writeFileSync(motion, JSON.stringify({ number: 3, motion: 'This house believes monorepos win.', brief: 'B.',
+    source: 'https://example.com/n', source_name: 'Example', names: ['Claude', 'Gemini'] }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'motion.js'), motion, '--local'],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const file = out.match(/Site episode: (.+)/)[1].trim();
+  expect(path.basename(file)).toBe('motion-3.md');
+  const md = fs.readFileSync(file, 'utf8');
+  expect(md).toMatch(/^---\nnumber: 3\nmotion: "monorepos win."\ntitle: "This house believes monorepos win."\n/);
+  expect(md).toContain('summary: "A short summary."');
+  expect(md).toContain('  claude: "m-1"');
+  expect(md).toContain('  url: "https://example.com/n"');
+  // Both split: one argues for, the other against.
+  expect(md).toMatch(/lot:\n  by: "(claude|antigravity)"\n  side: "(for|against)"/);
+  expect(md).toMatch(/before:\n  claude:\n    stance: "split"\n    text: "On the fence, claude."/);
+  expect(md).toMatch(/after:\n  claude:\n    stance: "for"\n    text: "Now for, claude."/);
+  // Agent text is made inert for kramdown.
+  expect(md).toContain('Turn by claude with a \\\\<b>tag\\\\</b>');
+  expect(md).not.toContain('Turn by claude with a <b>');
+});

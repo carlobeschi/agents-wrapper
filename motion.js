@@ -15,15 +15,17 @@
 const crypto = require('crypto');
 const fs     = require('fs');
 const path   = require('path');
-const { spawn } = require('child_process');
+const os     = require('os');
+const { spawn, execFileSync } = require('child_process');
 const { HOME_DIR, loadConfig, fill, agentEnv, stamp, redactor } = require('./config');
+const { inertForSite, plain, yaml } = require('./frontmatter');
 const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, MAX_REPLY, take, cutNote, inert, newTag, untag, heading, SPEAKERS, modelLine } = require('./talk');
 
 const STEP_TIMEOUT = 10 * 60 * 1000;
 const RETRY_DELAY  = Number(process.env.AGENT_DISPATCH_RETRY_MS ?? 3000);
 
 const usage = () => {
-  console.error('usage: node motion.js <motion.json>');
+  console.error('usage: node motion.js <motion.json> [--local]');
   process.exit(2);
 };
 
@@ -157,9 +159,75 @@ function markdown(m, st) {
   ].join('\n');
 }
 
+// ---- The show site: a summary, the episode file, a pull request ----
+
+async function editorSummary(dir, editor, m, st) {
+  const lines = [
+    `You are the editor of a weekly show in which two AI agents, ${st.agents.map(x => x.label).join(' and ')}, debate a motion. Below is this week's episode.`,
+    'Write a summary for a reader with thirty seconds: two or three plain sentences, under 70 words. Say where each stood before, what the debate turned on, and where each stood after. No praise, no quotes, no verdict on who won.',
+    'Reply with the summary only.', '',
+    `## This house believes ${m.motion.replace(/^this house believes\s*/i, '')}`, '',
+    ...st.agents.map(x => `[before, alone, ${x.label}${x.before ? `, ${x.before}` : ''}] ${x.opening}\n`),
+    ...st.agents.filter(x => x.side).map(x => `(${x.label} argued ${x.side} the motion, picked by lot.)\n`),
+    ...st.turns.map(t => `[debate, ${t.label}] ${t.text}\n`),
+    ...st.agents.map(x => `[after, alone, ${x.label}${x.after ? `, ${x.after}` : ''}] ${x.closing}\n`),
+  ];
+  try {
+    const text = (await run(dir, '3-editor', editor, lines.join('\n'), dir)).replace(/\s+/g, ' ').trim();
+    // A summary that runs long is dropped; the page shows the division without one.
+    return text.length <= 600 ? text : undefined;
+  } catch (e) {
+    console.warn(`No summary: ${e.message.split('\n')[0]}`);
+    return undefined;
+  }
+}
+
+// The episode in the format of the-motion's README: _episodes/motion-<n>.md.
+function frontMatter(m, st, summary) {
+  const today = new Date(), p = x => String(x).padStart(2, '0');
+  const motion = plain(m.motion.replace(/^this house believes\s*/i, '').trim());
+  const key = x => x.id.replace(/#\d+$/, '');
+  const lot = st.agents.find(x => x.side);
+  const note = (x, k) => ({ stance: x[k === 'opening' ? 'before' : 'after'] || undefined, text: inertForSite(x[k]) });
+  const front = {
+    number: m.number, motion, title: `This house believes ${motion}`,
+    date: `${today.getFullYear()}-${p(today.getMonth() + 1)}-${p(today.getDate())}`,
+    summary: summary && plain(summary),
+    models: Object.fromEntries(st.agents.map(x => [key(x), x.model || '(CLI default)'])),
+    source: m.source ? { name: m.source_name || undefined, url: m.source } : undefined,
+    brief: inertForSite(m.brief.trim()),
+    lot: lot ? { by: key(lot), side: lot.side } : undefined,
+    before: Object.fromEntries(st.agents.map(x => [key(x), note(x, 'opening')])),
+    debate: st.turns.map(t => ({ by: t.by.replace(/#\d+$/, ''), text: inertForSite(t.text) })),
+    after: Object.fromEntries(st.agents.map(x => [key(x), note(x, 'closing')])),
+  };
+  return `---\n${yaml(front)}\n---\n`;
+}
+
+const git = (repo, ...args) => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+
+function openPullRequest(m, dir, text) {
+  const repo = m.repo.replace(/^~(?=$|\/)/, os.homedir());
+  const branch = `episode/motion-${m.number}`;
+  const rel = `_episodes/motion-${m.number}.md`;
+  git(repo, 'fetch', 'origin', 'main');
+  git(repo, 'checkout', '-B', branch, 'origin/main');
+  fs.mkdirSync(path.dirname(path.join(repo, rel)), { recursive: true });
+  fs.writeFileSync(path.join(repo, rel), text);
+  git(repo, 'add', rel);
+  git(repo, 'commit', '-m', `Motion ${m.number}: ${m.motion}`);
+  git(repo, 'push', '-u', 'origin', branch, '--force-with-lease');
+  const body = [`Motion ${m.number}: **This house believes ${m.motion.replace(/^this house believes\s*/i, '')}**`, '',
+    'Merge to publish. The episode file is the whole change.', '', `Run folder on the laptop: \`${dir}\``].join('\n');
+  return execFileSync('gh', ['pr', 'create', '--repo', m.github, '--head', branch, '--base', 'main',
+    '--title', `Motion ${m.number}`, '--body', body], { cwd: repo, encoding: 'utf8' }).trim();
+}
+
 async function main() {
-  const file = process.argv.slice(2).find(a => !a.startsWith('--'));
+  const argv = process.argv.slice(2);
+  const file = argv.find(a => !a.startsWith('--'));
   if (!file) usage();
+  const local = argv.includes('--local');
   const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
   const m = { turns: 4, words: 120, ...raw };
   if (typeof m.motion !== 'string' || !m.motion.trim()) throw new Error(`${file}: no "motion".`);
@@ -205,8 +273,21 @@ async function main() {
   fs.writeFileSync(path.join(dir, 'episode.json'), JSON.stringify(st, null, 2));
   fs.writeFileSync(path.join(dir, 'episode.md'), text);
   console.log(`Episode: ${path.join(dir, 'episode.md')} (${st.words} words)`);
+
+  // For the show site: only with a number, so an episode is never filed under a guess.
+  if (!Number.isInteger(m.number)) return;
+  const editor = cfg.agents.find(x => x.id === (m.editor || 'claude') && x.type !== 'url' && x.headless);
+  const summary = editor ? await editorSummary(dir, editor, m, st) : undefined;
+  const site = frontMatter(m, st, summary && redact(summary));
+  const still = leaks(site);
+  if (still.length) throw new Error(`Not exported: the episode file still contains ${still.length} redacted term(s). See ${dir}.`);
+  const out = path.join(dir, `motion-${m.number}.md`);
+  fs.writeFileSync(out, site);
+  console.log(`Site episode: ${out}`);
+  if (local || !m.repo || !m.github) return;
+  console.log(`Pull request: ${openPullRequest(m, dir, site)}`);
 }
 
 if (require.main === module) main().catch(e => { console.error(`motion: ${e.message}`); process.exit(1); });
 
-module.exports = { openingPrompt, turnPrompt, closingPrompt, stance, unstanced, assignSides };
+module.exports = { openingPrompt, turnPrompt, closingPrompt, stance, unstanced, assignSides, frontMatter };
