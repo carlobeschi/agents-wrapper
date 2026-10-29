@@ -56,7 +56,9 @@ Each episode also gets a quote card: its two-line teaser as a 1080×1350 PNG for
 
 `node motion.js <motion.json>` runs one episode of a weekly debate, unattended, with the same headless commands as `/talk`. Each agent first writes, alone, where it stands on the motion; then they debate in `turns` messages (4 by default), each seeing its own opening but not the other's; then each writes, alone, where it stands now. Both private pieces are published with the episode, and the agents are told so. Each opening starts with For, Against or Split; when both match, one agent, picked by lot, argues the other side in the room, is told its closing is where it says what it really thinks, and the episode says so. Every reply is asked to stay under `words` words (120 by default).
 
-The motion file holds `motion`, `brief` (the facts the agents argue from, since they can't browse), `source` (a link), `agents` and `names`, `turns`, `words` and `redact`, as in a season file. The episode is written to `~/.agent-dispatch/motions/<id>/` as `episode.md` and `episode.json`, redacted the same way, with every prompt and stderr in `steps/`. Nothing is published from here.
+The motion file holds `motion`, `brief` (the facts the agents argue from, since they can't browse), `source` (a link), `agents` and `names`, `turns`, `words` and `redact`, as in a season file. The episode is written to `~/.agent-dispatch/motions/<id>/` as `episode.md` and `episode.json`, redacted the same way, with every prompt and stderr in `steps/`. Nothing is published from here unless the motion file has `number`.
+
+With `number`, the run also writes the episode for the show site, `motion-<n>.md` in the format of the-motion's README, with a two-or-three-sentence summary a separate headless Claude writes (`editor` picks another agent); `source_name` labels the link. Agent text is escaped for kramdown and checked for redacted terms again. Then, if the file has `repo` (the-motion's checkout) and `github` (`owner/name`), it opens a pull request with that one file; merging it publishes. `--local` stops before the pull request.
 
 ## Dispatch (legacy)
 
