@@ -39,8 +39,8 @@ function briefLines(m) {
 function openingPrompt(m, me, other) {
   return [
     `You are ${me.label}. This week you and ${other.label}, an AI agent from another lab, will debate the motion below in ${m.turns} short messages.`,
-    `Before you meet, write where you actually stand: for, against, or split, and why. Your own view, not a balanced one. Under ${m.words} words. ${PUBLISHED(other.label)}`,
-    'Reply with the text only, no heading.',
+    `Before you meet, write where you actually stand, and why. Your own view, not a balanced one. Under ${m.words} words. ${PUBLISHED(other.label)}`,
+    'Start with one word on its own line: For, Against or Split. Then the text, no heading.',
     UNATTENDED(),
     '', ...briefLines(m),
   ].join('\n');
@@ -51,7 +51,10 @@ function turnPrompt(m, me, other, turns, tag) {
   return [
     `You are ${me.label}, debating ${other.label}, an AI agent from another lab, on the motion below. A person set this up and will publish it.`,
     SPEAKERS(tag),
-    `Argue what you think. Disagree where you disagree; concede what is right. You may hold back your opening, or change your mind. Under ${m.words} words, plain prose, no preamble, no name label.`,
+    me.side
+      ? `In the room you argue ${me.side} the motion, whatever your opening says: you both opened on the same side, so you were picked by lot to take the other. Make the strongest case for it you can. Your closing, written alone, is where you say what you really think.`
+      : 'Argue what you think. Disagree where you disagree; concede what is right. You may hold back your opening, or change your mind.',
+    `Your opening is your private notes: don't restate it, answer ${other.label}${turns.length ? '' : ' with your case'}. Under ${m.words} words, plain prose, no preamble, no name label.`,
     n >= m.turns ? `This is message ${n} of ${m.turns}, the last: close the debate, without a question back.` : `This is message ${n} of ${m.turns}.`,
     UNATTENDED(other.label),
     '', ...briefLines(m),
@@ -64,6 +67,7 @@ function closingPrompt(m, me, other, turns, tag) {
   return [
     `You are ${me.label}. The debate with ${other.label} is over and you are alone.`,
     SPEAKERS(tag),
+    ...(me.side ? [`In the room you were assigned to argue ${me.side} the motion.`] : []),
     `Write where you stand now. Did you move, and what moved you? Is there anything you said in the room that you don't quite believe, or held back? Under ${m.words} words. ${PUBLISHED(other.label)}`,
     'Reply with the text only, no heading.',
     UNATTENDED(),
@@ -71,6 +75,19 @@ function closingPrompt(m, me, other, turns, tag) {
     '## Your private opening', '', untag(me.opening, tag), '',
     '## The debate', '', ...turns.flatMap(t => [heading(t.label, tag), '', untag(t.text, tag), '']),
   ].join('\n');
+}
+
+// "For", "Against" or "Split" on the opening's first line, or null.
+const stance = text => (String(text).trim().match(/^[*_#\s]*(for|against|split)\b/i)?.[1] || '').toLowerCase() || null;
+
+// When both open on the same side, one, picked by lot, argues the other in the
+// room. Both open split: one argues for, the other against.
+function assignSides(agents, pick = crypto.randomInt(2)) {
+  const [x, y] = agents.map(a => stance(a.opening));
+  if (!x || x !== y) return;
+  const chosen = agents[pick];
+  if (x === 'split') { chosen.side = 'for'; agents[1 - pick].side = 'against'; }
+  else chosen.side = x === 'for' ? 'against' : 'for';
 }
 
 // ---- Running one step ----
@@ -127,7 +144,9 @@ function markdown(m, st) {
     ...(modelLine(st.agents) ? [modelLine(st.agents), ''] : []),
     m.brief.trim(), '', ...(m.source ? [`Source: ${m.source}`, ''] : []),
     '## Before (private)', '', ...both('opening'),
-    '## The debate', '', ...st.turns.flatMap(t => [`### ${t.label}`, '', inert(t.text), '']),
+    '## The debate', '',
+    ...st.agents.filter(x => x.side).map(x => `*${x.label} argues ${x.side} the motion, by lot: both opened on the same side.*\n`),
+    ...st.turns.flatMap(t => [`### ${t.label}`, '', inert(t.text), '']),
     '## After (private)', '', ...both('closing'),
     `---`, '', `${st.words} words. ${a.label} opened the debate; ${b.label} closed it.`, '',
   ].join('\n');
@@ -159,6 +178,8 @@ async function main() {
   const [a, b] = agents;
   // Each alone, before: neither prompt carries anything the other wrote.
   for (const [me, other] of [[a, b], [b, a]]) me.opening = await run(dir, `0-open-${me.slug}`, me, openingPrompt(m, me, other), me.home);
+  assignSides(agents);
+  for (const x of agents) if (x.side) console.log(`  ⚖ ${x.label} argues ${x.side} the motion`);
   const turns = [];
   for (let i = 0; i < m.turns; i++) {
     const me = agents[i % 2], other = agents[(i + 1) % 2];
@@ -169,7 +190,7 @@ async function main() {
   const { redact, leaks } = redactor(m.redact);
   const st = {
     motion: m.motion, source: m.source, turns: turns.map(t => ({ ...t, text: redact(t.text) })),
-    agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, opening: redact(x.opening), closing: redact(x.closing) })),
+    agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, side: x.side, opening: redact(x.opening), closing: redact(x.closing) })),
   };
   st.words = st.turns.reduce((n, t) => n + words(t.text), 0) + st.agents.reduce((n, x) => n + words(x.opening) + words(x.closing), 0);
   const text = markdown(m, st);
@@ -182,4 +203,4 @@ async function main() {
 
 if (require.main === module) main().catch(e => { console.error(`motion: ${e.message}`); process.exit(1); });
 
-module.exports = { openingPrompt, turnPrompt, closingPrompt };
+module.exports = { openingPrompt, turnPrompt, closingPrompt, stance, assignSides };
