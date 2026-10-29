@@ -17,7 +17,7 @@ const os   = require('os');
 const path = require('path');
 const { spawn, execFileSync } = require('child_process');
 const { createStories } = require('./story');
-const { HOME_DIR, loadConfig, fill, agentEnv, stamp } = require('./config');
+const { HOME_DIR, loadConfig, fill, agentEnv, stamp, redactor } = require('./config');
 const { stripAnsi } = require('./talk');
 const { cardFor, renderCard } = require('./card');
 
@@ -28,24 +28,6 @@ const usage = () => {
   console.error('usage: node season.js <season.json> [--local] [--day <n>]');
   process.exit(2);
 };
-
-// ---- Taking out what must not leave the laptop ----
-
-const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-// The home folder and user name are always on the list; the season file adds
-// the producer's name and anything else. Longest first, so "Ada Lovelace" goes
-// before "Ada".
-function redactor(extra = []) {
-  const pairs = [[os.homedir(), '~'], [os.userInfo().username, '[redacted]'], ...extra]
-    .filter(([find]) => find && find.length > 1)
-    .sort((a, b) => b[0].length - a[0].length);
-  // Whole words only, in both: "Ada" is not in "adapt", nor a name in a URL that merely starts with it.
-  const word = find => new RegExp(`(?<![\\w])${escapeRe(find)}(?![\\w])`, 'gi');
-  const redact = text => pairs.reduce((t, [find, put]) => t.replace(word(find), put), String(text));
-  const leaks = text => pairs.map(([find]) => find).filter(find => word(find).test(text));
-  return { redact, leaks };
-}
 
 // The site renders every text with kramdown, which would pass HTML, links and
 // its own {: } syntax straight to the page. Agent text is escaped so that none

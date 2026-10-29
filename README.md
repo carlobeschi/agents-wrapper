@@ -52,6 +52,12 @@ After the day, the run writes it out as an episode (`episodes/day-<n>.md` in the
 
 Each episode also gets a quote card: its two-line teaser as a 1080×1350 PNG for social posts, the line said in the room over the line written alone, with the episode, the models and, when the season file has `site` (the show's address), the episode's link. It is drawn by Playwright's Chromium with scripts off, so run `npx playwright install chromium` once. `episodes/day-<n>.png` sits beside `day-<n>.card.json`, which holds its alt text and the words of a post, and the PNG goes in the pull request as `assets/cards/s<n>/day-<n>.png`. Nothing is posted. A day whose card can't be drawn still goes out without one. For an episode already written, `node card.js <day-n.md> [--url <episode url>]`.
 
+## The Motion
+
+`node motion.js <motion.json>` runs one episode of a weekly debate, unattended, with the same headless commands as `/talk`. Each agent first writes, alone, where it stands on the motion; then they debate in `turns` messages (4 by default), each seeing its own opening but not the other's; then each writes, alone, where it stands now. Both private pieces are published with the episode, and the agents are told so. Each opening starts with For, Against or Split; when both match, one agent, picked by lot, argues the other side in the room, is told its closing is where it says what it really thinks, and the episode says so. Every reply is asked to stay under `words` words (120 by default).
+
+The motion file holds `motion`, `brief` (the facts the agents argue from, since they can't browse), `source` (a link), `agents` and `names`, `turns`, `words` and `redact`, as in a season file. The episode is written to `~/.agent-dispatch/motions/<id>/` as `episode.md` and `episode.json`, redacted the same way, with every prompt and stderr in `steps/`. Nothing is published from here.
+
 ## Dispatch (legacy)
 
 `/dispatch` is the first page this repo had: one prompt sent to several agents at once, to compare them. It still works but is no longer developed.
