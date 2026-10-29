@@ -330,7 +330,7 @@ function render(t) {
   ].join('');
   const spoken = t.turns.filter(m => m.agent).length;
   const running = t.status === 'running';
-  $('pair').innerHTML = t.agents.map(a => esc(a.label)).join(' <span class="muted">↔</span> ');
+  $('pair').innerHTML = t.agents.map(a => esc(a.label) + (a.model ? ` <span class="muted">${esc(a.model)}</span>` : '')).join(' <span class="muted">↔</span> ');
   $('pill').textContent = t.status;
   $('pill').className = `pill s-${t.status}`;
   $('progress').textContent = t.kind === 'puzzle'
@@ -346,8 +346,12 @@ function render(t) {
   if (nearBottom) window.scrollTo(0, document.body.scrollHeight);
 }
 
+// As in the saved files: which model each agent ran, if any is pinned.
+const modelLine = agents => agents.some(a => a.model)
+  ? [`Models: ${agents.map(a => `${a.label} ${a.model || '(CLI default)'}`).join(' · ')}`, ''] : [];
+
 function transcript(t) {
-  return [`# ${t.agents.map(a => a.label).join(' ↔ ')}`, '', '## Opener', '', withFiles(t.opener, t.files), '',
+  return [`# ${t.agents.map(a => a.label).join(' ↔ ')}`, '', ...modelLine(t.agents), '## Opener', '', withFiles(t.opener, t.files), '',
     ...t.turns.flatMap(m => [`## ${m.label}${m.step ? ` (round ${m.round}, ${m.step})` : ''}`, '',
       withFiles(m.answer ? `${m.text}\n\n**Answer**\n\n${m.answer}` : m.text, m.files), ''])].join('\n');
 }

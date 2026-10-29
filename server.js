@@ -4,7 +4,7 @@
 // Each selected agent gets the same prompt. In "terminal" mode each one opens in
 // its own terminal window, interactive, so the result is inspected in the tool
 // itself. In "background" mode each runs headless and its output goes to a log.
-// Either way it is the CLI's own signed-in session doing the work — no API keys.
+// Either way it is the CLI's own session or key doing the work; none are stored here.
 //
 // The home page is talk.html: two agents in conversation, one headless call per
 // turn (talk.js). /story runs the same pair over several days, with a private
@@ -72,6 +72,13 @@ function loadConfig() {
   }
   const cfg = JSON.parse(fs.readFileSync(CONFIG, 'utf8'));
   if (!Array.isArray(cfg.agents)) throw new Error(`${CONFIG}: "agents" must be an array`);
+  // A command that names {model} runs that exact model, so it has to be set.
+  for (const a of cfg.agents) {
+    const named = [...(a.interactive || []), ...(a.headless || [])].some(s => String(s).includes('{model}'));
+    if (named && (typeof a.model !== 'string' || !a.model.trim() || a.model.startsWith('-'))) {
+      throw new Error(`${CONFIG}: ${a.id} uses {model} but has no "model".`);
+    }
+  }
   return cfg;
 }
 
@@ -90,13 +97,18 @@ function describeAgents(cfg) {
     label: a.label || a.id,
     type: a.type || 'cli',
     url: a.type === 'url' ? a.url : undefined,
+    model: a.model,
     available: a.type === 'url' ? true : onPath((a.interactive || a.headless || [])[0]),
     modes: a.type === 'url' ? ['browser']
          : ['terminal', 'background'].filter(m => (m === 'terminal' ? a.interactive : a.headless)),
   }));
 }
 
-const fill = (args, prompt) => args.map(s => s.split('{prompt}').join(prompt));
+// {model} first, so a prompt that happens to contain "{model}" is left as it is.
+// Which model each agent runs, as recorded with a run: { id: model }, pinned ones only.
+const modelsOf = agents => Object.fromEntries(agents.filter(a => a.model).map(a => [a.id, a.model]));
+
+const fill = (args, prompt, model = '') => args.map(s => s.split('{model}').join(model).split('{prompt}').join(prompt));
 
 // What an agent is given of this process's environment: enough to run and reach
 // the network, plus the names its "env" in agents.json lists (an API key, say).
@@ -142,7 +154,7 @@ function launchTerminal(cfg, agent, prompt, promptFile, cwd, runDir) {
   const launcher = cfg.terminal || defaultTerminal();
   if (!launcher) throw new Error('No terminal found. Set "terminal" in agents.json, or use background mode.');
   // The prompt is read from a file at run time, so it is never quoted into the script.
-  const args = agent.interactive.map(s => s === '{prompt}' ? '"$PROMPT"' : sq(s.split('{prompt}').join(prompt)));
+  const args = agent.interactive.map(s => s === '{prompt}' ? '"$PROMPT"' : sq(fill([s], prompt, agent.model)[0]));
   const script = path.join(runDir, `${agent.id}.command`);
   fs.writeFileSync(script, [
     '#!/bin/bash',
@@ -165,7 +177,7 @@ function launchTerminal(cfg, agent, prompt, promptFile, cwd, runDir) {
 function launchBackground(agent, prompt, cwd, runDir, runId) {
   const log = path.join(runDir, `${agent.id}.log`);
   const out = fs.openSync(log, 'a');
-  const [cmd, ...args] = fill(agent.headless, prompt);
+  const [cmd, ...args] = fill(agent.headless, prompt, agent.model);
   const child = spawn(cmd, args, { cwd, env: agentEnv(agent.env), shell: false, stdio: ['ignore', out, out] });
   const entry = { status: 'running', started: Date.now(), log, pid: child.pid };
   runs.get(runId).agents[agent.id] = entry;
@@ -200,7 +212,7 @@ function dispatch(body) {
   const promptFile = path.join(runDir, 'prompt.md');
   fs.writeFileSync(promptFile, prompt);
   fs.writeFileSync(path.join(runDir, 'meta.json'),
-    JSON.stringify({ runId, cwd, mode, isolate: !!body.isolate, agents: ids, at: new Date().toISOString() }, null, 2));
+    JSON.stringify({ runId, cwd, mode, isolate: !!body.isolate, agents: ids, models: modelsOf(agents), at: new Date().toISOString() }, null, 2));
   runs.set(runId, { runId, cwd, mode, prompt: prompt.slice(0, 200), agents: {} });
 
   const results = agents.map(agent => {
