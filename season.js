@@ -87,7 +87,7 @@ function yaml(v, indent = 0) {
   }).join('\n');
 }
 
-// ---- The editor: a title and a two-line teaser, quoted, not written ----
+// ---- The editor: a title and a two-line teaser, quoted, not written; a short summary, written ----
 
 function runAgent(agent, prompt, cwd) {
   return new Promise(resolve => {
@@ -110,8 +110,9 @@ async function editorPick(agent, dir, ep, names) {
   const prompt = [
     `You are the editor of a serialized show in which ${names.join(' and ')} meet each day, then each writes a private journal. Below is today's episode.`,
     'Pick a title and a two-line teaser. Quote, don\'t write: the teaser is one sentence said in the meeting and one sentence written in a journal, by different speakers if you can, copied exactly. The title is two to six words, from the episode.',
+    'Then write a summary for a reader with two minutes: two or three plain sentences, present tense, under 70 words. Say what happened in the meeting, then one thing a journal says that the meeting did not. No praise, no interpretation, no quotes.',
     'Reply with JSON only, no fence, in this shape:',
-    '{"title": "...", "thread": [{"from": "meeting", "by": "<key>", "text": "..."}, {"from": "journal", "by": "<key>", "text": "..."}]}',
+    '{"title": "...", "summary": "...", "thread": [{"from": "meeting", "by": "<key>", "text": "..."}, {"from": "journal", "by": "<key>", "text": "..."}]}',
     `Keys: ${Object.keys(ep.journals).join(', ')}.`,
     '', '## Episode', '', said, '', wrote,
   ].join('\n');
@@ -127,7 +128,10 @@ async function editorPick(agent, dir, ep, names) {
       ['meeting', 'journal'].includes(t?.from) && ep.journals[t.by] !== undefined && typeof t.text === 'string'
       && t.text.trim() && source[t.from].includes(squash(t.text)))
       .map(t => ({ from: t.from, by: t.by, text: squash(t.text) }));
-    return { title: title || undefined, thread: thread.length === 2 ? thread : undefined };
+    // A summary that runs long is dropped: the page then shows the teaser alone.
+    const summary = squash(String(pick.summary || ''));
+    return { title: title || undefined, summary: summary && summary.length <= 600 ? summary : undefined,
+      thread: thread.length === 2 ? thread : undefined };
   } catch { return {}; }
 }
 
@@ -272,7 +276,7 @@ async function main() {
   const front = {
     season: ep.season, day: n, title: plain(redact(pick.title || `Day ${n}`)),
     date: `${today.getFullYear()}-${p(today.getMonth() + 1)}-${p(today.getDate())}`,
-    morning: ep.morning, models: ep.models,
+    morning: ep.morning, summary: pick.summary && plain(redact(pick.summary)), models: ep.models,
     thread: pick.thread?.map(t => ({ ...t, text: plain(t.text) })),
     meeting: ep.meeting.map(t => ({ by: t.by, text: t.by === 'note' ? plain(t.text) : inertForSite(t.text) })),
     journals: Object.fromEntries(Object.entries(ep.journals).map(([k, j]) => [k, inertForSite(j)])),
