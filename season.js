@@ -19,6 +19,7 @@ const { spawn, execFileSync } = require('child_process');
 const { createStories } = require('./story');
 const { HOME_DIR, loadConfig, fill, agentEnv, stamp } = require('./config');
 const { stripAnsi } = require('./talk');
+const { cardFor, renderCard } = require('./card');
 
 const POLL = 2000;
 const EDITOR_TIMEOUT = 5 * 60 * 1000;
@@ -163,20 +164,50 @@ function daySize(storyDir, st, n) {
 
 const git = (repo, ...args) => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
-function openPullRequest(season, n, file, text, title) {
+function openPullRequest(season, n, file, text, title, card) {
   const repo = season.repo.replace(/^~(?=$|\/)/, os.homedir());
   const branch = `episode/s${season.season}-day-${n}`;
   const rel = `_episodes/s${season.season}/day-${n}.md`;
+  const cardRel = `assets/cards/s${season.season}/day-${n}.png`;
   git(repo, 'fetch', 'origin', 'main');
   git(repo, 'checkout', '-B', branch, 'origin/main');
   fs.mkdirSync(path.dirname(path.join(repo, rel)), { recursive: true });
   fs.writeFileSync(path.join(repo, rel), text);
   git(repo, 'add', rel);
+  if (card) {
+    fs.mkdirSync(path.dirname(path.join(repo, cardRel)), { recursive: true });
+    fs.copyFileSync(card, path.join(repo, cardRel));
+    git(repo, 'add', cardRel);
+  }
   git(repo, 'commit', '-m', `Season ${season.season}, day ${n}: ${title}`);
   git(repo, 'push', '-u', 'origin', branch, '--force-with-lease');
-  const body = [`Season ${season.season}, day ${n}: **${title}**.`, '', 'Merge to publish. The episode file is the whole change.', '', `Run folder on the laptop: \`${file}\``].join('\n');
+  const body = [`Season ${season.season}, day ${n}: **${title}**.`, '',
+    card ? `Merge to publish. The change is the episode file and its quote card, \`${cardRel}\`.` : 'Merge to publish. The episode file is the whole change.',
+    '', `Run folder on the laptop: \`${file}\``].join('\n');
   return execFileSync('gh', ['pr', 'create', '--repo', season.github, '--head', branch, '--base', 'main',
     '--title', `S${season.season} day ${n}: ${title}`, '--body', body], { cwd: repo, encoding: 'utf8' }).trim();
+}
+
+// ---- The quote card ----
+
+// day-<n>.png, and day-<n>.card.json with its alt text and the words of a post.
+// A day without a teaser, or a card that can't be drawn, still goes out.
+async function makeCard(season, st, n, front, out, leaks) {
+  if (!front.thread) return null;
+  const names = Object.fromEntries(st.agents.map(a => [a.id.replace(/#\d+$/, ''), a.label]));
+  const url = season.site && `${season.site.replace(/\/$/, '')}/s${season.season}/day-${n}.html`;
+  const c = cardFor(front, { names, url });
+  if (leaks(c.html + c.alt + c.post).length) { console.warn(`No card: day ${n}'s card would contain a redacted term.`); return null; }
+  const png = path.join(out, `day-${n}.png`);
+  try {
+    await renderCard(c.html, png);
+  } catch (e) {
+    console.warn(`No card: ${e.message.split('\n')[0]}`);
+    return null;
+  }
+  fs.writeFileSync(path.join(out, `day-${n}.card.json`), JSON.stringify({ png: path.basename(png), alt: c.alt, post: c.post }, null, 2));
+  console.log(`Card: ${png}`);
+  return png;
 }
 
 // ---- One day ----
@@ -256,9 +287,10 @@ async function main() {
   fs.writeFileSync(path.join(out, `day-${n}.size.json`), JSON.stringify(size, null, 2));
   console.log(`Episode: ${epFile}`);
   console.log(`Size: ${JSON.stringify(size)}`);
+  const card = await makeCard(season, st, n, front, out, leaks);
 
   if (local || season.pr === false) return;
-  const url = openPullRequest(season, n, view.dir, text, title);
+  const url = openPullRequest(season, n, view.dir, text, front.title, card);
   console.log(`Pull request: ${url}`);
 }
 
