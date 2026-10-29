@@ -40,9 +40,10 @@ function redactor(extra = []) {
   const pairs = [[os.homedir(), '~'], [os.userInfo().username, '[redacted]'], ...extra]
     .filter(([find]) => find && find.length > 1)
     .sort((a, b) => b[0].length - a[0].length);
-  const redact = text => pairs.reduce((t, [find, put]) =>
-    t.replace(new RegExp(`(?<![\\w])${escapeRe(find)}(?![\\w])`, 'gi'), put), String(text));
-  const leaks = text => pairs.map(([find]) => find).filter(find => new RegExp(escapeRe(find), 'i').test(text));
+  // Whole words only, in both: "Ada" is not in "adapt", nor a name in a URL that merely starts with it.
+  const word = find => new RegExp(`(?<![\\w])${escapeRe(find)}(?![\\w])`, 'gi');
+  const redact = text => pairs.reduce((t, [find, put]) => t.replace(word(find), put), String(text));
+  const leaks = text => pairs.map(([find]) => find).filter(find => word(find).test(text));
   return { redact, leaks };
 }
 
