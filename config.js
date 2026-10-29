@@ -53,4 +53,21 @@ function stamp() {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
 }
 
-module.exports = { HOME_DIR, CONFIG, loadConfig, modelsOf, fill, agentEnv, stamp };
+// Taking out what must not leave the laptop, for season.js and motion.js.
+const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// The home folder and user name are always on the list; the season file adds
+// the producer's name and anything else. Longest first, so "Ada Lovelace" goes
+// before "Ada".
+function redactor(extra = []) {
+  const pairs = [[os.homedir(), '~'], [os.userInfo().username, '[redacted]'], ...extra]
+    .filter(([find]) => find && find.length > 1)
+    .sort((a, b) => b[0].length - a[0].length);
+  // Whole words only, in both: "Ada" is not in "adapt", nor a name in a URL that merely starts with it.
+  const word = find => new RegExp(`(?<![\\w])${escapeRe(find)}(?![\\w])`, 'gi');
+  const redact = text => pairs.reduce((t, [find, put]) => t.replace(word(find), put), String(text));
+  const leaks = text => pairs.map(([find]) => find).filter(find => word(find).test(text));
+  return { redact, leaks };
+}
+
+module.exports = { HOME_DIR, CONFIG, loadConfig, modelsOf, fill, agentEnv, stamp, redactor };
