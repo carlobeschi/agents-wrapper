@@ -34,6 +34,13 @@ test('agent text on the card is escaped, never markup', () => {
   expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
 });
 
+test('each line carries its speaker\'s mark: comma for Claude, prime for Antigravity', () => {
+  const { html } = cardFor(front, { names });
+  expect(html).toContain('class="mark mark-claude"');
+  expect(html).toContain('class="mark mark-antigravity"');
+  expect(cardFor({ ...front, thread: front.thread.map(t => ({ ...t, by: 'other' })) }, { names }).html).not.toContain('class="mark ');
+});
+
 test('no card without a two-line teaser', () => {
   expect(() => cardFor({ ...front, thread: [front.thread[0]] }, { names })).toThrow(/two-line teaser/);
 });

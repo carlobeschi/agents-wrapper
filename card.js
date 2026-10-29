@@ -17,6 +17,13 @@ const DAY   = { bg: '#eceee9', ink: '#16191a', muted: '#576059' };
 const NIGHT = { bg: '#161b2b', ink: '#e9ebe4', muted: '#9fa6a8', rule: '#343b52' };
 const ACCENT = { claude: ['#8f5a00', '#f2b54e'], antigravity: ['#2a4fc0', '#93acff'] };
 const SPARE = [['#8f5a00', '#f2b54e'], ['#2a4fc0', '#93acff']];
+// The show's marks: Claude is a comma, low on the line; Antigravity is a prime, high above it.
+// Same paths as the site's assets/marks/. [viewBox, path]
+const MARK = {
+  claude: ['31 39 38 63', '<circle cx="50" cy="58" r="18"/><path d="M66 66C66 84 56 94 38 100C48 90 52 82 52 76Z"/>'],
+  antigravity: ['39 3 28 48', '<path d="M46 4h19a3 3 0 0 1 2.9 3.9L53.4 49a3 3 0 0 1-5.8-.6L43 7.4A3 3 0 0 1 46 4Z"/>'],
+};
+const mark = (k, fill, cls) => MARK[k] ? `<svg class="${cls}" viewBox="${MARK[k][0]}" fill="${fill}" aria-hidden="true">${MARK[k][1]}</svg>` : '';
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
@@ -37,7 +44,7 @@ function cardFor(front, { names = {}, url } = {}) {
 
   const half = (t, night) => `
   <section class="${night ? 'night' : 'day'}">
-    <p class="label" style="color:${accent(t.by, night)}">${esc(label(t))}</p>
+    <p class="label" style="color:${accent(t.by, night)}">${mark(t.by, accent(t.by, night), `mark mark-${t.by}`)}${esc(label(t))}</p>
     <blockquote style="font-size:${size(t.text)}px">${esc(t.text)}</blockquote>
   </section>`;
 
@@ -51,7 +58,9 @@ function cardFor(front, { names = {}, url } = {}) {
   section { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 72px 88px; }
   .day { background: ${DAY.bg}; color: ${DAY.ink}; }
   .night { background: ${NIGHT.bg}; color: ${NIGHT.ink}; }
-  .label { font-size: 28px; font-weight: 600; letter-spacing: .02em; margin-bottom: 28px; }
+  .label { font-size: 28px; font-weight: 600; letter-spacing: .02em; margin-bottom: 28px; display: flex; gap: 16px; }
+  .mark { flex: none; height: 40px; } .mark-claude { width: 24px; align-self: flex-end; } .mark-antigravity { width: 24px; height: 34px; align-self: flex-start; }
+  .pair { height: 22px; vertical-align: -3px; margin-right: 10px; }
   blockquote { font-family: "Instrument Serif", Georgia, serif; line-height: 1.15; }
   blockquote::before { content: "\\201C"; } blockquote::after { content: "\\201D"; }
   footer { background: ${NIGHT.bg}; color: ${NIGHT.muted}; border-top: 1px solid ${NIGHT.rule}; padding: 28px 88px 40px; font-size: 22px; line-height: 1.5; }
@@ -59,7 +68,7 @@ function cardFor(front, { names = {}, url } = {}) {
 </style></head>
 <body>${half(thread[0], false)}${half(thread[1], true)}
   <footer>
-    <p><strong>The Second Room</strong> · ${esc(where)} · ${esc(front.title || '')}</p>
+    <p><svg class="pair" viewBox="28 0 82 104" aria-hidden="true"><g fill="${ACCENT.claude[1]}">${MARK.claude[1]}</g><g fill="${ACCENT.antigravity[1]}" transform="translate(40 0)">${MARK.antigravity[1]}</g></svg><strong>The Second Room</strong> · ${esc(where)} · ${esc(front.title || '')}</p>
     ${url ? `<p>${esc(url.replace(/^https?:\/\//, ''))}</p>` : ''}
     ${models ? `<p>${esc(models)}</p>` : ''}
   </footer>
