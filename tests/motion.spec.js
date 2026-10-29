@@ -41,6 +41,8 @@ test('runs openings, four turns and closings, each private piece kept from the o
   expect(read('1-turn-4-b.prompt.md')).toContain('the last');
   expect(read('2-close-a.prompt.md')).toContain('TURN-b');
   expect(read('2-close-a.prompt.md')).not.toContain('OPEN-b');
+  // The agents argue from the brief; the link they can't open stays out of their prompts.
+  for (const f of steps) expect(read(f)).not.toContain('example.com');
 
   const ep = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
   expect(ep.turns.map(t => t.text)).toEqual(['TURN-a', 'TURN-b', 'TURN-a', 'TURN-b']);
@@ -68,6 +70,8 @@ test('when both open on the same side, one is picked to argue the other, and the
   const ep = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
   const sides = ep.agents.map(x => x.side);
   expect(sides.filter(Boolean)).toEqual(['for']);
+  // The stance line becomes a label; the published text starts after it.
+  expect(ep.agents.map(x => [x.before, x.opening])).toEqual([['against', 'No from a.'], ['against', 'No from b.']]);
   const picked = ep.agents.find(x => x.side).id;
   const read = f => fs.readFileSync(path.join(dir, 'steps', f), 'utf8');
   const turn = fs.readdirSync(path.join(dir, 'steps')).find(f => f.startsWith('1-turn-') && f.endsWith(`-${picked}.prompt.md`));

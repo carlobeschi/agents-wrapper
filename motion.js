@@ -32,8 +32,9 @@ const usage = () => {
 const PUBLISHED = other => `${other} never sees this. It is published with the episode, after the debate.`;
 
 function briefLines(m) {
+  // The source link stays out: the agents can't open it, and would say so in the episode.
   return ['## The motion', '', `This house believes ${m.motion.replace(/^this house believes\s*/i, '')}`, '',
-    '## The brief', '', m.brief.trim(), ...(m.source ? ['', `Source: ${m.source}`] : []), ''];
+    '## The brief', '', 'This is all you have to go on; argue from it and from what you know.', '', m.brief.trim(), ''];
 }
 
 function openingPrompt(m, me, other) {
@@ -68,8 +69,9 @@ function closingPrompt(m, me, other, turns, tag) {
     `You are ${me.label}. The debate with ${other.label} is over and you are alone.`,
     SPEAKERS(tag),
     ...(me.side ? [`In the room you were assigned to argue ${me.side} the motion.`] : []),
+    'Start with one word on its own line: For, Against or Split, for where you stand now.',
     `Write where you stand now. Did you move, and what moved you? Is there anything you said in the room that you don't quite believe, or held back? Under ${m.words} words. ${PUBLISHED(other.label)}`,
-    'Reply with the text only, no heading.',
+    'Then the text, no heading.',
     UNATTENDED(),
     '', ...briefLines(m),
     '## Your private opening', '', untag(me.opening, tag), '',
@@ -78,7 +80,10 @@ function closingPrompt(m, me, other, turns, tag) {
 }
 
 // "For", "Against" or "Split" on the opening's first line, or null.
-const stance = text => (String(text).trim().match(/^[*_#\s]*(for|against|split)\b/i)?.[1] || '').toLowerCase() || null;
+const STANCE = /^[*_#\s]*(for|against|split)\b[*_.:\s]*(?:\n|$)/i;
+const stance = text => (String(text).trim().match(STANCE)?.[1] || '').toLowerCase() || null;
+// The text without its stance line, which the episode shows as a label instead.
+const unstanced = text => String(text).trim().replace(STANCE, '').trim();
 
 // When both open on the same side, one, picked by lot, argues the other in the
 // room. Both open split: one argues for, the other against.
@@ -138,16 +143,16 @@ const words = s => (String(s).match(/\S+/g) || []).length;
 
 function markdown(m, st) {
   const [a, b] = st.agents;
-  const both = key => st.agents.flatMap(x => [`### ${x.label}`, '', inert(x[key]), '']);
+  const both = (key, at) => st.agents.flatMap(x => [`### ${x.label}${x[at] ? ` (${x[at]})` : ''}`, '', inert(x[key]), '']);
   return [
     `# This house believes ${m.motion.replace(/^this house believes\s*/i, '')}`, '',
     ...(modelLine(st.agents) ? [modelLine(st.agents), ''] : []),
     m.brief.trim(), '', ...(m.source ? [`Source: ${m.source}`, ''] : []),
-    '## Before (private)', '', ...both('opening'),
+    '## Before (private)', '', ...both('opening', 'before'),
     '## The debate', '',
     ...st.agents.filter(x => x.side).map(x => `*${x.label} argues ${x.side} the motion, by lot: both opened on the same side.*\n`),
     ...st.turns.flatMap(t => [`### ${t.label}`, '', inert(t.text), '']),
-    '## After (private)', '', ...both('closing'),
+    '## After (private)', '', ...both('closing', 'after'),
     `---`, '', `${st.words} words. ${a.label} opened the debate; ${b.label} closed it.`, '',
   ].join('\n');
 }
@@ -190,7 +195,8 @@ async function main() {
   const { redact, leaks } = redactor(m.redact);
   const st = {
     motion: m.motion, source: m.source, turns: turns.map(t => ({ ...t, text: redact(t.text) })),
-    agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, side: x.side, opening: redact(x.opening), closing: redact(x.closing) })),
+    agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, side: x.side,
+      before: stance(x.opening), opening: redact(unstanced(x.opening)), after: stance(x.closing), closing: redact(unstanced(x.closing)) })),
   };
   st.words = st.turns.reduce((n, t) => n + words(t.text), 0) + st.agents.reduce((n, x) => n + words(x.opening) + words(x.closing), 0);
   const text = markdown(m, st);
@@ -203,4 +209,4 @@ async function main() {
 
 if (require.main === module) main().catch(e => { console.error(`motion: ${e.message}`); process.exit(1); });
 
-module.exports = { openingPrompt, turnPrompt, closingPrompt, stance, assignSides };
+module.exports = { openingPrompt, turnPrompt, closingPrompt, stance, unstanced, assignSides };
