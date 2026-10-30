@@ -167,3 +167,14 @@ test('--quote also reads a published episode file, with its agent text as the ag
     { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
   expect(out).toContain('quote:\n  by: "antigravity"\n  where: "debate"\n  text: "Spaces are a <b>promise</b>."');
 });
+
+test('the side for the motion defines its terms first, and closings bring no new arguments', () => {
+  const { turnPrompt } = require('../motion');
+  const m = { motion: 'This house believes x.', brief: 'b', turns: 4, words: 120, closings: true };
+  const me = { label: 'A', side: 'for', opening: 'o' }, other = { label: 'B', side: 'against', opening: 'o' };
+  const t = { by: 'a', label: 'A', text: 'x' };
+  expect(turnPrompt(m, me, other, [], 'T')).toContain("defining the motion's key terms");
+  expect(turnPrompt(m, other, me, [t], 'T')).toContain('Accept that reading unless it is unreasonable');
+  expect(turnPrompt(m, me, other, [t, t], 'T')).not.toContain('key terms');
+  expect(turnPrompt(m, me, other, [t, t, t, t], 'T', true)).toContain('Bring no new arguments');
+});
