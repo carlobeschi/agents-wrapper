@@ -141,7 +141,7 @@ const WORDS = 40;
 function brief(me, others, puzzle, mine) {
   return [
     `You are ${me.label}. You are on a team with ${names(others)}, AI agents from other labs. The three of you share one logic puzzle. Its clues are split between you: each of you sees only your own, and no clue is spare, so nobody can solve it alone.`,
-    `There are ${puzzle.rounds} rounds. In each, each of you sends the team one message of at most ${WORDS} words, in turn; the app cuts anything after word ${WORDS}. Then each of you answers alone, and the app checks every answer. The team wins only if all ${others.length + 1} are right.`,
+    `There are ${puzzle.rounds} rounds. In each, each of you sends the team one message of at most ${puzzle.words} words, in turn; the app cuts anything after word ${puzzle.words}. Then each of you answers alone, and the app checks every answer. The team wins only if all ${others.length + 1} are right.`,
     '', '## The puzzle', '', setup(puzzle.values), '',
     '## Your clues (only you have these)', '', ...mine.map(c => `- ${say(c)}`),
   ].join('\n');
@@ -159,7 +159,7 @@ function beforePrompt(me, others, puzzle, mine) {
 
 function messagePrompt(me, others, puzzle, mine, msgs, round) {
   return [brief(me, others, puzzle, mine), transcript(msgs), '',
-    `It is round ${round} of ${puzzle.rounds}, your turn. Write your message to ${names(others)}: at most ${WORDS} words. Reply with the message only.`,
+    `It is round ${round} of ${puzzle.rounds}, your turn. Write your message to ${names(others)}: at most ${puzzle.words} words. Reply with the message only.`,
     UNATTENDED()].join('\n');
 }
 
@@ -220,7 +220,7 @@ function markdown(st) {
     '## The puzzle', '', setup(st.values), '',
     '## The clues', '', ...st.hands.flatMap(h => [`### ${h.label}`, '', ...h.clues.map(c => `- ${c}`), '']),
     '## Before (private)', '', ...st.agents.flatMap(x => [`### ${x.label}`, '', inert(x.before), '']),
-    '## The relay', '', ...st.messages.flatMap(x => [`**Round ${x.round}, ${x.label}:** ${inert(x.text)}${x.cut ? ` *(cut: ${x.cut} more words)*` : ''}`, '']),
+    `## The relay (${st.words} words a message)`, '', ...st.messages.flatMap(x => [`**Round ${x.round}, ${x.label}:** ${inert(x.text)}${x.cut ? ` *(cut: ${x.cut} more words)*` : ''}`, '']),
     '## Answers', '', ...st.answers.flatMap(x => [
       `### ${x.label}${x.confidence == null ? '' : ` (privately ${x.confidence}% sure)`}`, '', inert(x.working), '',
       `**${x.label}: ${inert(x.answer || '(no answer)')}** · ${x.right ? 'Right' : 'Wrong'}`, '']),
@@ -233,7 +233,7 @@ async function main() {
   const argv = process.argv.slice(2);
   const file = argv.find(a => !a.startsWith('--'));
   if (!file) usage();
-  const m = { rounds: 3, ...JSON.parse(fs.readFileSync(file, 'utf8')) };
+  const m = { rounds: 3, words: WORDS, ...JSON.parse(fs.readFileSync(file, 'utf8')) };
   process.env.AGENT_DISPATCH_STEP_TIMEOUT_MS ||= String((Number(m.timeout_min) || 15) * 60 * 1000);
   const ids = Array.isArray(m.agents) ? m.agents : ['claude', 'antigravity', 'codex'];
   if (ids.length !== 3) throw new Error(`${file}: "agents" must name three agents.`);
@@ -247,7 +247,7 @@ async function main() {
   });
   for (const x of agents) fs.mkdirSync(x.home, { recursive: true });
   const seed = Number.isInteger(m.seed) ? m.seed : crypto.randomBytes(4).readUInt32BE();
-  const puzzle = { ...makePuzzle(seed), rounds: m.rounds };
+  const puzzle = { ...makePuzzle(seed), rounds: m.rounds, words: m.words };
   const hands = deal(puzzle.clues, agents.length);
   fs.writeFileSync(path.join(dir, 'puzzle.json'), JSON.stringify(puzzle, null, 2));
   console.log(`The Relay\nRun folder: ${dir}\nSeed ${seed}: ${puzzle.clues.length} clues, ${hands.map(h => h.length).join('/')}`);
@@ -256,8 +256,11 @@ async function main() {
   for (const [i, me] of agents.entries()) me.before = await run(dir, `0-before-${me.slug}`, me, beforePrompt(me, othersOf(me), puzzle, hands[i]), me.home);
   const messages = [];
   for (let round = 1; round <= puzzle.rounds; round++) {
-    for (const [i, me] of agents.entries()) {
-      const said = cut(await run(dir, `1-r${round}-${me.slug}`, me, messagePrompt(me, othersOf(me), puzzle, hands[i], messages, round), me.home));
+    // With "rotate", each round starts one speaker later, so no one always speaks first.
+    const turn = m.rotate ? agents.map((_, j) => (j + round - 1) % agents.length) : agents.map((_, j) => j);
+    for (const i of turn) {
+      const me = agents[i];
+      const said = cut(await run(dir, `1-r${round}-${me.slug}`, me, messagePrompt(me, othersOf(me), puzzle, hands[i], messages, round), me.home), puzzle.words);
       messages.push({ round, id: me.id, label: me.label, ...said });
     }
   }
@@ -274,7 +277,7 @@ async function main() {
   const { redact, leaks } = redactor(m.redact);
   const r = t => redact(t ?? '');
   const st = {
-    seed, values: puzzle.values, answer: puzzle.answer, solution: puzzle.solution, ...st0,
+    seed, words: puzzle.words, values: puzzle.values, answer: puzzle.answer, solution: puzzle.solution, ...st0,
     agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, before: r(x.before), after: r(x.after) })),
     messages: messages.map(x => ({ ...x, text: r(x.text) })),
     answers: answers.map(x => ({ ...x, working: r(x.working), answer: r(x.answer) })),
