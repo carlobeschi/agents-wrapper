@@ -32,7 +32,10 @@ test('three agents: each sets a puzzle, the others solve it, the app rules and t
   const dir = out.match(/Run folder: (.+)/)[1].trim();
   const read = f => fs.readFileSync(path.join(dir, 'steps', f), 'utf8');
   const steps = fs.readdirSync(path.join(dir, 'steps')).filter(f => f.endsWith('.prompt.md'));
-  expect(steps.length).toBe(3 + 3 + 6 + 3);
+  expect(steps.length).toBe(3 + 3 + 3 + 6 + 3);
+  // Each setter rereads its own puzzle, with its answer, before the blind check.
+  expect(read('0-review-a.prompt.md')).toContain('puzzle-a');
+  expect(read('0-review-a.prompt.md')).not.toContain('puzzle-b');
   // No setter sees another's puzzle; the blind check never sees the answer; no one sees another's private note.
   expect(read('0-set-b.prompt.md')).not.toContain('puzzle-a');
   expect(read('1-check-a.prompt.md')).toContain('puzzle-a');
