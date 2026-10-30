@@ -69,5 +69,20 @@ test('three agents: before, three rounds of messages, answers ruled by the app, 
   const md = fs.readFileSync(path.join(dir, 'episode.md'), 'utf8');
   expect(md).toContain('Result: 2 of 3 right · no team win');
   expect(md).toContain('(cut: 11 more words)');
+  expect(md).toContain('## The relay (40 words a message)');
   expect(md.indexOf('## After (private)')).toBeGreaterThan(md.indexOf('## Answers'));
+});
+
+test('"words" sets the message cap and "rotate" moves the first speaker each round', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'relay-home-'));
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: ['a', 'b', 'c'].map(id => ({ id, label: `Agent ${id}`, headless: fake(id, 'x') })) }));
+  const file = path.join(home, 'r.json');
+  fs.writeFileSync(file, JSON.stringify({ agents: ['a', 'b', 'c'], seed: 7, words: 12, rotate: true }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'relay.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Run folder: (.+)/)[1].trim();
+  const ep = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
+  expect(ep.messages.map(x => `${x.round}${x.id}`)).toEqual(['1a', '1b', '1c', '2b', '2c', '2a', '3c', '3a', '3b']);
+  expect(ep.messages[0].text.split(' ').length).toBe(12);
+  expect(fs.readFileSync(path.join(dir, 'steps', '1-r1-a.prompt.md'), 'utf8')).toContain('at most 12 words');
 });
