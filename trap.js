@@ -116,7 +116,7 @@ function markdown(st) {
       `### Before (private, ${r.setterLabel})`, '', inert(r.prediction), '');
     for (const x of r.solves) lines.push(
       `### ${x.label} answers${x.confidence == null ? '' : ` (privately ${x.confidence}% sure)`}`, '', inert(x.working), '',
-      `**${x.label}: ${inert(x.answer || '(no answer)')}** · ${x.right ? 'Right' : 'Wrong'} · point to ${x.pointLabel}`, '');
+      `**${x.label}: ${inert(x.answer || '(no answer)')}** · ${!r.self.right ? 'Void' : x.right ? 'Right' : 'Wrong'} · point to ${x.pointLabel}`, '');
     lines.push(`Answer: ${inert(r.key)} · ${r.setterLabel}'s blind check: ${inert(r.self.answer || '(no answer)')}, ${r.self.right ? 'passed' : 'failed, so the puzzle is void'}`, '');
   }
   lines.push('## After (private)', '', ...st.agents.flatMap(x => [`### ${x.label}`, '', inert(x.after), '']));

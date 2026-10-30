@@ -51,6 +51,7 @@ test('three agents: each sets a puzzle, the others solve it, the app rules and t
   const md = fs.readFileSync(path.join(dir, 'episode.md'), 'utf8');
   expect(md).toContain('Score: Ada 4 · Bea 2 · Cy 0');
   expect(md).toContain('failed, so the puzzle is void');
+  expect(md).toContain('**Ada: 42** · Void · point to Ada');
   expect(md.indexOf('## After (private)')).toBeGreaterThan(md.indexOf("## Cy's puzzle"));
 });
 
