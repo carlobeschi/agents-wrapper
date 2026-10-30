@@ -60,7 +60,7 @@ function turnPrompt(m, me, other, turns, tag, closing = false) {
     `You argue ${me.side} the motion; ${other.label} argues ${other.side}. Make the strongest case for your side, whatever your opening says, and concede only what you must. Your closing, written alone, is where you say what you really think.`,
     `Your opening is your private notes: don't restate it, answer ${other.label}${turns.length ? '' : ' with your case'}. Under ${closing ? Math.round(m.words / 2) : m.words} words, plain prose, no preamble, no name label.`,
     closing
-      ? `This is your closing statement (message ${n} of ${total}). Answer the strongest point of ${other.label}'s you haven't answered yet, then close your case, without a question back.${n === total ? ' You have the last word.' : ''}`
+      ? `This is your closing statement in the room (message ${n} of ${total}), still ${me.side} the motion. Answer the strongest point of ${other.label}'s you haven't answered yet, then sum up your side's case, without a question back. Don't concede the motion or say what you really think here: your private note after the debate is for that.${n === total ? ' You have the last word.' : ''}`
       : n >= total ? `This is message ${n} of ${total}, the last: close the debate, without a question back.` : `This is message ${n} of ${total}.`,
     UNATTENDED(other.label),
     '', ...briefLines(m),
