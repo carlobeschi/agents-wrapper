@@ -267,7 +267,7 @@ function openPullRequest(m, dir, text, {
   git(repo, 'commit', '-m', commit);
   git(repo, 'push', '-u', 'origin', branch, '--force-with-lease');
   return execFileSync('gh', ['pr', 'create', '--repo', m.github, '--head', branch, '--base', 'main',
-    '--title', title, '--body', [...body, '', `Run folder on the laptop: \`${dir}\``].join('\n')], { cwd: repo, encoding: 'utf8' }).trim();
+    '--title', title, '--body', [...body, '', `Run folder on the laptop: \`${dir.replace(os.homedir(), '~')}\``].join('\n')], { cwd: repo, encoding: 'utf8' }).trim();
 }
 
 async function main() {
