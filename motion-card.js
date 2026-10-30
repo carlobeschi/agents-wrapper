@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // A LinkedIn card for an episode of The Motion: the motion and the editor's
-// quote, as a 1080×1350 PNG, in the site's colours. Nothing here posts anything.
+// quote, as a 1080×1350 PNG, in the site's colours. The footer points at the show's
+// home, <site>/motion/. Nothing here posts anything.
 //
 // motion-daily.js makes one after each run. By hand, for an episode file:
 // `node motion-card.js <motion-n.md> [--site <show url>]`, which writes
@@ -54,7 +55,7 @@ cite svg{height:36px;width:auto}
 <div class="top"><div class="brand"><svg viewBox="28 0 82 104"><g fill="#d97757">${MARK.claude[1]}</g><g transform="translate(40 0)" fill="#2a4fc0">${MARK.antigravity[1]}</g></svg>The Motion</div><span>Motion ${esc(front.number)}</span></div>
 <div><div class="thb">This house believes</div><h1>${esc(front.motion)}</h1></div>
 <blockquote><p>“${esc(q.text)}”</p><cite>${mark(q.by)}${esc(NAME[q.by] || q.by)} · ${esc(where)}</cite></blockquote>
-<div class="foot"><span>${esc(models)}</span><span>${esc(site ? site.replace(/^https?:\/\//, '') : '')}</span></div>
+<div class="foot"><span>${esc(models)}</span><span>${esc(site ? `${site.replace(/^https?:\/\//, '')}/motion/` : '')}</span></div>
 </div></body></html>`;
   const alt = `The Motion, Motion ${front.number}. This house believes ${front.motion} ${NAME[q.by] || q.by}, ${where}: "${q.text}"`;
   const post = [
