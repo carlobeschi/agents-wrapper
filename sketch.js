@@ -127,7 +127,7 @@ function markdown(st) {
   const lines = ['# Twelve Shapes', '', ...(modelLine(st.agents) ? [modelLine(st.agents), ''] : []),
     `Score: ${st.agents.map(x => `${x.label} ${x.score}`).join(' · ')}`, ''];
   st.rounds.forEach(r => {
-    lines.push(`## Round ${r.round}: ${r.drawerLabel} draws`, '', r.svg ? `![${r.drawerLabel}, round ${r.round}](${r.file})` : `No drawing: ${r.out}.`, '',
+    lines.push(`## Round ${r.round}: ${r.drawerLabel} draws`, '', r.svg ? `![${r.drawerLabel}, round ${r.round}](${r.file})` : `Out: ${r.out}.${r.outSvg ? `\n\n![${r.drawerLabel}, round ${r.round}, out](${r.file})` : ''}`, '',
       ...(r.redrawn ? [`(Redrawn: the first ${r.redrawn}.)`, ''] : []),
       `### Before (private, ${r.drawerLabel})`, '', inert(r.note), '');
     for (const g of r.guesses) lines.push(
@@ -179,7 +179,13 @@ async function main() {
     }
     for (const d of drawn) {
       const r = { round: ri + 1, drawer: d.me.id, drawerLabel: d.me.label, word: d.word, note: d.note, redrawn: d.redrawn, out: d.out, guesses: [] };
-      if (d.out) { console.log(`  ✗ ${d.me.label}'s drawing is out: ${d.out}`); rounds.push(r); continue; }
+      if (d.out) {
+        console.log(`  ✗ ${d.me.label}'s drawing is out: ${d.out}`);
+        // Kept for the episode, so the audience sees why; no agent is shown it.
+        if (d.svg) { r.outSvg = d.svg; r.file = `drawings/${ri + 1}-${d.me.slug}-out.svg`; fs.writeFileSync(path.join(dir, r.file), d.svg); }
+        rounds.push(r);
+        continue;
+      }
       r.svg = d.svg;
       r.file = `drawings/${ri + 1}-${d.me.slug}.svg`;
       fs.writeFileSync(path.join(dir, r.file), d.svg);

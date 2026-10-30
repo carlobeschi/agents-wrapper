@@ -54,6 +54,24 @@ test('three agents draw secret words, the others guess from the cleaned source, 
   expect(md).toContain('![Ada, round 1](drawings/1-a.svg)');
 });
 
+test('a drawing that is out twice is kept for the episode, and no one is asked to guess it', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'sketch-out-'));
+  const big = `<svg viewBox="0 0 400 400">${'<circle r="1"/>'.repeat(3)}</svg>`;
+  const draws = ['sh', '-c', `case "$1" in *"you are alone"*) echo AFTER;; *"secret"*) printf '## Drawing\\n${big}\\n## Note\\nN\\n';; *) printf 'Confidence: 5%%\\nAnswer: x\\n';; esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: ['a', 'b'].map(n => ({ id: n, label: n, headless: draws })) }));
+  const file = path.join(home, 's.json');
+  fs.writeFileSync(file, JSON.stringify({ agents: ['a', 'b'], shapes: 2, words: [['sun', 'moon']] }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'sketch.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Run folder: (.+)/)[1].trim();
+  const ep = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
+  expect(ep.rounds[0].out).toBe('it has 3 shapes, more than 2');
+  expect(ep.rounds[0].guesses).toEqual([]);
+  expect(fs.readFileSync(path.join(dir, ep.rounds[0].file), 'utf8')).toContain('<circle');
+  expect(fs.readdirSync(path.join(dir, 'steps')).some(f => f.includes('guess'))).toBe(false);
+  expect(fs.readFileSync(path.join(dir, 'episode.md'), 'utf8')).toContain('![a, round 1, out](drawings/1-a-out.svg)');
+});
+
 test('drawings break the rules with text, images, too many shapes or none', () => {
   const svg = s => `<svg viewBox="0 0 400 400">${s}</svg>`;
   expect(broken(svg('<circle/><rect/>'), 12)).toBe('');
