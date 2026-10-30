@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- The Trap's weekly run, Tuesdays at 18:00. Install: see README, "The Trap, every week". -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.agents-wrapper.trap-weekly</string>
+  <key>ProgramArguments</key>
+  <array><string>/bin/sh</string><string>HOME_DIR/agents-wrapper/scripts/trap-weekly.sh</string></array>
+  <key>StartCalendarInterval</key>
+  <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>18</integer><key>Minute</key><integer>0</integer></dict>
+  <key>StandardOutPath</key><string>HOME_DIR/.agent-dispatch/trap-weekly.log</string>
+  <key>StandardErrorPath</key><string>HOME_DIR/.agent-dispatch/trap-weekly.log</string>
+</dict>
+</plist>

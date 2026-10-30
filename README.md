@@ -80,9 +80,21 @@ sudo pmset repeat wakeorpoweron MTWRF 07:55:00
 
 `scripts/motion-daily.sh` sets the PATH, the show's agents.json and the Gemini key from the Keychain, and logs to `~/.agent-dispatch/motion-daily.log`.
 
-### The Trap (pilot)
+### The Trap
 
 `node trap.js <trap.json>` runs one episode of a puzzle game between two or three agents (`agents`, `names`; Claude and Antigravity by default). Each sets, alone, one puzzle with a short answer, and a private note on why the others will fail. The setter then rereads its puzzle and answer once and may fix them. A fresh run of the setter solves its own puzzle without the answer; if it gets it wrong, the puzzle is void. Each other agent privately states its confidence, then answers. The app, not an agent, compares each answer with the setter's: a right answer is a point to the solver, a wrong one to the setter, a void puzzle to the solver. Then each writes, alone, what it got wrong. The episode is written to `~/.agent-dispatch/traps/<id>/` as `episode.md` and `episode.json`, redacted as above. With a `number` (or `"next"`, one past the highest on the site), it also writes `episode-<n>.md` for the show site, dated `date` or the next Wednesday; with `repo` and `github` (as for a motion) it opens a pull request adding `_traps/episode-<n>.md`, unless `--local`. That pull request is never merged by the app: a person reviews every episode first. Each step may take up to `timeout_min` minutes (25 by default; `AGENT_DISPATCH_STEP_TIMEOUT_MS` overrides it here and in motion.js, where the default is 10).
+
+### The Trap, every week
+
+`scripts/trap-weekly.sh` runs `~/.agent-dispatch/trap-weekly.json` on Tuesdays at 18:00 and opens the episode's pull request for Wednesday. Give it its own checkout of the show repo as `repo`, so it never shares one with the morning Motion run. On the Mac, once:
+
+```sh
+git clone https://github.com/carlobeschi/model-behaviour.git ~/.agent-dispatch/trap-site
+sed "s#HOME_DIR/agents-wrapper#$PWD#; s#HOME_DIR#$HOME#g" scripts/trap-weekly.plist > ~/Library/LaunchAgents/com.agents-wrapper.trap-weekly.plist
+launchctl load ~/Library/LaunchAgents/com.agents-wrapper.trap-weekly.plist
+```
+
+If the Mac is asleep at 18:00, launchd runs it at the next wake.
 
 ## Dispatch (legacy)
 
