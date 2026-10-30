@@ -248,21 +248,26 @@ function frontMatter(m, st, summary, quote) {
 
 const git = (repo, ...args) => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
-function openPullRequest(m, dir, text) {
+// Opens a pull request on the show site that adds one episode file. The Trap
+// passes its own file, branch and title; The Motion uses the defaults.
+function openPullRequest(m, dir, text, {
+  rel = `_episodes/motion-${m.number}.md`,
+  branch = `episode/motion-${m.number}`,
+  title = `Motion ${m.number}`,
+  body = [`Motion ${m.number}: **This house believes ${m.motion.replace(/^this house believes\s*/i, '')}**`, '',
+    'Merge to publish. The episode file is the whole change.'],
+  commit = `Motion ${m.number}: ${m.motion}`,
+} = {}) {
   const repo = m.repo.replace(/^~(?=$|\/)/, os.homedir());
-  const branch = `episode/motion-${m.number}`;
-  const rel = `_episodes/motion-${m.number}.md`;
   git(repo, 'fetch', 'origin', 'main');
   git(repo, 'checkout', '-B', branch, 'origin/main');
   fs.mkdirSync(path.dirname(path.join(repo, rel)), { recursive: true });
   fs.writeFileSync(path.join(repo, rel), text);
   git(repo, 'add', rel);
-  git(repo, 'commit', '-m', `Motion ${m.number}: ${m.motion}`);
+  git(repo, 'commit', '-m', commit);
   git(repo, 'push', '-u', 'origin', branch, '--force-with-lease');
-  const body = [`Motion ${m.number}: **This house believes ${m.motion.replace(/^this house believes\s*/i, '')}**`, '',
-    'Merge to publish. The episode file is the whole change.', '', `Run folder on the laptop: \`${dir}\``].join('\n');
   return execFileSync('gh', ['pr', 'create', '--repo', m.github, '--head', branch, '--base', 'main',
-    '--title', `Motion ${m.number}`, '--body', body], { cwd: repo, encoding: 'utf8' }).trim();
+    '--title', title, '--body', [...body, '', `Run folder on the laptop: \`${dir}\``].join('\n')], { cwd: repo, encoding: 'utf8' }).trim();
 }
 
 async function main() {
@@ -375,4 +380,4 @@ async function runMotion(raw, { screen = false, local = false, name = 'motion' }
 
 if (require.main === module) main().catch(e => { console.error(`motion: ${e.message}`); process.exit(1); });
 
-module.exports = { openingPrompt, turnPrompt, closingPrompt, sidesFor, frontMatter, editorQuote, runMotion, run, openPullRequest };
+module.exports = { openingPrompt, turnPrompt, closingPrompt, sidesFor, frontMatter, editorQuote, runMotion, run, openPullRequest, git };
