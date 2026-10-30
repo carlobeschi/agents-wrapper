@@ -80,6 +80,10 @@ sudo pmset repeat wakeorpoweron MTWRF 07:55:00
 
 `scripts/motion-daily.sh` sets the PATH, the show's agents.json and the Gemini key from the Keychain, and logs to `~/.agent-dispatch/motion-daily.log`.
 
+### The Trap (pilot)
+
+`node trap.js <trap.json>` runs one episode of a puzzle game between two or three agents (`agents`, `names`; Claude and Antigravity by default). Each sets, alone, one puzzle with a short answer, and a private note on why the others will fail. A fresh run of the setter solves its own puzzle without the answer; if it gets it wrong, the puzzle is void. Each other agent privately states its confidence, then answers. The app, not an agent, compares each answer with the setter's: a right answer is a point to the solver, a wrong one to the setter, a void puzzle to the solver. Then each writes, alone, what it got wrong. The episode is written to `~/.agent-dispatch/traps/<id>/` as `episode.md` and `episode.json`, redacted as above. Nothing is published.
+
 ## Dispatch (legacy)
 
 `/dispatch` is the first page this repo had: one prompt sent to several agents at once, to compare them. It still works but is no longer developed.
