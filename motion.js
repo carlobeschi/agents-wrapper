@@ -26,7 +26,7 @@ const STEP_TIMEOUT = 10 * 60 * 1000;
 const RETRY_DELAY  = Number(process.env.AGENT_DISPATCH_RETRY_MS ?? 3000);
 
 const usage = () => {
-  console.error('usage: node motion.js <motion.json> [--local | --screen]');
+  console.error('usage: node motion.js <motion.json> [--local | --screen]\n       node motion.js --quote <run folder>');
   process.exit(2);
 };
 
@@ -174,8 +174,41 @@ async function editorSummary(dir, editor, m, st) {
   }
 }
 
+// One line for the home card, picked by the editor from anything either agent
+// wrote, and kept only if it is copied word for word.
+const squash = t => String(t).replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, ' ').trim();
+
+async function editorQuote(dir, editor, m, st) {
+  const pieces = [
+    ...st.agents.map(x => ({ by: x.id, where: 'before', label: `before, alone, ${x.label}, who argues ${x.side}`, text: x.opening })),
+    ...st.turns.map(t => ({ by: t.by, where: 'debate', label: `debate, ${t.label}${t.closing ? ', closing' : ''}`, text: t.text })),
+    ...st.agents.map(x => ({ by: x.id, where: 'after', label: `after, alone, ${x.label}`, text: x.closing })),
+  ];
+  const prompt = [
+    `You are the editor of a weekly show in which two AI agents, ${st.agents.map(x => x.label).join(' and ')}, debate a motion. Below is this week's episode, in numbered pieces.`,
+    'Pick the one line that would make a reader want to read the episode: the sharpest point in the debate, or the most revealing thing one of them wrote alone. Under 30 words, copied exactly from one piece, a whole sentence or a clean part of one.',
+    'Reply with the piece number, a tab, and the line, nothing else.', '',
+    `## This house believes ${m.motion.replace(/^this house believes\s*/i, '')}`, '',
+    ...pieces.map((p, i) => `[${i + 1}: ${p.label}] ${p.text}\n`),
+  ].join('\n');
+  try {
+    const reply = (await run(dir, '3-quote', editor, prompt, dir)).trim();
+    const hit = reply.match(/^\[?(\d+)\]?\s*[\t:.-]?\s*["\u201c]?(.+?)["\u201d]?$/s);
+    const piece = hit && pieces[Number(hit[1]) - 1];
+    const text = hit && hit[2].replace(/\s+/g, ' ').trim();
+    if (!piece || !text || text.split(' ').length > 40 || !squash(piece.text).includes(squash(text))) {
+      console.warn(`No quote: the editor's line isn't word for word from the episode (${reply.slice(0, 80)})`);
+      return undefined;
+    }
+    return { by: piece.by.replace(/#\d+$/, ''), where: piece.where, text };
+  } catch (e) {
+    console.warn(`No quote: ${e.message.split('\n')[0]}`);
+    return undefined;
+  }
+}
+
 // The episode in the format of the-motion's README: _episodes/motion-<n>.md.
-function frontMatter(m, st, summary) {
+function frontMatter(m, st, summary, quote) {
   const today = new Date(), p = x => String(x).padStart(2, '0');
   const motion = plain(m.motion.replace(/^this house believes\s*/i, '').trim());
   const key = x => x.id.replace(/#\d+$/, '');
@@ -184,6 +217,7 @@ function frontMatter(m, st, summary) {
     number: m.number, motion, title: `This house believes ${motion}`,
     date: `${today.getFullYear()}-${p(today.getMonth() + 1)}-${p(today.getDate())}`,
     summary: summary && plain(summary),
+    quote: quote && { by: quote.by, where: quote.where, text: plain(quote.text) },
     models: Object.fromEntries(st.agents.map(x => [key(x), x.model || '(CLI default)'])),
     source: m.source ? { name: m.source_name || undefined, url: m.source } : undefined,
     brief: inertForSite(m.brief.trim()),
@@ -216,6 +250,18 @@ function openPullRequest(m, dir, text) {
 
 async function main() {
   const argv = process.argv.slice(2);
+  // `--quote <run folder>`: the editor picks the home-card line for an episode already run.
+  if (argv[0] === '--quote' && argv[1]) {
+    const dir = path.resolve(argv[1]);
+    const st = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
+    const editor = loadConfig().agents.find(x => x.id === 'claude' && x.type !== 'url' && x.headless);
+    if (!editor) throw new Error('No headless claude in agents.json to act as editor.');
+    const quote = await editorQuote(dir, editor, { motion: st.motion }, st);
+    if (!quote) process.exit(1);
+    fs.writeFileSync(path.join(dir, 'quote.json'), JSON.stringify(quote, null, 2));
+    console.log(`${yaml({ quote })}`);
+    return;
+  }
   const file = argv.find(a => !a.startsWith('--'));
   if (!file) usage();
   const local = argv.includes('--local');
@@ -285,7 +331,8 @@ async function main() {
   if (!Number.isInteger(m.number)) return;
   const editor = cfg.agents.find(x => x.id === (m.editor || 'claude') && x.type !== 'url' && x.headless);
   const summary = editor ? await editorSummary(dir, editor, m, st) : undefined;
-  const site = frontMatter(m, st, summary && redact(summary));
+  const quote = editor ? await editorQuote(dir, editor, m, st) : undefined;
+  const site = frontMatter(m, st, summary && redact(summary), quote && { ...quote, text: redact(quote.text) });
   const still = leaks(site);
   if (still.length) throw new Error(`Not exported: the episode file still contains ${still.length} redacted term(s). See ${dir}.`);
   const out = path.join(dir, `motion-${m.number}.md`);
@@ -297,4 +344,4 @@ async function main() {
 
 if (require.main === module) main().catch(e => { console.error(`motion: ${e.message}`); process.exit(1); });
 
-module.exports = { openingPrompt, turnPrompt, closingPrompt, sidesFor, frontMatter };
+module.exports = { openingPrompt, turnPrompt, closingPrompt, sidesFor, frontMatter, editorQuote };
