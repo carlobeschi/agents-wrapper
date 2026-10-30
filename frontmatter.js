@@ -41,4 +41,49 @@ function yaml(v, indent = 0) {
   }).join('\n');
 }
 
-module.exports = { inertForSite, plain, yaml };
+// Reads back what yaml() writes: maps, lists of maps, JSON strings, block
+// scalars, numbers and booleans. Not a general YAML parser.
+function unyaml(text) {
+  const lines = String(text).replace(/\r\n?/g, '\n').split('\n');
+  const ind = l => l.match(/^ */)[0].length;
+  const item = (l, n) => ind(l) === n && l.slice(n).startsWith('- ');
+  let i = 0;
+  const scalar = s => s === 'true' ? true : s === 'false' ? false
+    : /^-?\d+(\.\d+)?$/.test(s) ? Number(s) : s.startsWith('"') ? JSON.parse(s) : s;
+  function value(rest, n) {
+    if (rest === '|') {
+      const out = [];
+      while (i < lines.length && (lines[i] === '' || ind(lines[i]) >= n + 2)) out.push(lines[i++].slice(n + 2));
+      return out.join('\n').replace(/\n+$/, '');
+    }
+    return rest ? scalar(rest) : node(n + 2);
+  }
+  function node(n) {
+    if (!(i < lines.length && item(lines[i], n))) return map(n);
+    const list = [];
+    while (i < lines.length && item(lines[i], n)) {
+      lines[i] = ' '.repeat(n + 2) + lines[i].slice(n + 2);
+      list.push(map(n + 2));
+    }
+    return list;
+  }
+  function map(n) {
+    const o = {};
+    while (i < lines.length) {
+      const l = lines[i];
+      if (!l.trim()) { i++; continue; }
+      if (ind(l) !== n || item(l, n)) break;
+      const m = l.slice(n).match(/^([^:]+):(?: (.*))?$/);
+      if (!m) throw new Error(`Can't read line ${i + 1}: ${l}`);
+      i++;
+      o[m[1]] = value(m[2] || '', n);
+    }
+    return o;
+  }
+  return map(0);
+}
+
+// Undoes inertForSite, for agent text read back from an episode file.
+const uninert = text => String(text).replace(/\\([<\[{])/g, '$1');
+
+module.exports = { inertForSite, plain, yaml, unyaml, uninert };

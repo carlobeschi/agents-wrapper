@@ -19,14 +19,14 @@ const path   = require('path');
 const os     = require('os');
 const { spawn, execFileSync } = require('child_process');
 const { HOME_DIR, loadConfig, fill, agentEnv, stamp, redactor } = require('./config');
-const { inertForSite, plain, yaml } = require('./frontmatter');
+const { inertForSite, plain, yaml, unyaml, uninert } = require('./frontmatter');
 const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, MAX_REPLY, take, cutNote, inert, newTag, untag, heading, SPEAKERS, modelLine } = require('./talk');
 
 const STEP_TIMEOUT = 10 * 60 * 1000;
 const RETRY_DELAY  = Number(process.env.AGENT_DISPATCH_RETRY_MS ?? 3000);
 
 const usage = () => {
-  console.error('usage: node motion.js <motion.json> [--local | --screen]\n       node motion.js --quote <run folder>');
+  console.error('usage: node motion.js <motion.json> [--local | --screen]\n       node motion.js --quote <run folder | episode .md>');
   process.exit(2);
 };
 
@@ -207,6 +207,19 @@ async function editorQuote(dir, editor, m, st) {
   }
 }
 
+// An episode read back from its file on the show site, in the shape of episode.json.
+const SHOW_NAMES = { claude: 'Claude', antigravity: 'Gemini' };
+function episodeFromSite(md) {
+  const f = unyaml((md.match(/^---\n([\s\S]*?)\n---/) || [])[1] || '');
+  if (!f.motion || !f.sides || !Array.isArray(f.debate)) throw new Error('Not an episode file: no motion, sides or debate.');
+  const name = id => SHOW_NAMES[id] || id;
+  return {
+    motion: f.motion,
+    agents: Object.keys(f.sides).map(id => ({ id, label: name(id), side: f.sides[id], opening: uninert(f.before[id]), closing: uninert(f.after[id]) })),
+    turns: f.debate.map(t => ({ by: t.by, label: name(t.by), closing: t.closing, text: uninert(t.text) })),
+  };
+}
+
 // The episode in the format of the-motion's README: _episodes/motion-<n>.md.
 function frontMatter(m, st, summary, quote) {
   const today = new Date(), p = x => String(x).padStart(2, '0');
@@ -250,10 +263,17 @@ function openPullRequest(m, dir, text) {
 
 async function main() {
   const argv = process.argv.slice(2);
-  // `--quote <run folder>`: the editor picks the home-card line for an episode already run.
+  // `--quote <run folder | episode .md>`: the editor picks the home-card line for
+  // an episode already run, from its run folder or from the published episode file.
   if (argv[0] === '--quote' && argv[1]) {
-    const dir = path.resolve(argv[1]);
-    const st = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
+    let dir = path.resolve(argv[1]), st;
+    if (dir.endsWith('.md')) {
+      st = episodeFromSite(fs.readFileSync(dir, 'utf8'));
+      dir = path.join(HOME_DIR, 'motions', `${stamp()}-quote-${path.basename(dir, '.md')}`);
+      fs.mkdirSync(dir, { recursive: true });
+    } else {
+      st = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
+    }
     const editor = loadConfig().agents.find(x => x.id === 'claude' && x.type !== 'url' && x.headless);
     if (!editor) throw new Error('No headless claude in agents.json to act as editor.');
     const quote = await editorQuote(dir, editor, { motion: st.motion }, st);

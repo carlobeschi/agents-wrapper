@@ -152,3 +152,18 @@ test('--quote has the editor pick a line for an episode already run, and drops o
   expect(made_up.status).toBe(1);
   expect(fs.existsSync(path.join(dir, 'quote.json'))).toBe(false);
 });
+
+test('--quote also reads a published episode file, with its agent text as the agents wrote it', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-home-'));
+  const md = path.join(home, 'motion-4.md');
+  fs.writeFileSync(md, [
+    '---', 'number: 4', 'motion: "tabs beat spaces."', 'sides:', '  claude: "for"', '  antigravity: "against"',
+    'before:', '  claude: "Hm."', '  antigravity: "No."',
+    'debate:', '  - by: "antigravity"', '    text: |', '      Tabs are a choice.', '', '      Spaces are a \\<b>promise\\</b>.',
+    'after:', '  claude: "I was wrong about tabs."', '  antigravity: "Still no."', '---', ''].join('\n'));
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
+    { id: 'claude', label: 'Claude Code', headless: ['sh', '-c', `case "$1" in *"debate, Gemini"*) printf '3\\tSpaces are a <b>promise</b>.';; esac`, 'x', '{prompt}'] }] }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'motion.js'), '--quote', md],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  expect(out).toContain('quote:\n  by: "antigravity"\n  where: "debate"\n  text: "Spaces are a <b>promise</b>."');
+});
