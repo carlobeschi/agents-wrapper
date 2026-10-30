@@ -127,6 +127,8 @@ async function main() {
   const file = process.argv[2];
   if (!file) usage();
   const m = { words: 150, ...JSON.parse(fs.readFileSync(file, 'utf8')) };
+  // Setting a hard puzzle can take a slow agent close to ten minutes, so each step gets 25 by default.
+  process.env.AGENT_DISPATCH_STEP_TIMEOUT_MS ||= String((Number(m.timeout_min) || 25) * 60 * 1000);
   const ids = Array.isArray(m.agents) ? m.agents : ['claude', 'antigravity'];
   if (ids.length < 2 || ids.length > 3) throw new Error(`${file}: "agents" must name two or three agents.`);
   const cfg = loadConfig();

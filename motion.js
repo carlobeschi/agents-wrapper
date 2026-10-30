@@ -22,7 +22,8 @@ const { HOME_DIR, loadConfig, fill, agentEnv, stamp, redactor } = require('./con
 const { inertForSite, plain, yaml, unyaml, uninert } = require('./frontmatter');
 const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, MAX_REPLY, take, cutNote, inert, newTag, untag, heading, SPEAKERS, modelLine } = require('./talk');
 
-const STEP_TIMEOUT = 10 * 60 * 1000;
+// A step that runs longer is stopped; AGENT_DISPATCH_STEP_TIMEOUT_MS overrides it.
+const stepTimeout = () => Number(process.env.AGENT_DISPATCH_STEP_TIMEOUT_MS) || 10 * 60 * 1000;
 const RETRY_DELAY  = Number(process.env.AGENT_DISPATCH_RETRY_MS ?? 3000);
 
 const usage = () => {
@@ -102,7 +103,7 @@ function runOnce(agent, prompt, cwd) {
     try {
       child = spawn(cmd, args, { cwd, env: agentEnv(agent.env), shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
     } catch (e) { return resolve({ why: e.message, err: '' }); }
-    const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, STEP_TIMEOUT);
+    const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, stepTimeout());
     child.stdout.on('data', c => take(cur, c));
     child.stderr.on('data', c => { cur.err = (cur.err + c).slice(-64000); });
     child.on('error', e => { cur.spawnError = e.message; });
