@@ -7,7 +7,7 @@ const { execFileSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { clean, broken, named } = require('../sketch');
+const { clean, broken, named, shapeCount } = require('../sketch');
 
 // Drawers draw one circle with a telling id and comment; a fake guesser says
 // "sun" to everything. c draws text the first time and is told why.
@@ -62,6 +62,10 @@ test('drawings break the rules with text, images, too many shapes or none', () =
   expect(broken(svg('<tspan>x</tspan><circle/>'), 12)).toBe('it has text in it');
   expect(broken(svg('<use href="#a"/><circle/>'), 12)).toMatch(/images/);
   expect(broken(undefined, 12)).toMatch(/no safe SVG/);
+  // A path is one shape per pen lift, so many squares in one path still count.
+  expect(shapeCount(svg('<path d="M0 0 H9 V9 Z M20 0 H29 V9 Z m5 5 h1"/><circle/>'))).toBe(4);
+  expect(shapeCount(svg("<path d='M0 0 L9 9'/><path/>"))).toBe(2);
+  expect(broken(svg('<path d="M0 0 h1 M2 2 h1 M4 4 h1"/>'), 2)).toBe('it has 3 shapes, more than 2');
   expect(clean(svg('<title>Sun</title><!--sun--><circle data-name="sun" id="s" r="1"/>'))).toBe(svg('<circle r="1"/>'));
 });
 

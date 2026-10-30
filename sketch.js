@@ -33,7 +33,7 @@ const PUBLISHED = others => `${names(others)} never ${others.length === 1 ? 'see
 const SHAPES = ['circle', 'ellipse', 'rect', 'line', 'polyline', 'polygon', 'path'];
 
 const rules = n => [
-  `One SVG with viewBox="0 0 400 400", at most ${n} shapes in all (${SHAPES.join(', ')}; a <g> costs nothing).`,
+  `One SVG with viewBox="0 0 400 400", at most ${n} shapes in all (${SHAPES.join(', ')}; a <g> costs nothing). A path counts once for each "M" or "m" in it: each piece you lift the pen for is a shape.`,
   'No text, letters, digits or symbols anywhere, as elements or drawn with lines. No scripts, links or images.',
 ].join(' ');
 
@@ -89,12 +89,22 @@ function clean(svg) {
     .replace(/>\s+</g, '>\n<').trim();
 }
 
+// Each element is a shape, and a path one per pen lift ("M" or "m"), so a
+// single path can't hold a whole drawing.
+function shapeCount(svg) {
+  return (svg.match(new RegExp(`<\\s*(${SHAPES.join('|')})\\b[^>]*>`, 'gi')) || []).reduce((n, el) => {
+    if (!/^<\s*path\b/i.test(el)) return n + 1;
+    const d = el.match(/\sd\s*=\s*(?:"([^"]*)"|'([^']*)')/i);
+    return n + Math.max(1, ((d ? d[1] ?? d[2] : '').match(/[Mm]/g) || []).length);
+  }, 0);
+}
+
 // Why a drawing breaks the rules, or '' if it doesn't.
 function broken(svg, n) {
   if (!svg) return 'there was no safe SVG in the reply';
   if (/<\s*(text|tspan|textPath)\b/i.test(svg)) return 'it has text in it';
   if (/<\s*(image|use|symbol|pattern)\b/i.test(svg)) return 'it uses images, <use> or patterns';
-  const count = (svg.match(new RegExp(`<\\s*(${SHAPES.join('|')})\\b`, 'gi')) || []).length;
+  const count = shapeCount(svg);
   if (count > n) return `it has ${count} shapes, more than ${n}`;
   if (!count) return 'it has no shapes';
   return '';
@@ -201,4 +211,4 @@ async function main() {
 
 if (require.main === module) main().catch(e => { console.error(`sketch: ${e.message}`); process.exit(1); });
 
-module.exports = { clean, broken, parseDrawing, named, drawPrompt, guessPrompt };
+module.exports = { clean, broken, shapeCount, parseDrawing, named, drawPrompt, guessPrompt };
