@@ -4,7 +4,8 @@
 //
 // Each agent is given a side. Before the debate each writes, alone, what it
 // really thinks. Then they debate in a few short turns, each seeing its own
-// opening but not the other's. After it, each writes, alone, where it stands now. The other agent never sees either
+// opening but not the other's, then a short closing statement each, the side
+// for the motion last. After it, each writes, alone, where it stands now. The other agent never sees either
 // private piece; both are published with the episode, and the agents are told so.
 //
 // Same headless commands as /talk and /story, so the agents get no permission
@@ -25,7 +26,7 @@ const STEP_TIMEOUT = 10 * 60 * 1000;
 const RETRY_DELAY  = Number(process.env.AGENT_DISPATCH_RETRY_MS ?? 3000);
 
 const usage = () => {
-  console.error('usage: node motion.js <motion.json> [--local]');
+  console.error('usage: node motion.js <motion.json> [--local | --screen]');
   process.exit(2);
 };
 
@@ -50,14 +51,17 @@ function openingPrompt(m, me, other) {
   ].join('\n');
 }
 
-function turnPrompt(m, me, other, turns, tag) {
+function turnPrompt(m, me, other, turns, tag, closing = false) {
   const n = turns.length + 1;
+  const total = m.turns + (m.closings ? 2 : 0);
   return [
     `You are ${me.label}, debating ${other.label}, an AI agent from another lab, on the motion below. A person set this up and will publish it.`,
     SPEAKERS(tag),
     `You argue ${me.side} the motion; ${other.label} argues ${other.side}. Make the strongest case for your side, whatever your opening says, and concede only what you must. Your closing, written alone, is where you say what you really think.`,
-    `Your opening is your private notes: don't restate it, answer ${other.label}${turns.length ? '' : ' with your case'}. Under ${m.words} words, plain prose, no preamble, no name label.`,
-    n >= m.turns ? `This is message ${n} of ${m.turns}, the last: close the debate, without a question back.` : `This is message ${n} of ${m.turns}.`,
+    `Your opening is your private notes: don't restate it, answer ${other.label}${turns.length ? '' : ' with your case'}. Under ${closing ? Math.round(m.words / 2) : m.words} words, plain prose, no preamble, no name label.`,
+    closing
+      ? `This is your closing statement (message ${n} of ${total}). Answer the strongest point of ${other.label}'s you haven't answered yet, then close your case, without a question back.${n === total ? ' You have the last word.' : ''}`
+      : n >= total ? `This is message ${n} of ${total}, the last: close the debate, without a question back.` : `This is message ${n} of ${total}.`,
     UNATTENDED(other.label),
     '', ...briefLines(m),
     `## Your private opening (${other.label} has not seen it)`, '', untag(me.opening, tag), '',
@@ -140,7 +144,7 @@ function markdown(m, st) {
     m.brief.trim(), '', ...(m.source ? [`Source: ${m.source}`, ''] : []),
     '## Before (private)', '', ...both('opening'),
     '## The debate', '',
-    ...st.turns.flatMap(t => [`### ${t.label}`, '', inert(t.text), '']),
+    ...st.turns.flatMap(t => [`### ${t.label}${t.closing ? ' (closing)' : ''}`, '', inert(t.text), '']),
     '## After (private)', '', ...both('closing'),
     `---`, '', `${st.words} words.`, '',
   ].join('\n');
@@ -151,11 +155,13 @@ function markdown(m, st) {
 async function editorSummary(dir, editor, m, st) {
   const lines = [
     `You are the editor of a weekly show in which two AI agents, ${st.agents.map(x => x.label).join(' and ')}, debate a motion. Below is this week's episode.`,
-    'Write a summary for a reader with thirty seconds: two or three plain sentences, under 70 words. Say what the debate turned on, then what each wrote alone that it did not say in the room. No praise, no quotes, no verdict on who won.',
+    'Write a summary for a reader with thirty seconds: two or three plain sentences, under 80 words.',
+    'Name the one point they actually split on. If their private notes before the debate already agreed, say so plainly. Then say how far each moved, from its notes before to its notes after, and what each wrote alone that it did not say in the room. If both said the same evidence was missing, name it.',
+    'No praise, no quotes, no verdict on who won, no stock phrases such as "the debate turned on".',
     'Reply with the summary only.', '',
     `## This house believes ${m.motion.replace(/^this house believes\s*/i, '')}`, '',
     ...st.agents.map(x => `[before, alone, ${x.label}, who argues ${x.side}] ${x.opening}\n`),
-    ...st.turns.map(t => `[debate, ${t.label}] ${t.text}\n`),
+    ...st.turns.map(t => `[debate, ${t.label}${t.closing ? ', closing' : ''}] ${t.text}\n`),
     ...st.agents.map(x => `[after, alone, ${x.label}] ${x.closing}\n`),
   ];
   try {
@@ -183,7 +189,7 @@ function frontMatter(m, st, summary) {
     brief: inertForSite(m.brief.trim()),
     sides: Object.fromEntries(st.agents.map(x => [key(x), x.side])),
     before: Object.fromEntries(st.agents.map(x => [key(x), inertForSite(x.opening)])),
-    debate: st.turns.map(t => ({ by: t.by.replace(/#\d+$/, ''), text: inertForSite(t.text) })),
+    debate: st.turns.map(t => ({ by: t.by.replace(/#\d+$/, ''), closing: t.closing || undefined, text: inertForSite(t.text) })),
     after: Object.fromEntries(st.agents.map(x => [key(x), inertForSite(x.closing)])),
   };
   return `---\n${yaml(front)}\n---\n`;
@@ -214,7 +220,8 @@ async function main() {
   if (!file) usage();
   const local = argv.includes('--local');
   const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
-  const m = { turns: 4, words: 120, ...raw };
+  const m = { turns: 4, words: 120, closings: true, ...raw };
+  const screen = argv.includes('--screen');
   if (typeof m.motion !== 'string' || !m.motion.trim()) throw new Error(`${file}: no "motion".`);
   if (typeof m.brief !== 'string' || !m.brief.trim()) throw new Error(`${file}: no "brief".`);
   const ids = Array.isArray(m.agents) ? m.agents : ['claude', 'antigravity'];
@@ -238,12 +245,26 @@ async function main() {
   console.log(`  ⚖ ${a.label} argues ${a.side}, ${b.label} argues ${b.side}`);
   // Each alone, before: neither prompt carries anything the other wrote.
   for (const [me, other] of [[a, b], [b, a]]) me.opening = await run(dir, `0-open-${me.slug}`, me, openingPrompt(m, me, other), me.home);
+  // A screen stops here: the chair reads both openings to check the motion splits them.
+  if (screen) {
+    const { redact } = redactor(m.redact);
+    const text = [`# This house believes ${m.motion.replace(/^this house believes\s*/i, '')}`, '',
+      ...agents.flatMap(x => [`## ${x.label} (argues ${x.side})`, '', redact(x.opening), ''])].join('\n');
+    fs.writeFileSync(path.join(dir, 'screen.md'), text);
+    console.log(`Screen: ${path.join(dir, 'screen.md')}\n\n${text}`);
+    return;
+  }
   const turns = [];
   // The side for the motion opens the debate, as in a debating chamber.
   const order = a.side === 'for' ? [a, b] : [b, a];
   for (let i = 0; i < m.turns; i++) {
     const me = order[i % 2], other = order[(i + 1) % 2];
     turns.push({ by: me.id, label: me.label, text: await run(dir, `1-turn-${i + 1}-${me.slug}`, me, turnPrompt(m, me, other, turns, tag), meeting) });
+  }
+  // Short closing statements, against first, so the side for the motion has the last word.
+  if (m.closings) for (const [me, other] of [[order[1], order[0]], [order[0], order[1]]]) {
+    const n = turns.length + 1;
+    turns.push({ by: me.id, label: me.label, closing: true, text: await run(dir, `1-turn-${n}-${me.slug}`, me, turnPrompt(m, me, other, turns, tag, true), meeting) });
   }
   for (const [me, other] of [[a, b], [b, a]]) me.closing = await run(dir, `2-close-${me.slug}`, me, closingPrompt(m, me, other, turns, tag), me.home);
 
