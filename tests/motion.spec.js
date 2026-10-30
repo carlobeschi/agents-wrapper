@@ -12,7 +12,7 @@ const fake = name => ['sh', '-c',
   `case "$1" in *"Before you meet"*) echo "OPEN-${name}";; *"you are alone"*) echo "CLOSE-${name}";; *) echo "TURN-${name}";; esac`,
   'x', '{prompt}'];
 
-test('runs openings, four turns and closings, each private piece kept from the other agent', () => {
+test('runs openings, four turns, two closing statements and closings, each private piece kept from the other agent', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-home-'));
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
     { id: 'a', label: 'Agent A', headless: fake('a') },
@@ -30,6 +30,7 @@ test('runs openings, four turns and closings, each private piece kept from the o
   expect(steps).toEqual([
     '0-open-a.prompt.md', '0-open-b.prompt.md',
     '1-turn-1-a.prompt.md', '1-turn-2-b.prompt.md', '1-turn-3-a.prompt.md', '1-turn-4-b.prompt.md',
+    '1-turn-5-b.prompt.md', '1-turn-6-a.prompt.md',
     '2-close-a.prompt.md', '2-close-b.prompt.md',
   ]);
   const read = f => fs.readFileSync(path.join(dir, 'steps', f), 'utf8');
@@ -38,14 +39,19 @@ test('runs openings, four turns and closings, each private piece kept from the o
   for (const f of steps.filter(f => f.endsWith('-b.prompt.md'))) expect(read(f)).not.toContain('OPEN-a');
   expect(read('1-turn-2-b.prompt.md')).toContain('OPEN-b');
   expect(read('1-turn-2-b.prompt.md')).toContain('TURN-a');
-  expect(read('1-turn-4-b.prompt.md')).toContain('the last');
+  // Closing statements: against first, so the side for the motion has the last word.
+  expect(read('1-turn-4-b.prompt.md')).toContain('message 4 of 6.');
+  expect(read('1-turn-5-b.prompt.md')).toContain('closing statement');
+  expect(read('1-turn-5-b.prompt.md')).not.toContain('last word');
+  expect(read('1-turn-6-a.prompt.md')).toContain('You have the last word.');
   expect(read('2-close-a.prompt.md')).toContain('TURN-b');
   expect(read('2-close-a.prompt.md')).not.toContain('OPEN-b');
   // The agents argue from the brief; the link they can't open stays out of their prompts.
   for (const f of steps) expect(read(f)).not.toContain('example.com');
 
   const ep = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
-  expect(ep.turns.map(t => t.text)).toEqual(['TURN-a', 'TURN-b', 'TURN-a', 'TURN-b']);
+  expect(ep.turns.map(t => t.text)).toEqual(['TURN-a', 'TURN-b', 'TURN-a', 'TURN-b', 'TURN-b', 'TURN-a']);
+  expect(ep.turns.map(t => !!t.closing)).toEqual([false, false, false, false, true, true]);
   expect(ep.agents.map(x => [x.label, x.opening, x.closing])).toEqual([['Ada', 'OPEN-a', 'CLOSE-a'], ['Bea', 'OPEN-b', 'CLOSE-b']]);
   const md = fs.readFileSync(path.join(dir, 'episode.md'), 'utf8');
   expect(md.indexOf('## Before (private)')).toBeLessThan(md.indexOf('## The debate'));
@@ -67,7 +73,7 @@ test('sides swap each week, and the side for the motion opens the debate', () =>
   const ep = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
   // Motion 2: the first agent argues against, so the second opens.
   expect(ep.agents.map(x => [x.id, x.side])).toEqual([['a', 'against'], ['b', 'for']]);
-  expect(ep.turns.map(t => t.by)).toEqual(['b', 'a', 'b', 'a']);
+  expect(ep.turns.map(t => t.by)).toEqual(['b', 'a', 'b', 'a', 'a', 'b']);
   const read = f => fs.readFileSync(path.join(dir, 'steps', f), 'utf8');
   expect(read('0-open-a.prompt.md')).toContain('You argue against the motion; Agent B argues for.');
   expect(read('1-turn-2-a.prompt.md')).toContain('You argue against the motion');
@@ -98,9 +104,26 @@ test('with a number, writes the episode file for the show site, with a summary f
   expect(md).toContain('  url: "https://example.com/n"');
   // Motion 3 is odd: the first agent argues for.
   expect(md).toContain('sides:\n  claude: "for"\n  antigravity: "against"');
+  expect(md).toContain('  - by: "antigravity"\n    closing: true\n');
   expect(md).toContain('before:\n  claude: "On the fence, claude."');
   expect(md).toContain('after:\n  claude: "Now for, claude."');
   // Agent text is made inert for kramdown.
   expect(md).toContain('Turn by claude with a \\\\<b>tag\\\\</b>');
   expect(md).not.toContain('Turn by claude with a <b>');
+});
+
+test('a screen runs only the openings, so the chair can check the motion splits them', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-home-'));
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
+    { id: 'a', label: 'Agent A', headless: fake('a') },
+    { id: 'b', label: 'Agent B', headless: fake('b') },
+  ] }));
+  const motion = path.join(home, 'm5.json');
+  fs.writeFileSync(motion, JSON.stringify({ number: 5, motion: 'tabs beat spaces.', brief: 'B.', agents: ['a', 'b'], repo: '/nowhere', github: 'x/y' }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'motion.js'), motion, '--screen'],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Run folder: (.+)/)[1].trim();
+  expect(fs.readdirSync(path.join(dir, 'steps')).filter(f => f.endsWith('.prompt.md')).sort()).toEqual(['0-open-a.prompt.md', '0-open-b.prompt.md']);
+  expect(out).toContain('## Agent A (argues for)\n\nOPEN-a');
+  expect(fs.existsSync(path.join(dir, 'episode.md'))).toBe(false);
 });
