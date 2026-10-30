@@ -3,7 +3,7 @@
 // shared, and the episode keeps them apart. Fake agents reply with a line that
 // says which step they were on.
 const { test, expect } = require('@playwright/test');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -85,7 +85,7 @@ test('sides swap each week, and the side for the motion opens the debate', () =>
 test('with a number, writes the episode file for the show site, with a summary from the editor', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-home-'));
   const agent = name => ['sh', '-c',
-    `case "$1" in *"Before you meet"*) echo "On the fence, ${name}.";; *"you are alone"*) echo "Now for, ${name}.";; *"You are the editor"*) echo "A short summary.";; *) echo "Turn by ${name} with a <b>tag</b>";; esac`,
+    `case "$1" in *"Before you meet"*) echo "On the fence, ${name}.";; *"you are alone"*) echo "Now for, ${name}.";; *"Pick the one line"*) printf '9\tNow for, claude.';; *"You are the editor"*) echo "A short summary.";; *) echo "Turn by ${name} with a <b>tag</b>";; esac`,
     'x', '{prompt}'];
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
     { id: 'claude', label: 'Claude Code', model: 'm-1', headless: agent('claude') },
@@ -101,6 +101,8 @@ test('with a number, writes the episode file for the show site, with a summary f
   const md = fs.readFileSync(file, 'utf8');
   expect(md).toMatch(/^---\nnumber: 3\nmotion: "monorepos win."\ntitle: "This house believes monorepos win."\n/);
   expect(md).toContain('summary: "A short summary."');
+  // The editor's line for the home card, checked word for word against the episode.
+  expect(md).toContain('quote:\n  by: "claude"\n  where: "after"\n  text: "Now for, claude."');
   expect(md).toContain('  claude: "m-1"');
   expect(md).toContain('  url: "https://example.com/n"');
   // Motion 3 is odd: the first agent argues for.
@@ -127,4 +129,26 @@ test('a screen runs only the openings, so the chair can check the motion splits 
   expect(fs.readdirSync(path.join(dir, 'steps')).filter(f => f.endsWith('.prompt.md')).sort()).toEqual(['0-open-a.prompt.md', '0-open-b.prompt.md']);
   expect(out).toContain('## Agent A (argues for)\n\nOPEN-a');
   expect(fs.existsSync(path.join(dir, 'episode.md'))).toBe(false);
+});
+
+test('--quote has the editor pick a line for an episode already run, and drops one that is not word for word', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-home-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-run-'));
+  fs.writeFileSync(path.join(dir, 'episode.json'), JSON.stringify({ motion: 'tabs beat spaces.',
+    turns: [{ by: 'antigravity', label: 'Gemini', text: 'Tabs are a choice. Spaces are a promise.' }],
+    agents: [{ id: 'claude', label: 'Claude', side: 'for', opening: 'Hm.', closing: 'I was wrong about tabs.' },
+             { id: 'antigravity', label: 'Gemini', side: 'against', opening: 'No.', closing: 'Still no.' }] }));
+  const run = reply => {
+    fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
+      { id: 'claude', label: 'Claude Code', headless: ['sh', '-c', `printf '${reply}'`, 'x', '{prompt}'] }] }));
+    return spawnSync('node', [path.join(__dirname, '..', 'motion.js'), '--quote', dir],
+      { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  };
+  const ok = run('3\\tSpaces are a promise.');
+  expect(ok.status).toBe(0);
+  expect(JSON.parse(fs.readFileSync(path.join(dir, 'quote.json'), 'utf8'))).toEqual({ by: 'antigravity', where: 'debate', text: 'Spaces are a promise.' });
+  fs.rmSync(path.join(dir, 'quote.json'));
+  const made_up = run('4\\tI was always right about tabs.');
+  expect(made_up.status).toBe(1);
+  expect(fs.existsSync(path.join(dir, 'quote.json'))).toBe(false);
 });
