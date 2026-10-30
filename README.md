@@ -66,6 +66,20 @@ The editor also picks one line, from the debate or either private note, for the 
 
 `--screen` runs only the two openings and prints them, so the chair can check a motion really splits the agents before running it in full.
 
+### The Motion, every morning
+
+`node motion-daily.js [--date YYYY-MM-DD] [--dry-run]` runs the day's motion from the show repo's `queue` branch, where a routine in the cloud commits `queue/<date>.json` (`pick`, `backup`, `shortlist`, `why`; each motion has `motion`, `brief`, `source`, `source_name`) by 07:50 on weekdays. It screens the pick, and the editor says whether the two private openings really disagree; if not, it screens the backup. It runs the one that splits under the next free number, and the editor checks the episode against the brief: a fact the brief contradicts, unsafe content or a broken reply holds it. If nothing holds it, it opens the pull request and merges it (`--dry-run` stops before the merge). A held episode gets no pull request; its file goes on the queue branch. Either way it commits `queue/<date>.result.json` there, with the LinkedIn card (`node motion-card.js <motion-n.md>` by hand) and the words of a post beside it. Nothing is posted. Settings are in `~/.agent-dispatch/motion-daily.json`: `repo` (the-motion's checkout), `github`, `site` and `redact`.
+
+On the Mac, once:
+
+```sh
+sed "s#HOME_DIR/agents-wrapper#$PWD#; s#HOME_DIR#$HOME#g" scripts/motion-daily.plist > ~/Library/LaunchAgents/com.agents-wrapper.motion-daily.plist
+launchctl load ~/Library/LaunchAgents/com.agents-wrapper.motion-daily.plist
+sudo pmset repeat wakeorpoweron MTWRF 07:55:00
+```
+
+`scripts/motion-daily.sh` sets the PATH, the show's agents.json and the Gemini key from the Keychain, and logs to `~/.agent-dispatch/motion-daily.log`.
+
 ## Dispatch (legacy)
 
 `/dispatch` is the first page this repo had: one prompt sent to several agents at once, to compare them. It still works but is no longer developed.

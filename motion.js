@@ -284,10 +284,16 @@ async function main() {
   }
   const file = argv.find(a => !a.startsWith('--'));
   if (!file) usage();
-  const local = argv.includes('--local');
   const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const r = await runMotion(raw, { screen: argv.includes('--screen'), local: argv.includes('--local'), name: file });
+  if (r.pr) console.log(`Pull request: ${r.pr}`);
+}
+
+// One motion, from its file's contents. Returns the run folder and, as far as
+// the run went, the openings (a screen), the episode and the site file.
+async function runMotion(raw, { screen = false, local = false, name = 'motion' } = {}) {
   const m = { turns: 4, words: 120, closings: true, ...raw };
-  const screen = argv.includes('--screen');
+  const file = name;
   if (typeof m.motion !== 'string' || !m.motion.trim()) throw new Error(`${file}: no "motion".`);
   if (typeof m.brief !== 'string' || !m.brief.trim()) throw new Error(`${file}: no "brief".`);
   const ids = Array.isArray(m.agents) ? m.agents : ['claude', 'antigravity'];
@@ -318,7 +324,7 @@ async function main() {
       ...agents.flatMap(x => [`## ${x.label} (argues ${x.side})`, '', redact(x.opening), ''])].join('\n');
     fs.writeFileSync(path.join(dir, 'screen.md'), text);
     console.log(`Screen: ${path.join(dir, 'screen.md')}\n\n${text}`);
-    return;
+    return { dir, m, agents: agents.map(x => ({ id: x.id, label: x.label, side: x.side, opening: redact(x.opening) })) };
   }
   const turns = [];
   // The side for the motion opens the debate, as in a debating chamber.
@@ -348,7 +354,7 @@ async function main() {
   console.log(`Episode: ${path.join(dir, 'episode.md')} (${st.words} words)`);
 
   // For the show site: only with a number, so an episode is never filed under a guess.
-  if (!Number.isInteger(m.number)) return;
+  if (!Number.isInteger(m.number)) return { dir, m, st };
   const editor = cfg.agents.find(x => x.id === (m.editor || 'claude') && x.type !== 'url' && x.headless);
   const summary = editor ? await editorSummary(dir, editor, m, st) : undefined;
   const quote = editor ? await editorQuote(dir, editor, m, st) : undefined;
@@ -358,10 +364,11 @@ async function main() {
   const out = path.join(dir, `motion-${m.number}.md`);
   fs.writeFileSync(out, site);
   console.log(`Site episode: ${out}`);
-  if (local || !m.repo || !m.github) return;
-  console.log(`Pull request: ${openPullRequest(m, dir, site)}`);
+  const done = { dir, m, st, site, summary, quote };
+  if (local || !m.repo || !m.github) return done;
+  return { ...done, pr: openPullRequest(m, dir, site) };
 }
 
 if (require.main === module) main().catch(e => { console.error(`motion: ${e.message}`); process.exit(1); });
 
-module.exports = { openingPrompt, turnPrompt, closingPrompt, sidesFor, frontMatter, editorQuote };
+module.exports = { openingPrompt, turnPrompt, closingPrompt, sidesFor, frontMatter, editorQuote, runMotion, run, openPullRequest };
