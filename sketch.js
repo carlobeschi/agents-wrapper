@@ -22,11 +22,13 @@ const fs     = require('fs');
 const path   = require('path');
 const { HOME_DIR, loadConfig, stamp, redactor } = require('./config');
 const { UNATTENDED, inert, modelLine } = require('./talk');
-const { run } = require('./motion');
+const os     = require('os');
+const { run, openPullRequest, git } = require('./motion');
+const { inertForSite, yaml } = require('./frontmatter');
 const { splitDrawing } = require('./story');
 const { parseSolve } = require('./trap');
 
-const usage = () => { console.error('usage: node sketch.js <sketch.json>'); process.exit(2); };
+const usage = () => { console.error('usage: node sketch.js <sketch.json> [--local]'); process.exit(2); };
 
 const names = xs => xs.length === 1 ? xs[0].label : `${xs.slice(0, -1).map(x => x.label).join(', ')} and ${xs[xs.length - 1].label}`;
 const PUBLISHED = others => `${names(others)} never ${others.length === 1 ? 'sees' : 'see'} this. It is published with the episode, after the game.`;
@@ -58,6 +60,7 @@ function guessPrompt(me, drawer, svg) {
     `You are ${me.label}. ${drawer.label}, an AI agent from another lab, was given a word in secret and drew it for you in SVG, below. Comments, ids, class names, titles and any text were taken out.`,
     'The word names a thing or an idea; it may be a short phrase. A right guess is a point to you and one to the drawer. You get one guess.',
     'Start with a line "Confidence: <0 to 100>%": how sure you are of your guess. No other agent sees that line until after the game.',
+    'Read the drawing from its source; there is nothing to run or open.',
     'Then say what you read in the drawing, under 100 words, and give your guess on the last line as "Answer: <word>", nothing else on that line.',
     UNATTENDED(), '', '```svg', svg, '```',
   ].join('\n');
@@ -139,8 +142,43 @@ function markdown(st) {
   return lines.join('\n');
 }
 
+// ---- The show site ----
+
+const p2 = x => String(x).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+
+// One past the highest _shapes/episode-<n>.md on the site's main branch.
+function nextNumber(repo) {
+  git(repo, 'fetch', 'origin', 'main');
+  const ns = git(repo, 'ls-tree', '--name-only', 'origin/main', '_shapes/').split('\n')
+    .map(f => Number((f.match(/episode-(\d+)\.md$/) || [])[1])).filter(Boolean);
+  return Math.max(0, ...ns) + 1;
+}
+
+// The episode in the format of the site's README: _shapes/episode-<n>.md. The
+// drawings go in as text; the site shows each as an image, where an SVG can't run anything.
+function siteFile(m, st) {
+  const key = id => id.replace(/#\d+$/, '');
+  const front = {
+    number: m.number, title: `Episode ${m.number}`, date: m.date || ymd(new Date()),
+    models: Object.fromEntries(st.agents.map(x => [key(x.id), x.model || '(CLI default)'])),
+    score: Object.fromEntries(st.agents.map(x => [key(x.id), x.score])),
+    shapes: m.shapes,
+    drawings: st.rounds.map(r => ({
+      round: r.round, kind: m.kinds?.[r.round - 1] || undefined, by: key(r.drawer), word: r.word,
+      svg: r.svg || r.outSvg || undefined, count: (r.svg || r.outSvg) ? shapeCount(r.svg || r.outSvg) : undefined,
+      redrawn: r.redrawn || undefined, out: r.out || undefined,
+      note: inertForSite(r.note || ''),
+      guesses: r.guesses.map(g => ({ by: key(g.id), confidence: g.confidence ?? undefined, answer: inertForSite(g.answer || ''), right: !!g.right, working: inertForSite(g.working || '') })),
+    })),
+    after: Object.fromEntries(st.agents.map(x => [key(x.id), inertForSite(x.after || '')])),
+  };
+  return `---\n${yaml(front)}\n---\n`;
+}
+
 async function main() {
-  const file = process.argv.slice(2).find(a => !a.startsWith('--'));
+  const argv = process.argv.slice(2);
+  const file = argv.find(a => !a.startsWith('--'));
   if (!file) usage();
   const m = { shapes: 12, accept: {}, ...JSON.parse(fs.readFileSync(file, 'utf8')) };
   process.env.AGENT_DISPATCH_STEP_TIMEOUT_MS ||= String((Number(m.timeout_min) || 25) * 60 * 1000);
@@ -213,8 +251,27 @@ async function main() {
   fs.writeFileSync(path.join(dir, 'episode.json'), JSON.stringify(st, null, 2));
   fs.writeFileSync(path.join(dir, 'episode.md'), text);
   console.log(`Score: ${st.agents.map(x => `${x.label} ${x.score}`).join(' · ')}\nEpisode: ${path.join(dir, 'episode.md')}`);
+
+  // For the show site: only with a number, so an episode is never filed under a guess.
+  const repo = m.repo && m.repo.replace(/^~(?=$|\/)/, os.homedir());
+  if (m.number === 'next' && repo) m.number = nextNumber(repo);
+  if (!Number.isInteger(m.number)) return;
+  const site = siteFile(m, st);
+  const still = leaks(site);
+  if (still.length) throw new Error(`Not exported: the episode file still contains ${still.length} redacted term(s). See ${dir}.`);
+  const out = path.join(dir, `episode-${m.number}.md`);
+  fs.writeFileSync(out, site);
+  console.log(`Site episode: ${out}`);
+  if (argv.includes('--local') || !repo || !m.github) return;
+  const pr = openPullRequest(m, dir, site, {
+    rel: `_shapes/episode-${m.number}.md`, branch: `shapes/episode-${m.number}`, title: `Twelve Shapes, episode ${m.number}`,
+    commit: `Twelve Shapes, episode ${m.number}`,
+    body: [`Twelve Shapes, episode ${m.number}. Score: ${st.agents.map(x => `${x.label} ${x.score}`).join(' · ')}`, '',
+      'For the producer to review before it is merged: every episode is read by a person before it goes out.'],
+  });
+  console.log(`Pull request: ${pr}`);
 }
 
 if (require.main === module) main().catch(e => { console.error(`sketch: ${e.message}`); process.exit(1); });
 
-module.exports = { clean, broken, shapeCount, parseDrawing, named, drawPrompt, guessPrompt };
+module.exports = { siteFile, clean, broken, shapeCount, parseDrawing, named, drawPrompt, guessPrompt };

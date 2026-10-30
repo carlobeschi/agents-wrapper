@@ -25,8 +25,9 @@ test('three agents draw secret words, the others guess from the cleaned source, 
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'sketch-home-'));
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: ['a', 'b', 'c'].map(n => ({ id: n, label: `Agent ${n}`, headless: fake(n) })) }));
   const file = path.join(home, 's.json');
-  fs.writeFileSync(file, JSON.stringify({ agents: ['a', 'b', 'c'], names: ['Ada', 'Bea', 'Cy'], words: [['sun', 'moon', 'suns']] }));
-  const out = execFileSync('node', [path.join(__dirname, '..', 'sketch.js'), file],
+  fs.writeFileSync(file, JSON.stringify({ agents: ['a', 'b', 'c'], names: ['Ada', 'Bea', 'Cy'], words: [['sun', 'moon', 'suns']],
+    kinds: ['things'], number: 2, date: '2026-10-31', repo: home, github: 'x/y' }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'sketch.js'), file, '--local'],
     { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
   const dir = out.match(/Run folder: (.+)/)[1].trim();
   const read = f => fs.readFileSync(path.join(dir, 'steps', f), 'utf8');
@@ -52,6 +53,17 @@ test('three agents draw secret words, the others guess from the cleaned source, 
   const md = fs.readFileSync(path.join(dir, 'episode.md'), 'utf8');
   expect(md).toContain('Score: Ada 3 · Bea 2 · Cy 3');
   expect(md).toContain('![Ada, round 1](drawings/1-a.svg)');
+
+  // The file for the show site: score, every drawing as text, the private pieces; no pull request with --local.
+  expect(out).not.toContain('Pull request');
+  const site = fs.readFileSync(path.join(dir, 'episode-2.md'), 'utf8');
+  expect(site).toMatch(/^---\nnumber: 2\ntitle: "Episode 2"\ndate: "2026-10-31"\n/);
+  expect(site).toContain('score:\n  a: 3\n  b: 2\n  c: 3');
+  expect(site).toContain('kind: "things"');
+  expect(site).toContain('<circle cx=\\"200\\"');
+  expect(site).toContain('redrawn: "it has text in it"');
+  expect(site).toContain('note: "PRIVATE-a"');
+  expect(site).toContain('a: "AFTER-a"');
 });
 
 test('a drawing that is out twice is kept for the episode, and no one is asked to guess it', () => {
