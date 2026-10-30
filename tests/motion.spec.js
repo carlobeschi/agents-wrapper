@@ -43,6 +43,7 @@ test('runs openings, four turns, two closing statements and closings, each priva
   expect(read('1-turn-4-b.prompt.md')).toContain('message 4 of 6.');
   expect(read('1-turn-5-b.prompt.md')).toContain('closing statement');
   expect(read('1-turn-5-b.prompt.md')).not.toContain('last word');
+  expect(read('1-turn-5-b.prompt.md')).toContain('still against the motion');
   expect(read('1-turn-6-a.prompt.md')).toContain('You have the last word.');
   expect(read('2-close-a.prompt.md')).toContain('TURN-b');
   expect(read('2-close-a.prompt.md')).not.toContain('OPEN-b');
