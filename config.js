@@ -48,6 +48,11 @@ const BASE_ENV = [
 const agentEnv = names => Object.fromEntries([...BASE_ENV, ...(Array.isArray(names) ? names : [])]
   .filter(k => typeof k === 'string' && process.env[k] !== undefined).map(k => [k, process.env[k]]));
 
+// An agent with "stdin": true gets the prompt on stdin instead of in its
+// arguments (Codex on macOS is killed when a long prompt is an argument).
+const stdinOf = agent => agent.stdin ? 'pipe' : 'ignore';
+const feed = (agent, child, prompt) => { if (agent.stdin && child.stdin) { child.stdin.on('error', () => {}); child.stdin.end(prompt); } };
+
 function stamp() {
   const d = new Date(), p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
@@ -70,4 +75,4 @@ function redactor(extra = []) {
   return { redact, leaks };
 }
 
-module.exports = { HOME_DIR, CONFIG, loadConfig, modelsOf, fill, agentEnv, stamp, redactor };
+module.exports = { HOME_DIR, CONFIG, loadConfig, modelsOf, fill, agentEnv, stdinOf, feed, stamp, redactor };

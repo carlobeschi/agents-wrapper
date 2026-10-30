@@ -45,7 +45,7 @@ const { spawn, execFileSync } = require('child_process');
 const { createTalks } = require('./talk');
 const { createStories } = require('./story');
 const attach = require('./attach');
-const { HOME_DIR, CONFIG, loadConfig, modelsOf, fill, agentEnv, stamp } = require('./config');
+const { HOME_DIR, CONFIG, loadConfig, modelsOf, fill, agentEnv, stdinOf, feed, stamp } = require('./config');
 
 const PORT      = Number(process.env.AGENT_DISPATCH_PORT) || 8787;
 const RUNS_DIR  = path.join(HOME_DIR, 'runs');
@@ -132,7 +132,8 @@ function launchBackground(agent, prompt, cwd, runDir, runId) {
   const log = path.join(runDir, `${agent.id}.log`);
   const out = fs.openSync(log, 'a');
   const [cmd, ...args] = fill(agent.headless, prompt, agent.model);
-  const child = spawn(cmd, args, { cwd, env: agentEnv(agent.env), shell: false, stdio: ['ignore', out, out] });
+  const child = spawn(cmd, args, { cwd, env: agentEnv(agent.env), shell: false, stdio: [stdinOf(agent), out, out] });
+  feed(agent, child, prompt);
   const entry = { status: 'running', started: Date.now(), log, pid: child.pid };
   runs.get(runId).agents[agent.id] = entry;
   child.on('error', e => { fs.appendFileSync(log, `\n[dispatch] ${e.message}\n`); entry.status = 'failed'; });
