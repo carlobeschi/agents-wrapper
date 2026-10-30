@@ -86,3 +86,11 @@ esac`, 'x', '-'];
   expect(ep.rounds[1].puzzle).toBe('puzzle-s');
   expect(ep.agents[1].after).toBe('AFTER-s');
 });
+
+test('maths markup and one pair of outer brackets around an answer are ignored', () => {
+  expect(same('\\((2,4,8)\\)', '(2, 4, 8)')).toBe(true);
+  expect(same('(2, 4, 8)', '2,4,8')).toBe(true);
+  expect(same('$\\boxed{181}$', '181')).toBe(true);
+  expect(same('\\text{TTHHTHHH}', 'tthhthhh')).toBe(true);
+  expect(same('(1, 2)', '(2, 1)')).toBe(false);
+});

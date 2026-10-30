@@ -100,7 +100,10 @@ function parseSolve(text) {
 // Text compare, forgiving of case, spaces, quotes, a trailing full stop and
 // number formatting; nothing cleverer, so the ruling is the same for everyone.
 function norm(s) {
-  const t = String(s).toLowerCase().replace(/[`"'‘’“”*_$\\]/g, '').replace(/\s+/g, ' ').trim().replace(/[.!]+$/, '');
+  // Maths markup an agent may wrap its answer in: \( \), \[ \], \boxed{}, \text{}.
+  const plainMath = String(s).replace(/\\[()[\]]/g, '').replace(/\\(?:boxed|text|mathrm)\{([^{}]*)\}/g, '$1');
+  // One pair of brackets around the whole answer doesn't change it: (2, 4, 8) is 2, 4, 8.
+  const t = plainMath.trim().replace(/^[([{]\s*([^()[\]{}]*?)\s*[)\]}]$/, '$1').toLowerCase().replace(/[`"'‘’“”*_$\\]/g, '').replace(/\s+/g, ' ').trim().replace(/[.!]+$/, '');
   const n = t.replace(/,(?=\d{3}\b)/g, '');
   return /^-?\d+(\.\d+)?$/.test(n) ? String(Number(n)) : t.replace(/\s*([,;:])\s*/g, '$1 ').trim();
 }
