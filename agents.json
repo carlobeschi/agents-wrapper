@@ -21,7 +21,8 @@
       "id": "codex",
       "label": "Codex CLI",
       "interactive": ["codex", "{prompt}"],
-      "headless": ["codex", "exec", "--sandbox", "read-only", "--skip-git-repo-check", "--", "{prompt}"],
+      "headless": ["codex", "exec", "--sandbox", "read-only", "--skip-git-repo-check", "-"],
+      "stdin": true,
       "env": ["OPENAI_API_KEY", "CODEX_HOME"]
     },
     {

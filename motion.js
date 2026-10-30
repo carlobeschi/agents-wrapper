@@ -18,7 +18,7 @@ const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
 const { spawn, execFileSync } = require('child_process');
-const { HOME_DIR, loadConfig, fill, agentEnv, stamp, redactor } = require('./config');
+const { HOME_DIR, loadConfig, fill, agentEnv, stdinOf, feed, stamp, redactor } = require('./config');
 const { inertForSite, plain, yaml, unyaml, uninert } = require('./frontmatter');
 const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, MAX_REPLY, take, cutNote, inert, newTag, untag, heading, SPEAKERS, modelLine } = require('./talk');
 
@@ -101,7 +101,8 @@ function runOnce(agent, prompt, cwd) {
     const cur = { out: '', err: '' };
     let child;
     try {
-      child = spawn(cmd, args, { cwd, env: agentEnv(agent.env), shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+      child = spawn(cmd, args, { cwd, env: agentEnv(agent.env), shell: false, detached: true, stdio: [stdinOf(agent), 'pipe', 'pipe'] });
+      feed(agent, child, prompt);
     } catch (e) { return resolve({ why: e.message, err: '' }); }
     const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, stepTimeout());
     child.stdout.on('data', c => take(cur, c));

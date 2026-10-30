@@ -13,6 +13,7 @@ const fs     = require('fs');
 const path   = require('path');
 const { spawn } = require('child_process');
 const { parseFiles, saveFiles, withFiles, attachedBytes } = require('./attach');
+const { stdinOf, feed } = require('./config');
 
 const MAX_TURNS    = 50;
 const MAX_ROUNDS   = Math.floor(MAX_TURNS / 3);
@@ -266,7 +267,8 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
 
     let child;
     try {
-      child = spawn(cmd, args, { cwd: t.work, env: agentEnv(me.env), shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+      child = spawn(cmd, args, { cwd: t.work, env: agentEnv(me.env), shell: false, detached: true, stdio: [stdinOf(me), 'pipe', 'pipe'] });
+      feed(me, child, prompt);
     } catch (e) { return fail(t, `${me.label}: ${e.message}`); }
     cur.child = child;
     const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, TURN_TIMEOUT);

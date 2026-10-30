@@ -63,3 +63,25 @@ test('answers compare as text, forgiving only case, spacing, quotes and number f
   expect(same('3 1 2', '3,1,2')).toBe(false);
   expect(same('', '')).toBe(false);
 });
+
+test('an agent with "stdin": true gets the prompt on stdin, not in its arguments', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'trap-stdin-'));
+  // Reads the prompt from stdin; fails if anything but "-" is in its arguments.
+  const viaStdin = name => ['sh', '-c', `[ "$#" = 1 ] && [ "$1" = - ] || exit 9; p=$(cat); case "$p" in
+  *"Reply in exactly three parts"*) printf '## Puzzle\\npuzzle-${name}\\n## Answer\\n42\\n## Why they will fail\\nPRIVATE-${name}\\n';;
+  *"you are alone"*) echo "AFTER-${name}";;
+  *) printf 'Confidence: 50%%\\nworking\\nAnswer: 42\\n';;
+esac`, 'x', '-'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
+    { id: 'a', label: 'Agent A', headless: fake('a', '42') },
+    { id: 's', label: 'Agent S', headless: viaStdin('s'), stdin: true },
+  ] }));
+  const file = path.join(home, 't.json');
+  fs.writeFileSync(file, JSON.stringify({ agents: ['a', 's'] }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'trap.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Run folder: (.+)/)[1].trim();
+  const ep = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
+  expect(ep.rounds[1].puzzle).toBe('puzzle-s');
+  expect(ep.agents[1].after).toBe('AFTER-s');
+});
