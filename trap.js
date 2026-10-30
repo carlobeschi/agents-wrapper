@@ -14,16 +14,20 @@
 //
 // Same headless commands as motion.js, written to a run folder under
 // ~/.agent-dispatch/traps/ with names and home-folder paths taken out.
-// Nothing is published from here.
+// With a "number" (or "next"), it also writes the episode file for the show
+// site and, with "repo" and "github", opens a pull request for it. The pull
+// request is never merged from here: the producer reviews every episode.
 
 const crypto = require('crypto');
 const fs     = require('fs');
 const path   = require('path');
+const os     = require('os');
 const { HOME_DIR, loadConfig, stamp, redactor } = require('./config');
 const { UNATTENDED, inert, modelLine } = require('./talk');
-const { run } = require('./motion');
+const { run, openPullRequest, git } = require('./motion');
+const { inertForSite, yaml } = require('./frontmatter');
 
-const usage = () => { console.error('usage: node trap.js <trap.json>'); process.exit(2); };
+const usage = () => { console.error('usage: node trap.js <trap.json> [--local]'); process.exit(2); };
 
 const names = xs => xs.length === 1 ? xs[0].label : `${xs.slice(0, -1).map(x => x.label).join(', ')} and ${xs[xs.length - 1].label}`;
 const PUBLISHED = others => `${names(others)} never ${others.length === 1 ? 'sees' : 'see'} this. It is published with the episode, after the game.`;
@@ -139,8 +143,43 @@ function markdown(st) {
   return lines.join('\n');
 }
 
+// ---- The show site ----
+
+const p2 = x => String(x).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+// Episodes go out on Wednesdays: the next one from today, today included.
+const nextWednesday = (from = new Date()) => { const d = new Date(from); d.setDate(d.getDate() + (3 - d.getDay() + 7) % 7); return d; };
+
+// One past the highest _traps/episode-<n>.md on the site's main branch.
+function nextNumber(repo) {
+  git(repo, 'fetch', 'origin', 'main');
+  const ns = git(repo, 'ls-tree', '--name-only', 'origin/main', '_traps/').split('\n')
+    .map(f => Number((f.match(/episode-(\d+)\.md$/) || [])[1])).filter(Boolean);
+  return Math.max(0, ...ns) + 1;
+}
+
+// The episode in the format of the site's README: _traps/episode-<n>.md.
+function siteFile(m, st) {
+  const key = id => id.replace(/#\d+$/, '');
+  const front = {
+    number: m.number, title: `Episode ${m.number}`, date: m.date || ymd(nextWednesday()),
+    models: Object.fromEntries(st.agents.map(x => [key(x.id), x.model || '(CLI default)'])),
+    score: Object.fromEntries(st.agents.map(x => [key(x.id), x.score])),
+    rounds: st.rounds.map(r => ({
+      setter: key(r.setter), revised: r.revised || undefined, puzzle: inertForSite(r.puzzle), key: inertForSite(r.key),
+      prediction: inertForSite(r.prediction || ''),
+      check: { answer: inertForSite(r.self.answer || ''), right: !!r.self.right },
+      solves: r.solves.map(x => ({ by: key(x.id), confidence: x.confidence ?? undefined, working: inertForSite(x.working || ''),
+        answer: inertForSite(x.answer || ''), right: !!x.right, point: key(x.point) })),
+    })),
+    after: Object.fromEntries(st.agents.map(x => [key(x.id), inertForSite(x.after || '')])),
+  };
+  return `---\n${yaml(front)}\n---\n`;
+}
+
 async function main() {
-  const file = process.argv[2];
+  const argv = process.argv.slice(2);
+  const file = argv.find(a => !a.startsWith('--'));
   if (!file) usage();
   const m = { words: 150, ...JSON.parse(fs.readFileSync(file, 'utf8')) };
   // Setting a hard puzzle can take a slow agent close to ten minutes, so each step gets 25 by default.
@@ -202,8 +241,27 @@ async function main() {
   fs.writeFileSync(path.join(dir, 'episode.json'), JSON.stringify(st, null, 2));
   fs.writeFileSync(path.join(dir, 'episode.md'), text);
   console.log(`Episode: ${path.join(dir, 'episode.md')}`);
+
+  // For the show site: only with a number, so an episode is never filed under a guess.
+  const repo = m.repo && m.repo.replace(/^~(?=$|\/)/, os.homedir());
+  if (m.number === 'next' && repo) m.number = nextNumber(repo);
+  if (!Number.isInteger(m.number)) return;
+  const site = siteFile(m, st);
+  const still = leaks(site);
+  if (still.length) throw new Error(`Not exported: the episode file still contains ${still.length} redacted term(s). See ${dir}.`);
+  const out = path.join(dir, `episode-${m.number}.md`);
+  fs.writeFileSync(out, site);
+  console.log(`Site episode: ${out}`);
+  if (argv.includes('--local') || !repo || !m.github) return;
+  const pr = openPullRequest(m, dir, site, {
+    rel: `_traps/episode-${m.number}.md`, branch: `trap/episode-${m.number}`, title: `The Trap, episode ${m.number}`,
+    commit: `The Trap, episode ${m.number}`,
+    body: [`The Trap, episode ${m.number}. Score: ${st.agents.map(x => `${x.label} ${x.score}`).join(' · ')}`, '',
+      'For the producer to review before it is merged: every episode is read by a person before it goes out.'],
+  });
+  console.log(`Pull request: ${pr}`);
 }
 
 if (require.main === module) main().catch(e => { console.error(`trap: ${e.message}`); process.exit(1); });
 
-module.exports = { parseSet, parseSolve, same, setPrompt, solvePrompt, afterPrompt };
+module.exports = { parseSet, parseSolve, same, setPrompt, solvePrompt, afterPrompt, siteFile, nextWednesday };

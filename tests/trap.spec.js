@@ -26,8 +26,8 @@ test('three agents: each sets a puzzle, the others solve it, the app rules and t
     { id: 'c', label: 'Agent C', headless: fake('c', '7', '9') },
   ] }));
   const file = path.join(home, 't.json');
-  fs.writeFileSync(file, JSON.stringify({ agents: ['a', 'b', 'c'], names: ['Ada', 'Bea', 'Cy'] }));
-  const out = execFileSync('node', [path.join(__dirname, '..', 'trap.js'), file],
+  fs.writeFileSync(file, JSON.stringify({ agents: ['a', 'b', 'c'], names: ['Ada', 'Bea', 'Cy'], number: 3, date: '2026-11-04' }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'trap.js'), file, '--local'],
     { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
   const dir = out.match(/Run folder: (.+)/)[1].trim();
   const read = f => fs.readFileSync(path.join(dir, 'steps', f), 'utf8');
@@ -56,6 +56,24 @@ test('three agents: each sets a puzzle, the others solve it, the app rules and t
   expect(md).toContain('failed, so the puzzle is void');
   expect(md).toContain('**Ada: 42** · Void · point to Ada');
   expect(md.indexOf('## After (private)')).toBeGreaterThan(md.indexOf("## Cy's puzzle"));
+
+  // The file for the show site: scores, every round and the private pieces, keyed by agent id.
+  expect(out).not.toContain('Pull request');
+  const site = fs.readFileSync(path.join(dir, 'episode-3.md'), 'utf8');
+  expect(site).toMatch(/^---\nnumber: 3\ntitle: "Episode 3"\ndate: "2026-11-04"\n/);
+  expect(site).toContain('score:\n  a: 4\n  b: 2\n  c: 0');
+  expect(site).toContain('setter: "c"');
+  expect(site).toContain('check:\n      answer: "9"\n      right: false');
+  expect(site).toContain('prediction: "PRIVATE-a"');
+  expect(site).toContain('a: "AFTER-a"');
+});
+
+test('a Trap episode is dated the next Wednesday, today included', () => {
+  const { nextWednesday } = require('../trap');
+  const day = s => nextWednesday(new Date(`${s}T10:00:00`)).toDateString();
+  expect(day('2026-11-03')).toBe(new Date('2026-11-04T10:00:00').toDateString());
+  expect(day('2026-11-04')).toBe(new Date('2026-11-04T10:00:00').toDateString());
+  expect(day('2026-11-05')).toBe(new Date('2026-11-11T10:00:00').toDateString());
 });
 
 test('answers compare as text, forgiving only case, spacing, quotes and number format', () => {
