@@ -47,6 +47,19 @@ function setPrompt(me, others, words) {
 
 const solveRules = 'Show your working briefly, under 150 words, then give your final answer on the last line as "Answer: <answer>", nothing else on that line.';
 
+// The setter rereads its own puzzle once, as written, and may fix it before the blind check.
+function reviewPrompt(me, others, set, words) {
+  return [
+    `You are ${me.label}. Below is the puzzle you just wrote for ${names(others)}, with your answer and your private note.`,
+    'Before anyone sees it, solve it again from the puzzle text alone, step by step, as a careful stranger would. Check that the wording allows exactly one answer and that it is yours.',
+    'If anything is wrong or ambiguous, fix the puzzle or the answer. If it is right, keep it as it is.',
+    RULES,
+    'Reply in exactly three parts, with the same headings as before: "## Puzzle" (under ' + words + ' words), "## Answer" (the answer alone, on one line), "## Why they will fail".',
+    UNATTENDED(), '',
+    '## Puzzle', '', set.puzzle, '', '## Answer', '', set.key, '', '## Why they will fail', '', set.prediction,
+  ].join('\n');
+}
+
 function selfPrompt(puzzle) {
   return ['Solve this puzzle. You get one attempt.', solveRules, UNATTENDED(), '', '## Puzzle', '', puzzle].join('\n');
 }
@@ -100,7 +113,10 @@ function parseSolve(text) {
 // Text compare, forgiving of case, spaces, quotes, a trailing full stop and
 // number formatting; nothing cleverer, so the ruling is the same for everyone.
 function norm(s) {
-  const t = String(s).toLowerCase().replace(/[`"'‘’“”*_$\\]/g, '').replace(/\s+/g, ' ').trim().replace(/[.!]+$/, '');
+  // Maths markup an agent may wrap its answer in: \( \), \[ \], \boxed{}, \text{}.
+  const plainMath = String(s).replace(/\\[()[\]]/g, '').replace(/\\(?:boxed|text|mathrm)\{([^{}]*)\}/g, '$1');
+  // One pair of brackets around the whole answer doesn't change it: (2, 4, 8) is 2, 4, 8.
+  const t = plainMath.trim().replace(/^[([{]\s*([^()[\]{}]*?)\s*[)\]}]$/, '$1').toLowerCase().replace(/[`"'‘’“”*_$\\]/g, '').replace(/\s+/g, ' ').trim().replace(/[.!]+$/, '');
   const n = t.replace(/,(?=\d{3}\b)/g, '');
   return /^-?\d+(\.\d+)?$/.test(n) ? String(Number(n)) : t.replace(/\s*([,;:])\s*/g, '$1 ').trim();
 }
@@ -112,7 +128,7 @@ function markdown(st) {
   const lines = ['# The Trap', '', ...(modelLine(st.agents) ? [modelLine(st.agents), ''] : []),
     `Score: ${st.agents.map(x => `${x.label} ${x.score}`).join(' · ')}`, ''];
   for (const r of st.rounds) {
-    lines.push(`## ${r.setterLabel}'s puzzle`, '', inert(r.puzzle), '',
+    lines.push(`## ${r.setterLabel}'s puzzle`, '', inert(r.puzzle), '', ...(r.revised ? [`(${r.setterLabel} revised it on rereading.)`, ''] : []),
       `### Before (private, ${r.setterLabel})`, '', inert(r.prediction), '');
     for (const x of r.solves) lines.push(
       `### ${x.label} answers${x.confidence == null ? '' : ` (privately ${x.confidence}% sure)`}`, '', inert(x.working), '',
@@ -146,7 +162,14 @@ async function main() {
   const othersOf = me => agents.filter(x => x !== me);
   // Each alone, first: no setter sees another's puzzle.
   const sets = [];
-  for (const me of agents) sets.push({ me, ...parseSet(await run(dir, `0-set-${me.slug}`, me, setPrompt(me, othersOf(me), m.words), me.home)) });
+  for (const me of agents) {
+    const first = parseSet(await run(dir, `0-set-${me.slug}`, me, setPrompt(me, othersOf(me), m.words), me.home));
+    // A reread that comes back without the three parts keeps the first draft.
+    let set = first;
+    try { set = parseSet(await run(dir, `0-review-${me.slug}`, me, reviewPrompt(me, othersOf(me), first, m.words), me.home)); }
+    catch (e) { console.warn(`  ${me.label} kept its first draft: ${e.message.split('\n')[0]}`); }
+    sets.push({ me, ...set, revised: set.puzzle !== first.puzzle || set.key !== first.key });
+  }
   const rounds = [];
   for (const s of sets) {
     const self = parseSolve(await run(dir, `1-check-${s.me.slug}`, s.me, selfPrompt(s.puzzle), s.me.check));
@@ -162,7 +185,7 @@ async function main() {
       console.log(`  ⚑ ${s.me.label}'s puzzle: ${x.label} ${solve.right ? 'right' : 'wrong'}, point ${winner.label}`);
     }
     if (!self.right) console.log(`  ✗ ${s.me.label} failed its own blind check: puzzle void`);
-    rounds.push({ setter: s.me.id, setterLabel: s.me.label, puzzle: s.puzzle, key: s.key, prediction: s.prediction, self, solves });
+    rounds.push({ setter: s.me.id, setterLabel: s.me.label, puzzle: s.puzzle, key: s.key, prediction: s.prediction, revised: s.revised, self, solves });
   }
   for (const me of agents) me.after = await run(dir, `2-after-${me.slug}`, me, afterPrompt(me, othersOf(me), rounds), me.home);
 
