@@ -58,3 +58,8 @@ test('a scare over the word cap is cut there; ratings and predictions are read f
   expect(parseRating('no number').scared).toBe(null);
   expect(predictions('- **Gemini**: 6, it fears loops\nCodex — 3', [{ id: 'g', label: 'Gemini' }, { id: 'c', label: 'Codex' }])).toEqual({ g: 6, c: 3 });
 });
+
+test('site text: tags and brackets are made inert outside code spans, left as they are inside them', () => {
+  const { inertForSite } = require('../frontmatter');
+  expect(inertForSite('1. `<thinking>` and <b>[x]</b> then `[EVAL]`')).toBe('1. `<thinking>` and \\<b>\\[x]\\</b> then `[EVAL]`');
+});
