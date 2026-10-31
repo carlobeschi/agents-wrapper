@@ -24,6 +24,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 const { HOME_DIR, loadConfig, stamp } = require('./config');
 const { runMotion, run, openPullRequest } = require('./motion');
+const { guard, publicGit } = require('./publish');
 const { motionCardFor } = require('./motion-card');
 const { renderCard } = require('./card');
 const { unyaml } = require('./frontmatter');
@@ -73,14 +74,17 @@ function report(repo, date, result, files = {}) {
   const work = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-queue-'));
   try {
     git(repo, 'worktree', 'add', '--detach', work, 'origin/queue');
-    fs.writeFileSync(path.join(work, 'queue', `${date}.result.json`), JSON.stringify(result, null, 2) + '\n');
+    // The queue branch is public too: same identity and the same private terms as an episode.
+    const { redact, leaks } = guard();
+    fs.writeFileSync(path.join(work, 'queue', `${date}.result.json`), redact(JSON.stringify(result, null, 2)) + '\n');
     for (const [name, from] of Object.entries(files)) {
+      if (/\.(md|json|txt)$/.test(name) && leaks(fs.readFileSync(from, 'utf8')).length) { console.warn(`Not queued: ${name} holds a private term.`); continue; }
       fs.mkdirSync(path.join(work, 'queue', date), { recursive: true });
       fs.copyFileSync(from, path.join(work, 'queue', date, name));
     }
-    git(work, 'add', 'queue');
-    git(work, 'commit', '-m', `Result for ${date}: ${result.status}`);
-    git(work, 'push', 'origin', 'HEAD:queue');
+    publicGit(work, 'add', 'queue');
+    publicGit(work, 'commit', '-m', `Result for ${date}: ${result.status}`);
+    publicGit(work, 'push', 'origin', 'HEAD:queue');
   } finally {
     try { git(repo, 'worktree', 'remove', '--force', work); } catch { fs.rmSync(work, { recursive: true, force: true }); }
   }
