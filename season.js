@@ -21,6 +21,7 @@ const { HOME_DIR, loadConfig, fill, agentEnv, stamp, redactor } = require('./con
 const { stripAnsi } = require('./talk');
 const { cardFor, renderCard } = require('./card');
 const { inertForSite, plain, yaml } = require('./frontmatter');
+const { openGuardedPullRequest } = require('./publish');
 
 const POLL = 2000;
 const EDITOR_TIMEOUT = 5 * 60 * 1000;
@@ -113,27 +114,17 @@ function daySize(storyDir, st, n) {
 const git = (repo, ...args) => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
 function openPullRequest(season, n, file, text, title, card) {
-  const repo = season.repo.replace(/^~(?=$|\/)/, os.homedir());
-  const branch = `episode/s${season.season}-day-${n}`;
   const rel = `_episodes/s${season.season}/day-${n}.md`;
   const cardRel = `assets/cards/s${season.season}/day-${n}.png`;
-  git(repo, 'fetch', 'origin', 'main');
-  git(repo, 'checkout', '-B', branch, 'origin/main');
-  fs.mkdirSync(path.dirname(path.join(repo, rel)), { recursive: true });
-  fs.writeFileSync(path.join(repo, rel), text);
-  git(repo, 'add', rel);
-  if (card) {
-    fs.mkdirSync(path.dirname(path.join(repo, cardRel)), { recursive: true });
-    fs.copyFileSync(card, path.join(repo, cardRel));
-    git(repo, 'add', cardRel);
-  }
-  git(repo, 'commit', '-m', `Season ${season.season}, day ${n}: ${title}`);
-  git(repo, 'push', '-u', 'origin', branch, '--force-with-lease');
-  const body = [`Season ${season.season}, day ${n}: **${title}**.`, '',
-    card ? `Merge to publish. The change is the episode file and its quote card, \`${cardRel}\`.` : 'Merge to publish. The episode file is the whole change.',
-    '', `Run folder on the laptop: \`${file}\``].join('\n');
-  return execFileSync('gh', ['pr', 'create', '--repo', season.github, '--head', branch, '--base', 'main',
-    '--title', `S${season.season} day ${n}: ${title}`, '--body', body], { cwd: repo, encoding: 'utf8' }).trim();
+  return openGuardedPullRequest({
+    repo: season.repo, github: season.github, branch: `episode/s${season.season}-day-${n}`, redact: season.redact,
+    files: [{ rel, text }, ...(card ? [{ rel: cardRel, src: card }] : [])],
+    commit: `Season ${season.season}, day ${n}: ${title}`,
+    title: `S${season.season} day ${n}: ${title}`,
+    body: [`Season ${season.season}, day ${n}: **${title}**.`, '',
+      card ? `Merge to publish. The change is the episode file and its quote card, \`${cardRel}\`.` : 'Merge to publish. The episode file is the whole change.',
+      '', `Run folder on the laptop: \`${file}\``].join('\n'),
+  });
 }
 
 // ---- The quote card ----

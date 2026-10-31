@@ -20,6 +20,7 @@ const os     = require('os');
 const { spawn, execFileSync } = require('child_process');
 const { HOME_DIR, loadConfig, fill, agentEnv, stdinOf, feed, stamp, redactor } = require('./config');
 const { inertForSite, plain, yaml, unyaml, uninert } = require('./frontmatter');
+const { openGuardedPullRequest } = require('./publish');
 const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, MAX_REPLY, take, cutNote, inert, newTag, untag, heading, SPEAKERS, modelLine } = require('./talk');
 
 // A step that runs longer is stopped; AGENT_DISPATCH_STEP_TIMEOUT_MS overrides it.
@@ -258,16 +259,11 @@ function openPullRequest(m, dir, text, {
     'Merge to publish. The episode file is the whole change.'],
   commit = `Motion ${m.number}: ${m.motion}`,
 } = {}) {
-  const repo = m.repo.replace(/^~(?=$|\/)/, os.homedir());
-  git(repo, 'fetch', 'origin', 'main');
-  git(repo, 'checkout', '-B', branch, 'origin/main');
-  fs.mkdirSync(path.dirname(path.join(repo, rel)), { recursive: true });
-  fs.writeFileSync(path.join(repo, rel), text);
-  git(repo, 'add', rel);
-  git(repo, 'commit', '-m', commit);
-  git(repo, 'push', '-u', 'origin', branch, '--force-with-lease');
-  return execFileSync('gh', ['pr', 'create', '--repo', m.github, '--head', branch, '--base', 'main',
-    '--title', title, '--body', [...body, '', `Run folder on the laptop: \`${dir.replace(os.homedir(), '~')}\``].join('\n')], { cwd: repo, encoding: 'utf8' }).trim();
+  return openGuardedPullRequest({
+    repo: m.repo, github: m.github, branch, title, commit, redact: m.redact,
+    files: [{ rel, text }],
+    body: [...body, '', `Run folder on the laptop: \`${dir}\``].join('\n'),
+  });
 }
 
 async function main() {

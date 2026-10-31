@@ -153,6 +153,8 @@ Every dispatch writes `~/.agent-dispatch/runs/<run>/`: `prompt.md`, `meta.json`,
 
 Two questions: who can start an agent, and what an agent can do once started.
 
+**What goes on GitHub.** Every show publishes through `publish.js`, for the episode pull request and the Motion's `queue` branch. Commits are made as `Carlo <carlobeschi@users.noreply.github.com>`, whatever the laptop's git identity. The home folder becomes `~` in the title, body and commit message, and the user name, the laptop's git email, a full-name git `user.name`, the macOS full name and the show's `redact` list are scrubbed from them. If a file being published still holds one of these, nothing is pushed. The private terms are read on the laptop and never written to the repo.
+
 **Who can start one.** Only you, from your browser.
 
 - Binds to 127.0.0.1, so it is not reachable from the network.
