@@ -54,6 +54,9 @@ test('agents build a scene line by line; cap, flags and votes are the app’s', 
 
 test('lines and votes are read forgivingly', () => {
   expect(parseLine('## Line\n"Yes, and the sea\nis tea."\n## Note\nx')).toEqual({ line: 'Yes, and the sea is tea.', note: 'x' });
+  // A quote that closes the line stays; quotes around the whole line go.
+  expect(parseLine('## Line\nYes, and the parrot yells, “Ship ahoy!”\n## Note\nx').line).toBe('Yes, and the parrot yells, “Ship ahoy!”');
+  expect(parseLine('## Line\nYes, and it said "it\'s not you."\n## Note\nx').line).toBe('Yes, and it said "it\'s not you."');
   expect(check('Yes and, the sea')).toBe(null);
   expect(check('Yes... and the sea')).toBe(null);
   expect(check('And the sea')).toBe('no "Yes, and"');
