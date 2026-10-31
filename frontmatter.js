@@ -9,7 +9,8 @@ function inertForSite(text) {
   let fenced = false;
   return String(text).split('\n').map(l => {
     if (/^\s*(```|~~~)/.test(l)) { fenced = !fenced; return l; }
-    return fenced ? l : l.replace(/([<\[{])/g, '\\$1');
+    // Inside an inline code span a backslash shows as it is, and the span is already inert.
+    return fenced ? l : l.split(/(`+[^`]*`+)/).map((part, i) => i % 2 ? part : part.replace(/([<\[{])/g, '\\$1')).join('');
   }).join('\n');
 }
 
