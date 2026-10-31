@@ -92,9 +92,16 @@ function votePrompt(me, others, starter, lines) {
 function parseLine(text) {
   const t = String(text).trim();
   const at = t.search(/^#{1,6}\s*Note\b/im);
-  const line = (at < 0 ? t : t.slice(0, at)).replace(/^#{1,6}\s*Line\b[^\n]*\n/im, '').replace(/^\s*["“]|["”]\s*$/g, '').replace(/\s*\n\s*/g, ' ').trim();
+  const line = (at < 0 ? t : t.slice(0, at)).replace(/^#{1,6}\s*Line\b[^\n]*\n/im, '').replace(/\s*\n\s*/g, ' ').trim();
   const note = at < 0 ? '' : t.slice(at).replace(/^#{1,6}\s*Note\b[^\n]*\n?/i, '').trim();
-  return { line, note };
+  return { line: unquote(line), note };
+}
+
+// A line wrapped in quotes as a whole loses them; a quote that only closes
+// the line ("... yelling, “Ship!”") stays.
+function unquote(line) {
+  const m = line.match(/^["“](.*)["”]$/);
+  return m && !/["“”]/.test(m[1]) ? m[1].trim() : line;
 }
 
 function parseVote(text) {
