@@ -218,6 +218,110 @@ async function ask(dir, key, me, prompt, cwd) {
 
 const shuffle = xs => { const a = xs.slice(); for (let i = a.length - 1; i > 0; i--) { const j = crypto.randomInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
+// ---- Solo: one agent makes the whole book, for comparison ----
+//
+// With "solo": true, each agent in "agents" makes its own book alone, with the
+// same brief, spread count, word cap and picture rules: it writes all the text
+// in one go, then draws every picture from the whole text. No near misses, no
+// matching: there is no one else to read it. Each book goes in books[].
+
+function soloWritePrompt(me, m, why) {
+  return [
+    `You are ${me.label}. You are making a short picture book on your own, for children and the grown-ups who read to them. The topic: ${m.topic}.`,
+    `It has ${m.spreads} spreads; each is a few words of text and one picture, which you will draw yourself afterwards, from the words.`,
+    ...brief(m),
+    `At most ${m.words} words per spread, simple ones, worth reading aloud. The app counts, and sends back a spread that is longer.`,
+    WORDS_RULE,
+    'Reply in exactly this shape:',
+    '## Text', `One line per spread, numbered 1 to ${m.spreads}: "1. <words>".`,
+    '## Title', 'One line: the title of the book.',
+    UNATTENDED(),
+    ...(why ? ['', `Your first text was sent back: ${why}. Write it again.`] : []),
+  ].join('\n');
+}
+
+function soloDrawPrompt(me, m, spreads, s, why) {
+  return [
+    `You are ${me.label}. You wrote a short picture book on your own, for children; the topic: ${m.topic}. Now you illustrate it.`,
+    `Draw the picture for spread ${s.n}.`,
+    ...brief(m),
+    rules(m.shapes, m.palette, [].concat(m.draw_rules || [])),
+    'Reply in exactly two parts, with these headings:',
+    '## Picture', 'The SVG alone, in an ```svg block, written straight into your reply (not to a file).',
+    '## Note', 'What you chose to show and why, under 40 words.',
+    UNATTENDED(),
+    '', 'The whole book:', '', ...bookSoFar(spreads, spreads.length), '',
+    `Your spread: ${s.n}. "${s.text}"`,
+    ...(why ? ['', `Your first picture was not accepted: ${why}. Draw it again within the rules.`] : []),
+  ].join('\n');
+}
+
+function parseSoloText(text, n) {
+  const t = String(text);
+  const lines = {};
+  for (const mm of t.matchAll(/^\s*\**(\d{1,2})[.):]\**\s+(.+)$/gm)) {
+    const k = Number(mm[1]);
+    if (k >= 1 && k <= n && !lines[k]) lines[k] = unquote(mm[2].replace(/\*\*/g, '').trim());
+  }
+  const title = (t.match(/^#{1,6}\s*Title\b[^\n]*\n+\s*(.+)$/im) || t.match(/^\s*title\s*:\s*(.+)$/im) || [])[1]?.replace(/[*_]/g, '').replace(/^["“](.*)["”]$/, '$1').trim() || '';
+  return { lines, title };
+}
+
+async function soloBooks(dir, agents, m) {
+  const books = [];
+  for (const me of agents) {
+    console.log(`Solo: ${me.label}`);
+    const check = r => {
+      const missing = Array.from({ length: m.spreads }, (_, i) => i + 1).filter(k => !r.lines[k]);
+      if (missing.length) return `spread ${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} missing`;
+      const long = Object.entries(r.lines).filter(([, v]) => count(v) > m.words).map(([k, v]) => `spread ${k} has ${count(v)} words`);
+      return long.length ? `${long.join(', ')}; the cap is ${m.words}` : '';
+    };
+    let r = parseSoloText(await ask(dir, `solo-${me.slug}-write`, me, soloWritePrompt(me, m), me.home), m.spreads);
+    let resent = check(r);
+    if (resent) {
+      const again = parseSoloText(await ask(dir, `solo-${me.slug}-write-again`, me, soloWritePrompt(me, m, resent), me.home), m.spreads);
+      r = { lines: { ...r.lines, ...again.lines }, title: again.title || r.title };
+    }
+    const spreads = Array.from({ length: m.spreads }, (_, i) => {
+      const n = i + 1; let text = r.lines[n] || '', over = 0;
+      if (count(text) > m.words) { over = count(text); text = cut(text, m.words); }
+      return { n, text, words: count(text), cut: over || undefined };
+    });
+    for (const s of spreads) {
+      const key = `solo-${me.slug}-${String(s.n).padStart(2, '0')}-draw`;
+      const prompt = why => soloDrawPrompt(me, m, spreads, s, why);
+      let d = parseDrawing((await ask(dir, key, me, prompt(), me.home)).replace(/^(#{1,6}\s*)Picture\b/im, '$1Drawing'));
+      let out = broken(d.svg, m.shapes);
+      if (out) {
+        console.warn(`  ↻ ${key}: ${out}, drawing again`);
+        s.redrawn = out;
+        d = parseDrawing((await ask(dir, `${key}-again`, me, prompt(out), me.home)).replace(/^(#{1,6}\s*)Picture\b/im, '$1Drawing'));
+        out = broken(d.svg, m.shapes);
+      }
+      s.drawNote = d.note;
+      const file = `pictures/solo-${me.slug}-${s.n}${out ? '-out' : ''}.svg`;
+      if (d.svg) fs.writeFileSync(path.join(dir, file), d.svg);
+      if (out) { s.out = out; if (d.svg) { s.outSvg = d.svg; s.file = file; } }
+      else { s.svg = d.svg; s.shapes = shapeCount(d.svg); s.file = file; }
+      console.log(`  ${s.n}. ${out ? `✗ ${out}` : `✎ ${s.shapes} shapes`}: ${s.text}`);
+    }
+    books.push({ id: me.id, label: me.label, model: me.model, title: r.title, resent: resent || undefined, spreads });
+  }
+  const { redact, leaks } = redactor(m.redact);
+  const rd = t => t == null ? t : redact(t);
+  const st = { topic: m.topic, words: m.words, shapes: m.shapes, solo: true,
+    books: books.map(b => ({ ...b, title: rd(b.title), spreads: b.spreads.map(s => ({ ...s, text: rd(s.text), drawNote: rd(s.drawNote) })) })),
+    usage: tally };
+  const md = st.books.flatMap(b => [`# ${b.label}: ${inert(b.title || '(untitled)')}`, '',
+    ...b.spreads.flatMap(s => [`## ${s.n}`, '', `**${inert(s.text)}**`, '', s.file ? `![${s.n}](${s.file})` : `(no picture: ${s.out})`, ''])]).join('\n');
+  const left = leaks(md + JSON.stringify(st));
+  if (left.length) throw new Error(`Not written: the books still contain ${left.length} redacted term(s). See ${dir}/steps.`);
+  fs.writeFileSync(path.join(dir, 'book.json'), JSON.stringify(st, null, 2));
+  fs.writeFileSync(path.join(dir, 'book.md'), md);
+  console.log(`Usage: ${agents.map(x => `${x.label} ${tally[x.id]?.calls || 0} calls, ~${tally[x.id]?.est_tokens || 0} tokens sent and received`).join(' · ')}\nBooks: ${path.join(dir, 'book.md')}`);
+}
+
 async function main() {
   const argv = process.argv.slice(2);
   const file = argv.find(a => !a.startsWith('--'));
@@ -225,8 +329,8 @@ async function main() {
   const m = { spreads: 9, words: 25, shapes: 12, decoys: false, topic: 'life as an AI agent', title: 'Pass the Page', ...JSON.parse(fs.readFileSync(file, 'utf8')) };
   process.env.AGENT_DISPATCH_STEP_TIMEOUT_MS ||= String((Number(m.timeout_min) || 15) * 60 * 1000);
   const ids = Array.isArray(m.agents) ? m.agents : ['claude', 'antigravity', 'codex'];
-  if (ids.length !== 3) throw new Error(`${file}: "agents" must name three agents: a writer, an illustrator and a reader for each spread.`);
-  if (!Number.isInteger(m.spreads) || m.spreads < 3 || m.spreads % 3) throw new Error(`${file}: "spreads" must be a multiple of 3, so each agent writes, draws and reads as often.`);
+  if (!m.solo && ids.length !== 3) throw new Error(`${file}: "agents" must name three agents: a writer, an illustrator and a reader for each spread.`);
+  if (!m.solo && (!Number.isInteger(m.spreads) || m.spreads < 3 || m.spreads % 3)) throw new Error(`${file}: "spreads" must be a multiple of 3, so each agent writes, draws and reads as often.`);
   const cfg = loadConfig();
   const dir = path.join(HOME_DIR, 'books', `${stamp()}-${crypto.randomBytes(2).toString('hex')}`);
   const agents = ids.map((id, i) => {
@@ -237,6 +341,7 @@ async function main() {
   });
   for (const p of [path.join(dir, 'pictures'), ...agents.map(x => x.home)]) fs.mkdirSync(p, { recursive: true });
   console.log(`${m.title}\nRun folder: ${dir}`);
+  if (m.solo) return soloBooks(dir, agents, m);
   const othersOf = me => agents.filter(x => x !== me);
   const role = (n, k) => agents[(n - 1 + k) % 3];
 
