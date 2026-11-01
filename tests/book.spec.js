@@ -150,6 +150,39 @@ test('solo: each agent writes a whole book alone, then draws every page; long or
   expect(book.books[1].spreads[2].svg).toContain('<circle');
 });
 
+test('review: the author writes and draws alone, others review the draft, the author revises and redraws what it picks', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'book-review-'));
+  const agent = name => ['sh', '-c', `case "$1" in
+    *"Now revise it."*) printf '## Text\\n1. One new.\\n2. Two a.\\n3. Three new.\\n## Title\\nT-final\\n## Redraw\\n3, 9\\n## Response\\nTook b on 1.\\n';;
+    *"one of its reviewers"*) printf '## Verdict\\nFine ${name}.\\n## Spreads\\n1. change\\n2. keep\\n3. redraw\\n## Top three\\nX\\n';;
+    *"Draw the picture for spread"*) case "$1" in *"This is your revision"*) printf '## Picture\\n<svg viewBox="0 0 400 400"><rect width="9" height="9"/></svg>\\n## Note\\nNEW\\n';; *) printf '## Picture\\n<svg viewBox="0 0 400 400"><circle r="9"/></svg>\\n## Note\\nOLD\\n';; esac;;
+    *) printf '## Text\\n1. One a.\\n2. Two a.\\n3. Three a.\\n## Title\\nT-draft\\n';;
+  esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: ['a', 'b', 'c'].map(n => ({ id: n, label: `Agent ${n}`, headless: agent(n) })) }));
+  const file = path.join(home, 'b.json');
+  fs.writeFileSync(file, JSON.stringify({ agents: ['a', 'b', 'c'], review: true, spreads: 3, words: 6, brief: 'BRIEF-LINE' }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'book.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Run folder: (.+)/)[1].trim();
+  const read = f => fs.readFileSync(path.join(dir, 'steps', f), 'utf8');
+  expect(read('review-b.prompt.md')).toContain('Words: "Three a."');
+  expect(read('review-b.prompt.md')).toContain('<circle r="9"/>');
+  expect(read('revise-a.prompt.md')).toContain('Fine b.');
+  expect(read('revise-a.prompt.md')).toContain('Fine c.');
+  expect(read('final-a-03-draw.prompt.md')).toContain('Your earlier picture');
+  const book = JSON.parse(fs.readFileSync(path.join(dir, 'book.json'), 'utf8'));
+  expect(book.review).toBe(true);
+  expect(book.draft.title).toBe('T-draft');
+  expect(book.reviews.map(r => r.label)).toEqual(['Agent b', 'Agent c']);
+  expect(book.revision).toEqual({ redraw: [3], response: 'Took b on 1.' });
+  expect(book.final.title).toBe('T-final');
+  expect(book.final.spreads.map(s => [s.text, !!s.changed, !!s.redrawnInRevision])).toEqual([
+    ['One new.', true, false], ['Two a.', false, false], ['Three new.', true, true]]);
+  expect(book.final.spreads[0].svg).toContain('<circle');
+  expect(book.final.spreads[2].svg).toContain('<rect');
+  expect(book.usage.a.calls).toBe(1 + 3 + 1 + 1);
+});
+
 test('replies are read for text, matches and reviews', () => {
   expect(parseText('## Text\n"The comma waits."\n## Note\nA dot.')).toEqual({ text: 'The comma waits.', note: 'A dot.' });
   expect(parseText('A line\nover two.')).toEqual({ text: 'A line over two.', note: '' });
