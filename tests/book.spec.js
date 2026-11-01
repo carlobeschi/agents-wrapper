@@ -155,7 +155,7 @@ test('review: the author writes and draws alone, others review the draft, the au
   const agent = name => ['sh', '-c', `case "$1" in
     *"Now revise it."*) printf '## Text\\n1. One new.\\n2. Two a.\\n3. Three new.\\n## Title\\nT-final\\n## Redraw\\n3, 9\\n## Response\\nTook b on 1.\\n';;
     *"one of its reviewers"*) printf '## Verdict\\nFine ${name}.\\n## Spreads\\n1. change\\n2. keep\\n3. redraw\\n## Top three\\nX\\n';;
-    *"Draw the picture for spread"*) case "$1" in *"This is your revision"*) printf '## Picture\\n<svg viewBox="0 0 400 400"><rect width="9" height="9"/></svg>\\n## Note\\nNEW\\n';; *) printf '## Picture\\n<svg viewBox="0 0 400 400"><circle r="9"/></svg>\\n## Note\\nOLD\\n';; esac;;
+    *"Draw the picture for"*) case "$1" in *"This is your revision"*) printf '## Picture\\n<svg viewBox="0 0 400 400"><rect width="9" height="9"/></svg>\\n## Note\\nNEW\\n';; *) printf '## Picture\\n<svg viewBox="0 0 400 400"><circle r="9"/></svg>\\n## Note\\nOLD\\n';; esac;;
     *) printf '## Text\\n1. One a.\\n2. Two a.\\n3. Three a.\\n## Title\\nT-draft\\n';;
   esac`, 'x', '{prompt}'];
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: ['a', 'b', 'c'].map(n => ({ id: n, label: `Agent ${n}`, headless: agent(n) })) }));
