@@ -120,11 +120,11 @@ test('with decoys, writers add a near miss the illustrator never sees, and reade
   expect(s1.match.seen).toBe('a dot');
 });
 
-test('solo: each agent writes a whole book alone, then draws every page; long or missing spreads go back once', () => {
+test('solo: each agent writes a whole book alone, then draws every page; long or missing spreads go back once, a failed step costs one picture', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'book-solo-'));
-  // a leaves spread 3 out the first time; b writes it all at once.
+  // a leaves spread 3 out the first time; b writes it all at once, and b's drawing step for spread 2 always fails.
   const solo = name => ['sh', '-c', `case "$1" in
-    *"Draw the picture for spread"*) printf '## Picture\\n<svg viewBox="0 0 400 400"><circle r="9"/></svg>\\n## Note\\nN-${name}\\n';;
+    *"Draw the picture for spread"*) case "$1" in *"Your spread: 2."*) [ "${name}" = b ] && exit 1;; esac; printf '## Picture\\n<svg viewBox="0 0 400 400"><circle r="9"/></svg>\\n## Note\\nN-${name}\\n';;
     *"sent back"*) printf '## Text\\n3. Three for ${name}.\\n## Title\\nT2-${name}\\n';;
     *) case "${name}" in a) printf '## Text\\n1. One a.\\n2. Two a.\\n## Title\\nT-a\\n';; *) printf '## Text\\n1. One b.\\n**2.** Two b.\\n3. "Three b."\\n## Title\\n"Book B"\\n';; esac;;
   esac`, 'x', '{prompt}'];
@@ -145,6 +145,9 @@ test('solo: each agent writes a whole book alone, then draws every page; long or
   expect(book.books[0].resent).toBe('spread 3 is missing');
   expect(book.books[1].spreads[0].svg).toContain('<circle');
   expect(book.usage.a.calls).toBe(2 + 3);
+  expect(book.books[1].spreads[1]).toMatchObject({ out: expect.stringContaining('step failed') });
+  expect(book.books[1].spreads[1].svg).toBeUndefined();
+  expect(book.books[1].spreads[2].svg).toContain('<circle');
 });
 
 test('replies are read for text, matches and reviews', () => {
