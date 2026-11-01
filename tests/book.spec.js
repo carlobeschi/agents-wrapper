@@ -120,6 +120,33 @@ test('with decoys, writers add a near miss the illustrator never sees, and reade
   expect(s1.match.seen).toBe('a dot');
 });
 
+test('solo: each agent writes a whole book alone, then draws every page; long or missing spreads go back once', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'book-solo-'));
+  // a leaves spread 3 out the first time; b writes it all at once.
+  const solo = name => ['sh', '-c', `case "$1" in
+    *"Draw the picture for spread"*) printf '## Picture\\n<svg viewBox="0 0 400 400"><circle r="9"/></svg>\\n## Note\\nN-${name}\\n';;
+    *"sent back"*) printf '## Text\\n3. Three for ${name}.\\n## Title\\nT2-${name}\\n';;
+    *) case "${name}" in a) printf '## Text\\n1. One a.\\n2. Two a.\\n## Title\\nT-a\\n';; *) printf '## Text\\n1. One b.\\n**2.** Two b.\\n3. "Three b."\\n## Title\\n"Book B"\\n';; esac;;
+  esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: ['a', 'b'].map(n => ({ id: n, label: `Agent ${n}`, headless: solo(n) })) }));
+  const file = path.join(home, 'b.json');
+  fs.writeFileSync(file, JSON.stringify({ agents: ['a', 'b'], solo: true, spreads: 3, words: 6, brief: 'BRIEF-LINE' }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'book.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Run folder: (.+)/)[1].trim();
+  const read = f => fs.readFileSync(path.join(dir, 'steps', f), 'utf8');
+  expect(read('solo-a-write.prompt.md')).toContain('BRIEF-LINE');
+  expect(read('solo-a-write-again.prompt.md')).toContain('spread 3 is missing');
+  expect(read('solo-b-02-draw.prompt.md')).toContain('Your spread: 2. "Two b."');
+  expect(read('solo-b-02-draw.prompt.md')).not.toContain('One a.');
+  const book = JSON.parse(fs.readFileSync(path.join(dir, 'book.json'), 'utf8'));
+  expect(book.books.map(b => [b.label, b.title, b.spreads.map(s => s.text)])).toEqual([
+    ['Agent a', 'T2-a', ['One a.', 'Two a.', 'Three for a.']], ['Agent b', 'Book B', ['One b.', 'Two b.', 'Three b.']]]);
+  expect(book.books[0].resent).toBe('spread 3 is missing');
+  expect(book.books[1].spreads[0].svg).toContain('<circle');
+  expect(book.usage.a.calls).toBe(2 + 3);
+});
+
 test('replies are read for text, matches and reviews', () => {
   expect(parseText('## Text\n"The comma waits."\n## Note\nA dot.')).toEqual({ text: 'The comma waits.', note: 'A dot.' });
   expect(parseText('A line\nover two.')).toEqual({ text: 'A line over two.', note: '' });
