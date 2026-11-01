@@ -291,13 +291,19 @@ async function soloBooks(dir, agents, m) {
     for (const s of spreads) {
       const key = `solo-${me.slug}-${String(s.n).padStart(2, '0')}-draw`;
       const prompt = why => soloDrawPrompt(me, m, spreads, s, why);
-      let d = parseDrawing((await ask(dir, key, me, prompt(), me.home)).replace(/^(#{1,6}\s*)Picture\b/im, '$1Drawing'));
-      let out = broken(d.svg, m.shapes);
-      if (out) {
+      // A stuck or failed step costs that one picture, not the whole run.
+      const draw = async (k, why) => {
+        try { return parseDrawing((await ask(dir, k, me, prompt(why), me.home)).replace(/^(#{1,6}\s*)Picture\b/im, '$1Drawing')); }
+        catch (e) { console.warn(`  ✗ ${k}: ${e.message}`); return { svg: '', note: '', failed: e.message }; }
+      };
+      let d = await draw(key);
+      // A step that already failed after its own retry is not tried a third time.
+      let out = d.failed ? `step failed: ${d.failed}` : broken(d.svg, m.shapes);
+      if (out && !d.failed) {
         console.warn(`  ↻ ${key}: ${out}, drawing again`);
         s.redrawn = out;
-        d = parseDrawing((await ask(dir, `${key}-again`, me, prompt(out), me.home)).replace(/^(#{1,6}\s*)Picture\b/im, '$1Drawing'));
-        out = broken(d.svg, m.shapes);
+        d = await draw(`${key}-again`, out);
+        out = d.failed ? `step failed: ${d.failed}` : broken(d.svg, m.shapes);
       }
       s.drawNote = d.note;
       const file = `pictures/solo-${me.slug}-${s.n}${out ? '-out' : ''}.svg`;
