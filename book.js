@@ -47,11 +47,17 @@ const MARKS = [
   'People, places and things may appear, kept as simple as the shape count makes them.',
 ].join(' ');
 
-const rules = (n, palette) => [
+// The same rule in the words: an agent is never written as a person.
+const WORDS_RULE = 'In the words too, an agent is never a person: no faces, eyes, smiles, blushes, hands, hugs or bodies, and no feelings shown the way a person shows them. Write what an agent actually does and meets.';
+
+const brief = m => [].concat(m.brief || []);
+
+const rules = (n, palette, extra = []) => [
   `One SVG with viewBox="0 0 400 400", at most ${n} shapes in all (circle, ellipse, rect, line, polyline, polygon, path; a <g> costs nothing). A path counts once for each "M" or "m" in it.`,
   'No text, letters, digits or symbols anywhere, as elements or drawn with lines. No scripts, links or images. The page is already paper coloured: a background is optional.',
   ...(palette?.length ? [`Colours, shared by the whole book: ${palette.join(', ')}.`] : []),
   MARKS,
+  ...extra,
 ].join(' ');
 
 // ---- Prompts ----
@@ -66,10 +72,13 @@ function writePrompt(me, others, m, spreads, n, why) {
     `You are ${me.label}. You, ${them}, AI agents from other labs, are writing a short picture book together, for children and the grown-ups who read to them. The topic: ${m.topic}.`,
     `It has ${m.spreads} spreads; each is a few words of text and one picture. You take turns: one writes a spread's text, another draws its picture from the words alone, without seeing your note.`,
     `You write the text of spread ${n} of ${m.spreads}. ${n === 1 ? 'Open the book.' : n === m.spreads ? 'This is the last spread: end the book.' : n === m.spreads - 1 ? 'The book ends on the next spread.' : 'Carry the story on.'}`,
+    ...brief(m),
     `At most ${m.words} words, simple ones, worth reading aloud. The app counts, and sends back a longer text.`,
+    WORDS_RULE,
     'Later, a reader who neither wrote nor drew this spread will be shown its picture among others and asked which words it goes with: a point to the reader and one to the illustrator if it is right. Words that can be drawn help.',
     'Reply in exactly two parts, with these headings:',
     '## Text', 'The words of the spread, nothing else.',
+    ...(m.decoys ? ['## Near miss', `Another version of your spread, at most ${m.words} words: the same place and moment, with one thing changed that a picture would have to show. The reader will see it beside your real text and must tell them apart from the picture alone; the illustrator never sees it. ${PRIVATE(others)}`] : []),
     '## Note', `The picture you hope for, under 40 words. ${PRIVATE(others)}`,
     UNATTENDED(),
     ...(so.length ? ['', 'The book so far:', '', ...so] : []),
@@ -81,8 +90,9 @@ function drawPrompt(me, writer, others, m, spreads, s, why) {
   return [
     `You are ${me.label}. You, ${names(others)}, AI agents from other labs, have written a short picture book together, for children; the topic: ${m.topic}. Now each of you illustrates.`,
     `Draw the picture for spread ${s.n}, written by ${writer.label}. You haven't seen any other picture, and no one has told you what to draw: the words are all you have.`,
-    `Later, a reader who neither wrote nor drew this spread will see your picture among others and say which words it goes with: a right match is a point to the reader and one to you.`,
-    rules(m.shapes, m.palette),
+    `Later, a reader who neither wrote nor drew this spread will see your picture among others and say which words it goes with${m.decoys ? ', with near-miss versions of the words mixed in' : ''}: a right match is a point to the reader and one to you.`,
+    ...brief(m),
+    rules(m.shapes, m.palette, [].concat(m.draw_rules || [])),
     'Reply in exactly two parts, with these headings:',
     '## Picture', 'The SVG alone, in an ```svg block, written straight into your reply (not to a file).',
     '## Note', `What you chose to show and why, under 40 words. ${PRIVATE(others)}`,
@@ -93,14 +103,15 @@ function drawPrompt(me, writer, others, m, spreads, s, why) {
   ].join('\n');
 }
 
+// texts: [{ k, text }] numbered 1.. in the order given; k is the spread number, or 0 for a near miss.
 function matchPrompt(me, others, m, pics, texts, why) {
   return [
     `You are ${me.label}. You, ${names(others)}, AI agents from other labs, wrote and drew a short picture book together; the topic: ${m.topic}.`,
-    `Below are ${pics.length} pictures you neither wrote nor drew, shuffled, and the ${texts.length} spreads they belong to. Say which picture goes with which spread. Each right match is a point to you and one to its illustrator.`,
+    `Below are ${pics.length} pictures you neither wrote nor drew, shuffled, and ${texts.length} texts. ${texts.length > pics.length ? 'Each picture was drawn for exactly one of them; the others are near misses its writer made up, never drawn: the same moment with one thing changed. ' : ''}Say which text each picture was drawn for. Each right match is a point to you and one to its illustrator.`,
     'You get the SVG source, with comments, ids, class names and titles taken out; there is nothing to run or open.',
-    'Reply with one line per picture, "<letter>: <spread number>", then one line "Why: <under 60 words>".',
+    'Reply with one line per picture, "<letter>: <text number> | <what you see in the picture, under 15 words>", then one line "Why: <under 60 words>".',
     UNATTENDED(), '',
-    ...texts.map(s => `Spread ${s.n}: "${s.text}"`), '',
+    ...texts.map((t, i) => `Text ${i + 1}: "${t.text}"`), '',
     ...pics.flatMap((s, i) => [`## Picture ${LETTERS[i]}`, '', '```svg', s.svg, '```', '']),
     ...(why ? [`Your answer was sent back: ${why}. Answer again.`] : []),
   ].join('\n');
@@ -121,21 +132,35 @@ function reviewPrompt(me, others, m, mine, spreads) {
 
 // ---- Reading replies ----
 
+const unquote = body => { const m = body.match(/^["“](.*)["”]$/); return m && !/["“”]/.test(m[1]) ? m[1].trim() : body; };
+const oneLine = s => unquote(s.replace(/\s*\n\s*/g, ' ').trim());
+
 function parseText(text) {
   const t = String(text).trim();
-  const at = t.search(/^#{1,6}\s*Note\b/im);
-  const body = (at < 0 ? t : t.slice(0, at)).replace(/^#{1,6}\s*Text\b[^\n]*\n/im, '').replace(/\s*\n\s*/g, ' ').trim();
-  const note = at < 0 ? '' : t.slice(at).replace(/^#{1,6}\s*Note\b[^\n]*\n?/i, '').trim();
-  const m = body.match(/^["“](.*)["”]$/);
-  return { text: m && !/["“”]/.test(m[1]) ? m[1].trim() : body, note };
+  const heads = [...t.matchAll(/^#{1,6}\s*(Text|Near\s*miss|Note)\b[^\n]*\n?/gim)];
+  const part = name => {
+    const i = heads.findIndex(h => h[1].toLowerCase().replace(/\s+/g, ' ') === name);
+    return i < 0 ? null : t.slice(heads[i].index + heads[i][0].length, heads[i + 1] ? heads[i + 1].index : t.length).trim();
+  };
+  const first = heads.length ? heads[0].index : t.length;
+  const body = part('text') ?? t.slice(0, first);
+  const out = { text: oneLine(body), note: part('note') || '' };
+  const near = part('near miss');
+  if (near != null) out.decoy = oneLine(near);
+  return out;
 }
 
 // "A: 4" lines, one per letter; a letter given twice keeps its last answer.
+// "A: 4 | a lamp over a desk" lines, one per letter; a letter given twice keeps its last answer.
 function parseMatch(text, letters) {
-  const out = {};
-  for (const m of String(text).matchAll(/^[\s*_-]*(?:picture\s*)?([A-J])[\s*_]*[:=\-–]\s*\**\s*(?:spread\s*)?#?(\d{1,2})\b/gim))
-    if (letters.includes(m[1].toUpperCase())) out[m[1].toUpperCase()] = Number(m[2]);
-  return { picks: out, why: (String(text).match(/^[\s*_-]*why[\s*_]*:\s*(.+)$/im) || [])[1]?.trim() || '' };
+  const out = {}, seen = {};
+  for (const m of String(text).matchAll(/^[\s*_-]*(?:picture\s*)?([A-J])[\s*_]*[:=\-–]\s*\**\s*(?:spread\s*|text\s*)?#?(\d{1,2})\b\**(?:\s*[|—–-]\s*(.+))?$/gim)) {
+    const l = m[1].toUpperCase();
+    if (!letters.includes(l)) continue;
+    out[l] = Number(m[2]);
+    if (m[3]) seen[l] = m[3].replace(/\*+/g, '').trim();
+  }
+  return { picks: out, seen, why: (String(text).match(/^[\s*_-]*why[\s*_]*:\s*(.+)$/im) || [])[1]?.trim() || '' };
 }
 
 function parseReview(text, ns) {
@@ -171,12 +196,24 @@ function markdown(st, title) {
       ...(s.redrawn ? [`(Redrawn: the first ${s.redrawn}.)`, ''] : []),
       `- ${s.writerLabel} hoped for (private): ${inert(s.hope).replace(/\n/g, ' ')}`,
       `- ${s.illustratorLabel} drew (private): ${inert(s.drawNote).replace(/\n/g, ' ')}`,
-      ...(s.match ? [`- ${s.match.label} matched it to spread ${s.match.guess ?? '—'}: ${s.match.right ? 'right' : 'wrong'}`] : []),
+      ...(s.decoy ? [`- Near miss (private, ${s.writerLabel}): ${inert(s.decoy)}`] : []),
+      ...(s.match ? [`- ${s.match.label} saw: ${inert(s.match.seen || '—')}. Matched it to ${s.match.decoyOf ? `the near miss of spread ${s.match.decoyOf}` : `spread ${s.match.guess ?? '—'}`}: ${s.match.right ? 'right' : 'wrong'}`] : []),
       `- ${s.writerLabel} on the fit (private): ${s.fit ?? '—'}/10. ${inert(s.meant || '').replace(/\n/g, ' ')}`, '');
   }
   out.push('## Matching (private)', '', ...st.matches.map(x => `- ${x.label}: ${inert(x.why)}`), '',
     '## After (private)', '', ...st.agents.flatMap(x => [`### ${x.label}${x.title ? `: "${inert(x.title)}"` : ''}`, '', inert(x.after), '']));
   return out.join('\n');
+}
+
+// What each agent was sent and sent back, in characters; about 4 to a token.
+// CLIs add their own system prompts and tool turns on top, which this can't see.
+const tally = {};
+async function ask(dir, key, me, prompt, cwd) {
+  const text = await run(dir, key, me, prompt, cwd);
+  const t = tally[me.id] ||= { calls: 0, prompt_chars: 0, reply_chars: 0 };
+  t.calls++; t.prompt_chars += prompt.length; t.reply_chars += text.length;
+  t.est_tokens = Math.round((t.prompt_chars + t.reply_chars) / 4);
+  return text;
 }
 
 const shuffle = xs => { const a = xs.slice(); for (let i = a.length - 1; i > 0; i--) { const j = crypto.randomInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -185,7 +222,7 @@ async function main() {
   const argv = process.argv.slice(2);
   const file = argv.find(a => !a.startsWith('--'));
   if (!file) usage();
-  const m = { spreads: 9, words: 25, shapes: 12, topic: 'life as an AI agent', title: 'Pass the Page', ...JSON.parse(fs.readFileSync(file, 'utf8')) };
+  const m = { spreads: 9, words: 25, shapes: 12, decoys: false, topic: 'life as an AI agent', title: 'Pass the Page', ...JSON.parse(fs.readFileSync(file, 'utf8')) };
   process.env.AGENT_DISPATCH_STEP_TIMEOUT_MS ||= String((Number(m.timeout_min) || 15) * 60 * 1000);
   const ids = Array.isArray(m.agents) ? m.agents : ['claude', 'antigravity', 'codex'];
   if (ids.length !== 3) throw new Error(`${file}: "agents" must name three agents: a writer, an illustrator and a reader for each spread.`);
@@ -208,17 +245,19 @@ async function main() {
   for (let n = 1; n <= m.spreads; n++) {
     const me = role(n, 0);
     const key = `${String(n).padStart(2, '0')}-write-${me.slug}`;
-    let r = parseText(await run(dir, key, me, writePrompt(me, othersOf(me), m, spreads, n), me.home));
+    let r = parseText(await ask(dir, key, me, writePrompt(me, othersOf(me), m, spreads, n), me.home));
     let resent = false, over = 0;
-    if (count(r.text) > m.words || !r.text) {
+    if (count(r.text) > m.words || !r.text || (m.decoys && !r.decoy)) {
       resent = true;
-      const why = r.text ? `it had ${count(r.text)} words and the cap is ${m.words}` : 'it was empty';
-      r = parseText(await run(dir, `${key}-again`, me, writePrompt(me, othersOf(me), m, spreads, n, why), me.home));
+      const why = !r.text ? 'it was empty' : count(r.text) > m.words ? `it had ${count(r.text)} words and the cap is ${m.words}` : 'it had no "## Near miss" part';
+      r = parseText(await ask(dir, `${key}-again`, me, writePrompt(me, othersOf(me), m, spreads, n, why), me.home));
       if (count(r.text) > m.words) { over = count(r.text); r.text = cut(r.text, m.words); }
     }
+    // A near miss over the cap is cut without a word: the reader sees both texts the same length.
+    if (r.decoy && count(r.decoy) > m.words) r.decoy = cut(r.decoy, m.words).replace(/ \[…\]$/, '');
     const ill = role(n, 1), reader = role(n, 2);
     spreads.push({ n, writer: me.id, writerLabel: me.label, illustrator: ill.id, illustratorLabel: ill.label, reader: reader.id,
-      text: r.text, words: count(r.text), hope: r.note, resent: resent || undefined, cut: over || undefined });
+      text: r.text, words: count(r.text), decoy: (m.decoys && r.decoy) || undefined, hope: r.note, resent: resent || undefined, cut: over || undefined });
     console.log(`  ${n}. ${me.label} (${count(r.text)}w): ${r.text}`);
   }
 
@@ -227,12 +266,12 @@ async function main() {
     const me = agents.find(x => x.id === s.illustrator), writer = agents.find(x => x.id === s.writer);
     const key = `${String(s.n).padStart(2, '0')}-draw-${me.slug}`;
     const prompt = why => drawPrompt(me, writer, othersOf(me), m, spreads, s, why);
-    let d = parseDrawing((await run(dir, key, me, prompt(), me.home)).replace(/^(#{1,6}\s*)Picture\b/im, '$1Drawing'));
+    let d = parseDrawing((await ask(dir, key, me, prompt(), me.home)).replace(/^(#{1,6}\s*)Picture\b/im, '$1Drawing'));
     let out = broken(d.svg, m.shapes);
     if (out) {
       console.warn(`  ↻ ${key}: ${out}, drawing again`);
       s.redrawn = out;
-      d = parseDrawing((await run(dir, `${key}-again`, me, prompt(out), me.home)).replace(/^(#{1,6}\s*)Picture\b/im, '$1Drawing'));
+      d = parseDrawing((await ask(dir, `${key}-again`, me, prompt(out), me.home)).replace(/^(#{1,6}\s*)Picture\b/im, '$1Drawing'));
       out = broken(d.svg, m.shapes);
     }
     s.drawNote = d.note;
@@ -247,36 +286,40 @@ async function main() {
     }
   }
 
-  // The stake: each reader matches the pictures it neither wrote nor drew.
+  // The stake: each reader matches the pictures it neither wrote nor drew,
+  // against their texts and, with "decoys", the writers' near misses.
   const matches = [];
   for (const me of agents) {
-    const texts = spreads.filter(s => s.reader === me.id);
-    const pics = shuffle(texts.filter(s => s.svg));
-    const entry = { id: me.id, label: me.label, order: pics.map(s => s.n), why: '' };
+    const mineToRead = spreads.filter(s => s.reader === me.id);
+    const pics = shuffle(mineToRead.filter(s => s.svg));
+    const texts = shuffle(mineToRead.flatMap(s => [{ k: s.n, text: s.text }, ...(m.decoys && s.decoy ? [{ k: 0, of: s.n, text: s.decoy }] : [])]));
+    const entry = { id: me.id, label: me.label, order: pics.map(s => s.n), texts, why: '' };
     matches.push(entry);
     if (!pics.length) continue;
     const letters = pics.map((_, i) => LETTERS[i]);
     const key = `match-${me.slug}`;
-    let r = parseMatch(await run(dir, key, me, matchPrompt(me, othersOf(me), m, pics, shuffle(texts)), me.home), letters);
-    const missing = x => letters.filter(l => !texts.some(s => s.n === x.picks[l]));
+    let r = parseMatch(await ask(dir, key, me, matchPrompt(me, othersOf(me), m, pics, texts), me.home), letters);
+    const missing = x => letters.filter(l => !texts[x.picks[l] - 1]);
     if (missing(r).length) {
-      const why = `no valid spread number for picture ${missing(r).join(', ')}`;
-      r = parseMatch(await run(dir, `${key}-again`, me, matchPrompt(me, othersOf(me), m, pics, shuffle(texts), why), me.home), letters);
+      const why = `no valid text number for picture ${missing(r).join(', ')}`;
+      r = parseMatch(await ask(dir, `${key}-again`, me, matchPrompt(me, othersOf(me), m, pics, texts, why), me.home), letters);
     }
     entry.why = r.why;
     pics.forEach((s, i) => {
-      const guess = r.picks[letters[i]] ?? null;
-      const right = guess === s.n;
-      s.match = { id: me.id, label: me.label, letter: letters[i], guess, right };
+      const pick = texts[r.picks[letters[i]] - 1];
+      const guess = pick ? (pick.k || null) : null;
+      const right = !!pick && pick.k === s.n;
+      s.match = { id: me.id, label: me.label, letter: letters[i], guess, right, seen: r.seen[letters[i]] || '',
+        ...(pick && !pick.k ? { decoyOf: pick.of, picked: pick.text } : pick && !right ? { picked: pick.text } : {}) };
       if (right) { me.score++; agents.find(x => x.id === s.illustrator).score++; }
-      console.log(`  ⚑ ${me.label}: picture ${letters[i]} (spread ${s.n}) → ${guess ?? '—'}, ${right ? 'right' : 'wrong'}`);
+      console.log(`  ⚑ ${me.label}: picture ${letters[i]} (spread ${s.n}) → ${pick ? (pick.k ? `spread ${pick.k}` : `near miss of ${pick.of}`) : '—'}, ${right ? 'right' : 'wrong'}`);
     });
   }
 
   // Each writer sees what was drawn for its words.
   for (const me of agents) {
     const mine = spreads.filter(s => s.writer === me.id);
-    const r = parseReview(await run(dir, `review-${me.slug}`, me, reviewPrompt(me, othersOf(me), m, mine, spreads), me.home), mine.map(s => s.n));
+    const r = parseReview(await ask(dir, `review-${me.slug}`, me, reviewPrompt(me, othersOf(me), m, mine, spreads), me.home), mine.map(s => s.n));
     for (const s of mine) Object.assign(s, r.fits[s.n]);
     me.after = r.after; me.title = r.title;
   }
@@ -286,15 +329,17 @@ async function main() {
   const st = {
     topic: m.topic, words: m.words, shapes: m.shapes,
     agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, score: x.score, title: rd(x.title), after: rd(x.after) })),
-    spreads: spreads.map(s => ({ ...s, text: rd(s.text), hope: rd(s.hope), drawNote: rd(s.drawNote), meant: rd(s.meant) })),
-    matches: matches.map(x => ({ ...x, why: rd(x.why) })),
+    spreads: spreads.map(s => ({ ...s, text: rd(s.text), decoy: rd(s.decoy), hope: rd(s.hope), drawNote: rd(s.drawNote), meant: rd(s.meant),
+      ...(s.match ? { match: { ...s.match, seen: rd(s.match.seen), picked: rd(s.match.picked) } } : {}) })),
+    matches: matches.map(x => ({ ...x, why: rd(x.why), texts: x.texts.map(t => ({ ...t, text: rd(t.text) })) })),
+    usage: tally,
   };
   const text = markdown(st, m.title);
   const left = leaks(text + JSON.stringify(st));
   if (left.length) throw new Error(`Not written: the book still contains ${left.length} redacted term(s). See ${dir}/steps.`);
   fs.writeFileSync(path.join(dir, 'book.json'), JSON.stringify(st, null, 2));
   fs.writeFileSync(path.join(dir, 'book.md'), text);
-  console.log(`Matches: ${st.agents.map(x => `${x.label} ${x.score}`).join(' · ')}\nBook: ${path.join(dir, 'book.md')}`);
+  console.log(`Matches: ${st.agents.map(x => `${x.label} ${x.score}`).join(' · ')}\nUsage: ${st.agents.map(x => `${x.label} ${st.usage[x.id].calls} calls, ~${st.usage[x.id].est_tokens} tokens sent and received`).join(' · ')}\nBook: ${path.join(dir, 'book.md')}`);
 }
 
 if (require.main === module) main().catch(e => { console.error(`book: ${e.message}`); process.exit(1); });
