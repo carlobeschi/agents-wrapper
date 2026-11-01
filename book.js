@@ -225,15 +225,21 @@ const shuffle = xs => { const a = xs.slice(); for (let i = a.length - 1; i > 0; 
 // in one go, then draws every picture from the whole text. No near misses, no
 // matching: there is no one else to read it. Each book goes in books[].
 
+// Solo and review prompts default to a picture book; a config can make it another form
+// ("form", "audience", "unit", "unit_text", "style", "reader"), e.g. a short chapter story.
+const F = m => ({ form: m.form || 'short picture book', audience: m.audience || 'children and the grown-ups who read to them',
+  unit: m.unit || 'spread', unitText: m.unit_text || 'a few words of text', style: m.style || 'simple ones, worth reading aloud', reader: m.reader || 'a 7-year-old' });
+
 function soloWritePrompt(me, m, why) {
+  const f = F(m);
   return [
-    `You are ${me.label}. You are making a short picture book on your own, for children and the grown-ups who read to them. The topic: ${m.topic}.`,
-    `It has ${m.spreads} spreads; each is a few words of text and one picture, which you will draw yourself afterwards, from the words.`,
+    `You are ${me.label}. You are making a ${f.form} on your own, for ${f.audience}. The topic: ${m.topic}.`,
+    `It has ${m.spreads} ${f.unit}s; each is ${f.unitText} and one picture, which you will draw yourself afterwards, from the words.`,
     ...brief(m),
-    `At most ${m.words} words per spread, simple ones, worth reading aloud. The app counts, and sends back a spread that is longer.`,
+    `At most ${m.words} words per ${f.unit}, ${f.style}. The app counts, and sends back a ${f.unit} that is longer.`,
     WORDS_RULE,
     'Reply in exactly this shape:',
-    '## Text', `One line per spread, numbered 1 to ${m.spreads}: "1. <words>".`,
+    '## Text', `One line per ${f.unit}, numbered 1 to ${m.spreads}: "1. <words>" (all of a ${f.unit} on its one line).`,
     '## Title', 'One line: the title of the book.',
     UNATTENDED(),
     ...(why ? ['', `Your first text was sent back: ${why}. Write it again.`] : []),
@@ -241,9 +247,10 @@ function soloWritePrompt(me, m, why) {
 }
 
 function soloDrawPrompt(me, m, spreads, s, why, extra = []) {
+  const f = F(m);
   return [
-    `You are ${me.label}. You wrote a short picture book on your own, for children; the topic: ${m.topic}. Now you illustrate it.`,
-    `Draw the picture for spread ${s.n}.`,
+    `You are ${me.label}. You wrote a ${f.form} on your own, for ${f.audience}; the topic: ${m.topic}. Now you illustrate it.`,
+    `Draw the picture for ${f.unit} ${s.n}.`,
     ...brief(m),
     rules(m.shapes, m.palette, [].concat(m.draw_rules || [])),
     'Reply in exactly two parts, with these headings:',
@@ -251,7 +258,7 @@ function soloDrawPrompt(me, m, spreads, s, why, extra = []) {
     '## Note', 'What you chose to show and why, under 40 words.',
     UNATTENDED(),
     '', 'The whole book:', '', ...bookSoFar(spreads, spreads.length), '',
-    `Your spread: ${s.n}. "${s.text}"`,
+    `Your ${f.unit}: ${s.n}. "${s.text}"`,
     ...extra,
     ...(why ? ['', `Your first picture was not accepted: ${why}. Draw it again within the rules.`] : []),
   ].join('\n');
@@ -347,22 +354,23 @@ async function soloBooks(dir, agents, m) {
 // others reviews the draft (words and picture code); the author then revises,
 // says what it took and what it didn't, and redraws the pages it chooses.
 const draftLines = b => b.spreads.flatMap(s => [
-  `### Spread ${s.n}`, `Words: "${s.text}"`,
+  `### ${s.n}`, `Words: "${s.text}"`,
   s.svg || s.outSvg ? ['Picture:', '```svg', s.svg || s.outSvg, '```'].join('\n') : `Picture: none (${s.out})`,
   ...(s.out && (s.svg || s.outSvg) ? [`(This picture broke the rules: ${s.out}.)`] : []),
   ...(s.drawNote ? [`Author's note on the picture: ${s.drawNote}`] : []), '']);
 
 function critiquePrompt(me, author, m, draft) {
+  const f = F(m);
   return [
-    `You are ${me.label}. ${author.label} wrote and drew a short picture book on its own, and you are one of its reviewers. The topic: ${m.topic}.`,
+    `You are ${me.label}. ${author.label} wrote and drew a ${f.form} on its own, and you are one of its reviewers. The topic: ${m.topic}.`,
     'The brief it was given:', ...brief(m),
-    `Its limits: at most ${m.words} words per spread; each picture one SVG of at most ${m.shapes} shapes, no text. The picture rules it was given:`,
+    `Its limits: at most ${m.words} words per ${f.unit}; each picture one SVG of at most ${m.shapes} shapes, no text. The picture rules it was given:`,
     rules(m.shapes, m.palette, [].concat(m.draw_rules || [])),
-    'Review it as a careful editor of children\'s books who also knows how AI really works. Read each picture from its SVG code. Look for: anything untrue or misleading about AI; anything a 7-year-old would not follow; pictures that do not show what the words say; broken rules; and missed chances to make it funnier or clearer.',
+    `Review it as a careful editor of children\'s books who also knows how AI really works. Read each picture from its SVG code. Look for: anything untrue or misleading about AI; anything ${f.reader} would not follow or would find babyish; pictures that do not show what the words say; broken rules; and missed chances to make it funnier or clearer.`,
     'Be specific and kind, and be honest. You are not rewriting the book; the author decides what to change.',
     'Reply in exactly this shape, under 450 words in all:',
     '## Verdict', 'Two sentences.',
-    '## Spreads', `One line per spread, numbered 1 to ${m.spreads}: "<n>. <what to change in the words or the picture, or keep>".`,
+    '## Spreads', `One line per ${f.unit}, numbered 1 to ${m.spreads}: "<n>. <what to change in the words or the picture, or keep>".`,
     '## Top three', 'The three changes that matter most, most important first.',
     UNATTENDED(),
     '', `The draft: "${draft.title || '(untitled)'}"`, '', ...draftLines(draft),
@@ -370,16 +378,17 @@ function critiquePrompt(me, author, m, draft) {
 }
 
 function revisePrompt(me, m, draft, reviews, why) {
+  const f = F(m);
   return [
-    `You are ${me.label}. You wrote and drew a short picture book on your own; the topic: ${m.topic}. ${names(reviews)} reviewed your draft. Now revise it.`,
+    `You are ${me.label}. You wrote and drew a ${f.form} on your own; the topic: ${m.topic}. ${names(reviews)} reviewed your draft. Now revise it.`,
     'The brief:', ...brief(m),
-    `At most ${m.words} words per spread, simple ones, worth reading aloud. The app counts, and sends back a spread that is longer.`,
+    `At most ${m.words} words per ${f.unit}, ${f.style}. The app counts, and sends back a ${f.unit} that is longer.`,
     WORDS_RULE,
     'Take the feedback that makes the book better and leave the rest. You do not have to agree with your reviewers, but say why when you don\'t.',
     'Reply in exactly this shape:',
-    '## Text', `The whole revised text, one line per spread, numbered 1 to ${m.spreads}: "1. <words>".`,
+    '## Text', `The whole revised text, one line per ${f.unit}, numbered 1 to ${m.spreads}: "1. <words>" (all of a ${f.unit} on its one line).`,
     '## Title', 'One line.',
-    '## Redraw', 'The numbers of the spreads whose pictures you will draw again (comma-separated), or "none". Redraw a picture when its words changed in a way the old picture no longer shows, or when a reviewer showed it does not work.',
+    '## Redraw', `The numbers of the ${f.unit}s whose pictures you will draw again (comma-separated), or "none". Redraw a picture when its words changed in a way the old picture no longer shows, or when a reviewer showed it does not work.`,
     '## Response', 'For each reviewer, what you took and what you did not, and why. Under 200 words in all.',
     UNATTENDED(),
     '', `Your draft: "${draft.title || '(untitled)'}"`, '', ...draftLines(draft),
