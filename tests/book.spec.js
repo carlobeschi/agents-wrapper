@@ -13,13 +13,13 @@ const { parseText, parseMatch, parseReview } = require('../book');
 // answers A: 3, B: 6, C: 9.
 const fake = name => ['sh', '-c', `case "$1" in
   *"is finished and you are alone"*) printf '## Spread 1\\nFit: 7\\nMEANT-1-${name}\\n## Spread 2\\nFit: 4\\nMEANT-2-${name}\\n## Spread 3\\nFit: 9\\nMEANT-3-${name}\\n## Spread 4\\nFit: 2\\nMEANT-4\\n## Spread 5\\nFit: 2\\nMEANT-5\\n## Spread 6\\nFit: 2\\nMEANT-6\\n## After\\nAFTER-${name}\\nTitle: "Book ${name}"\\n';;
-  *"shuffled, and the"*) printf 'A: 3\\nB: 6\\n**C: 9**\\nWhy: WHY-${name}\\n';;
+  *"you neither wrote nor drew, shuffled"*) printf 'A: 1 | a dot\\nB: 2\\n**C: 3**\\nWhy: WHY-${name}\\n';;
   *"Draw the picture for spread"*) case "${name}$1" in
      c*"not accepted"*|[ab]*) printf '## Picture\\n\\x60\\x60\\x60svg\\n<svg viewBox="0 0 400 400"><!-- a comma --><circle id="comma" cx="200" cy="200" r="20"/></svg>\\n\\x60\\x60\\x60\\n## Note\\nDREW-${name}\\n';;
      *) printf '## Picture\\n<svg viewBox="0 0 400 400"><text>hi</text><circle r="2"/></svg>\\n## Note\\nDREW-c\\n';;
    esac;;
   *"You write the text of spread"*) case "${name}$1" in
-     a*"sent back"*|[bc]*) printf '## Text\\nWORDS-${name} a small comma wakes.\\n## Note\\nHOPE-${name}\\n';;
+     a*"sent back"*|[bc]*) printf '## Text\\nWORDS-${name} a small comma wakes.\\n## Near miss\\nDECOY-${name} a small comma sleeps.\\n## Note\\nHOPE-${name}\\n';;
      a*) printf '## Text\\none two three four five six seven\\n## Note\\nHOPE-a\\n';;
    esac;;
 esac`, 'x', '{prompt}'];
@@ -53,9 +53,12 @@ test('three agents write, draw and match a picture book; the app counts words, c
   expect(read('02-draw-c-again.prompt.md')).toContain('it has text in it');
   // Readers get cleaned pictures and only their own three spreads, never a note.
   const match = read('match-c.prompt.md');
-  expect(match).toContain('Spread 1: "WORDS-a');
-  expect(match).toContain('Spread 4: "WORDS-a');
-  expect(match).not.toMatch(/Spread 2:|id=|a comma|DREW|HOPE/);
+  expect(match.match(/^Text \d: "WORDS-a/gm)).toHaveLength(2);
+  expect(match).not.toContain('Text 3');
+  expect(match).not.toMatch(/Text 4|WORDS-b|id=|a comma|DREW|HOPE|DECOY/);
+  // In the words, too, an agent is never a person.
+  expect(read('01-write-a.prompt.md')).toMatch(/never a person: no faces, eyes, smiles, blushes/);
+  expect(read('01-write-a.prompt.md')).not.toContain('Near miss');
   // Each writer reviews its own spreads with its own hope.
   const rev = read('review-a.prompt.md');
   expect(rev).toContain('HOPE-a');
@@ -78,15 +81,50 @@ test('three agents write, draw and match a picture book; the app counts words, c
   }
   expect(book.agents.map(x => x.score)).toEqual([score.a, score.b, score.c]);
   expect(book.agents[1]).toMatchObject({ title: 'Book b', after: 'AFTER-b' });
+  expect(book.spreads[0].decoy).toBeUndefined();
+  // a: two texts, each sent back once; two pictures; one match; one review.
+  expect(book.usage.a.calls).toBe(4 + 2 + 1 + 1);
+  expect(book.usage.c.est_tokens).toBeGreaterThan(100);
   const md = fs.readFileSync(path.join(dir, 'book.md'), 'utf8');
   expect(md).toContain('![Spread 1](pictures/1-b.svg)');
   expect(md).toContain('### Ada: "Book a"');
 });
 
+test('with decoys, writers add a near miss the illustrator never sees, and readers pick among real texts and near misses', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'book-decoy-'));
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: ['a', 'b', 'c'].map(n => ({ id: n, label: `Agent ${n}`, headless: fake(n) })) }));
+  const file = path.join(home, 'b.json');
+  fs.writeFileSync(file, JSON.stringify({ agents: ['a', 'b', 'c'], spreads: 3, words: 6, decoys: true, brief: 'BRIEF-LINE', draw_rules: ['A person is a sage circle.'] }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'book.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Run folder: (.+)/)[1].trim();
+  const read = f => fs.readFileSync(path.join(dir, 'steps', f), 'utf8');
+  expect(read('01-write-a.prompt.md')).toContain('## Near miss');
+  expect(read('01-write-a.prompt.md')).toContain('BRIEF-LINE');
+  const draw = read('01-draw-b.prompt.md');
+  expect(draw).toContain('BRIEF-LINE');
+  expect(draw).toContain('A person is a sage circle.');
+  expect(draw).not.toContain('DECOY');
+  // c reads spread 1 only: one picture, its text and its near miss.
+  const match = read('match-c.prompt.md');
+  expect(match).toContain('"WORDS-a a small comma wakes."');
+  expect(match).toContain('"DECOY-a a small comma sleeps."');
+  expect(match).not.toContain('Text 3');
+  const book = JSON.parse(fs.readFileSync(path.join(dir, 'book.json'), 'utf8'));
+  const s1 = book.spreads[0];
+  expect(s1.decoy).toBe('DECOY-a a small comma sleeps.');
+  // The fake picks text 1: right if text 1 was the real one, else the near miss.
+  const first = book.matches[2].texts[0];
+  expect(s1.match.right).toBe(first.k === 1);
+  if (!s1.match.right) expect(s1.match).toMatchObject({ decoyOf: 1, guess: null });
+  expect(s1.match.seen).toBe('a dot');
+});
+
 test('replies are read for text, matches and reviews', () => {
   expect(parseText('## Text\n"The comma waits."\n## Note\nA dot.')).toEqual({ text: 'The comma waits.', note: 'A dot.' });
   expect(parseText('A line\nover two.')).toEqual({ text: 'A line over two.', note: '' });
-  expect(parseMatch('Picture A: 4\n- **B**: spread 7\nC = #1\nD: 2\nWhy: shapes', ['A', 'B', 'C'])).toEqual({ picks: { A: 4, B: 7, C: 1 }, why: 'shapes' });
+  expect(parseMatch('Picture A: 4 | a lamp\n- **B**: spread 7\nC = #1 — two marks\nD: 2\nWhy: shapes', ['A', 'B', 'C'])).toEqual({ picks: { A: 4, B: 7, C: 1 }, seen: { A: 'a lamp', C: 'two marks' }, why: 'shapes' });
+  expect(parseText('## Text\nReal one.\n## Near miss\n"Fake one."\n## Note\nN')).toEqual({ text: 'Real one.', decoy: 'Fake one.', note: 'N' });
   const r = parseReview('## Spread 2\n**Fit:** 8\nClose.\n## Spread 5\nNo fit line\n## After\nFun.\nTitle: **The Comma**', [2, 5]);
   expect(r.fits).toEqual({ 2: { fit: 8, meant: 'Close.' }, 5: { fit: null, meant: 'No fit line' } });
   expect(r).toMatchObject({ after: 'Fun.', title: 'The Comma' });
