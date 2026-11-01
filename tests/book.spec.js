@@ -160,13 +160,15 @@ test('review: the author writes and draws alone, others review the draft, the au
   esac`, 'x', '{prompt}'];
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: ['a', 'b', 'c'].map(n => ({ id: n, label: `Agent ${n}`, headless: agent(n) })) }));
   const file = path.join(home, 'b.json');
-  fs.writeFileSync(file, JSON.stringify({ agents: ['a', 'b', 'c'], review: true, spreads: 3, words: 6, brief: 'BRIEF-LINE' }));
+  fs.writeFileSync(file, JSON.stringify({ agents: ['a', 'b', 'c'], review: true, spreads: 3, words: 6, brief: 'BRIEF-LINE', form: 'FORM-X', unit: 'section' }));
   const out = execFileSync('node', [path.join(__dirname, '..', 'book.js'), file],
     { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
   const dir = out.match(/Run folder: (.+)/)[1].trim();
   const read = f => fs.readFileSync(path.join(dir, 'steps', f), 'utf8');
   expect(read('review-b.prompt.md')).toContain('Words: "Three a."');
   expect(read('review-b.prompt.md')).toContain('<circle r="9"/>');
+  expect(read('draft-a-write.prompt.md')).toContain('making a FORM-X on your own');
+  expect(read('draft-a-write.prompt.md')).toContain('One line per section');
   expect(read('revise-a.prompt.md')).toContain('Fine b.');
   expect(read('revise-a.prompt.md')).toContain('Fine c.');
   expect(read('final-a-03-draw.prompt.md')).toContain('Your earlier picture');
