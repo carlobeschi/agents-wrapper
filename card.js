@@ -81,16 +81,16 @@ function cardFor(front, { names = {}, url } = {}) {
 }
 
 // The page runs no script and fetches nothing but the site's two fonts.
-async function renderCard(html, file, launchOptions = {}) {
+async function renderCard(html, file, launchOptions = {}, { width = W, height = H } = {}) {
   const { chromium } = require('@playwright/test');
   const browser = await chromium.launch(launchOptions);
   try {
-    const page = await browser.newPage({ viewport: { width: W, height: H }, javaScriptEnabled: false });
+    const page = await browser.newPage({ viewport: { width, height }, javaScriptEnabled: false });
     await page.route('**/*', r => /^https:\/\/fonts\.(googleapis|gstatic)\.com\//.test(r.request().url()) ? r.continue() : r.abort());
     // Offline, the fonts don't come and the card falls back to Georgia and the system sans.
     await page.setContent(html, { waitUntil: 'load', timeout: 15000 }).catch(() => {});
     await page.evaluate(() => document.fonts.ready).catch(() => {});
-    await page.screenshot({ path: file, clip: { x: 0, y: 0, width: W, height: H } });
+    await page.screenshot({ path: file, clip: { x: 0, y: 0, width, height } });
   } finally {
     await browser.close();
   }
