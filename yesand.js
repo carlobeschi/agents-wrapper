@@ -16,7 +16,8 @@
 // for the episode.
 //
 // Same headless commands and run folder rules as scare.js, under
-// ~/.agent-dispatch/improv/. Writes episode.json and episode.md; publishing is
+// ~/.agent-dispatch/improv/. With "punchy": true the line prompt asks for a
+// punchline every line and a callback on the last. Writes episode.json and episode.md; publishing is
 // a separate, reviewed step.
 
 const crypto = require('crypto');
@@ -54,14 +55,20 @@ function sceneText(starter, lines, me) {
   return [`0. Audience: "${starter}"`, ...lines.map(l => `${l.n}. ${l.by === me.id ? 'You' : l.byLabel}: ${l.text}`)].join('\n');
 }
 
-function linePrompt(me, others, starter, lines, n, total, words, why) {
+// "punchy": true: the line must be a joke on its own, not a step in a story.
+const PUNCHY = [
+  'Every line is a punchline, not a step in a story: no set-up, no "meanwhile", no explaining. One surprising, specific detail, and end on the funny word.',
+  'Build on the last line most of all. Short is funnier. It is a show: no real people, nothing cruel.',
+];
+
+function linePrompt(me, others, starter, lines, n, total, words, why, punchy) {
   const them = names(others);
   return [
     `You are ${me.label}. You, ${them}, AI agents from other labs, are on stage doing improv comedy: a game of "Yes, and". The audience gave the first line; you take turns to build the scene from it.`,
     'The rule: everything said so far is true. Start your line with "Yes, and", accept the line before yours, and add one new thing to it. Never deny, correct or undo what anyone said.',
     `At most ${words} words, "Yes, and" included. The app counts, and sends back a longer line.`,
-    'Be funny. Build on the last line most of all; a specific, surprising detail beats a pun. It is a show: no real people, nothing cruel.',
-    `This is line ${n} of ${total}.${n === total ? ' It is the last line of the scene: land it.' : ''}`,
+    ...(punchy ? PUNCHY : ['Be funny. Build on the last line most of all; a specific, surprising detail beats a pun. It is a show: no real people, nothing cruel.']),
+    `This is line ${n} of ${total}.${n === total ? (punchy ? ' It is the last line: call back to something said earlier and end the scene on a laugh.' : ' It is the last line of the scene: land it.') : ''}`,
     `After the scene each of you votes, alone, for the funniest line that isn't your own. Votes are the score.`,
     'Reply in exactly two parts, with these headings:',
     '## Line', 'Your line only, nothing else.',
@@ -142,12 +149,12 @@ async function scene(dir, agents, starter, si, m) {
   for (let n = 1; n <= m.turns; n++) {
     const me = order[(n - 1) % order.length];
     const key = `s${si + 1}-${String(n).padStart(2, '0')}-${me.slug}`;
-    let r = parseLine(await run(dir, key, me, linePrompt(me, othersOf(me), starter, lines, n, m.turns, m.words), me.home));
+    let r = parseLine(await run(dir, key, me, linePrompt(me, othersOf(me), starter, lines, n, m.turns, m.words, null, m.punchy), me.home));
     let resent = false, over = 0;
     if (count(r.line) > m.words || !r.line) {
       resent = true;
       const why = r.line ? `it had ${count(r.line)} words and the cap is ${m.words}` : 'it was empty';
-      r = parseLine(await run(dir, `${key}-again`, me, linePrompt(me, othersOf(me), starter, lines, n, m.turns, m.words, why), me.home));
+      r = parseLine(await run(dir, `${key}-again`, me, linePrompt(me, othersOf(me), starter, lines, n, m.turns, m.words, why, m.punchy), me.home));
       if (count(r.line) > m.words) { over = count(r.line); r.line = cut(r.line, m.words); }
     }
     const l = { n, by: me.id, byLabel: me.label, text: r.line, note: r.note, words: count(r.line), resent, cut: over || undefined, flag: check(r.line) || undefined, votes: [], blockCalls: [] };

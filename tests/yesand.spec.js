@@ -8,7 +8,7 @@ const { execFileSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { parseLine, parseVote, check, cut } = require('../yesand');
+const { parseLine, parseVote, check, cut, linePrompt } = require('../yesand');
 
 // Agent a always runs long once (then behaves); b votes its own line first; c says no.
 const fake = name => ['sh', '-c', `case "$1" in
@@ -64,4 +64,14 @@ test('lines and votes are read forgivingly', () => {
   expect(cut('a b c d', 2)).toBe('a b […]');
   expect(parseVote('**Vote:** line 7\nWhy: ha\nBlock: none\n## After\nfine')).toMatchObject({ vote: 7, why: 'ha', block: null, after: 'fine' });
   expect(parseVote('Vote: #4\nBlock: 2')).toMatchObject({ vote: 4, block: 2 });
+});
+
+test('"punchy" asks for a punchline every line and a callback on the last', () => {
+  const me = { id: 'a', label: 'Ada' }, others = [{ id: 'b', label: 'Bea' }];
+  const plain = linePrompt(me, others, 'I am bored.', [], 8, 8, 25);
+  const punchy = linePrompt(me, others, 'I am bored.', [], 8, 8, 12, null, true);
+  expect(plain).not.toContain('punchline');
+  expect(punchy).toContain('Every line is a punchline');
+  expect(punchy).toContain('call back to something said earlier');
+  expect(punchy).toContain('At most 12 words');
 });
