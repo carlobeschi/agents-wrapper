@@ -132,7 +132,9 @@ async function run(dir, file, agent, prompt, cwd) {
     r = await runOnce(agent, again, cwd);
   }
   if (r.err) fs.writeFileSync(base + '.stderr.txt', r.err);
-  if (r.why) throw new Error(`${agent.label}, ${file}: ${r.why}${r.err ? `\n${stripAnsi(r.err).trim().split('\n').slice(-5).join('\n')}` : ''}`);
+  // With nothing on stderr, the reply itself may say why (an API error, say).
+  const said = r.err ? stripAnsi(r.err).trim().split('\n').slice(-5).join('\n') : String(r.text || '').trim().split('\n').slice(0, 5).join('\n');
+  if (r.why) throw new Error(`${agent.label}, ${file}: ${r.why}${said ? `\n${said}` : ''}`);
   console.log(`  ✓ ${file}: ${r.text.length} chars`);
   return r.text.length > MAX_REPLY ? r.text.slice(0, MAX_REPLY) : r.text;
 }

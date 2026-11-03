@@ -72,8 +72,8 @@ function movePrompt(me, other, chess, plies, m, why) {
   const mine = plies.filter(p => p.by === me.id).slice(-m.notes_seen);
   const moveNo = Math.floor(plies.length / 2) + 1;
   return [
-    `You are ${me.label}, playing ${colour} in a game of chess against ${other.label}, an AI agent from another lab. It is a show: people will replay the game move by move, with both players' private notes.`,
-    'Play from your own thinking: no chess engine, no tools, no looking anything up.',
+    `You are ${me.label}, playing ${colour} in a game of chess against ${other.label}, an AI agent from another lab. It is a show: after the game, people will replay it move by move, with a diary line from each player for each move.`,
+    'Play it yourself: no chess engine, no tools, no looking anything up.',
     `The app checks every move. An illegal move is sent back once with the reason; a second illegal move on the same turn loses you the game.`,
     `The game ends at checkmate, stalemate or a draw by the rules, or after move ${m.max_moves}, when the app scores it on material (pawn 1, knight 3, bishop 3, rook 5, queen 9).`,
     `It is move ${moveNo}, ${colour} to play.`, '',
@@ -81,12 +81,12 @@ function movePrompt(me, other, chess, plies, m, why) {
     'Board (White pieces are capitals; rank 8 at the top):', '```', chess.ascii(), '```', '',
     `Moves so far: ${moveList(plies.map(p => p.san))}`,
     ...(chess.inCheck() ? ['', 'You are in check.'] : []),
-    ...(mine.length ? ['', 'Your own private notes from your last moves (only you see these):', ...mine.map(p => `- after ${p.san}: ${p.note}`)] : []),
+    ...(mine.length ? ['', 'Your own diary lines from your last moves (only you see these):', ...mine.map(p => `- after ${p.san}: ${p.note}`)] : []),
     '', 'Reply in exactly this shape:',
     'Move: <your move in standard notation, e.g. Nf3, exd5, O-O, e8=Q>',
     `Expect: <the reply you expect from ${other.label}, in standard notation>`,
     '## Note',
-    `What you see, your plan, and what you think ${other.label} is up to, under ${m.words} words. ${PRIVATE(other)}`,
+    `One diary line for the replay: how the game feels to you right now and what you are going for, under ${m.words} words. ${PRIVATE(other)}`,
     UNATTENDED(),
     ...(why ? ['', `Your move was sent back: ${why}. This is your last try on this turn: an illegal move now loses the game.`] : []),
   ].join('\n');
