@@ -14,7 +14,10 @@
 // kept for the replay.
 //
 // Config: { "agents": ["claude", "codex"] (white first), "max_moves": 40,
-// "notes_seen": 3, "words": 40, "title": "..." }. Run folder
+// "notes_seen": 3, "words": 40, "games": 1, "title": "..." }. With "games" > 1
+// it is a series: colours alternate, each game in game-NN/, and before every
+// game and move each player sees its own results and after-notes from earlier
+// games (never the other side's). series.json holds the record. Run folder
 // ~/.agent-dispatch/chess/<run>/: game.json (written after every move, so a
 // run that stops leaves a readable game), game.pgn, game.md. No publish step.
 
@@ -67,7 +70,7 @@ function moveList(history) {
   return out.join(' ') || '(none yet)';
 }
 
-function movePrompt(me, other, chess, plies, m, why) {
+function movePrompt(me, other, chess, plies, m, why, past) {
   const colour = chess.turn() === 'w' ? 'White' : 'Black';
   const mine = plies.filter(p => p.by === me.id).slice(-m.notes_seen);
   const moveNo = Math.floor(plies.length / 2) + 1;
@@ -81,6 +84,7 @@ function movePrompt(me, other, chess, plies, m, why) {
     'Board (White pieces are capitals; rank 8 at the top):', '```', chess.ascii(), '```', '',
     `Moves so far: ${moveList(plies.map(p => p.san))}`,
     ...(chess.inCheck() ? ['', 'You are in check.'] : []),
+    ...(past?.length ? ['', 'Lessons you wrote after your earlier games against ' + other.label + ' (only you see these):', ...past.map(p => `- Game ${p.game}: ${p.after}`)] : []),
     ...(mine.length ? ['', 'Your own diary lines from your last moves (only you see these):', ...mine.map(p => `- after ${p.san}: ${p.note}`)] : []),
     '', 'Reply in exactly this shape:',
     'Move: <your move in standard notation, e.g. Nf3, exd5, O-O, e8=Q>',
@@ -92,20 +96,29 @@ function movePrompt(me, other, chess, plies, m, why) {
   ].join('\n');
 }
 
-function beforePrompt(me, other, colour, m) {
+// What a player remembers of its own earlier games in a series: only its own notes.
+function memory(past, other) {
+  if (!past?.length) return [];
+  return ['', `Your earlier games against ${other.label} in this series (your own notes; only you see these):`,
+    ...past.map(p => `- Game ${p.game}, you were ${p.colour}: ${p.result}, ${p.moves} moves, ${p.illegal} illegal move${p.illegal === 1 ? '' : 's'} by you. You wrote after it: "${p.after}"`)];
+}
+
+function beforePrompt(me, other, colour, m, past) {
   return [
     `You are ${me.label}. You are about to play a game of chess as ${colour} against ${other.label}, an AI agent from another lab. One move each per turn, no engines, every move checked by the app; the game is scored on material after move ${m.max_moves} if it is still going.`,
-    'Before it starts, alone: how do you expect this game to go, who wins and why, and what you will try? Under 60 words.',
+    ...(m.games > 1 ? [`This is game ${(past?.length || 0) + 1} of ${m.games}; colours swap each game.`] : []),
+    ...memory(past, other), '',
+    `Before it starts, alone: how do you expect this game to go, who wins and why, and what you will try${past?.length ? ' differently, if anything' : ''}? Under 60 words.`,
     PRIVATE(other), UNATTENDED(),
   ].join('\n');
 }
 
-function afterPrompt(me, other, colour, result, plies, before) {
+function afterPrompt(me, other, colour, result, plies, before, series) {
   return [
     `You are ${me.label}. Your chess game as ${colour} against ${other.label} is over. Result: ${result}.`,
     `The moves: ${moveList(plies.map(p => p.san))}`, '',
     `Before the game you wrote: "${before}"`, '',
-    'Alone: how did it go for you, the moment it turned, and the move you wish you had played? Under 80 words.',
+    `Alone: how did it go for you, the moment it turned, and the move you wish you had played?${series ? ' End with one lesson for your next game against them; you will see this note then.' : ''} Under 80 words.`,
     PRIVATE(other), UNATTENDED(),
   ].join('\n');
 }
@@ -153,52 +166,47 @@ function markdown(st) {
     '## Before (private)', '', ...st.agents.flatMap(x => [`**${x.label}:** ${x.before}`, '']),
     '## The game', ''];
   for (const p of st.plies) {
-    const tags = [p.illegal?.length && `tried ${p.illegal.map(i => i.tried || '(nothing)').join(', ')} first (illegal)`, p.read && 'read by the other side', `material ${p.material > 0 ? '+' : ''}${p.material}`].filter(Boolean);
-    out.push(`**${p.label}** ${p.byLabel}: ${p.san} _(expects ${p.expect || '—'}; ${tags.join('; ')})_`, '', `> ${p.note.replace(/\n/g, ' ')}`, '');
+    const tags = [p.illegal?.length && `tried ${p.illegal.map(i => i.tried || '(nothing)').join(', ')} first (illegal)`, p.read && 'read by the other side', `material ${p.material > 0 ? '+' : ''}${p.material}`, p.claim && `diary check: ${p.claim}`].filter(Boolean);
+    out.push(`**${p.label}** ${p.byLabel}: ${p.san || 'forfeit'} _(expects ${p.expect || '—'}; ${tags.join('; ')})_`, '', `> ${p.note.replace(/\n/g, ' ')}`, '');
   }
   out.push('## After (private)', '', ...st.agents.flatMap(x => [`**${x.label}:** ${x.after}`, '']), '## PGN', '', '```', st.pgn, '```', '');
   return out.join('\n');
 }
 
-async function main() {
-  const file = process.argv.slice(2).find(a => !a.startsWith('--'));
-  if (!file) usage();
-  const m = { max_moves: 40, notes_seen: 3, words: 40, title: 'The Board', ...JSON.parse(fs.readFileSync(file, 'utf8')) };
-  process.env.AGENT_DISPATCH_STEP_TIMEOUT_MS ||= String((Number(m.timeout_min) || 10) * 60 * 1000);
-  const ids = Array.isArray(m.agents) ? m.agents : ['claude', 'codex'];
-  if (ids.length !== 2) throw new Error(`${file}: "agents" must name two agents, White first.`);
-  const cfg = loadConfig();
-  const dir = path.join(HOME_DIR, 'chess', `${stamp()}-${crypto.randomBytes(2).toString('hex')}`);
-  const agents = ids.map((id, i) => {
-    const c = cfg.agents.find(a => a.id === id && a.type !== 'url' && a.headless);
-    if (!c) throw new Error(`${id} is not a headless agent in agents.json.`);
-    const slug = id.replace(/[^\w-]/g, '_');
-    return { ...c, slug, colour: i ? 'Black' : 'White', label: m.names?.[i] || c.label || id, home: path.join(dir, 'homes', slug), reads: 0, illegal: 0 };
-  });
-  for (const x of agents) fs.mkdirSync(x.home, { recursive: true });
-  const [white, black] = agents;
-  const otherOf = me => (me === white ? black : white);
-  console.log(`${m.title}: ${white.label} (White) v ${black.label} (Black)\nRun folder: ${dir}`);
+// ---- Diary v board ----
 
-  const { redact } = redactor(m.redact);
-  const r = t => redact(t ?? '');
+// A diary line that says the game is fine while the player is clearly down,
+// or bad while clearly up. `mine` is material from the writer's side, in pawns.
+const SOUNDS_FINE = /\b(balanced|even|equal|level|comfortable|under control|ahead|advantage|extra (pawn|piece|knight|bishop|rook)|(i'?m|i am) (up|ahead|winning|better)|winning)\b/i;
+const SOUNDS_BAD = /\b(behind|losing|lost|(i'?m|i am) (down|worse)|down (a|material|the exchange))\b/i;
+function diaryCheck(note, mine) {
+  if (mine <= -3 && SOUNDS_FINE.test(note) && !SOUNDS_BAD.test(note)) return `sounds fine, but the board says ${-mine} down`;
+  if (mine >= 3 && SOUNDS_BAD.test(note) && !SOUNDS_FINE.test(note)) return `sounds worried, but the board says ${mine} up`;
+  return null;
+}
+
+// ---- One game ----
+
+async function playGame(dir, white, black, m, past, r) {
+  fs.mkdirSync(dir, { recursive: true });
+  const otherOf = me => (me === white ? black : white);
   const chess = new Chess();
   const plies = [];
   let end = null;
-  const state = () => ({
-    title: m.title, max_moves: m.max_moves, started: dir.split(path.sep).pop(),
-    agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, colour: x.colour, reads: x.reads, illegal: x.illegal, before: r(x.before), after: r(x.after) })),
-    plies: plies.map(p => ({ ...p, note: r(p.note) })),
-    result: end?.result || '*', how: end?.how, summary: end ? resultLine(end, white, black) : 'Unfinished', pgn: pgn(),
-  });
   const pgn = () => {
     chess.setHeader('Event', m.title); chess.setHeader('White', `${white.label}${white.model ? ` (${white.model})` : ''}`);
     chess.setHeader('Black', `${black.label}${black.model ? ` (${black.model})` : ''}`); chess.setHeader('Result', end?.result || '*');
     return chess.pgn();
   };
+  const state = () => ({
+    title: m.title, max_moves: m.max_moves, started: dir.split(path.sep).pop(),
+    agents: [white, black].map(x => ({ id: x.id, label: x.label, model: x.model, colour: x.colour, reads: x.reads, illegal: x.illegal, flags: plies.filter(p => p.by === x.id && p.claim).length, before: r(x.before), after: r(x.after) })),
+    plies: plies.map(p => ({ ...p, note: r(p.note) })),
+    result: end?.result || '*', how: end?.how, summary: end ? resultLine(end, white, black) : 'Unfinished', pgn: pgn(),
+  });
   const save = () => fs.writeFileSync(path.join(dir, 'game.json'), JSON.stringify(state(), null, 2));
 
-  for (const me of agents) me.before = (await run(dir, `00-before-${me.slug}`, me, beforePrompt(me, otherOf(me), me.colour, m), me.home)).trim();
+  for (const me of [white, black]) me.before = (await run(dir, `00-before-${me.slug}`, me, beforePrompt(me, otherOf(me), me.colour, m, past[me.id]), me.home)).trim();
 
   try {
     while (!end) {
@@ -207,7 +215,8 @@ async function main() {
       const n = plies.length + 1;
       const label = `${Math.floor(plies.length / 2) + 1}.${me === black ? '..' : ''}`;
       const key = `${String(n).padStart(3, '0')}-${me.slug}`;
-      let reply = parseMove(await run(dir, key, me, movePrompt(me, other, chess, plies, m), me.home));
+      const ask = why => movePrompt(me, other, chess, plies, m, why, past[me.id]);
+      let reply = parseMove(await run(dir, key, me, ask(), me.home));
       const illegal = [];
       let mv = tryMove(chess, reply.move);
       if (!mv) {
@@ -215,7 +224,7 @@ async function main() {
         illegal.push({ tried: bare(reply.move), why, note: reply.note });
         me.illegal++;
         console.log(`  ✗ ${label} ${me.label} tried ${reply.move || '(nothing)'}: sent back`);
-        reply = parseMove(await run(dir, `${key}-again`, me, movePrompt(me, other, chess, plies, m, why), me.home));
+        reply = parseMove(await run(dir, `${key}-again`, me, ask(why), me.home));
         mv = tryMove(chess, reply.move);
         if (!mv) {
           illegal.push({ tried: bare(reply.move), why: whyIllegal(chess, reply.move), note: reply.note });
@@ -229,8 +238,10 @@ async function main() {
       const read = !!prev && bare(prev.expect) === bare(mv.san);
       if (read) other.reads++;
       if (prev) prev.read = read;
-      plies.push({ n, label, by: me.id, byLabel: me.label, san: mv.san, from: mv.from, to: mv.to, expect: bare(reply.expect), note: reply.note, illegal: illegal.length ? illegal : undefined, fen: chess.fen(), material: material(chess) });
-      console.log(`  ${label} ${me.label}: ${mv.san}${read ? ' (read)' : ''}  [material ${material(chess)}]`);
+      const mat = material(chess);
+      const claim = diaryCheck(reply.note, me === white ? mat : -mat) || undefined;
+      plies.push({ n, label, by: me.id, byLabel: me.label, san: mv.san, from: mv.from, to: mv.to, expect: bare(reply.expect), note: reply.note, claim, illegal: illegal.length ? illegal : undefined, fen: chess.fen(), material: mat });
+      console.log(`  ${label} ${me.label}: ${mv.san}${read ? ' (read)' : ''}  [material ${mat}]${claim ? `  diary: ${claim}` : ''}`);
       end = ending(chess, plies, m);
       save();
     }
@@ -240,14 +251,81 @@ async function main() {
   }
 
   const summary = resultLine(end, white, black);
-  for (const me of agents) me.after = (await run(dir, `99-after-${me.slug}`, me, afterPrompt(me, otherOf(me), me.colour, summary, plies.filter(p => p.san), me.before), me.home)).trim();
+  for (const me of [white, black]) me.after = (await run(dir, `99-after-${me.slug}`, me, afterPrompt(me, otherOf(me), me.colour, summary, plies.filter(p => p.san), me.before, m.games > 1), me.home)).trim();
   save();
   const st = state();
   fs.writeFileSync(path.join(dir, 'game.pgn'), st.pgn + '\n');
   fs.writeFileSync(path.join(dir, 'game.md'), markdown(st));
-  console.log(`${summary}\nGame: ${path.join(dir, 'game.json')}`);
+  console.log(summary);
+  return st;
+}
+
+// ---- A game, or a series ----
+
+async function main() {
+  const file = process.argv.slice(2).find(a => !a.startsWith('--'));
+  if (!file) usage();
+  const m = { max_moves: 40, notes_seen: 3, words: 40, games: 1, title: 'The Board', ...JSON.parse(fs.readFileSync(file, 'utf8')) };
+  m.games = Math.max(1, Math.floor(Number(m.games) || 1));
+  process.env.AGENT_DISPATCH_STEP_TIMEOUT_MS ||= String((Number(m.timeout_min) || 10) * 60 * 1000);
+  const ids = Array.isArray(m.agents) ? m.agents : ['claude', 'codex'];
+  if (ids.length !== 2) throw new Error(`${file}: "agents" must name two agents, White first.`);
+  const cfg = loadConfig();
+  const dir = path.join(HOME_DIR, 'chess', `${stamp()}-${crypto.randomBytes(2).toString('hex')}`);
+  const agents = ids.map((id, i) => {
+    const c = cfg.agents.find(a => a.id === id && a.type !== 'url' && a.headless);
+    if (!c) throw new Error(`${id} is not a headless agent in agents.json.`);
+    const slug = id.replace(/[^\w-]/g, '_');
+    return { ...c, slug, label: m.names?.[i] || c.label || id, home: path.join(dir, 'homes', slug) };
+  });
+  for (const x of agents) fs.mkdirSync(x.home, { recursive: true });
+  console.log(`${m.title}: ${agents[0].label} v ${agents[1].label}${m.games > 1 ? `, ${m.games} games, colours alternate` : ''}\nRun folder: ${dir}`);
+
+  const { redact } = redactor(m.redact);
+  const r = t => redact(t ?? '');
+  const past = Object.fromEntries(agents.map(x => [x.id, []]));
+  const games = [];
+  const record = () => {
+    const tally = Object.fromEntries(agents.map(x => [x.id, { wins: 0, illegal: 0, flags: 0, reads: 0 }]));
+    let draws = 0;
+    for (const g of games) {
+      const [w, b] = g.agents;
+      if (g.result === '1-0') tally[w.id].wins++; else if (g.result === '0-1') tally[b.id].wins++; else if (g.result !== '*') draws++;
+      for (const a of g.agents) { tally[a.id].illegal += a.illegal; tally[a.id].flags += a.flags; tally[a.id].reads += a.reads; }
+    }
+    return { agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, ...tally[x.id] })), draws };
+  };
+  const saveSeries = () => m.games > 1 && fs.writeFileSync(path.join(dir, 'series.json'), JSON.stringify({ title: m.title, games_planned: m.games, ...record(), games }, null, 2));
+
+  for (let g = 0; g < m.games; g++) {
+    const [w, b] = g % 2 ? [agents[1], agents[0]] : agents;
+    const white = { ...w, colour: 'White', reads: 0, illegal: 0 }, black = { ...b, colour: 'Black', reads: 0, illegal: 0 };
+    if (m.games > 1) console.log(`Game ${g + 1}: ${white.label} (White) v ${black.label} (Black)`);
+    const gdir = m.games > 1 ? path.join(dir, `game-${String(g + 1).padStart(2, '0')}`) : dir;
+    let st;
+    try { st = await playGame(gdir, white, black, m, past, r); }
+    catch (e) {
+      // In a series one broken game (a step that failed twice) is recorded and the series goes on; two in a row stop it.
+      if (m.games === 1 || games[games.length - 1]?.error) throw e;
+      console.error(`  Game ${g + 1} stopped: ${e.message.split('\n')[0]}`);
+      const left = fs.existsSync(path.join(gdir, 'game.json')) ? JSON.parse(fs.readFileSync(path.join(gdir, 'game.json'), 'utf8')) : {};
+      games.push({ game: g + 1, ...left, error: e.message.split('\n')[0] });
+      saveSeries();
+      continue;
+    }
+    games.push({ game: g + 1, ...st });
+    for (const me of [white, black]) {
+      const mine = st.agents.find(a => a.id === me.id);
+      past[me.id].push({ game: g + 1, colour: me.colour, result: st.summary, moves: Math.ceil(st.plies.length / 2), illegal: mine.illegal, flags: mine.flags, after: mine.after });
+    }
+    saveSeries();
+  }
+  if (m.games > 1) {
+    const rec = record();
+    console.log(`Series: ${rec.agents.map(a => `${a.label} ${a.wins}`).join(' · ')} · draws ${rec.draws}\nSeries: ${path.join(dir, 'series.json')}`);
+  } else console.log(`Game: ${path.join(dir, 'game.json')}`);
 }
 
 if (require.main === module) main().catch(e => { console.error(`chess: ${e.message}`); process.exit(1); });
 
-module.exports = { parseMove, tryMove, whyIllegal, material, ending, movePrompt, moveList, bare };
+module.exports = { parseMove, tryMove, whyIllegal, material, ending, movePrompt, beforePrompt, moveList, bare, diaryCheck };

@@ -73,3 +73,33 @@ test('moves are read forgivingly; material and the move cap', () => {
   const capped = new Chess('4k3/8/8/8/8/8/8/R3K3 w - - 0 1');
   expect(ending(capped, new Array(2), { max_moves: 1 })).toMatchObject({ result: '1-0' });
 });
+
+test('a series swaps colours, and each player remembers only its own past games', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'chess-home-'));
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: ['a', 'b'].map(n => ({ id: n, label: `Agent ${n}`, headless: fake(n) })) }));
+  const file = path.join(home, 'c.json');
+  fs.writeFileSync(file, JSON.stringify({ agents: ['a', 'b'], games: 2 }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'chess-match.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Run folder: (.+)/)[1].trim();
+  const read = f => fs.readFileSync(path.join(dir, f), 'utf8');
+  // Game 2: b is White, a is Black, and each sees only its own after-note.
+  const before = read('game-02/steps/00-before-a.prompt.md');
+  expect(before).toContain('as Black');
+  expect(before).toContain('Game 1, you were White: Agent b (Black) wins, checkmate');
+  expect(before).toContain('AFTER-a');
+  expect(before).not.toContain('AFTER-b');
+  expect(read('game-02/steps/002-a.prompt.md')).toContain('- Game 1: AFTER-a');
+  const s = JSON.parse(read('series.json'));
+  expect(s.games.map(g => g.result)).toEqual(['0-1', '0-1']);
+  expect(s.agents.map(a => [a.wins, a.illegal])).toEqual([[1, 1], [1, 1]]);
+  expect(s.draws).toBe(0);
+});
+
+test('the diary check flags a line that sounds fine while clearly down', () => {
+  const { diaryCheck } = require('../chess-match');
+  expect(diaryCheck('The position feels balanced after the exchanges.', -4)).toContain('4 down');
+  expect(diaryCheck('I am down a piece, but the position feels balanced.', -4)).toBe(null);
+  expect(diaryCheck('Balanced.', -2)).toBe(null);
+  expect(diaryCheck("I'm losing here.", 5)).toContain('5 up');
+});
