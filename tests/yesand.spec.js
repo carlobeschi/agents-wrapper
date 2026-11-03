@@ -75,3 +75,18 @@ test('"punchy" asks for a punchline every line and a callback on the last', () =
   expect(punchy).toContain('call back to something said earlier');
   expect(punchy).toContain('At most 12 words');
 });
+
+test('"language": "it" plays the scene as "Sì, e" and the app checks that opener', () => {
+  const me = { id: 'a', label: 'Ada' }, others = [{ id: 'b', label: 'Bea' }];
+  const it = linePrompt(me, others, 'Mi annoio.', [], 1, 8, 12, null, true, 'it');
+  expect(it).toContain('Start your line with "Sì, e"');
+  expect(it).toContain('in natural, idiomatic Italian');
+  expect(check('Sì, e il mio gatto chiede le ferie.', 'it')).toBe(null);
+  expect(check('Si e il gatto', 'it')).toBe(null);
+  expect(check('E il gatto', 'it')).toBe('no "Sì, e"');
+  expect(check('Sì, e però non è vero', 'it')).toBe('opens with a denial');
+  expect(check('Sì, e no', 'it')).toBe('opens with a denial');
+  expect(check('Sì, e nonna balla', 'it')).toBe(null);
+  expect(check('Yes, and the sea', 'en')).toBe(null);
+  expect(() => check('x', 'fr')).toThrow(/language/);
+});
