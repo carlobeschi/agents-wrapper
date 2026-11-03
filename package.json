@@ -18,5 +18,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0"
+  },
+  "dependencies": {
+    "chess.js": "^1.4.0"
   }
 }
