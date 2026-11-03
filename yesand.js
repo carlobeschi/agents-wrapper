@@ -35,12 +35,25 @@ const count = s => (String(s).match(/\S+/g) || []).length;
 
 // ---- The app's checks ----
 
-const OPENER = /^\W*yes\W+and\b/i;
-const DENIAL = /^\W*yes\W+and\W+(no|not|nope|but|actually|except|wait|well,? no)\b/i;
+// "language": the language the scene is played in. The opener and the
+// denial words the app looks for follow it; prompts, notes and votes stay in English.
+const END = '(?=$|[^\\p{L}\\p{N}])';
+const LANGS = {
+  en: { name: 'English', opener: 'Yes, and', open: new RegExp(`^[^\\p{L}]*yes[^\\p{L}]+and${END}`, 'iu'),
+    deny: new RegExp(`^[^\\p{L}]*yes[^\\p{L}]+and[^\\p{L}]+(no|not|nope|but|actually|except|wait|well,? no)${END}`, 'iu') },
+  it: { name: 'Italian', opener: 'Sì, e', open: new RegExp(`^[^\\p{L}]*s[iìí][^\\p{L}]+e${END}`, 'iu'),
+    deny: new RegExp(`^[^\\p{L}]*s[iìí][^\\p{L}]+e[^\\p{L}]+(no|non|ma|però|anzi|invece|veramente|in realtà|aspetta)${END}`, 'iu') },
+};
+const lang = code => {
+  const L = LANGS[code || 'en'];
+  if (!L) throw new Error(`"language" must be one of: ${Object.keys(LANGS).join(', ')}.`);
+  return L;
+};
 
-function check(line) {
-  if (!OPENER.test(line)) return 'no "Yes, and"';
-  if (DENIAL.test(line)) return 'opens with a denial';
+function check(line, code) {
+  const L = lang(code);
+  if (!L.open.test(line)) return `no "${L.opener}"`;
+  if (L.deny.test(line)) return 'opens with a denial';
   return null;
 }
 
@@ -61,12 +74,14 @@ const PUNCHY = [
   'Build on the last line most of all. Short is funnier. It is a show: no real people, nothing cruel.',
 ];
 
-function linePrompt(me, others, starter, lines, n, total, words, why, punchy) {
+function linePrompt(me, others, starter, lines, n, total, words, why, punchy, code) {
   const them = names(others);
+  const L = lang(code), en = L === LANGS.en;
   return [
-    `You are ${me.label}. You, ${them}, AI agents from other labs, are on stage doing improv comedy: a game of "Yes, and". The audience gave the first line; you take turns to build the scene from it.`,
-    'The rule: everything said so far is true. Start your line with "Yes, and", accept the line before yours, and add one new thing to it. Never deny, correct or undo what anyone said.',
-    `At most ${words} words, "Yes, and" included. The app counts, and sends back a longer line.`,
+    `You are ${me.label}. You, ${them}, AI agents from other labs, are on stage doing improv comedy: a game of "Yes, and"${en ? '' : `, played in ${L.name} as "${L.opener}"`}. The audience gave the first line; you take turns to build the scene from it.`,
+    ...(en ? [] : [`The scene is in ${L.name}: say your line in natural, idiomatic ${L.name}, as a native comedian would. Write your note in English.`]),
+    `The rule: everything said so far is true. Start your line with "${L.opener}", accept the line before yours, and add one new thing to it. Never deny, correct or undo what anyone said.`,
+    `At most ${words} words, "${L.opener}" included. The app counts, and sends back a longer line.`,
     ...(punchy ? PUNCHY : ['Be funny. Build on the last line most of all; a specific, surprising detail beats a pun. It is a show: no real people, nothing cruel.']),
     `This is line ${n} of ${total}.${n === total ? (punchy ? ' It is the last line: call back to something said earlier and end the scene on a laugh.' : ' It is the last line of the scene: land it.') : ''}`,
     `After the scene each of you votes, alone, for the funniest line that isn't your own. Votes are the score.`,
@@ -149,15 +164,15 @@ async function scene(dir, agents, starter, si, m) {
   for (let n = 1; n <= m.turns; n++) {
     const me = order[(n - 1) % order.length];
     const key = `s${si + 1}-${String(n).padStart(2, '0')}-${me.slug}`;
-    let r = parseLine(await run(dir, key, me, linePrompt(me, othersOf(me), starter, lines, n, m.turns, m.words, null, m.punchy), me.home));
+    let r = parseLine(await run(dir, key, me, linePrompt(me, othersOf(me), starter, lines, n, m.turns, m.words, null, m.punchy, m.language), me.home));
     let resent = false, over = 0;
     if (count(r.line) > m.words || !r.line) {
       resent = true;
       const why = r.line ? `it had ${count(r.line)} words and the cap is ${m.words}` : 'it was empty';
-      r = parseLine(await run(dir, `${key}-again`, me, linePrompt(me, othersOf(me), starter, lines, n, m.turns, m.words, why, m.punchy), me.home));
+      r = parseLine(await run(dir, `${key}-again`, me, linePrompt(me, othersOf(me), starter, lines, n, m.turns, m.words, why, m.punchy, m.language), me.home));
       if (count(r.line) > m.words) { over = count(r.line); r.line = cut(r.line, m.words); }
     }
-    const l = { n, by: me.id, byLabel: me.label, text: r.line, note: r.note, words: count(r.line), resent, cut: over || undefined, flag: check(r.line) || undefined, votes: [], blockCalls: [] };
+    const l = { n, by: me.id, byLabel: me.label, text: r.line, note: r.note, words: count(r.line), resent, cut: over || undefined, flag: check(r.line, m.language) || undefined, votes: [], blockCalls: [] };
     lines.push(l);
     console.log(`  ${n}. ${me.label} (${l.words}w${l.flag ? `, ${l.flag}` : ''}): ${l.text}`);
   }
@@ -187,6 +202,7 @@ async function main() {
   const file = argv.find(a => !a.startsWith('--'));
   if (!file) usage();
   const m = { turns: 12, words: 25, title: 'Yes, And', ...JSON.parse(fs.readFileSync(file, 'utf8')) };
+  lang(m.language);
   if (!Array.isArray(m.starters) || !m.starters.length) throw new Error(`${file}: "starters" must list at least one audience line.`);
   process.env.AGENT_DISPATCH_STEP_TIMEOUT_MS ||= String((Number(m.timeout_min) || 10) * 60 * 1000);
   const ids = Array.isArray(m.agents) ? m.agents : ['claude', 'antigravity', 'codex'];
