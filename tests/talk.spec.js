@@ -42,6 +42,10 @@ test.beforeAll(async () => {
       { id: 'envy', label: 'Envy', headless: ['sh', '-c', 'echo "secret=${TALK_SECRET:-none} key=${TALK_KEY:-none}"'], env: ['TALK_KEY'] },
       // Says which model it was started with: {model} in argv is its "model".
       { id: 'pinned', label: 'Pinned', model: 'model-x', headless: ['sh', '-c', 'printf "on %s\\n" "$1"', 'x', '{model}'] },
+      // Free turns: each always makes the same choice of who speaks next.
+      { id: 'keeper', label: 'Keeper', headless: fake('keeper', 'More from K\n\nNext: me') },
+      { id: 'ender', label: 'Ender', headless: fake('ender', 'That covers it.\n**Next: end**') },
+      { id: 'asker', label: 'Asker', headless: fake('asker', 'Which one do you mean?\nNext: person') },
       { id: 'term', label: 'Terminal only', interactive: ['true', '{prompt}'] },
       { id: 'web', label: 'Web', type: 'url', url: 'https://example.com/?q={prompt}' },
     ],
@@ -62,7 +66,7 @@ test.afterAll(() => {
   fs.rmSync(home, { recursive: true, force: true });
 });
 
-async function begin(page, a, b, turns, opener = NASTY) {
+async function begin(page, a, b, turns, opener = NASTY, free = false) {
   await page.goto(BASE + '/#k=' + key);
   await page.evaluate(() => Object.keys(localStorage).filter(k => k !== 'agents.key').forEach(k => localStorage.removeItem(k)));
   await page.reload();
@@ -70,6 +74,7 @@ async function begin(page, a, b, turns, opener = NASTY) {
   await page.locator('#b').selectOption(b);
   await page.locator('#turns').fill(String(turns));
   await page.locator('#opener').fill(opener);
+  await page.locator('#free').setChecked(free);
   await page.locator('#start').click();
   await expect(page.locator('#view')).toBeVisible();
 }
@@ -79,7 +84,7 @@ const talkDir = async page => (await page.locator('#status').textContent()).matc
 test('only agents with a headless command can be picked', async ({ page }) => {
   await page.goto(BASE + '/#k=' + key);
   const ids = await page.locator('#a option').evaluateAll(os => os.map(o => /** @type {HTMLOptionElement} */ (o).value));
-  expect(ids).toEqual(['a', 'b', 'slow', 'stuck', 'denied', 'flaky', 'md', 'bad', 'forger', 'flood', 'envy', 'pinned']);
+  expect(ids).toEqual(['a', 'b', 'slow', 'stuck', 'denied', 'flaky', 'md', 'bad', 'forger', 'flood', 'envy', 'pinned', 'keeper', 'ender', 'asker']);
 });
 
 test('two agents take turns, and each sees the conversation so far', async ({ page }) => {
@@ -342,4 +347,53 @@ test('attachments get safe names, never overwrite, and are refused by type, size
 test('attachments need the token', async ({ request }) => {
   const r = await request.post(BASE + '/api/talk', { data: { opener: 'x', agents: ['a', 'b'], files: [{ name: 'a.txt', data: b64('x') }] } });
   expect(r.status()).toBe(403);
+});
+
+test('free turns: an agent can keep the floor, at most three messages in a row, and the line is taken out', async ({ page }) => {
+  await begin(page, 'keeper', 'a', 5, 'Go.', true);
+  await expect(page.locator('#pill')).toHaveText('done');
+  await expect(page.locator('#chat .m:not(.opener) .who b')).toHaveText(['Keeper', 'Keeper', 'Keeper', 'Agent A', 'Keeper']);
+  await expect(page.locator('#chat .m.a .text').first()).toHaveText('More from K');
+  await expect(page.locator('#chat .m.a .floor').first()).toHaveText('→ keeps the floor');
+  const dir = await talkDir(page);
+  expect(fs.readFileSync(path.join(dir, 'turns', '01-keeper.prompt.md'), 'utf8')).toContain('- "Next: me": you keep the floor');
+  expect(fs.readFileSync(path.join(dir, 'turns', '03-keeper.prompt.md'), 'utf8')).toContain('"Next: me" is not open to you now');
+  const a = fs.readFileSync(path.join(dir, 'prompt-a.txt'), 'utf8');
+  expect(a).not.toMatch(/Next: me$/m);
+  expect(fs.readFileSync(path.join(dir, 'transcript.md'), 'utf8')).toContain('_Keeps the floor._');
+  expect(JSON.parse(fs.readFileSync(path.join(dir, 'meta.json'), 'utf8')).free).toBe(true);
+});
+
+test('free turns: the conversation ends early only when both agents choose to end', async ({ page }) => {
+  await begin(page, 'ender', 'ender', 10, 'Go.', true);
+  await expect(page.locator('#pill')).toHaveText('done');
+  await expect(page.locator('#chat .m:not(.opener)')).toHaveCount(2);
+  await expect(page.locator('#chat .floor')).toHaveText(['→ proposes to end', '→ agrees to end']);
+  await expect(page.locator('#progress')).toContainText('both chose to end');
+  expect(fs.readFileSync(path.join(await talkDir(page), 'turns', '02-ender_2.prompt.md'), 'utf8')).toContain('has proposed to end the conversation');
+
+  // One agent alone can't end it.
+  await begin(page, 'ender', 'a', 3, 'Go.', true);
+  await expect(page.locator('#pill')).toHaveText('done');
+  await expect(page.locator('#chat .m:not(.opener)')).toHaveCount(3);
+});
+
+test('free turns: an agent can wait for the person, and their reply carries on', async ({ page }) => {
+  await begin(page, 'asker', 'a', 3, 'Go.', true);
+  await expect(page.locator('#pill')).toHaveText('waiting');
+  await expect(page.locator('#progress')).toHaveText('waiting for you');
+  await expect(page.locator('#chat .m:not(.opener)')).toHaveCount(1);
+  await page.locator('#say').fill('The red one.');
+  await page.locator('#send').click();
+  await expect(page.locator('#chat .m.b')).toHaveCount(1);
+  const a = fs.readFileSync(path.join(await talkDir(page), 'prompt-a.txt'), 'utf8');
+  expect(a).toMatch(/Which one do you mean\?\n\n### You · [0-9a-f]{8}\n\nThe red one\.\n/);
+});
+
+test('without free turns, a "Next:" line is just text and turns alternate', async ({ page }) => {
+  await begin(page, 'keeper', 'a', 3, 'Go.');
+  await expect(page.locator('#pill')).toHaveText('done');
+  await expect(page.locator('#chat .m:not(.opener) .who b')).toHaveText(['Keeper', 'Agent A', 'Keeper']);
+  await expect(page.locator('#chat .m.a .text').first()).toContainText('Next: me');
+  expect(fs.readFileSync(path.join(await talkDir(page), 'turns', '01-keeper.prompt.md'), 'utf8')).not.toContain('You choose who speaks next');
 });
