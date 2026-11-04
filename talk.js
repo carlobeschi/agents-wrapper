@@ -142,7 +142,34 @@ function floorRules(other, { keep, proposed }) {
   ].join('\n');
 }
 
-function framing(me, other, opener, turns, retry, tag, n, total, free = null) {
+// Jam (a /talk option): the listener can cut the speaker off mid-message, as in a
+// live brainstorm. The speaker's last message is shown to the listener numbered
+// by sentence; a reply that opens with "Cut in after N" keeps sentences 1..N of
+// it and drops the rest, which the page shows folded as what went unsaid.
+const CUT_LINE = /^[ \t]*[*_`]*cut in after[ \t]*(\d+)[*_`.:]*[ \t]*\n?/i;
+
+// End offsets of each sentence (or line) in text, for cutting it.
+function sentenceEnds(text) {
+  const ends = [];
+  const re = /[^.!?\n]*?(?:[.!?]+["')\]*_]*(?=\s|$)|\n+|$)/g;
+  let m;
+  while ((m = re.exec(text)) && re.lastIndex <= text.length) {
+    if (m[0].trim()) ends.push(re.lastIndex);
+    if (re.lastIndex === text.length) break;
+    if (!m[0].length) re.lastIndex++;
+  }
+  return ends;
+}
+const sentences = text => { let from = 0; return sentenceEnds(text).map(e => { const s = text.slice(from, e).trim(); from = e; return s; }); };
+const numbered = text => sentences(text).map((s, i) => `[${i + 1}] ${s}`).join('\n');
+
+const JAM = (other, cuttable, wasCut) => [
+  `This is a jam: a live brainstorm, where you build on each other's ideas as they come. Say your most important thing first: ${other} can cut you off mid-message, as people do.`,
+  ...(cuttable ? [`${other}'s last message is numbered by sentence, as if you were hearing it live. If you would have jumped in partway (because something sparked an idea, or it was heading somewhere you want to turn), make the first line of your reply exactly "Cut in after N", where N is the last sentence you let ${other} say, and reply only to what was said up to there: you never heard the rest. If you'd let ${other} finish, just reply. Cut in when it comes naturally, not every time. Build on ideas more than you knock them down.`] : []),
+  ...(wasCut ? [`${other} cut you off: your last message ends where it did.`] : []),
+].join('\n');
+
+function framing(me, other, opener, turns, retry, tag, n, total, free = null, jam = null) {
   const lines = [
     `You are ${me}, in a conversation with ${other}, another AI agent. A person set this up and is reading along; their messages, if any, are marked "${USER}".`,
     SPEAKERS(tag),
@@ -150,6 +177,7 @@ function framing(me, other, opener, turns, retry, tag, n, total, free = null) {
     UNATTENDED(other),
     ...(n ? [position(n, total)] : []),
     ...(free ? [floorRules(other, free)] : []),
+    ...(jam ? [JAM(other, jam.cuttable, jam.wasCut)] : []),
     '',
     '## Opener',
     '',
@@ -255,14 +283,16 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
   const transcript = (t, all = false) => [
     `# ${t.agents.map(a => a.label).join(' ↔ ')}`, '', ...(modelLine(t.agents) ? [modelLine(t.agents), ''] : []), `## Opener`, '', withFiles(t.opener, t.files), '',
     ...t.turns.flatMap(m => [`## ${title(m)}`, '', withFiles(inert(shown(t, m, all)), m.files), '',
-      ...(m.next && m.next !== 'other' ? [`_${FLOOR_NOTE[m.next]}_`, ''] : [])]),
+      ...(m.next && m.next !== 'other' ? [`_${FLOOR_NOTE[m.next]}_`, ''] : []),
+      ...(m.unsaid ? [`_Unsaid (cut off by ${m.cutBy}):_ ${inert(m.unsaid)}`, ''] : [])]),
   ].join('\n');
 
   const FLOOR_NOTE = { me: 'Keeps the floor.', person: 'Asks the person.', end: 'Proposes to end.' };
   const title = m => m.step ? `${m.label} (round ${m.round}, ${m.step})` : m.label;
   const revealed = (t, m) => m.step === 'puzzle' && t.turns.some(g => g.step === 'grade' && g.round === m.round);
   const shown = (t, m, all = false) => m.secret && (all || revealed(t, m))
-    ? `${m.text}\n\n**Answer (hidden until graded)**\n\n${m.secret}` : m.text;
+    ? `${m.text}\n\n**Answer (hidden until graded)**\n\n${m.secret}`
+    : m.cutBy ? `${m.text} [cut off by ${m.cutBy}]` : m.text;
   const score = t => t.agents.map(a => `${a.label} ${t.turns.filter(m => m.step === 'grade' && m.solver === a.id && m.solved).length}`).join(', ');
 
   function save(t) {
@@ -310,12 +340,18 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
     // The second review is written without the first.
     const seen = t.kind === 'review' && spoken === 1 ? t.turns.filter(m => !m.agent) : t.turns;
     const past = seen.map(m => ({ label: title(m), text: withFiles(shown(t, m), m.files) }));
+    // Jam: the other agent's message just before this turn can be cut, so it is shown numbered.
+    const lastTurn = t.turns[t.turns.length - 1];
+    const cuttable = t.jam && !pz && lastTurn && lastTurn.agent === other.id && !lastTurn.skipped && sentences(lastTurn.text).length > 1;
+    if (cuttable) past[past.length - 1].text = numbered(lastTurn.text);
+    const mineLast = t.turns.filter(m => m.agent === me.id).pop();
+    const jam = t.jam && !pz ? { cuttable, wasCut: !!(mineLast && mineLast.cutBy) } : null;
     const prompt = pz
       ? puzzleFraming(me.label, other.label, opener, past, retry, t.tag, {
           round: pz.round, rounds: t.rounds, step: pz.step, score: score(t),
           secret: pz.step === 'grade' ? t.turns.find(m => m.step === 'puzzle' && m.round === pz.round)?.secret : '' })
       : (t.kind === 'review' ? reviewFraming : framing)(me.label, other.label, opener, past, retry, t.tag,
-          spoken + 1, spoken + t.turnsLeft, free);
+          spoken + 1, spoken + t.turnsLeft, free, jam);
     // Keep what each turn was sent and what it said on stderr, to rerun a failed turn by hand.
     const base = path.join(t.dir, 'turns', `${String(spoken + 1).padStart(2, '0')}-${me.id.replace(/[^\w-]/g, '_')}`);
     fs.mkdirSync(path.dirname(base), { recursive: true });
@@ -365,6 +401,23 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
         return next(t);
       }
       const m = { agent: me.id, label: me.label, text, seconds: Math.round((Date.now() - cur.started) / 1000) };
+      if (jam) {
+        const c = CUT_LINE.exec(text);
+        const target = jam.cuttable ? t.turns[t.turns.length - 1] : null;
+        if (c) {
+          m.text = text.slice(c[0].length).trim() || text;
+          const ends = target ? sentenceEnds(target.text) : [];
+          const k = Number(c[1]);
+          // Cutting after the last sentence is letting them finish.
+          if (target && k >= 1 && k < ends.length) {
+            target.unsaid = target.text.slice(ends[k - 1]).trim();
+            target.text = target.text.slice(0, ends[k - 1]).trimEnd() + ' —';
+            target.cutBy = me.label;
+            m.cutIn = { after: k, of: ends.length };
+          }
+        }
+        text = m.text;
+      }
       if (free) {
         const f = floor(text);
         m.next = f.next || 'other';
@@ -422,12 +475,12 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
     const labels = agents.map(a => a.label || a.id);
     if (labels[0] === labels[1]) { labels[0] += ' (1)'; labels[1] += ' (2)'; }
     const t = {
-      id, kind, rounds, free: kind === 'talk' && body.free === true, dir: talkDir, work, tag: newTag(), opener, files: saved, turns: [], queued: [], turnsLeft: turns, status: 'running',
+      id, kind, rounds, free: kind === 'talk' && body.free === true, jam: kind === 'talk' && body.jam === true, dir: talkDir, work, tag: newTag(), opener, files: saved, turns: [], queued: [], turnsLeft: turns, status: 'running',
       agents: agents.map((a, i) => ({ id: a.id + (ids[0] === ids[1] ? `#${i + 1}` : ''), label: labels[i], model: a.model, headless: a.headless, env: a.env })),
     };
     talks.set(id, t);
     fs.writeFileSync(path.join(talkDir, 'meta.json'),
-      JSON.stringify({ id, kind, free: t.free, agents: ids, models: t.agents.map(a => a.model || null), turns, at: new Date().toISOString() }, null, 2));
+      JSON.stringify({ id, kind, free: t.free, jam: t.jam, agents: ids, models: t.agents.map(a => a.model || null), turns, at: new Date().toISOString() }, null, 2));
     save(t);
     console.log(`  ↔ ${id} ${kind} ${ids.join(' ↔ ')} (${turns} turns) in ${talkDir}`);
     next(t);
@@ -482,11 +535,11 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
 
   // The page doesn't get an answer before its round is graded either, live or kept.
   const view = t => ({
-    id: t.id, kind: t.kind, free: t.free, agreed: !!t.agreed, rounds: t.rounds, dir: t.dir, opener: t.opener, files: t.files, status: t.status, error: t.error, turnsLeft: t.turnsLeft,
+    id: t.id, kind: t.kind, free: t.free, jam: t.jam, agreed: !!t.agreed, rounds: t.rounds, dir: t.dir, opener: t.opener, files: t.files, status: t.status, error: t.error, turnsLeft: t.turnsLeft,
     agents: t.agents.map(a => ({ id: a.id, label: a.label, model: a.model })),
     turns: t.turns.map(m => {
-      const { agent, user, label, text, files, seconds, skipped, step, round, solved, next } = m;
-      return { agent, user, label, text, files, seconds, skipped, step, round, solved, next,
+      const { agent, user, label, text, files, seconds, skipped, step, round, solved, next, unsaid, cutBy, cutIn } = m;
+      return { agent, user, label, text, files, seconds, skipped, step, round, solved, next, unsaid, cutBy, cutIn,
         answer: revealed(t, m) ? m.secret : undefined, hidden: !!m.secret && !revealed(t, m) };
     }),
     queued: t.queued.map(m => withFiles(m.text, m.files)),
@@ -494,7 +547,7 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
     current: t.current && {
       agent: t.current.agent, label: t.current.label, step: t.current.step, round: t.current.round,
       text: t.current.step === 'puzzle' ? splitAnswer(stripAnsi(t.current.out)).puzzle
-        : t.free ? floor(stripAnsi(t.current.out).trimEnd()).text : stripAnsi(t.current.out),
+        : (t.free || t.jam) ? floor(stripAnsi(t.current.out).replace(CUT_LINE, '').trimEnd()).text : stripAnsi(t.current.out),
       seconds: Math.round((Date.now() - t.current.started) / 1000), retry: t.current.retry,
     },
   });
@@ -526,4 +579,4 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
   return { start, stop, resume, say, get, list, clear };
 }
 
-module.exports = { createTalks, floor, floorRules, MAX_RUN, modelLine, framing, reviewFraming, puzzleFraming, splitAnswer, verdict, position, killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS };
+module.exports = { createTalks, floor, floorRules, MAX_RUN, sentenceEnds, sentences, numbered, CUT_LINE, modelLine, framing, reviewFraming, puzzleFraming, splitAnswer, verdict, position, killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS };

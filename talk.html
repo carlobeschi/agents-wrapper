@@ -53,8 +53,9 @@
   .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--muted); }
   .dot.running { background: var(--run); animation: pulse 1.2s infinite; } .dot.done { background: var(--ok); }
   .dot.failed { background: var(--bad); } .dot.waiting { background: var(--run); }
-  #freeRow[hidden] { display: none; }
-  #freeRow { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+  #freeRow[hidden], #jamRow[hidden] { display: none; }
+  details.unsaid { margin-top: 6px; font-size: 13px; color: var(--muted); } details.unsaid summary { cursor: pointer; }
+  #freeRow, #jamRow { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
   aside .bottom { padding: 10px 14px 14px; border-top: 1px solid var(--line); font-size: 12px; display: flex; flex-direction: column; gap: 8px; }
   aside .bottom a { color: var(--muted); }
   #saved { overflow-wrap: anywhere; }
@@ -74,7 +75,7 @@
   .pair select { width: 100%; }
   #swap { margin-top: 18px; }
   #opener { width: 100%; min-height: 140px; margin-top: 14px; resize: vertical; line-height: 1.5; }
-  .go { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 12px; }
+  .go { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 12px; flex-wrap: wrap; }
   .go label { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
   input[type=number] { width: 72px; }
   .files { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -169,6 +170,7 @@
       <div class="go">
         <label><span id="countLabel">Turns</span> <input type="number" id="turns" min="1" max="50" value="10"></label>
         <label id="freeRow" title="Each agent ends its message by choosing who goes next: the other agent, itself again, you, or the end (which needs both to agree)."><input type="checkbox" id="free"> Agents choose who speaks next</label>
+        <label id="jamRow" title="A live brainstorm: the listener can cut the speaker off partway through a message, and reply to what was said up to there."><input type="checkbox" id="jam"> Jam: they can cut each other off</label>
         <span style="flex:1"></span>
         <button id="attachOpener" type="button" data-for="opener">Attach files</button>
         <button class="primary" id="start" type="button">Start <small>⌘↵</small></button>
@@ -322,6 +324,9 @@ function floorNote(t, m, i) {
     : prev && prev.next === 'end' && prev.agent !== m.agent ? 'agrees to end' : 'proposes to end';
   return `<span class="floor">→ ${text}</span>`;
 }
+// Jam: a message cut short keeps what went unsaid, folded; the one that cut in says so.
+const unsaid = m => m.unsaid ? `<details class="unsaid"><summary>cut off by ${esc(m.cutBy)} · what went unsaid</summary><div class="text">${md(m.unsaid)}</div></details>` : '';
+const cutNote = m => m.cutIn ? `<span class="floor">↯ cut in after ${m.cutIn.after} of ${m.cutIn.of}</span>` : '';
 const stepNote = m => m.step ? `<span>round ${m.round} · ${m.step}${m.step === 'grade' && m.solved != null ? (m.solved ? ' · solved' : ' · not solved') : ''}</span>` : '';
 const answer = m => m.answer ? `<details class="answer"><summary>Answer</summary><div class="text">${md(m.answer)}</div></details>`
   : m.hidden ? '<div class="answer muted">Answer hidden until graded.</div>' : '';
@@ -333,7 +338,7 @@ function render(t) {
   $('chat').innerHTML = [
     message('opener', 'Opener', md(t.opener) + att(t.files), '', '✎'),
     ...t.turns.map((m, i) => m.user ? message('you', m.label, md(m.text) + att(m.files))
-                               : message(side(m.agent) + (m.skipped ? ' skipped' : ''), m.label, md(m.text) + answer(m), `${stepNote(m)}<span>${m.skipped ? 'no reply' : `${m.seconds}s`}</span>${floorNote(t, m, i)}`)),
+                               : message(side(m.agent) + (m.skipped ? ' skipped' : ''), m.label, md(m.text) + answer(m) + unsaid(m), `${stepNote(m)}<span>${m.skipped ? 'no reply' : `${m.seconds}s`}</span>${cutNote(m)}${floorNote(t, m, i)}`)),
     ...t.queued.map(text => message('you', 'You', md(text), '<span>after this reply</span>')),
     t.current ? message(`${side(t.current.agent)} live`, t.current.label,
       t.current.text.trim() ? md(t.current.text) : '<span class="typing"><i></i><i></i><i></i></span>',
@@ -367,7 +372,8 @@ const modelLine = agents => agents.some(a => a.model)
 function transcript(t) {
   return [`# ${t.agents.map(a => a.label).join(' ↔ ')}`, '', ...modelLine(t.agents), '## Opener', '', withFiles(t.opener, t.files), '',
     ...t.turns.flatMap(m => [`## ${m.label}${m.step ? ` (round ${m.round}, ${m.step})` : ''}`, '',
-      withFiles(m.answer ? `${m.text}\n\n**Answer**\n\n${m.answer}` : m.text, m.files), ''])].join('\n');
+      withFiles(m.answer ? `${m.text}\n\n**Answer**\n\n${m.answer}` : m.text, m.files), '',
+      ...(m.unsaid ? [`_Unsaid (cut off by ${m.cutBy}):_ ${m.unsaid}`, ''] : [])])].join('\n');
 }
 
 async function show(id) {
@@ -402,8 +408,8 @@ async function start() {
   store.set('pair', agents); store.set('turns', $('turns').value);
   $('start').disabled = true;
   try {
-    store.set('free', $('free').checked);
-    const t = await api('/api/talk', { kind: KIND, opener, agents, turns: Number($('turns').value), free: KIND === 'talk' && $('free').checked, files: await encode('opener') });
+    store.set('free', $('free').checked); store.set('jam', $('jam').checked);
+    const t = await api('/api/talk', { kind: KIND, opener, agents, turns: Number($('turns').value), free: KIND === 'talk' && $('free').checked, jam: KIND === 'talk' && $('jam').checked, files: await encode('opener') });
     msg('');
     $('opener').value = '';
     picked.opener = []; chips('opener');
@@ -502,7 +508,7 @@ $('firstLabel').textContent = MODE.first; $('secondLabel').textContent = MODE.se
 $('countLabel').textContent = MODE.count;
 $('opener').placeholder = MODE.placeholder;
 Object.assign($('turns'), { min: MODE.min, max: MODE.max });
-$('freeRow').hidden = KIND !== 'talk';
+$('freeRow').hidden = $('jamRow').hidden = KIND !== 'talk';
 $('moreTurns').setAttribute('aria-label', `More ${MODE.count.toLowerCase()}`);
 
 (async () => {
@@ -517,6 +523,7 @@ $('moreTurns').setAttribute('aria-label', `More ${MODE.count.toLowerCase()}`);
     $('b').value = ok.includes(pb) ? pb : ok.find(id => id !== $('a').value) || ok[0] || '';
     $('turns').value = store.get('turns', MODE.turns);
     $('free').checked = KIND === 'talk' && store.get('free', false) === true;
+    $('jam').checked = KIND === 'talk' && store.get('jam', false) === true;
     await refreshTalks();
     const id = store.get('current', null);
     id ? show(id) : showSetup();

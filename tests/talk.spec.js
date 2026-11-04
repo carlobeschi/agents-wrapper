@@ -46,6 +46,9 @@ test.beforeAll(async () => {
       { id: 'keeper', label: 'Keeper', headless: fake('keeper', 'More from K\n\nNext: me') },
       { id: 'ender', label: 'Ender', headless: fake('ender', 'That covers it.\n**Next: end**') },
       { id: 'asker', label: 'Asker', headless: fake('asker', 'Which one do you mean?\nNext: person') },
+      // Jam: talks in three sentences; the cutter always cuts in after the first.
+      { id: 'talker', label: 'Talker', headless: fake('talker', 'First idea here. Second idea grows. Third idea lands.') },
+      { id: 'cutter', label: 'Cutter', headless: fake('cutter', 'Cut in after 1\nYes, and the first idea could fly.') },
       { id: 'term', label: 'Terminal only', interactive: ['true', '{prompt}'] },
       { id: 'web', label: 'Web', type: 'url', url: 'https://example.com/?q={prompt}' },
     ],
@@ -66,7 +69,7 @@ test.afterAll(() => {
   fs.rmSync(home, { recursive: true, force: true });
 });
 
-async function begin(page, a, b, turns, opener = NASTY, free = false) {
+async function begin(page, a, b, turns, opener = NASTY, free = false, jam = false) {
   await page.goto(BASE + '/#k=' + key);
   await page.evaluate(() => Object.keys(localStorage).filter(k => k !== 'agents.key').forEach(k => localStorage.removeItem(k)));
   await page.reload();
@@ -75,6 +78,7 @@ async function begin(page, a, b, turns, opener = NASTY, free = false) {
   await page.locator('#turns').fill(String(turns));
   await page.locator('#opener').fill(opener);
   await page.locator('#free').setChecked(free);
+  await page.locator('#jam').setChecked(jam);
   await page.locator('#start').click();
   await expect(page.locator('#view')).toBeVisible();
 }
@@ -84,7 +88,7 @@ const talkDir = async page => (await page.locator('#status').textContent()).matc
 test('only agents with a headless command can be picked', async ({ page }) => {
   await page.goto(BASE + '/#k=' + key);
   const ids = await page.locator('#a option').evaluateAll(os => os.map(o => /** @type {HTMLOptionElement} */ (o).value));
-  expect(ids).toEqual(['a', 'b', 'slow', 'stuck', 'denied', 'flaky', 'md', 'bad', 'forger', 'flood', 'envy', 'pinned', 'keeper', 'ender', 'asker']);
+  expect(ids).toEqual(['a', 'b', 'slow', 'stuck', 'denied', 'flaky', 'md', 'bad', 'forger', 'flood', 'envy', 'pinned', 'keeper', 'ender', 'asker', 'talker', 'cutter']);
 });
 
 test('two agents take turns, and each sees the conversation so far', async ({ page }) => {
@@ -396,4 +400,31 @@ test('without free turns, a "Next:" line is just text and turns alternate', asyn
   await expect(page.locator('#chat .m:not(.opener) .who b')).toHaveText(['Keeper', 'Agent A', 'Keeper']);
   await expect(page.locator('#chat .m.a .text').first()).toContainText('Next: me');
   expect(fs.readFileSync(path.join(await talkDir(page), 'turns', '01-keeper.prompt.md'), 'utf8')).not.toContain('You choose who speaks next');
+});
+
+test('jam: the listener sees the message numbered, cuts in, and the speaker is cut where it said', async ({ page }) => {
+  await begin(page, 'talker', 'cutter', 3, 'Brainstorm.', false, true);
+  await expect(page.locator('#pill')).toHaveText('done');
+  const texts = page.locator('#chat .m:not(.opener) > .body > .text');
+  // The unsaid rest is folded under the cut message.
+  await expect(texts).toHaveText([/^First idea here\. —cut off by Cutter · what went unsaid/, 'Yes, and the first idea could fly.', 'First idea here. Second idea grows. Third idea lands.']);
+  await expect(page.locator('#chat .m.a details.unsaid').first()).toContainText('cut off by Cutter');
+  await expect(page.locator('#chat .m.b .floor')).toHaveText('↯ cut in after 1 of 3');
+  const dir = await talkDir(page);
+  const cut = fs.readFileSync(path.join(dir, 'turns', '02-cutter.prompt.md'), 'utf8');
+  expect(cut).toContain('[1] First idea here.\n[2] Second idea grows.\n[3] Third idea lands.');
+  expect(cut).toContain('make the first line of your reply exactly "Cut in after N"');
+  // The talker sees only what it got to say, and that it was cut off.
+  const talk = fs.readFileSync(path.join(dir, 'turns', '03-talker.prompt.md'), 'utf8');
+  expect(talk).toContain('First idea here. — [cut off by Cutter]');
+  expect(talk).not.toContain('Second idea grows');
+  expect(talk).toContain('Cutter cut you off');
+  expect(fs.readFileSync(path.join(dir, 'transcript.md'), 'utf8')).toContain('_Unsaid (cut off by Cutter):_ Second idea grows. Third idea lands.');
+});
+
+test('jam is off by default: a "Cut in after" line is just text', async ({ page }) => {
+  await begin(page, 'talker', 'cutter', 2, 'Brainstorm.');
+  await expect(page.locator('#pill')).toHaveText('done');
+  await expect(page.locator('#chat .m:not(.opener) > .body > .text').first()).toHaveText('First idea here. Second idea grows. Third idea lands.');
+  await expect(page.locator('#chat .m.b .text')).toContainText('Cut in after 1');
 });
