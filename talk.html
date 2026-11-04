@@ -52,7 +52,9 @@
   .talk .t2 { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
   .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--muted); }
   .dot.running { background: var(--run); animation: pulse 1.2s infinite; } .dot.done { background: var(--ok); }
-  .dot.failed { background: var(--bad); }
+  .dot.failed { background: var(--bad); } .dot.waiting { background: var(--run); }
+  #freeRow[hidden] { display: none; }
+  #freeRow { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
   aside .bottom { padding: 10px 14px 14px; border-top: 1px solid var(--line); font-size: 12px; display: flex; flex-direction: column; gap: 8px; }
   aside .bottom a { color: var(--muted); }
   #saved { overflow-wrap: anywhere; }
@@ -89,7 +91,7 @@
                background: var(--bg); position: sticky; top: 0; z-index: 2; flex-wrap: wrap; }
   header.bar .who { font-weight: 600; display: flex; align-items: center; gap: 6px; }
   .pill { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
-  .s-running { color: var(--run); } .s-done { color: var(--ok); } .s-failed { color: var(--bad); } .s-stopped { color: var(--muted); }
+  .s-running { color: var(--run); } .s-done { color: var(--ok); } .s-failed { color: var(--bad); } .s-stopped { color: var(--muted); } .s-waiting { color: var(--run); }
   #progress { font-size: 13px; color: var(--muted); }
   header.bar .sp { flex: 1; }
 
@@ -166,6 +168,7 @@
       <div class="files" id="openerFiles"></div>
       <div class="go">
         <label><span id="countLabel">Turns</span> <input type="number" id="turns" min="1" max="50" value="10"></label>
+        <label id="freeRow" title="Each agent ends its message by choosing who goes next: the other agent, itself again, you, or the end (which needs both to agree)."><input type="checkbox" id="free"> Agents choose who speaks next</label>
         <span style="flex:1"></span>
         <button id="attachOpener" type="button" data-for="opener">Attach files</button>
         <button class="primary" id="start" type="button">Start <small>⌘↵</small></button>
@@ -311,6 +314,14 @@ function message(cls, who, html, extra = '', avatar = initials(who)) {
 }
 
 // A puzzle round's step, and once graded, its verdict and the setter's answer.
+// Free turns: what the speaker chose, when it wasn't simply handing over.
+function floorNote(t, m, i) {
+  if (!m.next || m.next === 'other') return '';
+  const prev = t.turns.slice(0, i).filter(x => x.agent).pop();
+  const text = m.next === 'me' ? 'keeps the floor' : m.next === 'person' ? 'asks you'
+    : prev && prev.next === 'end' && prev.agent !== m.agent ? 'agrees to end' : 'proposes to end';
+  return `<span class="floor">→ ${text}</span>`;
+}
 const stepNote = m => m.step ? `<span>round ${m.round} · ${m.step}${m.step === 'grade' && m.solved != null ? (m.solved ? ' · solved' : ' · not solved') : ''}</span>` : '';
 const answer = m => m.answer ? `<details class="answer"><summary>Answer</summary><div class="text">${md(m.answer)}</div></details>`
   : m.hidden ? '<div class="answer muted">Answer hidden until graded.</div>' : '';
@@ -321,8 +332,8 @@ function render(t) {
   const nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 120;
   $('chat').innerHTML = [
     message('opener', 'Opener', md(t.opener) + att(t.files), '', '✎'),
-    ...t.turns.map(m => m.user ? message('you', m.label, md(m.text) + att(m.files))
-                               : message(side(m.agent) + (m.skipped ? ' skipped' : ''), m.label, md(m.text) + answer(m), `${stepNote(m)}<span>${m.skipped ? 'no reply' : `${m.seconds}s`}</span>`)),
+    ...t.turns.map((m, i) => m.user ? message('you', m.label, md(m.text) + att(m.files))
+                               : message(side(m.agent) + (m.skipped ? ' skipped' : ''), m.label, md(m.text) + answer(m), `${stepNote(m)}<span>${m.skipped ? 'no reply' : `${m.seconds}s`}</span>${floorNote(t, m, i)}`)),
     ...t.queued.map(text => message('you', 'You', md(text), '<span>after this reply</span>')),
     t.current ? message(`${side(t.current.agent)} live`, t.current.label,
       t.current.text.trim() ? md(t.current.text) : '<span class="typing"><i></i><i></i><i></i></span>',
@@ -335,12 +346,15 @@ function render(t) {
   $('pill').className = `pill s-${t.status}`;
   $('progress').textContent = t.kind === 'puzzle'
     ? `round ${Math.min(t.rounds, Math.floor(spoken / 3) + (running ? 1 : 0)) || 1} of ${t.rounds} · solved ${t.agents.map((a, i) => `${a.label} ${t.score[i]}`).join(', ')}`
-    : running ? `turn ${spoken + 1} of ${spoken + t.turnsLeft}` : `${spoken} turn${spoken === 1 ? '' : 's'}`;
+    : running ? `turn ${spoken + 1} of ${spoken + t.turnsLeft}` : t.status === 'waiting' ? 'waiting for you'
+    : t.agreed ? `${spoken} turns · both chose to end` : `${spoken} turn${spoken === 1 ? '' : 's'}`;
   $('status').innerHTML = `<span class="s-${esc(t.status)}">${esc(t.status)}</span> · ${spoken} turn${spoken === 1 ? '' : 's'}`
     + (running ? ` · ${t.turnsLeft} to go` : '') + ` · ${esc(t.dir)}`
     + (t.error ? `\n<span class="err">${esc(t.error)}</span>` : '');
-  $('stop').hidden = !running;
-  $('more').hidden = running;
+  $('stop').hidden = !running && t.status !== 'waiting';
+  $('more').hidden = running || t.status === 'waiting';
+  if (t.status === 'waiting') $('say').placeholder = 'They are waiting for you: reply to carry on';
+  else $('say').placeholder = 'Say something to both';
   $('resume').textContent = t.status === 'failed' ? 'Retry' : 'Continue';
   document.title = `${t.agents.map(a => a.label).join(' ↔ ')} · ${MODE.title}`;
   if (nearBottom) window.scrollTo(0, document.body.scrollHeight);
@@ -388,7 +402,8 @@ async function start() {
   store.set('pair', agents); store.set('turns', $('turns').value);
   $('start').disabled = true;
   try {
-    const t = await api('/api/talk', { kind: KIND, opener, agents, turns: Number($('turns').value), files: await encode('opener') });
+    store.set('free', $('free').checked);
+    const t = await api('/api/talk', { kind: KIND, opener, agents, turns: Number($('turns').value), free: KIND === 'talk' && $('free').checked, files: await encode('opener') });
     msg('');
     $('opener').value = '';
     picked.opener = []; chips('opener');
@@ -487,6 +502,7 @@ $('firstLabel').textContent = MODE.first; $('secondLabel').textContent = MODE.se
 $('countLabel').textContent = MODE.count;
 $('opener').placeholder = MODE.placeholder;
 Object.assign($('turns'), { min: MODE.min, max: MODE.max });
+$('freeRow').hidden = KIND !== 'talk';
 $('moreTurns').setAttribute('aria-label', `More ${MODE.count.toLowerCase()}`);
 
 (async () => {
@@ -500,6 +516,7 @@ $('moreTurns').setAttribute('aria-label', `More ${MODE.count.toLowerCase()}`);
     $('a').value = ok.includes(pa) ? pa : ok[0] || '';
     $('b').value = ok.includes(pb) ? pb : ok.find(id => id !== $('a').value) || ok[0] || '';
     $('turns').value = store.get('turns', MODE.turns);
+    $('free').checked = KIND === 'talk' && store.get('free', false) === true;
     await refreshTalks();
     const id = store.get('current', null);
     id ? show(id) : showSetup();

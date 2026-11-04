@@ -24,6 +24,8 @@ const USER         = 'You';
 // A reply past this is cut: it goes whole into every later prompt, which is one
 // command-line argument, and an agent shouldn't be able to stall the rest by flooding it.
 const MAX_REPLY    = 32 * 1024;
+// Free turns: the most messages one agent can send in a row by choosing "Next: me".
+const MAX_RUN      = 3;
 
 // Terminal colour and cursor codes, which some CLIs print even into a pipe.
 // Kill the agent and anything it started: a CLI's own child holding stdout open
@@ -108,13 +110,46 @@ function position(n, total) {
     : `This is message ${n} of ${total}.`;
 }
 
-function framing(me, other, opener, turns, retry, tag, n, total) {
+// Free turns (a /talk option): instead of strict alternation, each speaker ends
+// its message with a line saying who goes next. It can hand over (the default),
+// keep the floor for another message, wait for the person, or propose to end,
+// which ends the conversation only when the other agent agrees on its next turn.
+const FLOOR = ['other', 'me', 'person', 'end'];
+const NEXT_LINE = /^[ \t]*[*_`]*next[*_`]*[ \t]*:[ \t]*[*_`]*(other|me|person|end)[*_`]*[ \t]*\.?[ \t]*$/i;
+
+// { text, next } from a reply: the choice is the last non-empty line, taken out
+// of the text. next is null when there is no such line.
+function floor(text) {
+  const lines = String(text).split('\n');
+  let i = lines.length - 1;
+  while (i >= 0 && !lines[i].trim()) i--;
+  const m = i >= 0 && NEXT_LINE.exec(lines[i]);
+  return m ? { text: lines.slice(0, i).join('\n').trim(), next: m[1].toLowerCase() } : { text: String(text), next: null };
+}
+
+// The free-turns rules, said to the speaker. `keep` is false once it has had
+// MAX_RUN messages in a row; `proposed` when the other agent proposed to end.
+function floorRules(other, { keep, proposed }) {
+  return [
+    `You choose who speaks next. End your message with one line on its own, exactly one of:`,
+    `- "Next: other": ${other} replies. This is the usual choice.`,
+    keep ? `- "Next: me": you keep the floor and write another message straight after this one, to add something, change course or correct yourself.`
+         : `- ("Next: me" is not open to you now: you have had ${MAX_RUN} messages in a row.)`,
+    `- "Next: person": you need the person reading along, for something only they can answer or decide. The conversation waits for them.`,
+    `- "Next: end": you think the conversation is finished. It ends only if ${other} also ends its next message with "Next: end".`,
+    `Without that line, ${other} replies. The line is taken out before anyone reads your message.`,
+    ...(proposed ? [`${other} has proposed to end the conversation. End with "Next: end" if you agree; otherwise carry on.`] : []),
+  ].join('\n');
+}
+
+function framing(me, other, opener, turns, retry, tag, n, total, free = null) {
   const lines = [
     `You are ${me}, in a conversation with ${other}, another AI agent. A person set this up and is reading along; their messages, if any, are marked "${USER}".`,
     SPEAKERS(tag),
     `Write only your next message to ${other}. No preamble, no name label, no tools unless the conversation needs them. Match the length to the moment, from a line to a few paragraphs. Don't open by quoting or praising ${other}'s last message, and don't end every message with a question.`,
     UNATTENDED(other),
     ...(n ? [position(n, total)] : []),
+    ...(free ? [floorRules(other, free)] : []),
     '',
     '## Opener',
     '',
@@ -219,9 +254,11 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
   // on Save and clear, when nothing runs): until then no file holds it.
   const transcript = (t, all = false) => [
     `# ${t.agents.map(a => a.label).join(' ↔ ')}`, '', ...(modelLine(t.agents) ? [modelLine(t.agents), ''] : []), `## Opener`, '', withFiles(t.opener, t.files), '',
-    ...t.turns.flatMap(m => [`## ${title(m)}`, '', withFiles(inert(shown(t, m, all)), m.files), '']),
+    ...t.turns.flatMap(m => [`## ${title(m)}`, '', withFiles(inert(shown(t, m, all)), m.files), '',
+      ...(m.next && m.next !== 'other' ? [`_${FLOOR_NOTE[m.next]}_`, ''] : [])]),
   ].join('\n');
 
+  const FLOOR_NOTE = { me: 'Keeps the floor.', person: 'Asks the person.', end: 'Proposes to end.' };
   const title = m => m.step ? `${m.label} (round ${m.round}, ${m.step})` : m.label;
   const revealed = (t, m) => m.step === 'puzzle' && t.turns.some(g => g.step === 'grade' && g.round === m.round);
   const shown = (t, m, all = false) => m.secret && (all || revealed(t, m))
@@ -237,15 +274,38 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
   // behind these CLIs return the odd one-off error (Antigravity: NOT_FOUND 404),
   // and an agent whose tool was refused needs telling to reply without it.
   // `retry` is { why, note } on that second run.
+  // Free turns: who speaks next, from the last agent message's choice. Returns
+  // { me: index into t.agents, keep: may it choose "Next: me", proposed: did the
+  // other agent just propose to end }.
+  function freeTurn(t) {
+    const said = t.turns.filter(m => m.agent);
+    const last = said[said.length - 1];
+    if (!last) return { me: 0, keep: true, proposed: false };
+    const lastIdx = t.agents.findIndex(a => a.id === last.agent);
+    let run = 0;
+    for (let i = said.length - 1; i >= 0 && said[i].agent === last.agent; i--) run++;
+    const stay = last.next === 'me' && run < MAX_RUN;
+    const me = stay ? lastIdx : 1 - lastIdx;
+    return { me, keep: (stay ? run + 1 : 1) < MAX_RUN, proposed: !stay && last.next === 'end' };
+  }
+
   function next(t, retry = null) {
-    if (t.stopRequested || t.turnsLeft <= 0) {
+    if (t.stopRequested || t.turnsLeft <= 0 || t.agreed) {
       t.status = t.stopRequested ? 'stopped' : 'done';
+      t.current = null;
+      return;
+    }
+    // Free turns: an agent asked for the person, and the person hasn't spoken yet.
+    if (t.waiting) {
+      t.status = 'waiting';
       t.current = null;
       return;
     }
     const spoken = t.turns.filter(m => m.agent).length;
     const pz = t.kind === 'puzzle' && puzzleTurn(t.agents, spoken);
-    const me = pz ? pz.me : t.agents[spoken % 2], other = pz ? pz.other : t.agents[(spoken + 1) % 2];
+    const free = t.free ? freeTurn(t) : null;
+    const meIdx = free ? free.me : spoken % 2;
+    const me = pz ? pz.me : t.agents[meIdx], other = pz ? pz.other : t.agents[1 - meIdx];
     const opener = withFiles(t.opener, t.files);
     // The second review is written without the first.
     const seen = t.kind === 'review' && spoken === 1 ? t.turns.filter(m => !m.agent) : t.turns;
@@ -255,7 +315,7 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
           round: pz.round, rounds: t.rounds, step: pz.step, score: score(t),
           secret: pz.step === 'grade' ? t.turns.find(m => m.step === 'puzzle' && m.round === pz.round)?.secret : '' })
       : (t.kind === 'review' ? reviewFraming : framing)(me.label, other.label, opener, past, retry, t.tag,
-          spoken + 1, spoken + t.turnsLeft);
+          spoken + 1, spoken + t.turnsLeft, free);
     // Keep what each turn was sent and what it said on stderr, to rerun a failed turn by hand.
     const base = path.join(t.dir, 'turns', `${String(spoken + 1).padStart(2, '0')}-${me.id.replace(/[^\w-]/g, '_')}`);
     fs.mkdirSync(path.dirname(base), { recursive: true });
@@ -305,6 +365,14 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
         return next(t);
       }
       const m = { agent: me.id, label: me.label, text, seconds: Math.round((Date.now() - cur.started) / 1000) };
+      if (free) {
+        const f = floor(text);
+        m.next = f.next || 'other';
+        m.text = f.text || `(${me.label} has nothing to add.)`;
+        // Both agents chose to end, one after the other: the conversation is over.
+        if (m.next === 'end' && free.proposed) t.agreed = true;
+        if (m.next === 'person' && !t.queued.length) t.waiting = true;
+      }
       if (pz) Object.assign(m, { step: pz.step, round: pz.round });
       if (split) Object.assign(m, { text: split.puzzle, secret: split.secret });
       if (pz && pz.step === 'grade') Object.assign(m, { solver: other.id, solved: verdict(text) });
@@ -354,12 +422,12 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
     const labels = agents.map(a => a.label || a.id);
     if (labels[0] === labels[1]) { labels[0] += ' (1)'; labels[1] += ' (2)'; }
     const t = {
-      id, kind, rounds, dir: talkDir, work, tag: newTag(), opener, files: saved, turns: [], queued: [], turnsLeft: turns, status: 'running',
+      id, kind, rounds, free: kind === 'talk' && body.free === true, dir: talkDir, work, tag: newTag(), opener, files: saved, turns: [], queued: [], turnsLeft: turns, status: 'running',
       agents: agents.map((a, i) => ({ id: a.id + (ids[0] === ids[1] ? `#${i + 1}` : ''), label: labels[i], model: a.model, headless: a.headless, env: a.env })),
     };
     talks.set(id, t);
     fs.writeFileSync(path.join(talkDir, 'meta.json'),
-      JSON.stringify({ id, kind, agents: ids, models: t.agents.map(a => a.model || null), turns, at: new Date().toISOString() }, null, 2));
+      JSON.stringify({ id, kind, free: t.free, agents: ids, models: t.agents.map(a => a.model || null), turns, at: new Date().toISOString() }, null, 2));
     save(t);
     console.log(`  ↔ ${id} ${kind} ${ids.join(' ↔ ')} (${turns} turns) in ${talkDir}`);
     next(t);
@@ -369,6 +437,7 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
   function stop(id) {
     const t = talks.get(id);
     if (!t) return [404, { error: 'No such conversation.' }];
+    if (t.status === 'waiting') { t.waiting = false; t.status = 'stopped'; save(t); return [200, view(t)]; }
     if (t.status !== 'running') return [200, view(t)];
     t.stopRequested = true;
     clearTimeout(t.retryTimer);
@@ -389,6 +458,8 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
       t.rounds = Math.ceil((spoken + t.turnsLeft) / 3);
     } else t.turnsLeft = Math.min(MAX_TURNS, Math.max(1, Math.floor(Number(body.turns)) || 2));
     t.stopRequested = false;
+    t.agreed = false;
+    t.waiting = false;
     t.error = undefined;
     next(t);
     return [200, view(t)];
@@ -404,23 +475,26 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
     const m = { user: true, label: USER, text, files: saveFiles(t.work, files) };
     if (t.current) t.queued.push(m);
     else { t.turns.push(m); save(t); }
+    // An agent asked for the person: their message lets the conversation go on.
+    if (t.status === 'waiting') { t.waiting = false; t.status = 'running'; next(t); }
     return [200, view(t)];
   }
 
   // The page doesn't get an answer before its round is graded either, live or kept.
   const view = t => ({
-    id: t.id, kind: t.kind, rounds: t.rounds, dir: t.dir, opener: t.opener, files: t.files, status: t.status, error: t.error, turnsLeft: t.turnsLeft,
+    id: t.id, kind: t.kind, free: t.free, agreed: !!t.agreed, rounds: t.rounds, dir: t.dir, opener: t.opener, files: t.files, status: t.status, error: t.error, turnsLeft: t.turnsLeft,
     agents: t.agents.map(a => ({ id: a.id, label: a.label, model: a.model })),
     turns: t.turns.map(m => {
-      const { agent, user, label, text, files, seconds, skipped, step, round, solved } = m;
-      return { agent, user, label, text, files, seconds, skipped, step, round, solved,
+      const { agent, user, label, text, files, seconds, skipped, step, round, solved, next } = m;
+      return { agent, user, label, text, files, seconds, skipped, step, round, solved, next,
         answer: revealed(t, m) ? m.secret : undefined, hidden: !!m.secret && !revealed(t, m) };
     }),
     queued: t.queued.map(m => withFiles(m.text, m.files)),
     score: t.kind === 'puzzle' ? t.agents.map(a => t.turns.filter(m => m.step === 'grade' && m.solver === a.id && m.solved).length) : undefined,
     current: t.current && {
       agent: t.current.agent, label: t.current.label, step: t.current.step, round: t.current.round,
-      text: t.current.step === 'puzzle' ? splitAnswer(stripAnsi(t.current.out)).puzzle : stripAnsi(t.current.out),
+      text: t.current.step === 'puzzle' ? splitAnswer(stripAnsi(t.current.out)).puzzle
+        : t.free ? floor(stripAnsi(t.current.out).trimEnd()).text : stripAnsi(t.current.out),
       seconds: Math.round((Date.now() - t.current.started) / 1000), retry: t.current.retry,
     },
   });
@@ -452,4 +526,4 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
   return { start, stop, resume, say, get, list, clear };
 }
 
-module.exports = { createTalks, modelLine, framing, reviewFraming, puzzleFraming, splitAnswer, verdict, position, killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS };
+module.exports = { createTalks, floor, floorRules, MAX_RUN, modelLine, framing, reviewFraming, puzzleFraming, splitAnswer, verdict, position, killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS };
