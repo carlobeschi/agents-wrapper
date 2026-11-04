@@ -1,0 +1,12 @@
+{
+  "title": "The Pair, pilot 2: a calculator with a split spec",
+  "task": "Create calc.js (CommonJS) exporting evaluate(expr): it takes an arithmetic expression as a string and returns its value as a number. Numbers, + - * /, parentheses and spaces must work; invalid input throws an Error. That's all the spec you have; your navigator knows the product's other requirements. Use only Node's standard library.",
+  "navigator_notes": "1. ^ is power and is right-associative: 2^3^2 is 512.\n2. Unary minus binds looser than ^: -2^2 is -4, but 2^-1 is 0.5. It can repeat: --3 is 3.\n3. % is not modulo. It is a postfix percent on a number or a parenthesised group. When it is the right-hand operand of + or -, it means that percent of the left-hand side: 200+10% is 220, 50-10% is 45. Anywhere else it divides by 100: 10% is 0.1, 50*10% is 5, (10+10)% is 0.2.\n4. Division by zero throws an Error whose message contains \"division by zero\".\n5. Every syntax error throws an Error whose message contains \"at N\", where N is the 0-based index of the character where it went wrong (the end of the string if input ran out): \"1+*2\" says at 2, \"1 2\" says at 2, \"(1+2\" says at 4, \"\" says at 0.\n6. Numbers can be written 5, 0.5, .5 or 5. but scientific notation is not allowed: \"1e3\" is a syntax error (at 1).",
+  "tests": "hidden",
+  "proof": ["node", "--test", "hidden-tests/calc.test.js"],
+  "navigator": "claude",
+  "look_secs": 45,
+  "max_looks": 40,
+  "max_rounds": 6,
+  "max_minutes": 40
+}
