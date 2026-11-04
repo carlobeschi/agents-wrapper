@@ -49,6 +49,8 @@ test.beforeAll(async () => {
       // Jam: talks in three sentences; the cutter always cuts in after the first.
       { id: 'talker', label: 'Talker', headless: fake('talker', 'First idea here. Second idea grows. Third idea lands.') },
       { id: 'cutter', label: 'Cutter', headless: fake('cutter', 'Cut in after 1\nYes, and the first idea could fly.') },
+      // Like Codex: the prompt comes on stdin, and nothing on stdin is an error.
+      { id: 'piped', label: 'Piped', stdin: true, headless: ['sh', '-c', 'p=$(cat); [ -n "$p" ] || { echo "No prompt provided via stdin." >&2; exit 1; }; printf "got %s bytes\\n" "${#p}"'] },
       { id: 'term', label: 'Terminal only', interactive: ['true', '{prompt}'] },
       { id: 'web', label: 'Web', type: 'url', url: 'https://example.com/?q={prompt}' },
     ],
@@ -88,7 +90,7 @@ const talkDir = async page => (await page.locator('#status').textContent()).matc
 test('only agents with a headless command can be picked', async ({ page }) => {
   await page.goto(BASE + '/#k=' + key);
   const ids = await page.locator('#a option').evaluateAll(os => os.map(o => /** @type {HTMLOptionElement} */ (o).value));
-  expect(ids).toEqual(['a', 'b', 'slow', 'stuck', 'denied', 'flaky', 'md', 'bad', 'forger', 'flood', 'envy', 'pinned', 'keeper', 'ender', 'asker', 'talker', 'cutter']);
+  expect(ids).toEqual(['a', 'b', 'slow', 'stuck', 'denied', 'flaky', 'md', 'bad', 'forger', 'flood', 'envy', 'pinned', 'keeper', 'ender', 'asker', 'talker', 'cutter', 'piped']);
 });
 
 test('two agents take turns, and each sees the conversation so far', async ({ page }) => {
@@ -163,6 +165,12 @@ test('an agent gets a trimmed environment: the variables its env lists, not the 
   await begin(page, 'envy', 'a', 1);
   await expect(page.locator('#pill')).toHaveText('done');
   await expect(page.locator('#chat .m.a .text')).toHaveText('secret=none key=k3y');
+});
+
+test('an agent with "stdin": true gets the prompt on stdin', async ({ page }) => {
+  await begin(page, 'piped', 'a', 1);
+  await expect(page.locator('#pill')).toHaveText('done');
+  await expect(page.locator('#chat .m.a .text')).toHaveText(/^got [1-9]\d* bytes$/);
 });
 
 test('a reply in progress shows live, and Stop ends it', async ({ page }) => {

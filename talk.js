@@ -476,7 +476,7 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
     if (labels[0] === labels[1]) { labels[0] += ' (1)'; labels[1] += ' (2)'; }
     const t = {
       id, kind, rounds, free: kind === 'talk' && body.free === true, jam: kind === 'talk' && body.jam === true, dir: talkDir, work, tag: newTag(), opener, files: saved, turns: [], queued: [], turnsLeft: turns, status: 'running',
-      agents: agents.map((a, i) => ({ id: a.id + (ids[0] === ids[1] ? `#${i + 1}` : ''), label: labels[i], model: a.model, headless: a.headless, env: a.env })),
+      agents: agents.map((a, i) => ({ id: a.id + (ids[0] === ids[1] ? `#${i + 1}` : ''), label: labels[i], model: a.model, headless: a.headless, stdin: a.stdin, env: a.env })),
     };
     talks.set(id, t);
     fs.writeFileSync(path.join(talkDir, 'meta.json'),
