@@ -28,7 +28,7 @@ test('a session: help, a cut-in, a resume of the same session, the hidden tests 
   ] }));
   const cfg = path.join(home, 'pair.json');
   fs.writeFileSync(cfg, JSON.stringify({
-    task: 'Write 42 to answer.txt.', tests: path.join(FIX, 'hidden'),
+    task: 'Write 42 to answer.txt.', navigator_notes: 'SECRET-RULE: only the navigator knows.', tests: path.join(FIX, 'hidden'),
     proof: ['sh', '-c', 'test "$(cat answer.txt)" = 42 && test -f hidden-tests/check.txt'], proof_wrap: ['env'],
     look_secs: 999,
     driver: { model: '', start: ['node', path.join(FIX, 'fake-codex.js'), '-m', '{model}', '-'], resume: ['node', path.join(FIX, 'fake-codex.js'), 'resume', '{session}', '-'] },
@@ -44,6 +44,12 @@ test('a session: help, a cut-in, a resume of the same session, the hidden tests 
   expect(prompts.match(/^--- .*$/gm)).toEqual(['--- start', '--- resume th-123', '--- resume th-123']);
   expect(prompts).toContain('Navi answers your question:\n\nUse 42.');
   expect(prompts).toContain('Navi cuts in:\n\nThat says 41; the task wants 42.');
+  // Requirements only the navigator knows: in its prompts, never in the driver's.
+  expect(prompts).not.toContain('SECRET-RULE');
+  expect(prompts).toContain('Navi knows requirements that are not in your task');
+  const steps = fs.readdirSync(path.join(dir, 'steps')).filter(f => f.endsWith('.prompt.md'));
+  expect(steps.length).toBeGreaterThan(0);
+  for (const f of steps) expect(fs.readFileSync(path.join(dir, 'steps', f), 'utf8')).toContain('SECRET-RULE');
   // The hidden tests ran on a copy, never in the driver's folder.
   expect(fs.existsSync(path.join(dir, 'work', 'hidden-tests'))).toBe(false);
   const md = fs.readFileSync(path.join(dir, 'episode.md'), 'utf8');

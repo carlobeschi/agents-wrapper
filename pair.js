@@ -20,6 +20,7 @@
 //
 // Config:
 // { "title": "...", "task": "what to build", "starter": "folder copied in (optional)",
+//   "navigator_notes": "requirements only the navigator is told (optional)",
 //   "tests": "folder of hidden tests", "proof": ["node", "--test", "hidden-tests/x.test.js"],
 //   "navigator": "claude", "driver": { "model": "gpt-6-luna" },
 //   "look_secs": 45, "max_looks": 40, "max_rounds": 6, "max_minutes": 40 }
@@ -83,10 +84,11 @@ const sessionOf = ev => ev.thread_id || ev.session_id || (ev.type === 'session.c
 
 function driverBrief(p, nav) {
   return [
-    `You are the driver in a pair-programming session. ${nav.label}, an AI agent from another lab, is your navigator: it watches what you do as you do it and may cut in at any moment. A person is following along, and the session is recorded as a show.`,
+    `You are the driver in a pair-programming session. ${nav.label}, an AI agent from another lab, is your navigator: it watches what you do as you do it and may cut in at any moment. A person is following along.`,
     `Your folder is the current directory. You can edit files and run commands in it; there is no network.`,
     `When you are stuck, or a decision would really benefit from a second opinion, write a line on its own: "HELP: <your question>". The app pauses you, asks ${nav.label}, and brings you its answer. Use it when it helps, not for reassurance.`,
     `When ${nav.label} cuts in, take it seriously but think for yourself: if it is wrong, say why and carry on.`,
+    ...(p.navigator_notes ? [`${nav.label} knows requirements that are not in your task below, as a colleague who knows the product would. The hidden tests check them too. Ask when something is unspecified rather than guessing.`] : []),
     `When you think the task is done, check it yourself, then finish your turn with a short summary. Hidden tests will then be run on your work.`,
     '',
     '## The task',
@@ -94,6 +96,12 @@ function driverBrief(p, nav) {
     p.task,
   ].join('\n');
 }
+
+// Requirements only the navigator is given: the driver has to learn them from it.
+const NOTES = (p, drv) => p.navigator_notes ? [
+  '', `## Only you know this (${drv} can't see it; the hidden tests check it)`, '', p.navigator_notes, '',
+  `Share these as a colleague who knows the product would: when they become relevant, or when ${drv} asks. Don't dump the whole list at once.`,
+] : [];
 
 const NAV_RULES = drv => [
   `Cut in only for something that matters: a bug, a wrong approach, a missed requirement, a test it should run. Not for style, and not to praise. Each cut-in stops ${drv} mid-task, as a tap on the shoulder would.`,
@@ -105,13 +113,14 @@ function navPrompt(p, me, drv, timeline, since, why) {
   const recent = timeline.slice(since);
   const before = timeline.slice(Math.max(0, since - 12), since);
   return [
-    `You are ${me.label}, the navigator in a pair-programming session. ${drv}, an AI agent from another lab, is the driver: it writes the code and runs the commands. You watch and may cut in at any moment. A person is following along, and the session is recorded as a show.`,
+    `You are ${me.label}, the navigator in a pair-programming session. ${drv}, an AI agent from another lab, is the driver: it writes the code and runs the commands. You watch and may cut in at any moment. A person is following along.`,
     UNATTENDED(drv),
     ...(why === 'help' ? [`${drv} has asked you for help (the last entry below). Answer it directly, in a few sentences, said to ${drv}.`] : NAV_RULES(drv)),
     '',
     '## The task',
     '',
     p.task,
+    ...NOTES(p, drv),
     '',
     ...(before.length ? ['## Earlier (you have seen this)', '', ...before.map(entry), ''] : []),
     '## Since your last look',
@@ -127,7 +136,7 @@ function signOffPrompt(p, me, drv, timeline, proof) {
     `Look at the work (you can read the files in the folder). If you agree it is done, say so in a sentence and end with a line "Next: end". If something is still missing or wrong, say what, in one to three sentences said to ${drv}, without that line.`,
     UNATTENDED(drv),
     '',
-    '## The task', '', p.task, '',
+    '## The task', '', p.task, ...NOTES(p, drv), '',
     '## The session, last part', '', ...timeline.slice(-15).map(entry),
   ].join('\n');
 }
@@ -300,6 +309,7 @@ async function main() {
   const rel = f => f && path.resolve(base, f);
   const p = {
     title: raw.title || 'The Pair', task: String(raw.task || '').trim(),
+    navigator_notes: String(raw.navigator_notes || '').trim(),
     starter: rel(raw.starter), tests: rel(raw.tests),
     proof: Array.isArray(raw.proof) && raw.proof.length ? raw.proof : null,
     proof_wrap: Array.isArray(raw.proof_wrap) && raw.proof_wrap.length ? raw.proof_wrap : PROOF_WRAP,
