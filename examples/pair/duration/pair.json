@@ -1,0 +1,11 @@
+{
+  "title": "The Pair, pilot 1: durations",
+  "task": "Create duration.js (CommonJS) exporting two functions.\n\nparse(text) takes a duration such as \"1h30m\", \"90s\", \"2h 5m 3s\", \"1d\" or \"1.5h\" and returns the number of seconds. Units: d, h, m, s, case-insensitive. Spaces between parts are allowed. Each unit may appear once, in the order d, h, m, s. Decimals are allowed only on the first part. Anything else (empty text, an unknown unit, a repeated or out-of-order unit, a negative number, a bare number with no unit) throws an Error.\n\nformat(seconds) does the reverse with whole seconds: 5400 becomes \"1h30m\", 0 becomes \"0s\", 90061 becomes \"1d1h1m1s\". Units that are zero are left out. Negative, fractional or non-number input throws.\n\nUse only Node's standard library. Add your own tests if you like.",
+  "tests": "hidden",
+  "proof": ["node", "--test", "hidden-tests/duration.test.js"],
+  "navigator": "claude",
+  "look_secs": 45,
+  "max_looks": 30,
+  "max_rounds": 5,
+  "max_minutes": 30
+}
