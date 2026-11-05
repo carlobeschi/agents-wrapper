@@ -77,6 +77,25 @@ test('when neither motion splits the agents, the day is held before the debate',
   expect(res.run).toBeUndefined();
 });
 
+test('when the pick and backup agree, the reserves are screened in turn', () => {
+  const s = show({ pick: M('tabs beat spaces.'), backup: M('tabs beat everything.'),
+    reserves: [M('tabs are fine.'), M('monorepos win.'), M('never screened.')], shortlist: [], why: 'w' });
+  const r = daily(home(s.clone, 'HOLD\\tA fact is off.'));
+  expect(r.status).toBe(0);
+  git(s.clone, 'fetch', '-q', 'origin', 'queue');
+  const res = result(s);
+  expect(res.screened.map(x => x.split)).toEqual([false, false, false, true]);
+  expect(res.motion).toBe('This house believes monorepos win.');
+});
+
+test('when no reserve splits either, the hold names how many were screened', () => {
+  const s = show({ pick: M('tabs beat spaces.'), backup: M('tabs beat everything.'),
+    reserves: [M('tabs are fine.')], shortlist: [], why: 'w' });
+  daily(home(s.clone, 'OK'));
+  git(s.clone, 'fetch', '-q', 'origin', 'queue');
+  expect(result(s).why).toContain('None of the 3 motions screened');
+});
+
 test('with nothing queued for the day, it does nothing', () => {
   const s = show({ pick: M('x.') });
   const r = spawnSync('node', [path.join(__dirname, '..', 'motion-daily.js'), '--date', '2026-11-03'],

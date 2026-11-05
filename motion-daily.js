@@ -3,11 +3,13 @@
 //
 // A routine in the cloud reads the day's newsletters, picks a motion and a
 // backup, and commits them to the show repo's `queue` branch as
-// queue/<date>.json: { pick, backup, shortlist, why }, each motion being
-// { motion, brief, source, source_name }. This runs on the Mac, where the agents are:
+// queue/<date>.json: { pick, backup, reserves?, shortlist, why }, each motion being
+// { motion, brief, source, source_name }; reserves is an optional list of up to
+// two more. This runs on the Mac, where the agents are:
 //
 //   1. Screen the pick: both private openings only. The editor says whether
-//      they really disagree; if not, screen the backup. If neither splits, hold.
+//      they really disagree; if not, screen the backup, then any reserves.
+//      If none splits, hold.
 //   2. Run the motion in full under the next free number.
 //   3. The editor checks the episode against the brief; a broken reply, a
 //      fact the brief contradicts or unsafe content holds it.
@@ -112,9 +114,11 @@ async function main() {
     repo, github: set.github, redact: set.redact || [], number };
   const result = { date, number, dry_run: dry || undefined, screened: [] };
 
-  // 1. Screen: the pick, then the backup.
+  // 1. Screen: the pick, then the backup, then up to two reserves.
   let m;
-  for (const [slug, c] of [['pick', q.pick], ['backup', q.backup]]) {
+  const reserves = (Array.isArray(q.reserves) ? q.reserves : []).slice(0, 2);
+  const candidates = [['pick', q.pick], ['backup', q.backup], ...reserves.map((c, i) => [`reserve-${i + 1}`, c])];
+  for (const [slug, c] of candidates) {
     if (!c || !c.motion || !c.brief) continue;
     const cand = { ...base, motion: c.motion, brief: c.brief, source: c.source, source_name: c.source_name, slug };
     const s = await runMotion(cand, { screen: true, name: slug });
@@ -124,7 +128,9 @@ async function main() {
   }
   if (!m) {
     result.status = 'held';
-    result.why = 'Neither the pick nor the backup split the agents in their private openings.';
+    result.why = result.screened.length > 2
+      ? `None of the ${result.screened.length} motions screened split the agents in their private openings.`
+      : 'Neither the pick nor the backup split the agents in their private openings.';
     report(repo, date, result);
     console.log(`Held: ${result.why}`);
     return;
