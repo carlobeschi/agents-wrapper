@@ -51,6 +51,8 @@ test.beforeAll(async () => {
       { id: 'cutter', label: 'Cutter', headless: fake('cutter', 'Cut in after 1\nYes, and the first idea could fly.') },
       // Like Codex: the prompt comes on stdin, and nothing on stdin is an error.
       { id: 'piped', label: 'Piped', stdin: true, headless: ['sh', '-c', 'p=$(cat); [ -n "$p" ] || { echo "No prompt provided via stdin." >&2; exit 1; }; printf "got %s bytes\\n" "${#p}"'] },
+      // Puts its choice at the end of its last line instead of on a line of its own.
+      { id: 'tacker', label: 'Tacker', headless: fake('tacker', 'A lovely chat. Next: end') },
       { id: 'term', label: 'Terminal only', interactive: ['true', '{prompt}'] },
       { id: 'web', label: 'Web', type: 'url', url: 'https://example.com/?q={prompt}' },
     ],
@@ -90,7 +92,7 @@ const talkDir = async page => (await page.locator('#status').textContent()).matc
 test('only agents with a headless command can be picked', async ({ page }) => {
   await page.goto(BASE + '/#k=' + key);
   const ids = await page.locator('#a option').evaluateAll(os => os.map(o => /** @type {HTMLOptionElement} */ (o).value));
-  expect(ids).toEqual(['a', 'b', 'slow', 'stuck', 'denied', 'flaky', 'md', 'bad', 'forger', 'flood', 'envy', 'pinned', 'keeper', 'ender', 'asker', 'talker', 'cutter', 'piped']);
+  expect(ids).toEqual(['a', 'b', 'slow', 'stuck', 'denied', 'flaky', 'md', 'bad', 'forger', 'flood', 'envy', 'pinned', 'keeper', 'ender', 'asker', 'talker', 'cutter', 'piped', 'tacker']);
 });
 
 test('two agents take turns, and each sees the conversation so far', async ({ page }) => {
@@ -422,6 +424,7 @@ test('jam: the listener sees the message numbered, cuts in, and the speaker is c
   const cut = fs.readFileSync(path.join(dir, 'turns', '02-cutter.prompt.md'), 'utf8');
   expect(cut).toContain('[1] First idea here.\n[2] Second idea grows.\n[3] Third idea lands.');
   expect(cut).toContain('make the first line of your reply exactly "Cut in after N"');
+  expect(cut).toContain("don't quote them in your reply");
   // The talker sees only what it got to say, and that it was cut off.
   const talk = fs.readFileSync(path.join(dir, 'turns', '03-talker.prompt.md'), 'utf8');
   expect(talk).toContain('First idea here. — [cut off by Cutter]');
@@ -435,4 +438,11 @@ test('jam is off by default: a "Cut in after" line is just text', async ({ page 
   await expect(page.locator('#pill')).toHaveText('done');
   await expect(page.locator('#chat .m:not(.opener) > .body > .text').first()).toHaveText('First idea here. Second idea grows. Third idea lands.');
   await expect(page.locator('#chat .m.b .text')).toContainText('Cut in after 1');
+});
+
+test('free turns: a choice at the end of the last line counts too, and is taken out', async ({ page }) => {
+  await begin(page, 'tacker', 'tacker', 10, 'Go.', true);
+  await expect(page.locator('#pill')).toHaveText('done');
+  await expect(page.locator('#chat .m:not(.opener) > .body > .text')).toHaveText(['A lovely chat.', 'A lovely chat.']);
+  await expect(page.locator('#chat .floor')).toHaveText(['→ proposes to end', '→ agrees to end']);
 });
