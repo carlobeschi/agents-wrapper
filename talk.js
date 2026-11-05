@@ -117,14 +117,20 @@ function position(n, total) {
 const FLOOR = ['other', 'me', 'person', 'end'];
 const NEXT_LINE = /^[ \t]*[*_`]*next[*_`]*[ \t]*:[ \t]*[*_`]*(other|me|person|end)[*_`]*[ \t]*\.?[ \t]*$/i;
 
-// { text, next } from a reply: the choice is the last non-empty line, taken out
-// of the text. next is null when there is no such line.
+// The same choice tacked onto the end of the last line of text ("... daft together. Next: end").
+const NEXT_TAIL = /(?<=[.!?)"'”’*_`]|^)[ \t]+[*_`]*next[*_`]*[ \t]*:[ \t]*[*_`]*(other|me|person|end)[*_`]*[ \t]*\.?[ \t]*$/i;
+
+// { text, next } from a reply: the choice is the last non-empty line, or the
+// end of it, taken out of the text. next is null when there is none.
 function floor(text) {
   const lines = String(text).split('\n');
   let i = lines.length - 1;
   while (i >= 0 && !lines[i].trim()) i--;
   const m = i >= 0 && NEXT_LINE.exec(lines[i]);
-  return m ? { text: lines.slice(0, i).join('\n').trim(), next: m[1].toLowerCase() } : { text: String(text), next: null };
+  if (m) return { text: lines.slice(0, i).join('\n').trim(), next: m[1].toLowerCase() };
+  const t = i >= 0 && NEXT_TAIL.exec(lines[i]);
+  if (t) return { text: [...lines.slice(0, i), lines[i].slice(0, t.index)].join('\n').trim(), next: t[1].toLowerCase() };
+  return { text: String(text), next: null };
 }
 
 // The free-turns rules, said to the speaker. `keep` is false once it has had
@@ -165,7 +171,7 @@ const numbered = text => sentences(text).map((s, i) => `[${i + 1}] ${s}`).join('
 
 const JAM = (other, cuttable, wasCut) => [
   `This is a jam: a live brainstorm, where you build on each other's ideas as they come. Say your most important thing first: ${other} can cut you off mid-message, as people do.`,
-  ...(cuttable ? [`${other}'s last message is numbered by sentence, as if you were hearing it live. If you would have jumped in partway (because something sparked an idea, or it was heading somewhere you want to turn), make the first line of your reply exactly "Cut in after N", where N is the last sentence you let ${other} say, and reply only to what was said up to there: you never heard the rest. If you'd let ${other} finish, just reply. Cut in when it comes naturally, not every time. Build on ideas more than you knock them down.`] : []),
+  ...(cuttable ? [`${other}'s last message is numbered by sentence, as if you were hearing it live. If you would have jumped in partway (because something sparked an idea, or it was heading somewhere you want to turn), make the first line of your reply exactly "Cut in after N", where N is the last sentence you let ${other} say, and reply only to what was said up to there: you never heard the rest. If you'd let ${other} finish, just reply. Cut in when it comes naturally, not every time. The numbers are only for this: don't quote them in your reply.`] : []),
   ...(wasCut ? [`${other} cut you off: your last message ends where it did.`] : []),
 ].join('\n');
 
