@@ -32,6 +32,7 @@
 //   "moves": 8, "lines_per_move": 4, "words": 30, "max_minutes": 30,
 //   "silent": false,    (silent: no chat, and comments are taken out of edits)
 //   "turns": false,     (turns: one agent at a time, in order, so no clashes)
+//   "min_moves": 0,     (each agent must change the piece this many times before done counts)
 //   "safe_word": { "word": "STUCK", "uses": 1 } }
 // A safe word lets a silent agent break the silence: it writes "STUCK: ..."
 // (at most "words" words), the others see it on their next move, and each may
@@ -148,8 +149,10 @@ function check(c, lines) {
 // event handlers and outside references taken out.
 function safeSvg(text) {
   let s = String(text);
-  const m = s.match(/<svg[\s\S]*<\/svg>/i);
-  s = m ? m[0] : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">${s}</svg>`;
+  // Agents can move or delete the closing tag while editing: keep everything
+  // from the opening tag on, drop stray closing tags, and close it once.
+  const at = s.search(/<svg[\s>]/i);
+  s = at >= 0 ? s.slice(at).replace(/<\/svg>/gi, '') + '</svg>' : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">${s}</svg>`;
   s = s.replace(/<(script|foreignObject|iframe|image|use|a)\b[\s\S]*?(<\/\1>|\/>)/gi, '')
        .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
        .replace(/\s(href|xlink:href)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
@@ -179,6 +182,7 @@ function movePrompt(cfg, me, others, view) {
     ...(cfg.secrets?.[me.id] || mine.length ? ['', `Only you have this, ${them} ${others.length > 1 ? 'have' : 'has'} not been told it:`,
       ...(cfg.secrets?.[me.id] ? [cfg.secrets[me.id]] : []), ...mine.map(c => `- The app checks at the end: ${c.say}`),
       'You may say it in the chat, or not: your call.'] : []),
+    ...(cfg.min_moves ? ['', `Everyone must change the ${cfg.kind === 'svg' ? 'picture' : 'piece'} at least ${cfg.min_moves} times. You have changed it ${view.touched} time${view.touched === 1 ? '' : 's'} so far${view.touched < cfg.min_moves ? ', so you cannot be done yet' : ''}.`] : []),
     '', `This is move ${view.move} of at most ${cfg.moves} for you.${view.minutesLeft != null ? ` About ${view.minutesLeft} minutes are left.` : ''}`,
     ...(view.since.length ? ['', 'Since your last move:', ...view.since] : []),
     '', 'The chat so far:', view.chat.length ? view.chat.join('\n') : '(nothing yet)',
@@ -252,7 +256,7 @@ async function main(file) {
   const t0 = Date.now(), deadline = t0 + cfg.max_minutes * 60000;
   const timeline = [];          // every move, in the order it landed
   const chat = [];              // "Label: text"
-  const state = Object.fromEntries(agents.map(a => [a.id, { moves: 0, done: false, out: false, seen: 0, fails: 0, stuckUsed: 0, stuckIn: [], inbox: [] }]));
+  const state = Object.fromEntries(agents.map(a => [a.id, { moves: 0, done: false, out: false, seen: 0, fails: 0, stuckUsed: 0, stuckIn: [], inbox: [], touched: 0 }]));
   let wake = () => {};
   let changed = new Promise(r => { wake = r; });
   const bump = () => { const w = wake; changed = new Promise(r => { wake = r; }); w(); };
@@ -272,7 +276,7 @@ async function main(file) {
     const snap = doc.lines.map(l => l.id);
     const view = { move: st.moves + 1, since, chat: chat.slice(-16), lines: doc.lines.map(l => ({ ...l })),
       minutesLeft: Math.max(0, Math.round((deadline - Date.now()) / 60000)),
-      stuck, stuckLeft: cfg.safe_word ? (cfg.safe_word.uses ?? 1) - st.stuckUsed : 0 };
+      touched: st.touched, stuck, stuckLeft: cfg.safe_word ? (cfg.safe_word.uses ?? 1) - st.stuckUsed : 0 };
     const asked = Date.now();
     let reply;
     try { reply = await run(dir, `${String(timeline.length + 1).padStart(2, '0')}-${me.id}`, me, movePrompt(cfg, me, others, view), cwd); st.fails = 0; }
@@ -307,7 +311,8 @@ async function main(file) {
       else { budget -= c; entry.landed.push(opLabel(op)); }
     }
     if (entry.say) chat.push(`${me.label}: ${entry.say}`);
-    st.done = mv.done;
+    if (entry.landed.length) st.touched++;
+    st.done = mv.done && st.touched >= (cfg.min_moves || 0);
     if (entry.landed.length) { doc.version++; if (cfg.turns) for (const o of others) state[o.id].done = false; }
     entry.after = doc.lines.map(l => ({ text: l.text, by: l.by }));
     timeline.push(entry);

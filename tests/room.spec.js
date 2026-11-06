@@ -105,3 +105,18 @@ test('turns: one move each in order; the safe word reaches the other, who may an
   expect(t.moves.every(m => !m.dropped.length)).toBe(true);
   expect(t.final.map(l => l.text)).toEqual(['line-a2', 'line-b1', 'line-a1']);
 });
+
+test('min_moves: "done" does not count until an agent has changed the piece enough times; a moved closing tag still draws', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'room-home-'));
+  const a = ['sh', '-c', `case "$1" in *"just finished"*) echo A;; *) printf 'INSERT AFTER 0\\n<rect/>\\nEND\\nSTATUS: done\\n';; esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: a }] }));
+  const file = path.join(home, 'r.json');
+  fs.writeFileSync(file, JSON.stringify({ title: 'T', kind: 'svg', brief: 'b', agents: ['a'], moves: 6, turns: true, min_moves: 3 }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'room.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Run folder: (.+)/)[1].trim();
+  const t = JSON.parse(fs.readFileSync(path.join(dir, 'timeline.json'), 'utf8'));
+  expect(t.moves.length).toBe(3);
+  expect(fs.readFileSync(path.join(dir, 'steps', '01-a.prompt.md'), 'utf8')).toContain('at least 3 times');
+  expect(safeSvg('<svg viewBox="0 0 4 4">\n</svg>\n<circle r="1"/>')).toMatch(/<circle r="1"\/><\/svg>$/);
+});
