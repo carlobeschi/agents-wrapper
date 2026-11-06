@@ -29,7 +29,8 @@
 //               { "type": "last", "pattern": "\\?\\s*$" },
 //               { "type": "answer", "pattern": "^\\s*42\\s*$" } ],
 //   "guess": { "agent": "claude", "answers": [["fox"], ["snow", "snowy"]] },
-//   "moves": 8, "lines_per_move": 4, "words": 30, "max_minutes": 30 }
+//   "moves": 8, "lines_per_move": 4, "words": 30, "max_minutes": 30,
+//   "silent": false }   (silent: no chat, and comments are taken out of edits)
 // "moves" is the most moves each agent gets. Run folder:
 // ~/.agent-dispatch/rooms/<run>/: timeline.json (every move, landed or not,
 // with the artefact after it and who wrote each line), episode.md, steps/.
@@ -175,8 +176,9 @@ function movePrompt(cfg, me, others, view) {
     '', 'The chat so far:', view.chat.length ? view.chat.join('\n') : '(nothing yet)',
     '', 'The document, as it is right now:', '```', numbered(view.lines), '```',
     '', `Make one small move. You can change at most ${cfg.lines_per_move} lines in all this move; the rest of yours would not land. Line numbers are the ones above. If someone else changes or removes those lines before your edit lands, your edit is dropped and you'll be told.`,
+    ...(cfg.silent ? [`There is no chat in this one: the only way to reach ${them} is through the work itself. Comments in the document are taken out when an edit lands.`] : []),
     'Reply in this form, nothing else:',
-    `SAY: one line to the others, at most ${cfg.words} words (or leave it empty)`,
+    ...(cfg.silent ? [] : [`SAY: one line to the others, at most ${cfg.words} words (or leave it empty)`]),
     'then any edits, each one of:', 'REPLACE 3-4', '<the new lines>', 'END', 'INSERT AFTER 5', '<the new lines>', 'END', 'DELETE 7-8',
     `NOTE: a private line for yourself, at most 40 words: what you're going for, and anything that surprised you. ${them} never see${others.length > 1 ? '' : 's'} this; it is published after.`,
     'STATUS: working, or done if you think the piece is finished as it stands. When everyone is done, it ends.',
@@ -269,6 +271,10 @@ async function main(file) {
       catch (e) { console.warn(`  ✗ ${e.message.split('\n')[0]}`); if (++st.fails >= 2) st.out = true; continue; }
       st.moves++;
       const mv = parseMove(reply);
+      if (cfg.silent) {
+        mv.say = '';
+        for (const op of mv.ops) op.text = op.text.map(t => t.replace(/<!--[\s\S]*?-->/g, '').replace(/^\s*(\/\/|#).*$/, '')).filter(t => t.trim());
+      }
       const entry = { n: timeline.length + 1, agent: me.id, label: me.label, asked: (asked - t0) / 1000, at: (Date.now() - t0) / 1000,
         saw: snap.length, say: capWords(mv.say, cfg.words), note: capWords(mv.note, 40), done: mv.done, landed: [], dropped: [] };
       let budget = cfg.lines_per_move;

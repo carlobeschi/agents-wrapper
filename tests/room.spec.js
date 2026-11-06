@@ -63,3 +63,16 @@ test('a drawing is cleaned before it is shown as a picture', () => {
   expect(s).not.toMatch(/script|onload|e\.com|image/);
   expect(s).toContain('xmlns=');
 });
+
+test('silent: no chat line, and comments are taken out of edits', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'room-home-'));
+  const say = ['sh', '-c', `case "$1" in *"just finished"*) echo A;; *) printf 'SAY: it is a fox\\nINSERT AFTER 0\\n<!-- a fox -->\\n<circle r="3"/>\\nEND\\nSTATUS: done\\n';; esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: say }] }));
+  const file = path.join(home, 'r.json');
+  fs.writeFileSync(file, JSON.stringify({ title: 'T', kind: 'svg', brief: 'b', agents: ['a'], moves: 1, silent: true }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'room.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const t = JSON.parse(fs.readFileSync(path.join(out.match(/Run folder: (.+)/)[1].trim(), 'timeline.json'), 'utf8'));
+  expect(t.moves[0].say).toBe('');
+  expect(t.final.map(l => l.text)).toEqual(['<circle r="3"/>']);
+});
