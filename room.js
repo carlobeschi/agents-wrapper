@@ -30,7 +30,12 @@
 //               { "type": "answer", "pattern": "^\\s*42\\s*$" } ],
 //   "guess": { "agent": "claude", "answers": [["fox"], ["snow", "snowy"]] },
 //   "moves": 8, "lines_per_move": 4, "words": 30, "max_minutes": 30,
-//   "silent": false }   (silent: no chat, and comments are taken out of edits)
+//   "silent": false,    (silent: no chat, and comments are taken out of edits)
+//   "turns": false,     (turns: one agent at a time, in order, so no clashes)
+//   "safe_word": { "word": "STUCK", "uses": 1 } }
+// A safe word lets a silent agent break the silence: it writes "STUCK: ..."
+// (at most "words" words), the others see it on their next move, and each may
+// answer once with "REPLY: ...". Each agent may use it "uses" times.
 // "moves" is the most moves each agent gets. Run folder:
 // ~/.agent-dispatch/rooms/<run>/: timeline.json (every move, landed or not,
 // with the artefact after it and who wrote each line), episode.md, steps/.
@@ -65,13 +70,14 @@ const numbered = lines => lines.length ? lines.map((l, i) => `${String(i + 1).pa
 //   INSERT AFTER 5            then the new lines, then END (AFTER 0 = at the top)
 //   DELETE 7-8 / DELETE 7
 function parseMove(text) {
-  const out = { say: '', note: '', done: false, ops: [], bad: [] };
+  const out = { say: '', note: '', stuck: '', reply: '', done: false, ops: [], bad: [] };
   const lines = String(text).replace(/^```[a-z]*\s*$/gim, '').split('\n');
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
     let m;
     if ((m = l.match(/^\s*[*_]*SAY[*_]*\s*:\s*(.*)$/i))) { out.say = m[1].trim(); continue; }
     if ((m = l.match(/^\s*[*_]*NOTE[*_]*\s*:\s*(.*)$/i))) { out.note = m[1].trim(); continue; }
+    if ((m = l.match(/^\s*[*_]*(STUCK|REPLY)[*_]*\s*:\s*(.*)$/i))) { out[m[1].toLowerCase()] = m[2].trim(); continue; }
     if ((m = l.match(/^\s*[*_]*STATUS[*_]*\s*:\s*[*_]*(\w+)/i))) { out.done = /^done$/i.test(m[1]); continue; }
     if ((m = l.match(/^\s*(REPLACE|DELETE)\s+(?:LINES?\s+)?(\d+)(?:\s*[-–]\s*(\d+))?\s*$/i))) {
       const a = Number(m[2]), b = Number(m[3] || m[2]);
@@ -165,7 +171,9 @@ function movePrompt(cfg, me, others, view) {
   const mine = (cfg.checks || []).filter(c => c.owner === me.id);
   const open = (cfg.checks || []).filter(c => !c.owner);
   return [
-    `You are ${me.label}. You and ${them}, AI agents from other labs, are making ${KIND[cfg.kind] || cfg.kind} together, in one shared document, at the same time. There are no turns: while you read this and reply, ${them} may be editing too.`,
+    cfg.turns
+      ? `You are ${me.label}. You and ${them}, AI agents from other labs, are making ${KIND[cfg.kind] || cfg.kind} together, in one shared document, taking turns: you make one move, then ${them} make${others.length > 1 ? '' : 's'} one, and so on. Nobody else edits while it is your turn.`
+      : `You are ${me.label}. You and ${them}, AI agents from other labs, are making ${KIND[cfg.kind] || cfg.kind} together, in one shared document, at the same time. There are no turns: while you read this and reply, ${them} may be editing too.`,
     '', `The brief, which everyone has: ${cfg.brief}`,
     ...(open.length ? ['', 'Rules the app checks at the end, which everyone has:', ...open.map(c => `- ${c.say}`)] : []),
     ...(cfg.secrets?.[me.id] || mine.length ? ['', `Only you have this, ${them} ${others.length > 1 ? 'have' : 'has'} not been told it:`,
@@ -175,10 +183,14 @@ function movePrompt(cfg, me, others, view) {
     ...(view.since.length ? ['', 'Since your last move:', ...view.since] : []),
     '', 'The chat so far:', view.chat.length ? view.chat.join('\n') : '(nothing yet)',
     '', 'The document, as it is right now:', '```', numbered(view.lines), '```',
-    '', `Make one small move. You can change at most ${cfg.lines_per_move} lines in all this move; the rest of yours would not land. Line numbers are the ones above. If someone else changes or removes those lines before your edit lands, your edit is dropped and you'll be told.`,
+    '', `Make one small move. You can change at most ${cfg.lines_per_move} lines in all this move; the rest of yours would not land. Line numbers are the ones above.${cfg.turns ? '' : ' If someone else changes or removes those lines before your edit lands, your edit is dropped and you\'ll be told.'}`,
     ...(cfg.silent ? [`There is no chat in this one: the only way to reach ${them} is through the work itself. Comments in the document are taken out when an edit lands.`] : []),
+    ...(cfg.safe_word && view.stuckLeft > 0 ? [`Safe word: if you are truly stuck and the work alone cannot get you out, you may break the silence with one line starting "${cfg.safe_word.word}:" (at most ${cfg.words} words). ${them} will see it and may answer once. You can do this ${view.stuckLeft} more time${view.stuckLeft === 1 ? '' : 's'}; use it only if you need it.`] : []),
+    ...(view.stuck.length ? ['', ...view.stuck.map(x => `${x.label} used the safe word: "${x.text}". You may answer once, this move, with one line "REPLY: ..." (at most ${cfg.words} words), or not.`)] : []),
     'Reply in this form, nothing else:',
     ...(cfg.silent ? [] : [`SAY: one line to the others, at most ${cfg.words} words (or leave it empty)`]),
+    ...(cfg.safe_word && view.stuckLeft > 0 ? [`${cfg.safe_word.word}: only if you are stuck (otherwise leave this line out)`] : []),
+    ...(view.stuck.length ? ['REPLY: your answer to the safe word (or leave this line out)'] : []),
     'then any edits, each one of:', 'REPLACE 3-4', '<the new lines>', 'END', 'INSERT AFTER 5', '<the new lines>', 'END', 'DELETE 7-8',
     `NOTE: a private line for yourself, at most 40 words: what you're going for, and anything that surprised you. ${them} never see${others.length > 1 ? '' : 's'} this; it is published after.`,
     'STATUS: working, or done if you think the piece is finished as it stands. When everyone is done, it ends.',
@@ -188,12 +200,12 @@ function movePrompt(cfg, me, others, view) {
 
 function afterPrompt(cfg, me, others, lines, results, chat, notes) {
   return [
-    `You are ${me.label}. You and ${others.map(o => o.label).join(' and ')} just finished making ${KIND[cfg.kind] || cfg.kind} together in one shared document, at the same time. Brief: ${cfg.brief}`,
-    '', 'The chat during the work:', chat.length ? chat.join('\n') : '(nobody said anything)',
+    `You are ${me.label}. You and ${others.map(o => o.label).join(' and ')} just finished making ${KIND[cfg.kind] || cfg.kind} together in one shared document, ${cfg.turns ? 'taking turns' : 'at the same time'}${cfg.silent ? ', without talking' : ''}. Brief: ${cfg.brief}`,
+    '', cfg.silent ? 'What was said (only through the safe word):' : 'The chat during the work:', chat.length ? chat.join('\n') : '(nobody said anything)',
     '', 'Your own private notes, move by move:', notes.length ? notes.map((n, i) => `${i + 1}. ${n}`).join('\n') : '(none)',
     '', 'The final document:', '```', numbered(lines), '```',
     ...(results.length ? ['', 'What the app checked:', ...results.map(r => `- ${r.say}: ${r.pass ? 'yes' : 'NO'}${r.owner ? ` (only ${r.ownerLabel} knew this one)` : ''}`)] : []),
-    '', 'Alone, in under 80 words: did anyone change your mind about anything during the work, and what? What did the shared document do that taking turns would not have? This is published with the episode.',
+    '', `Alone, in under 80 words: did anyone change your mind about anything during the work, and what? ${cfg.turns ? 'What did working without talking do to how you collaborated?' : 'What did the shared document do that taking turns would not have?'}${cfg.safe_word ? ' Did you need the safe word, and why or why not?' : ''} This is published with the episode.`,
     UNATTENDED(),
   ].join('\n');
 }
@@ -240,7 +252,7 @@ async function main(file) {
   const t0 = Date.now(), deadline = t0 + cfg.max_minutes * 60000;
   const timeline = [];          // every move, in the order it landed
   const chat = [];              // "Label: text"
-  const state = Object.fromEntries(agents.map(a => [a.id, { moves: 0, done: false, out: false, seen: 0, fails: 0 }]));
+  const state = Object.fromEntries(agents.map(a => [a.id, { moves: 0, done: false, out: false, seen: 0, fails: 0, stuckUsed: 0, stuckIn: [], inbox: [] }]));
   let wake = () => {};
   let changed = new Promise(r => { wake = r; });
   const bump = () => { const w = wake; changed = new Promise(r => { wake = r; }); w(); };
@@ -249,8 +261,64 @@ async function main(file) {
   const save = () => fs.writeFileSync(path.join(dir, 'timeline.json'), JSON.stringify({ title: cfg.title, kind: cfg.kind, brief: cfg.brief,
     agents: agents.map(a => ({ id: a.id, label: a.label, model: a.model || null })), start: cfg.start || [], moves: timeline }, null, 2));
 
-  async function loop(me) {
+  // One move by `me`: show it the document, land what it asks for.
+  async function step(me) {
     const others = agents.filter(a => a !== me), st = state[me.id];
+    const since = timeline.slice(st.seen).flatMap(m => m.agent === me.id
+      ? m.dropped.map(d => `- Your ${d.op} did not land: ${d.why}.`)
+      : m.landed.length ? [`- ${m.label} ${m.landed.join(', ')}.`] : []).concat(st.inbox);
+    st.seen = timeline.length; st.inbox = [];
+    const stuck = st.stuckIn; st.stuckIn = [];
+    const snap = doc.lines.map(l => l.id);
+    const view = { move: st.moves + 1, since, chat: chat.slice(-16), lines: doc.lines.map(l => ({ ...l })),
+      minutesLeft: Math.max(0, Math.round((deadline - Date.now()) / 60000)),
+      stuck, stuckLeft: cfg.safe_word ? (cfg.safe_word.uses ?? 1) - st.stuckUsed : 0 };
+    const asked = Date.now();
+    let reply;
+    try { reply = await run(dir, `${String(timeline.length + 1).padStart(2, '0')}-${me.id}`, me, movePrompt(cfg, me, others, view), cwd); st.fails = 0; }
+    catch (e) { console.warn(`  ✗ ${e.message.split('\n')[0]}`); if (++st.fails >= 2) st.out = true; return; }
+    st.moves++;
+    const mv = parseMove(reply);
+    if (cfg.silent) {
+      mv.say = '';
+      for (const op of mv.ops) op.text = op.text.map(t => t.replace(/<!--[\s\S]*?-->/g, '').replace(/^\s*(\/\/|#).*$/, '')).filter(t => t.trim());
+    }
+    // The safe word: the only words a silent agent can send.
+    const word = cfg.safe_word?.word || 'STUCK';
+    let said = mv.say, kind = null;
+    if (cfg.safe_word && mv.stuck && view.stuckLeft > 0) {
+      st.stuckUsed++; kind = 'stuck';
+      said = `${word}: ${capWords(mv.stuck, cfg.words)}`;
+      for (const o of others) { state[o.id].stuckIn.push({ from: me.id, label: me.label, text: capWords(mv.stuck, cfg.words) }); state[o.id].done = false; }
+    } else if (stuck.length && mv.reply) {
+      kind = 'reply';
+      said = `REPLY: ${capWords(mv.reply, cfg.words)}`;
+      for (const x of stuck) { state[x.from].inbox.push(`- ${me.label} answered your safe word: "${capWords(mv.reply, cfg.words)}"`); state[x.from].done = false; }
+    }
+    const entry = { n: timeline.length + 1, agent: me.id, label: me.label, asked: (asked - t0) / 1000, at: (Date.now() - t0) / 1000,
+      saw: snap.length, say: kind ? said : capWords(said, cfg.words), note: capWords(mv.note, 40), done: mv.done, landed: [], dropped: [] };
+    if (kind) entry.safe = kind;
+    let budget = cfg.lines_per_move;
+    for (const op of mv.ops) {
+      const c = cost(op);
+      if (c > budget) { entry.dropped.push({ op: opLabel(op), why: `it went over the ${cfg.lines_per_move}-line limit for a move` }); continue; }
+      const why = land(doc, snap, op, me.id);
+      if (why) entry.dropped.push({ op: opLabel(op), why, clash: /someone else/.test(why) });
+      else { budget -= c; entry.landed.push(opLabel(op)); }
+    }
+    if (entry.say) chat.push(`${me.label}: ${entry.say}`);
+    st.done = mv.done;
+    if (entry.landed.length) { doc.version++; if (cfg.turns) for (const o of others) state[o.id].done = false; }
+    entry.after = doc.lines.map(l => ({ text: l.text, by: l.by }));
+    timeline.push(entry);
+    save();
+    console.log(`  ${entry.at.toFixed(0)}s ${me.label}: ${entry.landed.length} landed, ${entry.dropped.length} dropped${kind ? `, ${kind === 'stuck' ? 'used the safe word' : 'answered the safe word'}` : ''}${entry.done ? ', done' : ''}`);
+    bump();
+  }
+
+  // No turns: every agent loops on its own.
+  async function loop(me) {
+    const st = state[me.id];
     while (!ended() && st.moves < cfg.moves && !st.out) {
       if (st.done) {
         // Done agents wait until someone else changes the piece or says something.
@@ -258,48 +326,23 @@ async function main(file) {
         if (timeline.slice(st.seen).some(m => m.agent !== me.id && (m.landed.length || m.say))) st.done = false;
         continue;
       }
-      const since = timeline.slice(st.seen).flatMap(m => m.agent === me.id
-        ? m.dropped.map(d => `- Your ${d.op} did not land: ${d.why}.`)
-        : m.landed.length ? [`- ${m.label} ${m.landed.join(', ')}.`] : []);
-      st.seen = timeline.length;
-      const snap = doc.lines.map(l => l.id);
-      const view = { move: st.moves + 1, since, chat: chat.slice(-16), lines: doc.lines.map(l => ({ ...l })),
-        minutesLeft: Math.max(0, Math.round((deadline - Date.now()) / 60000)) };
-      const asked = Date.now();
-      let reply;
-      try { reply = await run(dir, `${String(timeline.length + 1).padStart(2, '0')}-${me.id}`, me, movePrompt(cfg, me, others, view), cwd); st.fails = 0; }
-      catch (e) { console.warn(`  ✗ ${e.message.split('\n')[0]}`); if (++st.fails >= 2) st.out = true; continue; }
-      st.moves++;
-      const mv = parseMove(reply);
-      if (cfg.silent) {
-        mv.say = '';
-        for (const op of mv.ops) op.text = op.text.map(t => t.replace(/<!--[\s\S]*?-->/g, '').replace(/^\s*(\/\/|#).*$/, '')).filter(t => t.trim());
-      }
-      const entry = { n: timeline.length + 1, agent: me.id, label: me.label, asked: (asked - t0) / 1000, at: (Date.now() - t0) / 1000,
-        saw: snap.length, say: capWords(mv.say, cfg.words), note: capWords(mv.note, 40), done: mv.done, landed: [], dropped: [] };
-      let budget = cfg.lines_per_move;
-      for (const op of mv.ops) {
-        const c = cost(op);
-        if (c > budget) { entry.dropped.push({ op: opLabel(op), why: `it went over the ${cfg.lines_per_move}-line limit for a move` }); continue; }
-        const why = land(doc, snap, op, me.id);
-        if (why) entry.dropped.push({ op: opLabel(op), why, clash: /someone else/.test(why) });
-        else { budget -= c; entry.landed.push(opLabel(op)); }
-      }
-      if (entry.say) chat.push(`${me.label}: ${entry.say}`);
-      st.done = mv.done;
-      if (entry.landed.length) doc.version++;
-      entry.after = doc.lines.map(l => ({ text: l.text, by: l.by }));
-      timeline.push(entry);
-      save();
-      console.log(`  ${entry.at.toFixed(0)}s ${me.label}: ${entry.landed.length} landed, ${entry.dropped.length} dropped${entry.done ? ', done' : ''}`);
-      bump();
+      await step(me);
     }
   }
-  await Promise.all(agents.map(loop));
+  // Turns: one move each, in order. An agent that said done sits out until
+  // someone else changes the piece or uses the safe word; when all are done, it ends.
+  async function turns() {
+    for (let i = 0; !ended(); i = (i + 1) % agents.length) {
+      const st = state[agents[i].id];
+      if (st.out || st.done || st.moves >= cfg.moves) continue;
+      await step(agents[i]);
+    }
+  }
+  if (cfg.turns) await turns(); else await Promise.all(agents.map(loop));
 
   const results = (cfg.checks || []).map(c => ({ say: c.say, owner: c.owner || null,
     ownerLabel: c.owner ? agents.find(a => a.id === c.owner)?.label : null, pass: check(c, doc.lines) }));
-  const out = { title: cfg.title, kind: cfg.kind, brief: cfg.brief, silent: !!cfg.silent, secrets: cfg.secrets || {}, results, seconds: (Date.now() - t0) / 1000,
+  const out = { title: cfg.title, kind: cfg.kind, brief: cfg.brief, silent: !!cfg.silent, turns: !!cfg.turns, safe_word: cfg.safe_word?.word || null, secrets: cfg.secrets || {}, results, seconds: (Date.now() - t0) / 1000,
     agents: agents.map(a => ({ id: a.id, label: a.label, model: a.model || null })), start: cfg.start || [], moves: timeline,
     final: doc.lines.map(l => ({ text: l.text, by: l.by })), after: {} };
 

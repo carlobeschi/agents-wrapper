@@ -76,3 +76,32 @@ test('silent: no chat line, and comments are taken out of edits', () => {
   expect(t.moves[0].say).toBe('');
   expect(t.final.map(l => l.text)).toEqual(['<circle r="3"/>']);
 });
+
+test('turns: one move each in order; the safe word reaches the other, who may answer once', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'room-home-'));
+  // a uses the safe word on its first move only; b answers when it sees it.
+  const a = ['sh', '-c', `case "$1" in *"just finished"*) echo A;;
+    *"move 1 of"*) printf 'SAY: hello\\nSTUCK: is this a fox or a cat?\\nINSERT AFTER 0\\nline-a1\\nEND\\nSTATUS: working\\n';;
+    *) printf 'INSERT AFTER 0\\nline-a2\\nEND\\nSTATUS: done\\n';; esac`, 'x', '{prompt}'];
+  const b = ['sh', '-c', `case "$1" in *"just finished"*) echo B;;
+    *"used the safe word"*) printf 'REPLY: a fox\\nINSERT AFTER 0\\nline-b1\\nEND\\nSTATUS: working\\n';;
+    *) printf 'STATUS: done\\n';; esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: a }, { id: 'b', label: 'B', headless: b }] }));
+  const file = path.join(home, 'r.json');
+  fs.writeFileSync(file, JSON.stringify({ title: 'T', kind: 'svg', brief: 'b', agents: ['a', 'b'], moves: 3, silent: true, turns: true,
+    safe_word: { word: 'STUCK', uses: 1 } }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'room.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Run folder: (.+)/)[1].trim();
+  const t = JSON.parse(fs.readFileSync(path.join(dir, 'timeline.json'), 'utf8'));
+  expect(t.turns).toBe(true);
+  expect(t.moves.map(m => m.agent)).toEqual(['a', 'b', 'a', 'b']);
+  expect(t.moves[0].say).toBe('STUCK: is this a fox or a cat?'); // silent drops SAY, not the safe word
+  expect(t.moves[0].safe).toBe('stuck');
+  expect(t.moves[1].say).toBe('REPLY: a fox');
+  expect(fs.readFileSync(path.join(dir, 'steps', '03-a.prompt.md'), 'utf8')).toContain('B answered your safe word: "a fox"');
+  // The safe word was used up, so a's second prompt no longer offers it.
+  expect(fs.readFileSync(path.join(dir, 'steps', '03-a.prompt.md'), 'utf8')).not.toContain('Safe word:');
+  expect(t.moves.every(m => !m.dropped.length)).toBe(true);
+  expect(t.final.map(l => l.text)).toEqual(['line-a2', 'line-b1', 'line-a1']);
+});
