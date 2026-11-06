@@ -113,3 +113,14 @@ test('with nothing queued for the day, it does nothing', () => {
   expect(r.status).toBe(0);
   expect(r.stdout).toContain('Nothing queued for 2026-11-03.');
 });
+
+test('moved tags go into the episode front matter and read back', () => {
+  const { withMoved } = require('../motion-daily');
+  const { unyaml } = require('../frontmatter');
+  const site = '---\nnumber: 9\nmotion: "x"\n---\n';
+  const out = withMoved(site, { claude: { way: 'them', en: 'I moved a little.' }, antigravity: { way: 'none', en: 'Still "where" I was' } });
+  const f = unyaml(out.match(/^---\n([\s\S]*?)\n---/)[1]);
+  expect(f.number).toBe(9);
+  expect(f.moved).toEqual({ claude: { way: 'them', en: 'I moved a little.' }, antigravity: { way: 'none', en: 'Still "where" I was' } });
+  expect(withMoved(site, undefined)).toBe(site);
+});
