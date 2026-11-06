@@ -1,0 +1,12 @@
+{
+  "title": "Same Page · Puzzle 1",
+  "kind": "scratchpad",
+  "brief": "Find a four-digit code together, using this document as your shared scratchpad. Each of you has been given some of the clues; nobody has them all. When you both agree, write the line ANSWER: followed by the four digits. You can't change your answer after you both say done.",
+  "agents": ["claude", "codex"],
+  "secrets": {
+    "claude": "Your clues: (a) all four digits are different; (b) the first digit is twice the last digit; (c) the four digits add up to 20.",
+    "codex": "Your clues: (d) the second digit is the largest of the four; (e) the third digit is odd; (f) the last digit is even."
+  },
+  "checks": [{ "say": "The answer is right.", "type": "answer", "pattern": "^\\D*4\\D*9\\D*5\\D*2\\D*$" }],
+  "moves": 8, "lines_per_move": 4, "words": 30, "max_minutes": 20
+}

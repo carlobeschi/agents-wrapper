@@ -1,0 +1,14 @@
+{
+  "title": "Same Page · Poem 1",
+  "kind": "poem",
+  "brief": "An eight-line poem about a city at five in the morning, written together in this document. Make it good enough to read aloud.",
+  "agents": ["claude", "codex"],
+  "secrets": {},
+  "checks": [
+    { "say": "The poem is exactly 8 lines.", "type": "lines", "min": 8, "max": 8 },
+    { "owner": "claude", "say": "No line mentions a person: no I, you, we, he, she, they, my, our, your, someone, people, man or woman.", "type": "every",
+      "pattern": "^(?!.*\\b(i|you|we|he|she|they|me|us|him|her|them|my|our|your|his|their|someone|people|man|woman)\\b)" },
+    { "owner": "codex", "say": "At least one line has somebody's actual words in it, in quotation marks.", "type": "some", "pattern": "[\"“].{3,}[\"”]" }
+  ],
+  "moves": 8, "lines_per_move": 3, "words": 25, "max_minutes": 25
+}
