@@ -96,6 +96,16 @@ test('when no reserve splits either, the hold names how many were screened', () 
   expect(result(s).why).toContain('None of the 3 motions screened');
 });
 
+test('with on_no_split "run", the pick runs on its assigned sides when nothing splits', () => {
+  const s = show({ pick: M('tabs beat spaces.'), backup: M('tabs beat everything.'), on_no_split: 'run', shortlist: [], why: 'w' });
+  daily(home(s.clone, 'HOLD\\tA fact is off.'));
+  git(s.clone, 'fetch', '-q', 'origin', 'queue');
+  const res = result(s);
+  expect(res.screened.map(x => x.split)).toEqual([false, false]);
+  expect(res).toMatchObject({ no_split: true, motion: 'This house believes tabs beat spaces.' });
+  expect(res.run).toBeTruthy();
+});
+
 test('with nothing queued for the day, it does nothing', () => {
   const s = show({ pick: M('x.') });
   const r = spawnSync('node', [path.join(__dirname, '..', 'motion-daily.js'), '--date', '2026-11-03'],

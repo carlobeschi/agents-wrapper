@@ -3,13 +3,14 @@
 //
 // A routine in the cloud reads the day's newsletters, picks a motion and a
 // backup, and commits them to the show repo's `queue` branch as
-// queue/<date>.json: { pick, backup, reserves?, shortlist, why }, each motion being
+// queue/<date>.json: { pick, backup, reserves?, on_no_split?, shortlist, why }, each motion being
 // { motion, brief, source, source_name }; reserves is an optional list of up to
 // two more. This runs on the Mac, where the agents are:
 //
 //   1. Screen the pick: both private openings only. The editor says whether
 //      they really disagree; if not, screen the backup, then any reserves.
-//      If none splits, hold.
+//      If none splits, hold, unless the queue file says on_no_split: "run";
+//      then the pick runs on its assigned sides.
 //   2. Run the motion in full under the next free number.
 //   3. The editor checks the episode against the brief; a broken reply, a
 //      fact the brief contradicts or unsafe content holds it.
@@ -125,6 +126,13 @@ async function main() {
     const verdict = await splitCheck(dir, editor, cand, s.agents);
     result.screened.push({ motion: c.motion, split: verdict.split, why: verdict.why, run: s.dir });
     if (verdict.split) { m = cand; break; }
+  }
+  // When nothing splits, the queue can ask to run the pick anyway, on its
+  // assigned sides; the editor's summary says their private notes agreed.
+  if (!m && q.on_no_split === 'run' && result.screened.length) {
+    const c = q.pick;
+    m = { ...base, motion: c.motion, brief: c.brief, source: c.source, source_name: c.source_name };
+    result.no_split = true;
   }
   if (!m) {
     result.status = 'held';
