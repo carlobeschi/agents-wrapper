@@ -299,7 +299,7 @@ async function main(file) {
 
   const results = (cfg.checks || []).map(c => ({ say: c.say, owner: c.owner || null,
     ownerLabel: c.owner ? agents.find(a => a.id === c.owner)?.label : null, pass: check(c, doc.lines) }));
-  const out = { title: cfg.title, kind: cfg.kind, brief: cfg.brief, secrets: cfg.secrets || {}, results, seconds: (Date.now() - t0) / 1000,
+  const out = { title: cfg.title, kind: cfg.kind, brief: cfg.brief, silent: !!cfg.silent, secrets: cfg.secrets || {}, results, seconds: (Date.now() - t0) / 1000,
     agents: agents.map(a => ({ id: a.id, label: a.label, model: a.model || null })), start: cfg.start || [], moves: timeline,
     final: doc.lines.map(l => ({ text: l.text, by: l.by })), after: {} };
 
