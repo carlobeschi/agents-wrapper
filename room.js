@@ -61,6 +61,9 @@ function makeDoc(start = []) {
   const doc = { lines: [], version: 0 };
   doc.add = (text, by) => ({ id: next++, text, by });
   doc.lines = start.map(t => doc.add(String(t), 'start'));
+  // A drawing's opening and closing <svg> tags are its frame: nobody can edit
+  // them, so the picture always stays one complete SVG.
+  for (const l of doc.lines) if (/^\s*<\/?svg[\s>]/i.test(l.text)) l.locked = true;
   return doc;
 }
 const numbered = lines => lines.length ? lines.map((l, i) => `${String(i + 1).padStart(2)}| ${l.text}`).join('\n') : '(empty: nothing written yet)';
@@ -106,14 +109,18 @@ function land(doc, snap, op, by) {
   const idx = id => doc.lines.findIndex(l => l.id === id);
   if (op.kind === 'insert') {
     if (op.after < 0 || op.after > snap.length) return `there is no line ${op.after}`;
-    const at = op.after === 0 ? 0 : idx(snap[op.after - 1]) + 1;
+    let at = op.after === 0 ? 0 : idx(snap[op.after - 1]) + 1;
     if (op.after > 0 && at === 0) return `line ${op.after} was changed or removed by someone else before your edit landed`;
+    // Nothing goes before the opening tag or after the closing one.
+    while (at > 0 && at < doc.lines.length + 1 && doc.lines[at - 1]?.locked && /<\/svg/i.test(doc.lines[at - 1].text)) at--;
+    if (at === 0 && doc.lines[0]?.locked && !/<\/svg/i.test(doc.lines[0].text)) at = 1;
     doc.lines.splice(at, 0, ...op.text.map(t => doc.add(t, by)));
     return null;
   }
   if (op.from < 1 || op.to > snap.length) return `there is no line ${op.from > snap.length ? op.from : op.to}`;
   const ids = snap.slice(op.from - 1, op.to);
   const at = ids.map(idx);
+  if (at.some(k => k >= 0 && doc.lines[k].locked)) return `the <svg> tags are the frame of the drawing and cannot be changed`;
   if (at.some(k => k < 0)) return `line${ids.length > 1 ? 's' : ''} ${op.from}${op.to > op.from ? `-${op.to}` : ''} had been changed or removed by someone else before your edit landed`;
   if (at.some((k, n) => n > 0 && k !== at[n - 1] + 1)) return `someone else put new lines inside ${op.from}-${op.to} before your edit landed`;
   doc.lines.splice(at[0], at.length, ...(op.kind === 'replace' ? op.text.map(t => doc.add(t, by)) : []));
@@ -165,7 +172,7 @@ function safeSvg(text) {
 
 const KIND = {
   poem: 'a poem',
-  svg: 'a drawing, as SVG source (viewBox "0 0 400 400"), one element per line where you can, so you can edit each other\'s shapes',
+  svg: 'a drawing, as SVG source (viewBox "0 0 400 400"), one element per line where you can, so you can edit each other\'s shapes. The opening and closing <svg> lines are fixed: draw between them',
   scratchpad: 'a shared scratchpad: notes, working and, when you agree, a line "ANSWER: ..."',
 };
 

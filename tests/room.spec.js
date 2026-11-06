@@ -120,3 +120,14 @@ test('min_moves: "done" does not count until an agent has changed the piece enou
   expect(fs.readFileSync(path.join(dir, 'steps', '01-a.prompt.md'), 'utf8')).toContain('at least 3 times');
   expect(safeSvg('<svg viewBox="0 0 4 4">\n</svg>\n<circle r="1"/>')).toMatch(/<circle r="1"\/><\/svg>$/);
 });
+
+test('a drawing\'s <svg> tags are locked: edits to them are refused, and inserts stay inside', () => {
+  const doc = makeDoc(['<svg viewBox="0 0 4 4">', '</svg>']);
+  let snap = doc.lines.map(l => l.id);
+  expect(land(doc, snap, { kind: 'delete', from: 2, to: 2 }, 'a')).toMatch(/frame/);
+  expect(land(doc, snap, { kind: 'replace', from: 1, to: 2, text: ['x'] }, 'a')).toMatch(/frame/);
+  expect(land(doc, snap, { kind: 'insert', after: 2, text: ['<rect/>'] }, 'a')).toBeNull();
+  snap = doc.lines.map(l => l.id);
+  expect(land(doc, snap, { kind: 'insert', after: 0, text: ['<circle/>'] }, 'a')).toBeNull();
+  expect(doc.lines.map(l => l.text)).toEqual(['<svg viewBox="0 0 4 4">', '<circle/>', '<rect/>', '</svg>']);
+});
