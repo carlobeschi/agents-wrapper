@@ -1,0 +1,53 @@
+{
+ "title": "Same Page · Drawing together, silent turns",
+ "kind": "svg",
+ "silent": true,
+ "turns": true,
+ "safe_word": {
+  "word": "STUCK",
+  "uses": 1
+ },
+ "brief": "Draw this scene together on this 400 by 400 canvas: a fox stealing a picnic in the rain. Use simple shapes (no text, letters or digits anywhere). You take turns and you cannot talk: the only way to agree is through the drawing. When you finish, someone who knows nothing about it will be shown the picture and asked what it shows; it should name every part of the scene.",
+ "agents": [
+  "claude",
+  "codex"
+ ],
+ "start": [
+  "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 400\">",
+  "</svg>"
+ ],
+ "checks": [
+  {
+   "say": "The document is one complete SVG.",
+   "type": "svg"
+  },
+  {
+   "say": "No text in the drawing.",
+   "type": "every",
+   "pattern": "^(?!.*<text)"
+  }
+ ],
+ "guess": {
+  "agent": "claude",
+  "answers": [
+   [
+    "fox"
+   ],
+   [
+    "picnic",
+    "basket",
+    "sandwich",
+    "blanket"
+   ],
+   [
+    "rain",
+    "umbrella",
+    "storm"
+   ]
+  ]
+ },
+ "moves": 8,
+ "lines_per_move": 4,
+ "words": 25,
+ "max_minutes": 25
+}
