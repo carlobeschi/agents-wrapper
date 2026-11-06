@@ -14,7 +14,8 @@
 //   2. Run the motion in full under the next free number.
 //   3. The editor checks the episode against the brief; a broken reply, a
 //      fact the brief contradicts or unsafe content holds it.
-//   4. If nothing held it, open its pull request and merge it (not with --dry-run).
+//   4. If nothing held it, the editor tags which way each agent moved (from its
+//      private note after), then the pull request is opened and merged (not with --dry-run).
 //   5. Draw the LinkedIn card, and commit queue/<date>.result.json with the card
 //      and the post beside it on the queue branch, for the routine to report.
 //
@@ -30,7 +31,7 @@ const { runMotion, run, openPullRequest } = require('./motion');
 const { guard, publicGit } = require('./publish');
 const { motionCardFor } = require('./motion-card');
 const { renderCard } = require('./card');
-const { unyaml } = require('./frontmatter');
+const { unyaml, yaml } = require('./frontmatter');
 
 const git = (repo, ...args) => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 const today = () => { const d = new Date(), p = x => String(x).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
@@ -70,6 +71,40 @@ async function review(dir, editor, m, st) {
   ].join('\n');
   const reply = (await run(dir, '4-review', editor, prompt, dir)).trim();
   return /^OK\W*$/.test(reply) ? { ok: true } : { ok: false, why: reply.replace(/^HOLD\s*/, '') || 'no answer' };
+}
+
+// The editor reads each agent's private note after the debate and says which
+// way arguing moved it, with a short quote copied word for word from that note.
+// An agent whose answer can't be checked gets no tag; the episode still runs.
+const squash = t => String(t).replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, ' ').trim();
+const WAYS = { THEM: 'them', OWN: 'own', NONE: 'none' };
+async function moved(dir, editor, st) {
+  const key = x => x.id.replace(/#\d+$/, '');
+  const prompt = [
+    'Two AI agents each argued an assigned side of a motion, then wrote alone what they now think. For each agent, did arguing change its mind?',
+    'THEM = it moved toward the other side; OWN = it moved toward the side it argued; NONE = it barely moved.',
+    'For each agent reply on one line: its key, a tab, THEM, OWN or NONE, a tab, and a short phrase (under 20 words) copied exactly from its note that shows it. Nothing else.', '',
+    ...st.agents.map(x => `### ${key(x)} (argued ${x.side})\n\nBefore, alone: ${x.opening}\n\nAfter, alone: ${x.closing}\n`),
+  ].join('\n');
+  const out = {};
+  try {
+    const reply = (await run(dir, '5-moved', editor, prompt, dir)).trim();
+    for (const line of reply.split('\n')) {
+      const [k, w, ...rest] = line.split('\t').map(x => x.trim());
+      const a = st.agents.find(x => key(x) === k);
+      const q = rest.join(' ').replace(/^["\u201c]|["\u201d]$/g, '').trim();
+      if (!a || !WAYS[w] || !q || q.split(/\s+/).length > 25 || !squash(a.closing).includes(squash(q))) continue;
+      out[k] = { way: WAYS[w], en: q };
+    }
+  } catch (e) { console.warn(`No moved tags: ${e.message.split('\n')[0]}`); }
+  return Object.keys(out).length ? out : undefined;
+}
+
+// Adds the moved tags to an episode file's front matter, just before it closes.
+function withMoved(site, mv) {
+  if (!mv) return site;
+  const i = site.lastIndexOf('\n---');
+  return i < 0 ? site : `${site.slice(0, i)}\n${yaml({ moved: mv })}${site.slice(i)}`;
 }
 
 // The result, the card and the post go on the queue branch beside the day's motion.
@@ -159,6 +194,8 @@ async function main() {
     result.why = `Editor's check: ${check.why}`;
     files[`motion-${number}.md`] = path.join(ep.dir, `motion-${number}.md`);
   } else {
+    const mv = await moved(ep.dir, editor, ep.st);
+    if (mv) { ep.site = withMoved(ep.site, mv); result.moved = mv; }
     result.pr = openPullRequest(m, ep.dir, ep.site);
     result.url = set.site ? `${set.site}/motion-${number}.html` : undefined;
     if (dry) result.status = 'dry-run';
@@ -184,4 +221,4 @@ async function main() {
 
 if (require.main === module) main().catch(e => { console.error(`motion-daily: ${e.message}`); process.exit(1); });
 
-module.exports = { nextNumber };
+module.exports = { nextNumber, withMoved };
