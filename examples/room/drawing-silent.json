@@ -1,0 +1,49 @@
+{
+  "title": "Same Page · Drawing 2 (silent)",
+  "kind": "svg",
+  "brief": "Draw one scene together on this 400 by 400 canvas, using simple shapes (no text, letters or digits anywhere). When you finish, someone who knows nothing about it will be shown the picture and asked what it shows.",
+  "agents": [
+    "claude",
+    "codex"
+  ],
+  "start": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 400\">",
+    "</svg>"
+  ],
+  "secrets": {
+    "claude": "The scene is a lighthouse. The guesser must be able to name it.",
+    "codex": "The scene is at night, in a storm. The guesser must be able to tell."
+  },
+  "checks": [
+    {
+      "say": "The document is one complete SVG.",
+      "type": "svg"
+    },
+    {
+      "say": "No text in the drawing.",
+      "type": "every",
+      "pattern": "^(?!.*<text)"
+    }
+  ],
+  "guess": {
+    "agent": "claude",
+    "answers": [
+      [
+        "lighthouse"
+      ],
+      [
+        "night",
+        "storm",
+        "dark",
+        "rain",
+        "thunder",
+        "lightning"
+      ]
+    ]
+  },
+  "moves": 8,
+  "lines_per_move": 4,
+  "words": 25,
+  "max_minutes": 25,
+  "silent": true
+}
