@@ -18,7 +18,13 @@
 //   "room": { shared room.js settings for every run: silent, turns, moves,
 //             min_moves, lines_per_move, max_minutes, words, safe_word },
 //   "tasks": [ { "id": "fox", "kind": "svg", "brief": "...", "start": [...], "guess": {...} } ],
-//   "learn": { "id": "...", "kind": "svg", "brief": "..." } }
+//   "learn": { "id": "...", "kind": "svg", "brief": "..." },
+//   "repeats": 1 }
+// A task may give "roles": two open jobs, e.g. ["You write the lines.",
+// "You edit: cut, sharpen, reorder."]. Then there is a fourth condition,
+// "together, roles", and the jobs swap between agents on every repeat.
+// Every condition runs "repeats" times; each repeat is judged as its own set.
+// Lessons only carry over from tasks of the same kind as the learning task.
 // A solo run gets twice the moves and twice the minimum touches of one agent
 // in a pair, so it can do as much work as the pair. Nothing is published.
 // Run folder: ~/.agent-dispatch/studies/<run>/: study.json, summary.md,
@@ -109,20 +115,38 @@ async function main(file) {
   const roomRun = async c => { const { tag, ...rest } = c; const r = await room.main(rest); return { dir: r.dir, guess: r.out.guess?.score || null, seconds: Math.round(r.out.seconds), lessons: r.out.lessons || {} }; };
 
   // 1. Alone, then together.
+  const repeats = cfg.repeats || 1;
   const lessons = Object.fromEntries(agents.map(a => [a.id, []]));
+  const together = (t, extra = {}) => ({ ...base, ...t, agents: agents.map(a => a.id), ...extra, lesson: true,
+    brief: `${t.brief} ${PAIR()} Each of you must change it at least ${base.min_moves} times.` });
   for (const t of cfg.tasks) {
-    console.log(`\n# ${t.id}`);
-    const task = { id: t.id, kind: t.kind, brief: t.brief, runs: {} };
+    const task = { id: t.id, kind: t.kind, brief: t.brief, repeats: [] };
     study.tasks.push(task);
-    for (const a of agents) { console.log(`- ${a.label} alone`); task.runs[`${a.id} alone`] = await roomRun(solo(t, a)); save(); }
-    console.log('- together');
-    const pair = await roomRun({ ...base, ...t, agents: agents.map(a => a.id), title: `${t.id} · together`, lesson: true,
-      brief: `${t.brief} ${PAIR()} Each of you must change it at least ${base.min_moves} times.` });
-    task.runs.together = pair;
-    for (const [id, l] of Object.entries(pair.lessons)) lessons[id].push(l);
-    save();
-    task.judgings = await judgeSet(dir, t.id, t.kind, t.brief, Object.entries(task.runs).map(([label, r]) => ({ label, dir: r.dir })), judges);
-    task.average = Object.fromEntries(Object.keys(task.runs).map(l => [l, avgOf(task.judgings, l)]));
+    for (let r = 0; r < repeats; r++) {
+      console.log(`\n# ${t.id}${repeats > 1 ? `, repeat ${r + 1} of ${repeats}` : ''}`);
+      const runs = {};
+      task.repeats.push({ runs });
+      for (const a of agents) { console.log(`- ${a.label} alone`); runs[`${a.id} alone`] = await roomRun(solo(t, a)); save(); }
+      console.log('- together');
+      runs.together = await roomRun(together(t, { title: `${t.id} · together` }));
+      if (t.roles) {
+        // Swap the jobs on every repeat, so a job is not tied to one agent.
+        const ids = r % 2 ? agents.map(a => a.id).reverse() : agents.map(a => a.id);
+        const roles = Object.fromEntries(ids.map((id, i) => [id, t.roles[i % t.roles.length]]));
+        console.log(`- together, roles (${ids.join(' first, ')} second)`);
+        runs['together, roles'] = await roomRun(together({ ...t, roles: undefined }, { title: `${t.id} · together, roles`, roles, agents: ids }));
+        task.repeats[r].roles = roles;
+      }
+      for (const label of ['together', 'together, roles']) for (const [id, l] of Object.entries(runs[label]?.lessons || {})) lessons[id].push({ kind: t.kind, task: t.id, text: l });
+      save();
+      task.repeats[r].judgings = await judgeSet(dir, `${t.id}-${r + 1}`, t.kind, t.brief, Object.entries(runs).map(([label, x]) => ({ label, dir: x.dir })), judges);
+      save();
+    }
+    const labels = Object.keys(task.repeats[0].runs);
+    const allJ = task.repeats.flatMap(x => x.judgings);
+    task.average = Object.fromEntries(labels.map(l => [l, avgOf(allJ, l)]));
+    task.best = Object.fromEntries(labels.map(l => [l, allJ.filter(j => j.best === l).length]));
+    task.guesses = Object.fromEntries(labels.map(l => [l, task.repeats.map(x => x.runs[l]?.guess).filter(Boolean)]));
     save();
   }
 
@@ -130,17 +154,26 @@ async function main(file) {
   if (cfg.learn) {
     const t = cfg.learn;
     console.log(`\n# learning: ${t.id}`);
-    study.learn = { id: t.id, kind: t.kind, brief: t.brief, lessons, agents: {} };
+    // Only lessons from the same kind of work: drawing tips for a drawing.
+    const same = Object.fromEntries(Object.entries(lessons).map(([id, ls]) => [id, ls.filter(l => l.kind === t.kind).map(l => l.text)]));
+    study.learn = { id: t.id, kind: t.kind, brief: t.brief, lessons: same, agents: {} };
     for (const a of agents) {
-      const runs = {};
-      console.log(`- ${a.label}: before`); runs.before = await roomRun(solo(t, a, { tag: 'before' }));
-      console.log(`- ${a.label}: practice only`); runs.practice = await roomRun(solo(t, a, { tag: 'practice' }));
-      const notes = lessons[a.id];
-      console.log(`- ${a.label}: with lessons (${notes.length})`);
-      runs.lessons = await roomRun(solo(t, a, { tag: 'with lessons', secrets: notes.length
-        ? { [a.id]: `Techniques you noted while working with ${agents.filter(x => x !== a).map(x => x.label).join(' and ')}, to use if they help:\n${notes.map(n => `- ${n}`).join('\n')}` } : {} }));
-      const judgings = await judgeSet(dir, `${t.id}-${a.id}`, t.kind, t.brief, Object.entries(runs).map(([label, r]) => ({ label, dir: r.dir })), judges);
-      study.learn.agents[a.id] = { runs, judgings, average: Object.fromEntries(Object.keys(runs).map(l => [l, avgOf(judgings, l)])) };
+      const notes = same[a.id];
+      const reps = [];
+      for (let r = 0; r < repeats; r++) {
+        const runs = {};
+        console.log(`- ${a.label}${repeats > 1 ? `, repeat ${r + 1}` : ''}: before`); runs.before = await roomRun(solo(t, a, { tag: 'before' }));
+        console.log(`- ${a.label}: practice only`); runs.practice = await roomRun(solo(t, a, { tag: 'practice' }));
+        console.log(`- ${a.label}: with lessons (${notes.length})`);
+        runs.lessons = await roomRun(solo(t, a, { tag: 'with lessons', secrets: notes.length
+          ? { [a.id]: `Techniques you noted while working with ${agents.filter(x => x !== a).map(x => x.label).join(' and ')}, to use if they help:\n${notes.map(n => `- ${n}`).join('\n')}` } : {} }));
+        const judgings = await judgeSet(dir, `${t.id}-${a.id}-${r + 1}`, t.kind, t.brief, Object.entries(runs).map(([label, x]) => ({ label, dir: x.dir })), judges);
+        reps.push({ runs, judgings });
+        save();
+      }
+      const allJ = reps.flatMap(x => x.judgings), labels = Object.keys(reps[0].runs);
+      study.learn.agents[a.id] = { repeats: reps, average: Object.fromEntries(labels.map(l => [l, avgOf(allJ, l)])),
+        best: Object.fromEntries(labels.map(l => [l, allJ.filter(j => j.best === l).length])) };
       save();
     }
   }
@@ -152,17 +185,19 @@ async function main(file) {
 }
 
 function summaryMd(s) {
-  const L = [`# ${s.title || 'Solo vs together'}`, '', `Judges (blind): ${s.judges.join(', ')}. Scores 1-10, averaged over judges.`, '', '## Alone or together', ''];
+  const L = [`# ${s.title || 'Solo vs together'}`, '', `Judges (blind): ${s.judges.join(', ')}. Scores 1-10, averaged over judges and repeats. "best" counts how often a judge picked it as the best of its set.`, '', '## Alone or together', ''];
   for (const t of s.tasks) {
-    L.push(`### ${t.id}`, '', ...Object.entries(t.average || {}).map(([l, v]) => `- ${l}: ${v ?? 'n/a'}${t.runs[l]?.guess ? ` (guess ${t.runs[l].guess})` : ''}`));
-    const bests = (t.judgings || []).map(j => j.error ? `${j.judge}: ${j.error}` : `${j.judge} picked ${j.best}`);
-    L.push(`- best: ${bests.join('; ')}`, '');
+    L.push(`### ${t.id} (${t.repeats.length} repeat${t.repeats.length === 1 ? '' : 's'})`, '',
+      ...Object.entries(t.average || {}).map(([l, v]) => `- ${l}: ${v ?? 'n/a'} · best ${t.best?.[l] ?? 0}${t.guesses?.[l]?.length ? ` · guesses ${t.guesses[l].join(', ')}` : ''}`));
+    const errs = t.repeats.flatMap(x => (x.judgings || []).filter(j => j.error).map(j => `${j.judge}: ${j.error}`));
+    if (errs.length) L.push(`- judge errors: ${errs.join('; ')}`);
+    L.push('');
   }
   if (s.learn) {
     L.push('## Did they learn from each other?', '', `Task: ${s.learn.brief}`, '');
     for (const [id, x] of Object.entries(s.learn.agents)) {
-      L.push(`### ${s.agents.find(a => a.id === id)?.label || id}`, '', `Lessons noted: ${(s.learn.lessons[id] || []).map(l => `"${l}"`).join('; ') || '(none)'}`, '',
-        ...Object.entries(x.average).map(([l, v]) => `- ${l}: ${v ?? 'n/a'}`), `- best: ${x.judgings.map(j => j.error ? `${j.judge}: ${j.error}` : `${j.judge} picked ${j.best}`).join('; ')}`, '');
+      L.push(`### ${s.agents.find(a => a.id === id)?.label || id}`, '', `Lessons carried over: ${(s.learn.lessons[id] || []).map(l => `"${l}"`).join('; ') || '(none)'}`, '',
+        ...Object.entries(x.average).map(([l, v]) => `- ${l}: ${v ?? 'n/a'} · best ${x.best?.[l] ?? 0}`), '');
     }
   }
   return L.join('\n');
