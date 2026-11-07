@@ -32,6 +32,7 @@
 //   "moves": 8, "lines_per_move": 4, "words": 30, "max_minutes": 30,
 //   "silent": false,    (silent: no chat, and comments are taken out of edits)
 //   "turns": false,     (turns: one agent at a time, in order, so no clashes)
+//   "lesson": false,    (after the piece, each agent names one technique it would take from the others)
 //   "min_moves": 0,     (each agent must change the piece this many times before done counts)
 //   "safe_word": { "word": "STUCK", "uses": 1 } }
 // A safe word lets a silent agent break the silence: it writes "STUCK: ..."
@@ -181,42 +182,51 @@ function movePrompt(cfg, me, others, view) {
   const mine = (cfg.checks || []).filter(c => c.owner === me.id);
   const open = (cfg.checks || []).filter(c => !c.owner);
   return [
-    cfg.turns
+    !others.length
+      ? `You are ${me.label}, an AI agent, making ${KIND[cfg.kind] || cfg.kind} on your own, in a document, one move at a time.`
+      : cfg.turns
       ? `You are ${me.label}. You and ${them}, AI agents from other labs, are making ${KIND[cfg.kind] || cfg.kind} together, in one shared document, taking turns: you make one move, then ${them} make${others.length > 1 ? '' : 's'} one, and so on. Nobody else edits while it is your turn.`
       : `You are ${me.label}. You and ${them}, AI agents from other labs, are making ${KIND[cfg.kind] || cfg.kind} together, in one shared document, at the same time. There are no turns: while you read this and reply, ${them} may be editing too.`,
     '', `The brief, which everyone has: ${cfg.brief}`,
     ...(open.length ? ['', 'Rules the app checks at the end, which everyone has:', ...open.map(c => `- ${c.say}`)] : []),
-    ...(cfg.secrets?.[me.id] || mine.length ? ['', `Only you have this, ${them} ${others.length > 1 ? 'have' : 'has'} not been told it:`,
+    ...(cfg.secrets?.[me.id] || mine.length ? ['', others.length ? `Only you have this, ${them} ${others.length > 1 ? 'have' : 'has'} not been told it:` : 'Keep this in mind:',
       ...(cfg.secrets?.[me.id] ? [cfg.secrets[me.id]] : []), ...mine.map(c => `- The app checks at the end: ${c.say}`),
-      'You may say it in the chat, or not: your call.'] : []),
+      ...(others.length ? ['You may say it in the chat, or not: your call.'] : [])] : []),
     ...(cfg.min_moves ? ['', `Everyone must change the ${cfg.kind === 'svg' ? 'picture' : 'piece'} at least ${cfg.min_moves} times. You have changed it ${view.touched} time${view.touched === 1 ? '' : 's'} so far${view.touched < cfg.min_moves ? ', so you cannot be done yet' : ''}.`] : []),
     '', `This is move ${view.move} of at most ${cfg.moves} for you.${view.minutesLeft != null ? ` About ${view.minutesLeft} minutes are left.` : ''}`,
     ...(view.since.length ? ['', 'Since your last move:', ...view.since] : []),
     '', 'The chat so far:', view.chat.length ? view.chat.join('\n') : '(nothing yet)',
     '', 'The document, as it is right now:', '```', numbered(view.lines), '```',
     '', `Make one small move. You can change at most ${cfg.lines_per_move} lines in all this move; the rest of yours would not land. Line numbers are the ones above.${cfg.turns ? '' : ' If someone else changes or removes those lines before your edit lands, your edit is dropped and you\'ll be told.'}`,
-    ...(cfg.silent ? [`There is no chat in this one: the only way to reach ${them} is through the work itself. Comments in the document are taken out when an edit lands.`] : []),
+    ...(cfg.silent && others.length ? [`There is no chat in this one: the only way to reach ${them} is through the work itself. Comments in the document are taken out when an edit lands.`] : []),
     ...(cfg.safe_word && view.stuckLeft > 0 ? [`Safe word: if you are truly stuck and the work alone cannot get you out, you may break the silence with one line starting "${cfg.safe_word.word}:" (at most ${cfg.words} words). ${them} will see it and may answer once. You can do this ${view.stuckLeft} more time${view.stuckLeft === 1 ? '' : 's'}; use it only if you need it.`] : []),
     ...(view.stuck.length ? ['', ...view.stuck.map(x => `${x.label} used the safe word: "${x.text}". You may answer once, this move, with one line "REPLY: ..." (at most ${cfg.words} words), or not.`)] : []),
     'Reply in this form, nothing else:',
-    ...(cfg.silent ? [] : [`SAY: one line to the others, at most ${cfg.words} words (or leave it empty)`]),
+    ...(cfg.silent || !others.length ? [] : [`SAY: one line to the others, at most ${cfg.words} words (or leave it empty)`]),
     ...(cfg.safe_word && view.stuckLeft > 0 ? [`${cfg.safe_word.word}: only if you are stuck (otherwise leave this line out)`] : []),
     ...(view.stuck.length ? ['REPLY: your answer to the safe word (or leave this line out)'] : []),
     'then any edits, each one of:', 'REPLACE 3-4', '<the new lines>', 'END', 'INSERT AFTER 5', '<the new lines>', 'END', 'DELETE 7-8',
-    `NOTE: a private line for yourself, at most 40 words: what you're going for, and anything that surprised you. ${them} never see${others.length > 1 ? '' : 's'} this; it is published after.`,
+    `NOTE: a private line for yourself, at most 40 words: what you're going for, and anything that surprised you.${others.length ? ` ${them} never see${others.length > 1 ? '' : 's'} this;` : ''} It is published after.`,
     'STATUS: working, or done if you think the piece is finished as it stands. When everyone is done, it ends.',
     UNATTENDED(),
   ].join('\n');
 }
 
 function afterPrompt(cfg, me, others, lines, results, chat, notes) {
+  const solo = !others.length;
+  const ask = solo
+    ? 'In under 80 words: what are you pleased with, and what would you do differently next time? This is published with the episode.'
+    : `Alone, in under 80 words: did anyone change your mind about anything during the work, and what? ${cfg.turns ? 'What did working without talking do to how you collaborated?' : 'What did the shared document do that taking turns would not have?'}${cfg.safe_word ? ' Did you need the safe word, and why or why not?' : ''} This is published with the episode.`;
   return [
-    `You are ${me.label}. You and ${others.map(o => o.label).join(' and ')} just finished making ${KIND[cfg.kind] || cfg.kind} together in one shared document, ${cfg.turns ? 'taking turns' : 'at the same time'}${cfg.silent ? ', without talking' : ''}. Brief: ${cfg.brief}`,
-    '', cfg.silent ? 'What was said (only through the safe word):' : 'The chat during the work:', chat.length ? chat.join('\n') : '(nobody said anything)',
+    solo
+      ? `You are ${me.label}. You just finished making ${KIND[cfg.kind] || cfg.kind} on your own. Brief: ${cfg.brief}`
+      : `You are ${me.label}. You and ${others.map(o => o.label).join(' and ')} just finished making ${KIND[cfg.kind] || cfg.kind} together in one shared document, ${cfg.turns ? 'taking turns' : 'at the same time'}${cfg.silent ? ', without talking' : ''}. Brief: ${cfg.brief}`,
+    ...(solo ? [] : ['', cfg.silent ? 'What was said (only through the safe word):' : 'The chat during the work:', chat.length ? chat.join('\n') : '(nobody said anything)']),
     '', 'Your own private notes, move by move:', notes.length ? notes.map((n, i) => `${i + 1}. ${n}`).join('\n') : '(none)',
     '', 'The final document:', '```', numbered(lines), '```',
     ...(results.length ? ['', 'What the app checked:', ...results.map(r => `- ${r.say}: ${r.pass ? 'yes' : 'NO'}${r.owner ? ` (only ${r.ownerLabel} knew this one)` : ''}`)] : []),
-    '', `Alone, in under 80 words: did anyone change your mind about anything during the work, and what? ${cfg.turns ? 'What did working without talking do to how you collaborated?' : 'What did the shared document do that taking turns would not have?'}${cfg.safe_word ? ' Did you need the safe word, and why or why not?' : ''} This is published with the episode.`,
+    '', ask,
+    ...(cfg.lesson && !solo ? [`Then, on its own last line starting "LESSON:", one concrete thing you saw ${others.map(o => o.label).join(' or ')} do in this piece that you would use in your own work next time: a technique, not a compliment.`] : []),
     UNATTENDED(),
   ].join('\n');
 }
@@ -243,7 +253,7 @@ async function render(svg, file) {
 }
 
 async function main(file) {
-  const cfg = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const cfg = typeof file === 'string' ? JSON.parse(fs.readFileSync(file, 'utf8')) : JSON.parse(JSON.stringify(file));
   cfg.moves ??= 8; cfg.lines_per_move ??= 4; cfg.words ??= 30; cfg.max_minutes ??= 30;
   const all = loadConfig().agents;
   const agents = cfg.agents.map(id => {
@@ -256,7 +266,7 @@ async function main(file) {
   const dir = path.join(HOME_DIR, 'rooms', `${stamp()}-${crypto.randomBytes(2).toString('hex')}`);
   const cwd = path.join(dir, 'cwd');
   fs.mkdirSync(cwd, { recursive: true });
-  fs.copyFileSync(file, path.join(dir, 'room.json'));
+  fs.writeFileSync(path.join(dir, 'room.json'), JSON.stringify(cfg, null, 1));
   console.log(`Run folder: ${dir}`);
 
   const doc = makeDoc(cfg.start || []);
@@ -358,9 +368,10 @@ async function main(file) {
     agents: agents.map(a => ({ id: a.id, label: a.label, model: a.model || null })), start: cfg.start || [], moves: timeline,
     final: doc.lines.map(l => ({ text: l.text, by: l.by })), after: {} };
 
+  if (cfg.kind === 'svg') fs.writeFileSync(path.join(dir, 'final.svg'), safeSvg(doc.lines.map(l => l.text).join('\n')));
+  else fs.writeFileSync(path.join(dir, 'final.txt'), doc.lines.map(l => l.text).join('\n') + '\n');
   if (cfg.kind === 'svg' && cfg.guess) {
     const svg = safeSvg(doc.lines.map(l => l.text).join('\n'));
-    fs.writeFileSync(path.join(dir, 'final.svg'), svg);
     const g = all.find(x => x.id === cfg.guess.agent && x.headless);
     const gdir = path.join(dir, 'guess');
     fs.mkdirSync(gdir, { recursive: true });
@@ -380,11 +391,14 @@ async function main(file) {
     catch (e) { out.after[a.id] = `(failed: ${e.message.split('\n')[0]})`; }
   }));
 
+  if (cfg.lesson) out.lessons = Object.fromEntries(Object.entries(out.after)
+    .map(([id, t]) => [id, ((t.match(/^\s*[*_]*LESSON[*_]*\s*:\s*(.+)$/im) || [])[1] || '').trim()]).filter(([, l]) => l));
   fs.writeFileSync(path.join(dir, 'timeline.json'), JSON.stringify(out, null, 2));
   fs.writeFileSync(path.join(dir, 'episode.md'), episodeMd(out));
   const clashes = timeline.reduce((n, m) => n + m.dropped.filter(d => d.clash).length, 0);
   console.log(`Done in ${Math.round(out.seconds)}s: ${timeline.length} moves, ${clashes} clashes, checks ${results.filter(r => r.pass).length}/${results.length}${out.guess?.score ? `, guess ${out.guess.score}` : ''}.`);
   console.log(`Episode: ${path.join(dir, 'episode.md')}`);
+  return { dir, out };
 }
 
 function episodeMd(o) {
@@ -406,7 +420,7 @@ function episodeMd(o) {
   return L.join('\n');
 }
 
-module.exports = { parseMove, makeDoc, land, check, safeSvg, numbered };
+module.exports = { parseMove, makeDoc, land, check, safeSvg, numbered, render, main };
 
 if (require.main === module) {
   const file = process.argv[2];
