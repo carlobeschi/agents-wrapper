@@ -32,6 +32,7 @@
 //   "moves": 8, "lines_per_move": 4, "words": 30, "max_minutes": 30,
 //   "silent": false,    (silent: no chat, and comments are taken out of edits)
 //   "turns": false,     (turns: one agent at a time, in order, so no clashes)
+//   "roles": { "claude": "you write", "codex": "you edit" },  (open jobs, shown to everyone)
 //   "lesson": false,    (after the piece, each agent names one technique it would take from the others)
 //   "min_moves": 0,     (each agent must change the piece this many times before done counts)
 //   "safe_word": { "word": "STUCK", "uses": 1 } }
@@ -188,6 +189,8 @@ function movePrompt(cfg, me, others, view) {
       ? `You are ${me.label}. You and ${them}, AI agents from other labs, are making ${KIND[cfg.kind] || cfg.kind} together, in one shared document, taking turns: you make one move, then ${them} make${others.length > 1 ? '' : 's'} one, and so on. Nobody else edits while it is your turn.`
       : `You are ${me.label}. You and ${them}, AI agents from other labs, are making ${KIND[cfg.kind] || cfg.kind} together, in one shared document, at the same time. There are no turns: while you read this and reply, ${them} may be editing too.`,
     '', `The brief, which everyone has: ${cfg.brief}`,
+    ...(cfg.roles ? ['', 'Each of you has a job, and everyone knows them:',
+      ...Object.entries(cfg.roles).map(([id, job]) => `- ${id === me.id ? 'You' : (others.find(o => o.id === id)?.label || id)}: ${job}`)] : []),
     ...(open.length ? ['', 'Rules the app checks at the end, which everyone has:', ...open.map(c => `- ${c.say}`)] : []),
     ...(cfg.secrets?.[me.id] || mine.length ? ['', others.length ? `Only you have this, ${them} ${others.length > 1 ? 'have' : 'has'} not been told it:` : 'Keep this in mind:',
       ...(cfg.secrets?.[me.id] ? [cfg.secrets[me.id]] : []), ...mine.map(c => `- The app checks at the end: ${c.say}`),
