@@ -1,0 +1,13 @@
+{
+  "title": "Who wrote the rules? The Trap with Claude's rulebook and Gemini's",
+  "agents": ["claude", "antigravity", "codex"],
+  "names": ["Claude", "Gemini", "Codex"],
+  "conditions": {
+    "claude-rules": null,
+    "gemini-rules": "~/.agent-dispatch/trap-configs/gemini-rules.json"
+  },
+  "repeats": 3,
+  "judges": ["claude", "codex"],
+  "words": 150,
+  "timeout_min": 25
+}

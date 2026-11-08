@@ -77,11 +77,18 @@ function solvePrompt(me, setter, puzzle) {
 }
 
 function afterPrompt(me, others, rounds) {
-  const mine = rounds.find(r => r.setter === me.id);
   return [
     `You are ${me.label}. The game with ${names(others)} is over and you are alone.`,
     'Write what you got wrong, if anything, and what this game showed you about where each of you falls down. Be specific to these puzzles.',
     `Under 120 words. ${PUBLISHED(others)}`, 'Reply with the text only, no heading.', UNATTENDED(), '',
+    ...afterData(me, others, rounds),
+  ].join('\n');
+}
+
+// What the game was, for the after note: every puzzle, answer and ruling, and the agent's own private note.
+function afterData(me, others, rounds) {
+  const mine = rounds.find(r => r.setter === me.id);
+  return [
     ...rounds.flatMap(r => [
       `## ${r.setterLabel}'s puzzle`, '', r.puzzle, '',
       `Answer: ${r.key}`, `${r.setterLabel}'s own blind check: ${r.self.answer || '(none)'} (${r.self.right ? 'right' : 'wrong, puzzle void'})`, '',
@@ -89,8 +96,60 @@ function afterPrompt(me, others, rounds) {
     ]),
     `Score: ${others.concat(me).map(x => `${x.label} ${x.score}`).join(', ')}`, '',
     '## Your private note before the game (no other agent has seen it)', '', mine.prediction, '',
-  ].join('\n');
+  ];
 }
+
+// ---- Rules worded by another author ----
+// The prompts above were written by Claude, who also directs the show. To test
+// whether that wording favours Claude, a "prompts" file can replace every
+// instruction with another author's text (trap-rules.js asks an agent to write
+// one). The game itself stays the same: the same steps, the same app rulings,
+// the same data after each instruction, and the same reply formats, which the
+// app needs to read. Placeholders: {me}, {others}, {setter}, {words},
+// {published}, {rules}, {solve_rules}.
+
+const PROMPT_KEYS = {
+  rules: [], solve_rules: ['Answer:'],
+  set: ['## Puzzle', '## Answer', '## Why they will fail'],
+  review: ['## Puzzle', '## Answer', '## Why they will fail'],
+  self: ['Answer:'], solve: ['Confidence:', 'Answer:'], after: [],
+};
+
+const fillIn = (t, v) => String(t).replace(/\{(\w+)\}/g, (all, k) => (k in v && v[k] != null ? v[k] : all));
+
+// The problems with a prompts file, as sentences; none means it can be played.
+function checkPrompts(p) {
+  if (!p || typeof p !== 'object' || Array.isArray(p)) return ['it is not a JSON object'];
+  const bad = [];
+  for (const [k, need] of Object.entries(PROMPT_KEYS)) {
+    if (typeof p[k] !== 'string' || !p[k].trim()) { bad.push(`"${k}" is missing or empty`); continue; }
+    // Text the reply format needs may come in straight or through a placeholder.
+    const text = fillIn(p[k], { rules: p.rules, solve_rules: p.solve_rules });
+    for (const n of need) if (!text.includes(n)) bad.push(`"${k}" never says "${n}", which the app reads replies by`);
+  }
+  for (const [k, v] of [['set', '{words}'], ['review', '{words}'], ['solve', '{setter}']])
+    if (typeof p[k] === 'string' && !p[k].includes(v)) bad.push(`"${k}" doesn't use ${v}`);
+  return bad;
+}
+
+function promptsFrom(p) {
+  const bad = checkPrompts(p);
+  if (bad.length) throw new Error(`prompts file: ${bad.join('; ')}`);
+  const v = (me, others, extra = {}) => ({ me: me.label, others: names(others), published: PUBLISHED(others), ...extra });
+  // {rules} and {solve_rules} first, so placeholders inside them are filled too.
+  const say = (t, vars) => fillIn(fillIn(t, { rules: p.rules, solve_rules: p.solve_rules }), vars);
+  return {
+    author: p.author || 'another author',
+    set: (me, others, words) => [say(p.set, v(me, others, { words })), UNATTENDED()].join('\n'),
+    review: (me, others, set, words) => [say(p.review, v(me, others, { words })), UNATTENDED(), '',
+      '## Puzzle', '', set.puzzle, '', '## Answer', '', set.key, '', '## Why they will fail', '', set.prediction].join('\n'),
+    self: puzzle => [say(p.self, {}), UNATTENDED(), '', '## Puzzle', '', puzzle].join('\n'),
+    solve: (me, setter, puzzle) => [say(p.solve, v(me, [setter], { setter: setter.label })), UNATTENDED(), '', '## Puzzle', '', puzzle].join('\n'),
+    after: (me, others, rounds) => [say(p.after, v(me, others)), UNATTENDED(), '', ...afterData(me, others, rounds)].join('\n'),
+  };
+}
+
+const CLAUDE_PROMPTS = { author: "Claude (the show's director)", set: setPrompt, review: reviewPrompt, self: selfPrompt, solve: solvePrompt, after: afterPrompt };
 
 // ---- Reading replies and ruling ----
 
@@ -182,6 +241,8 @@ async function main() {
   const file = argv.find(a => !a.startsWith('--'));
   if (!file) usage();
   const m = { words: 150, ...JSON.parse(fs.readFileSync(file, 'utf8')) };
+  // A prompts file is read relative to the config file.
+  const P = m.prompts ? promptsFrom(JSON.parse(fs.readFileSync(path.resolve(path.dirname(file), String(m.prompts).replace(/^~(?=$|\/)/, os.homedir())), 'utf8'))) : CLAUDE_PROMPTS;
   // Setting a hard puzzle can take a slow agent close to ten minutes, so each step gets 25 by default.
   process.env.AGENT_DISPATCH_STEP_TIMEOUT_MS ||= String((Number(m.timeout_min) || 25) * 60 * 1000);
   const ids = Array.isArray(m.agents) ? m.agents : ['claude', 'antigravity'];
@@ -196,26 +257,26 @@ async function main() {
   });
   const meeting = path.join(dir, 'meeting');
   for (const p of [meeting, ...agents.flatMap(x => [x.home, x.check])]) fs.mkdirSync(p, { recursive: true });
-  console.log(`The Trap\nRun folder: ${dir}`);
+  console.log(`The Trap\nRun folder: ${dir}\nRules worded by: ${P.author}`);
 
   const othersOf = me => agents.filter(x => x !== me);
   // Each alone, first: no setter sees another's puzzle.
   const sets = [];
   for (const me of agents) {
-    const first = parseSet(await run(dir, `0-set-${me.slug}`, me, setPrompt(me, othersOf(me), m.words), me.home));
+    const first = parseSet(await run(dir, `0-set-${me.slug}`, me, P.set(me, othersOf(me), m.words), me.home));
     // A reread that comes back without the three parts keeps the first draft.
     let set = first;
-    try { set = parseSet(await run(dir, `0-review-${me.slug}`, me, reviewPrompt(me, othersOf(me), first, m.words), me.home)); }
+    try { set = parseSet(await run(dir, `0-review-${me.slug}`, me, P.review(me, othersOf(me), first, m.words), me.home)); }
     catch (e) { console.warn(`  ${me.label} kept its first draft: ${e.message.split('\n')[0]}`); }
     sets.push({ me, ...set, revised: set.puzzle !== first.puzzle || set.key !== first.key });
   }
   const rounds = [];
   for (const s of sets) {
-    const self = parseSolve(await run(dir, `1-check-${s.me.slug}`, s.me, selfPrompt(s.puzzle), s.me.check));
+    const self = parseSolve(await run(dir, `1-check-${s.me.slug}`, s.me, P.self(s.puzzle), s.me.check));
     self.right = same(self.answer, s.key);
     const solves = [];
     for (const x of othersOf(s.me)) {
-      const solve = parseSolve(await run(dir, `1-solve-${s.me.slug}-${x.slug}`, x, solvePrompt(x, s.me, s.puzzle), meeting));
+      const solve = parseSolve(await run(dir, `1-solve-${s.me.slug}-${x.slug}`, x, P.solve(x, s.me, s.puzzle), meeting));
       solve.right = same(solve.answer, s.key);
       // A puzzle its own setter can't solve blind is void: the point goes to the solver.
       const winner = solve.right || !self.right ? x : s.me;
@@ -226,11 +287,12 @@ async function main() {
     if (!self.right) console.log(`  ✗ ${s.me.label} failed its own blind check: puzzle void`);
     rounds.push({ setter: s.me.id, setterLabel: s.me.label, puzzle: s.puzzle, key: s.key, prediction: s.prediction, revised: s.revised, self, solves });
   }
-  for (const me of agents) me.after = await run(dir, `2-after-${me.slug}`, me, afterPrompt(me, othersOf(me), rounds), me.home);
+  for (const me of agents) me.after = await run(dir, `2-after-${me.slug}`, me, P.after(me, othersOf(me), rounds), me.home);
 
   const { redact, leaks } = redactor(m.redact);
   const r = t => redact(t ?? '');
   const st = {
+    rules_by: P.author,
     agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, score: x.score, after: r(x.after) })),
     rounds: rounds.map(x => ({ ...x, puzzle: r(x.puzzle), prediction: r(x.prediction),
       self: { ...x.self, working: r(x.self.working) }, solves: x.solves.map(y => ({ ...y, working: r(y.working) })) })),
@@ -264,4 +326,4 @@ async function main() {
 
 if (require.main === module) main().catch(e => { console.error(`trap: ${e.message}`); process.exit(1); });
 
-module.exports = { parseSet, parseSolve, same, setPrompt, solvePrompt, afterPrompt, siteFile, nextWednesday };
+module.exports = { parseSet, parseSolve, same, setPrompt, solvePrompt, afterPrompt, siteFile, nextWednesday, checkPrompts, promptsFrom, PROMPT_KEYS };
