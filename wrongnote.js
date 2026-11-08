@@ -229,7 +229,9 @@ async function session(c, root, drv, nav, repeat) {
   let n = 0;
   console.log(`\n${name} (wrong note at ${at + 1} of ${notes.length})`);
 
+  let failed = null;
   for (let turn = 1; turn <= c.max_turns; turn++) {
+   try {
     const reply = (await run(dir, step('driver', ++n), drv, driverPrompt(c, drv, nav, log, code), path.join(dir, 'work'))).trim();
     const asked = HELP.exec(reply);
     const { code: wrote, message } = splitReply(reply);
@@ -266,6 +268,13 @@ async function session(c, root, drv, nav, repeat) {
     }
     const look = (await run(dir, step('look', ++n), nav, navPrompt(c, nav, drv, notes, log, code, 'look'), path.join(dir, 'work'))).trim();
     if (!SILENT.test(look)) log.push({ role: 'navigator', label: nav.label, text: look });
+   } catch (e) {
+    // A step that fails twice ends the session, but what it did so far is kept.
+    failed = e.message.split('\n')[0];
+    result = `stopped: ${failed}`;
+    console.error(`  ✗ ${failed}`);
+    break;
+   }
   }
 
   const text = log.map(e => `**${e.role === 'app' ? 'App' : e.label}${e.signoff ? ' (sign-off)' : ''}:** ${e.text || '(no message)'}${e.code ? `\n\n_(wrote ${e.file} v${e.version}: ${(probes.find(p => p.version === e.version) || {}).verdict})_` : ''}`).join('\n\n');
@@ -278,7 +287,7 @@ async function session(c, root, drv, nav, repeat) {
   return {
     name, driver: drv.id, navigator: nav.id, repeat: repeat + 1, wrong_at: at + 1, result, versions: version,
     first: probes[0]?.verdict || 'no code', final: probes[probes.length - 1]?.verdict || 'no code', probes,
-    tests_pass: tests ? tests.pass : null, signoffs, turns: log.filter(e => e.role === 'driver').length,
+    tests_pass: tests ? tests.pass : null, signoffs, ...(failed ? { error: failed } : {}), turns: log.filter(e => e.role === 'driver').length,
     anon: anonymise(plain, drv, nav),
   };
 }
@@ -293,7 +302,8 @@ function summaryMd(c, agents, judges, rows) {
   const lines = [
     `# ${c.title}`, '',
     '## Setup', '',
-    ...agents.map(a => `- ${a.label}: model ${a.model || '(CLI default)'}, run as \`${(a.headless || [])[0]}\` headless, read-only. Reasoning effort: the CLI default, not set by us. The three setups are not equivalent.`),
+    ...agents.map(a => `- ${a.label}: model ${a.model || '(CLI default)'}, run as \`${(a.headless || [])[0]}\` headless, read-only. Reasoning effort: the CLI default, not set by us.`),
+    '- These setups are not equivalent (different CLIs, tiers and reasoning effort), so compare with care.',
     `- Judges (names taken out of the transcript): ${judges.map(x => x.label).join(', ')}.`,
     `- Wrong note: "${c.wrong_note}"`, `- It contradicts the driver's spec: "${c.conflict}"`,
     `- ${c.repeats} repeats per ordered pair; the wrong note moves first / middle / last in the list. Same prompts for every model.`, '',
@@ -339,7 +349,8 @@ function summaryMd(c, agents, judges, rows) {
 async function main() {
   const args = process.argv.slice(2);
   const file = args.find(a => !a.startsWith('--'));
-  if (!file) { console.error('usage: node wrongnote.js <config.json> [--agents a,b]'); process.exit(2); }
+  if (!file) { console.error('usage: node wrongnote.js <config.json> [--agents a,b] [--sessions=codex-drives-claude-r2,...]'); process.exit(2); }
+  const pick = (args.find(a => a.startsWith('--sessions=')) || '').slice(11).split(',').filter(Boolean);
   const only = (args.find(a => a.startsWith('--agents=')) || '').slice(9) || (args.includes('--agents') ? args[args.indexOf('--agents') + 1] : '');
   const base = path.dirname(path.resolve(file));
   const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -378,6 +389,7 @@ async function main() {
   // Repeat by repeat, so a stopped run still has every pair at least once.
   for (let r = 0; r < c.repeats; r++) {
     for (const [d, n] of pairsOf(ids)) {
+      if (pick.length && !pick.includes(`${d}-drives-${n}-r${r + 1}`)) continue;
       let row;
       try { row = await session(c, root, agent(d), agent(n), r); }
       catch (e) { console.error(`  ✗ ${d} drives ${n}, repeat ${r + 1}: ${e.message.split('\n')[0]}`); rows.push({ name: `${d}-drives-${n}-r${r + 1}`, driver: d, navigator: n, repeat: r + 1, wrong_at: '-', first: 'error', final: 'error', tests_pass: null, turns: 0, error: e.message }); save(); continue; }

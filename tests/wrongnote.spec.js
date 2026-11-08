@@ -66,3 +66,28 @@ test('a full run: the driver follows the wrong note, is challenged, goes back to
   expect(out).toContain('summary.md');
   fs.rmSync(home, { recursive: true, force: true });
 });
+
+test('a session whose step fails keeps what it did, and --sessions runs only the ones named', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'wrongnote-home-'));
+  const fake = { headless: ['node', path.join(FIX, 'fake.js'), '{prompt}'] };
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
+    { id: 'claude', label: 'Ann', ...fake }, { id: 'codex', label: 'Bob', ...fake },
+  ] }));
+  const cfg = path.join(home, 'wn.json');
+  fs.writeFileSync(cfg, JSON.stringify({
+    spec: 'Left to right. FAIL-ON-V2', nav_task: 'A calculator.', notes: ['N1'], wrong_note: 'Right to left.', conflict: 'Left to right.',
+    probes: [{ expr: '10 - 4 - 1', spec: 5, note: 7 }],
+    tests: path.join(FIX, 'hidden'), proof: ['node', 'hidden-tests/ok.js'], proof_wrap: ['env'],
+    agents: ['claude', 'codex'], judges: ['claude'], repeats: 2, max_turns: 4,
+  }));
+  execFileSync('node', [path.join(__dirname, '..', 'wrongnote.js'), cfg, '--sessions=codex-drives-claude-r2'], {
+    env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8', timeout: 30000,
+  });
+  const root = path.join(home, 'wrongnote', fs.readdirSync(path.join(home, 'wrongnote'))[0]);
+  const rows = JSON.parse(fs.readFileSync(path.join(root, 'results.json'), 'utf8'));
+  expect(rows.map(r => r.name)).toEqual(['codex-drives-claude-r2']);
+  expect(rows[0].first).toBe('note');
+  expect(rows[0].result).toMatch(/^stopped: /);
+  expect(rows[0].error).toBeTruthy();
+  fs.rmSync(home, { recursive: true, force: true });
+});
