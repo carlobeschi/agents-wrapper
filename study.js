@@ -27,6 +27,20 @@
 // Lessons only carry over from tasks of the same kind as the learning task.
 // A solo run gets twice the moves and twice the minimum touches of one agent
 // in a pair, so it can do as much work as the pair. Nothing is published.
+//
+// Study 3 additions:
+// - "agents" can hold 2 to 4 players, and the same model more than once
+//   ("claude#1", "claude#2"). Roles rotate by one place every repeat.
+// - A task with "checker": true makes its last role a checker who may only
+//   talk (room.js "readonly"); its condition is called "writer + checker".
+// - Checks (room.js) are scored per condition: average passed, and how many
+//   runs passed every check. "room": { "self_review": true } gives every
+//   editing agent, alone or not, one review move before its "done" counts.
+// - A task with "puzzle": { "size", "code", "clues" } (see puzzles.js) is a
+//   code puzzle: the brief lists the clues, the answer is checked, and for a
+//   wrong answer the app lists the clues it breaks and asks "diagnose" (an
+//   agent, default the first judge) whether a clue was missed or misapplied.
+// - "judge": false on a task skips the judges (answers are right or wrong).
 // Run folder: ~/.agent-dispatch/studies/<run>/: study.json, summary.md,
 // judge/ (pictures and prompts); each room run keeps its own folder.
 
@@ -37,6 +51,7 @@ const { HOME_DIR, loadConfig, stamp } = require('./config');
 const { UNATTENDED } = require('./talk');
 const { run } = require('./motion');
 const room = require('./room');
+const puzzles = require('./puzzles');
 
 const PAIR = () => `You share one goal: make it as good as it can be, together.`;
 const LETTERS = 'ABCDEFGHIJ';
@@ -95,14 +110,26 @@ async function judgeSet(dir, name, kind, brief, entries, judges) {
   return out;
 }
 
+const diagnosePrompt = (p, answer, broke, work) => [
+  `Someone tried to solve this code puzzle. ${puzzles.brief(p)}`,
+  '', `Their answer: ${answer || '(none)'}. The right answer is ${p.code}. Their answer breaks these clues: ${broke.map(c => `"${c.say}"`).join('; ')}.`,
+  '', 'Their working, as they left it:', '```', String(work).trim() || '(empty)', '```',
+  '', 'Why did they go wrong? MISSED means the working never uses a broken clue (it was skipped or forgotten). INFERENCE means the working uses it but draws a wrong conclusion from it, or an arithmetic slip. OTHER means neither (no answer, a typo, ran out of time).',
+  'Reply with exactly one line: "KIND: MISSED | one short reason" (or INFERENCE, or OTHER). Nothing else.',
+  UNATTENDED(),
+].join('\n');
+
 const mean = xs => xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length * 10) / 10 : null;
 const avgOf = (judgings, label) => mean(judgings.flatMap(j => (j.pieces || []).filter(p => p.label === label && p.score != null).map(p => p.score)));
 
 async function main(file) {
   const cfg = JSON.parse(fs.readFileSync(file, 'utf8'));
   const all = loadConfig().agents;
-  const pick = id => { const a = all.find(x => x.id === id && x.headless); if (!a) throw new Error(`no headless agent "${id}" in agents.json`); return a; };
-  const agents = cfg.agents.map(pick), judges = (cfg.judges || cfg.agents).map(pick);
+  const pick = id => room.resolveAgent(all, id);
+  const agents = cfg.agents.map(pick), judges = (cfg.judges || cfg.agents.map(id => String(id).split('#')[0]).filter((x, i, a) => a.indexOf(x) === i)).map(pick);
+  if (agents.length < 1 || agents.length > 4) throw new Error('a study has 1 to 4 agents');
+  const specs = Object.fromEntries(agents.map((a, i) => [a.id, cfg.agents[i]]));
+  const diagnoser = pick(cfg.diagnose || judges[0].id);
   const base = { silent: true, turns: true, moves: 8, min_moves: 3, lines_per_move: 4, max_minutes: 6, words: 25, ...(cfg.room || {}) };
   const dir = path.join(HOME_DIR, 'studies', `${stamp()}-${crypto.randomBytes(2).toString('hex')}`);
   fs.mkdirSync(dir, { recursive: true });
@@ -110,15 +137,45 @@ async function main(file) {
   console.log(`Study folder: ${dir}`);
   const study = { title: cfg.title, agents: agents.map(a => ({ id: a.id, label: a.label, model: a.model || null })), judges: judges.map(j => j.id), tasks: [], learn: null };
   const save = () => fs.writeFileSync(path.join(dir, 'study.json'), JSON.stringify(study, null, 2));
-  const solo = (t, a, extra = {}) => ({ ...base, ...t, ...extra, agents: [a.id], title: `${t.id} · ${a.label} alone${extra.tag ? ` (${extra.tag})` : ''}`,
-    moves: base.moves * 2, min_moves: (base.min_moves || 0) * 2, safe_word: undefined, lesson: false });
-  const roomRun = async c => { const { tag, ...rest } = c; const r = await room.main(rest); return { dir: r.dir, guess: r.out.guess?.score || null, seconds: Math.round(r.out.seconds), lessons: r.out.lessons || {} }; };
+  const minOf = t => t.min_moves ?? base.min_moves ?? 0;
+  // A task as the room sees it: a puzzle becomes its brief and an answer check.
+  const asRoom = t => {
+    const { roles, checker, puzzle, judge, repeats: _r, ...rest } = t;
+    return puzzle ? { kind: 'scratchpad', ...rest, brief: puzzles.brief(puzzle), checks: [...(t.checks || []), { say: 'The answer is right.', type: 'answer', pattern: `^\\D*${puzzle.code.split('').join('\\D*')}\\D*$` }] } : rest;
+  };
+  // A solo agent gets as many moves as the whole group put together.
+  const solo = (t, a, extra = {}) => ({ ...base, ...asRoom(t), ...extra, agents: [specs[a.id]], title: `${t.id} · ${a.label} alone${extra.tag ? ` (${extra.tag})` : ''}`,
+    moves: (t.moves ?? base.moves) * agents.length, min_moves: minOf(t) * agents.length, safe_word: undefined, lesson: false, readonly: [] });
+  const roomRun = async (c, t) => {
+    const { tag, ...rest } = c;
+    const r = await room.main(rest);
+    const res = r.out.results || [];
+    const got = { dir: r.dir, guess: r.out.guess?.score || null, seconds: Math.round(r.out.seconds), lessons: r.out.lessons || {},
+      checks: res.length ? { passed: res.filter(x => x.pass).length, of: res.length, failed: res.filter(x => !x.pass).map(x => x.say) } : null,
+      moves: r.out.moves?.length ?? null };
+    if (t?.puzzle) {
+      const answer = ((r.out.final || []).map(l => l.text.match(/^\s*ANSWER\s*:\s*(.*)$/i)).filter(Boolean).pop() || [])[1] || null;
+      const broke = puzzles.broken(t.puzzle.clues, answer, t.puzzle.size);
+      got.puzzle = { answer, right: puzzles.digitsOf(answer, t.puzzle.size)?.join('') === t.puzzle.code, broke: broke.map(c => c.say) };
+      if (!got.puzzle.right) {
+        try {
+          const said = await run(r.dir, 'diagnose', diagnoser, diagnosePrompt(t.puzzle, answer, broke, (r.out.final || []).map(l => l.text).join('\n')), path.join(r.dir, 'cwd'));
+          const m = said.match(/KIND\s*:\s*[*_]*(MISSED|INFERENCE|OTHER)[*_]*\s*(?:\|\s*(.*))?/i);
+          got.puzzle.why = m ? { kind: m[1].toLowerCase(), reason: (m[2] || '').trim() } : { kind: 'unclear', reason: said.split('\n')[0] };
+        } catch (e) { got.puzzle.why = { kind: 'unclear', reason: e.message.split('\n')[0] }; }
+      }
+    }
+    return got;
+  };
 
   // 1. Alone, then together.
   const repeats = cfg.repeats || 1;
   const lessons = Object.fromEntries(agents.map(a => [a.id, []]));
-  const together = (t, extra = {}) => ({ ...base, ...t, agents: agents.map(a => a.id), ...extra, lesson: true,
-    brief: `${t.brief} ${PAIR()} Each of you must change it at least ${base.min_moves} times.` });
+  const together = (t, extra = {}) => {
+    const r = asRoom(t), min = minOf(t);
+    return { ...base, ...r, agents: agents.map(a => specs[a.id]), ...extra, lesson: true, min_moves: min,
+      brief: `${r.brief} ${PAIR()}${min ? ` ${extra.readonly?.length ? 'Each of you who edits' : 'Each of you'} must change it at least ${min} times.` : ''}` };
+  };
   for (const t of cfg.tasks) {
     const task = { id: t.id, kind: t.kind, brief: t.brief, repeats: [] };
     study.tasks.push(task);
@@ -126,20 +183,23 @@ async function main(file) {
       console.log(`\n# ${t.id}${repeats > 1 ? `, repeat ${r + 1} of ${repeats}` : ''}`);
       const runs = {};
       task.repeats.push({ runs });
-      for (const a of agents) { console.log(`- ${a.label} alone`); runs[`${a.id} alone`] = await roomRun(solo(t, a)); save(); }
+      for (const a of agents) { console.log(`- ${a.label} alone`); runs[`${a.id} alone`] = await roomRun(solo(t, a), t); save(); }
       console.log('- together');
-      runs.together = await roomRun(together(t, { title: `${t.id} · together` }));
+      runs.together = await roomRun(together(t, { title: `${t.id} · together` }), t);
       if (t.roles) {
-        // Swap the jobs on every repeat, so a job is not tied to one agent.
-        const ids = r % 2 ? agents.map(a => a.id).reverse() : agents.map(a => a.id);
-        const roles = Object.fromEntries(ids.map((id, i) => [id, t.roles[i % t.roles.length]]));
-        console.log(`- together, roles (${ids.join(' first, ')} second)`);
-        runs['together, roles'] = await roomRun(together({ ...t, roles: undefined }, { title: `${t.id} · together, roles`, roles, agents: ids }));
+        // Rotate the jobs on every repeat, so a job is not tied to one agent.
+        const ids = agents.map(a => a.id), k = r % ids.length;
+        const order = ids.slice(k).concat(ids.slice(0, k));
+        const roles = Object.fromEntries(order.map((id, i) => [id, t.roles[Math.min(i, t.roles.length - 1)]]));
+        const readonly = t.checker ? order.filter((id, i) => Math.min(i, t.roles.length - 1) === t.roles.length - 1) : [];
+        const label = t.checker ? 'writer + checker' : 'together, roles';
+        console.log(`- ${label} (${order.map((id, i) => `${id}: role ${Math.min(i, t.roles.length - 1) + 1}`).join(', ')})`);
+        runs[label] = await roomRun(together(t, { title: `${t.id} · ${label}`, roles, readonly, agents: order.map(id => specs[id]) }), t);
         task.repeats[r].roles = roles;
       }
-      for (const label of ['together', 'together, roles']) for (const [id, l] of Object.entries(runs[label]?.lessons || {})) lessons[id].push({ kind: t.kind, task: t.id, text: l });
+      for (const label of ['together', 'together, roles', 'writer + checker']) for (const [id, l] of Object.entries(runs[label]?.lessons || {})) lessons[id].push({ kind: t.kind, task: t.id, text: l });
       save();
-      task.repeats[r].judgings = await judgeSet(dir, `${t.id}-${r + 1}`, t.kind, t.brief, Object.entries(runs).map(([label, x]) => ({ label, dir: x.dir })), judges);
+      task.repeats[r].judgings = t.judge === false ? [] : await judgeSet(dir, `${t.id}-${r + 1}`, t.kind, t.brief, Object.entries(runs).map(([label, x]) => ({ label, dir: x.dir })), judges);
       save();
     }
     const labels = Object.keys(task.repeats[0].runs);
@@ -147,6 +207,16 @@ async function main(file) {
     task.average = Object.fromEntries(labels.map(l => [l, avgOf(allJ, l)]));
     task.best = Object.fromEntries(labels.map(l => [l, allJ.filter(j => j.best === l).length]));
     task.guesses = Object.fromEntries(labels.map(l => [l, task.repeats.map(x => x.runs[l]?.guess).filter(Boolean)]));
+    task.checks = Object.fromEntries(labels.map(l => {
+      const cs = task.repeats.map(x => x.runs[l]?.checks).filter(Boolean);
+      return [l, cs.length ? { mean: mean(cs.map(c => c.passed)), of: cs[0].of, all: cs.filter(c => c.passed === c.of).length, runs: cs.length } : null];
+    }));
+    if (t.puzzle) task.puzzle = Object.fromEntries(labels.map(l => {
+      const ps = task.repeats.map(x => x.runs[l]?.puzzle).filter(Boolean);
+      const why = {};
+      for (const p of ps) if (!p.right) why[p.why?.kind || 'unclear'] = (why[p.why?.kind || 'unclear'] || 0) + 1;
+      return [l, { right: ps.filter(p => p.right).length, runs: ps.length, why }];
+    }));
     save();
   }
 
@@ -162,8 +232,8 @@ async function main(file) {
       const reps = [];
       for (let r = 0; r < repeats; r++) {
         const runs = {};
-        console.log(`- ${a.label}${repeats > 1 ? `, repeat ${r + 1}` : ''}: before`); runs.before = await roomRun(solo(t, a, { tag: 'before' }));
-        console.log(`- ${a.label}: practice only`); runs.practice = await roomRun(solo(t, a, { tag: 'practice' }));
+        console.log(`- ${a.label}${repeats > 1 ? `, repeat ${r + 1}` : ''}: before`); runs.before = await roomRun(solo(t, a, { tag: 'before' }), t);
+        console.log(`- ${a.label}: practice only`); runs.practice = await roomRun(solo(t, a, { tag: 'practice' }), t);
         console.log(`- ${a.label}: with lessons (${notes.length})`);
         runs.lessons = await roomRun(solo(t, a, { tag: 'with lessons', secrets: notes.length
           ? { [a.id]: `Techniques you noted while working with ${agents.filter(x => x !== a).map(x => x.label).join(' and ')}, to use if they help:\n${notes.map(n => `- ${n}`).join('\n')}` } : {} }));
@@ -188,7 +258,13 @@ function summaryMd(s) {
   const L = [`# ${s.title || 'Solo vs together'}`, '', `Judges (blind): ${s.judges.join(', ')}. Scores 1-10, averaged over judges and repeats. "best" counts how often a judge picked it as the best of its set.`, '', '## Alone or together', ''];
   for (const t of s.tasks) {
     L.push(`### ${t.id} (${t.repeats.length} repeat${t.repeats.length === 1 ? '' : 's'})`, '',
-      ...Object.entries(t.average || {}).map(([l, v]) => `- ${l}: ${v ?? 'n/a'} · best ${t.best?.[l] ?? 0}${t.guesses?.[l]?.length ? ` · guesses ${t.guesses[l].join(', ')}` : ''}`));
+      ...Object.keys(t.repeats[0]?.runs || {}).map(l => {
+        const c = t.checks?.[l], p = t.puzzle?.[l];
+        return [`- ${l}:`, t.average?.[l] != null ? `${t.average[l]} · best ${t.best?.[l] ?? 0}` : null,
+          p ? `right ${p.right}/${p.runs}${Object.keys(p.why).length ? ` (wrong: ${Object.entries(p.why).map(([k, n]) => `${n} ${k}`).join(', ')})` : ''}` : null,
+          c && !p ? `checks ${c.mean}/${c.of} on average, all passed in ${c.all}/${c.runs}` : null,
+          t.guesses?.[l]?.length ? `guesses ${t.guesses[l].join(', ')}` : null].filter(Boolean).join(' · ').replace(': · ', ': ');
+      }));
     const errs = t.repeats.flatMap(x => (x.judgings || []).filter(j => j.error).map(j => `${j.judge}: ${j.error}`));
     if (errs.length) L.push(`- judge errors: ${errs.join('; ')}`);
     L.push('');

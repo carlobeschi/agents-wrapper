@@ -1,0 +1,136 @@
+{
+ "title": "Study 3a: checkable tasks (constraints and a code puzzle)",
+ "agents": [
+  "claude",
+  "codex"
+ ],
+ "judges": [
+  "claude",
+  "codex",
+  "antigravity"
+ ],
+ "diagnose": "claude",
+ "room": {
+  "silent": false,
+  "turns": true,
+  "moves": 8,
+  "min_moves": 2,
+  "lines_per_move": 4,
+  "max_minutes": 10,
+  "words": 40,
+  "self_review": true
+ },
+ "tasks": [
+  {
+   "id": "bakery",
+   "kind": "poem",
+   "brief": "An eight-line poem about the night shift at a bakery. Make it good enough to read aloud.",
+   "checks": [
+    {
+     "say": "The poem is exactly 8 lines.",
+     "type": "lines",
+     "min": 8,
+     "max": 8
+    },
+    {
+     "say": "Every line has exactly 7 words (a word is anything between spaces).",
+     "type": "every",
+     "pattern": "^\\s*\\S+(\\s+\\S+){6}\\s*$"
+    },
+    {
+     "say": "The first letters of the lines spell MIDNIGHT, in order.",
+     "type": "acrostic",
+     "word": "MIDNIGHT"
+    },
+    {
+     "say": "The word \"flour\" appears at least twice.",
+     "type": "contains",
+     "word": "flour",
+     "min": 2
+    },
+    {
+     "say": "The word \"bread\" never appears.",
+     "type": "every",
+     "pattern": "^(?!.*\\bbread\\b)"
+    },
+    {
+     "say": "The last line ends with a question mark.",
+     "type": "last",
+     "pattern": "\\?\\s*$"
+    }
+   ],
+   "checker": true,
+   "roles": [
+    "You write: draft the lines and fix them.",
+    "You check: go through the poem against every rule, line by line, counting words and letters, and tell the writer exactly what to fix. You do not edit."
+   ]
+  },
+  {
+   "id": "code",
+   "judge": false,
+   "lines_per_move": 6,
+   "min_moves": 1,
+   "puzzle": {
+    "size": 6,
+    "code": "685566",
+    "clues": [
+     {
+      "type": "pairsum",
+      "i": 5,
+      "j": 4,
+      "s": 12,
+      "say": "The sixth and fifth digits add up to 12."
+     },
+     {
+      "type": "oddcount",
+      "n": 2,
+      "say": "Exactly 2 of the digits are odd."
+     },
+     {
+      "type": "gt",
+      "i": 5,
+      "j": 2,
+      "say": "The sixth digit is bigger than the third."
+     },
+     {
+      "type": "parity",
+      "i": 5,
+      "odd": false,
+      "say": "The sixth digit is even."
+     },
+     {
+      "type": "pairsum",
+      "i": 5,
+      "j": 3,
+      "s": 11,
+      "say": "The sixth and fourth digits add up to 11."
+     },
+     {
+      "type": "pairsum",
+      "i": 5,
+      "j": 2,
+      "s": 11,
+      "say": "The sixth and third digits add up to 11."
+     },
+     {
+      "type": "gt",
+      "i": 1,
+      "j": 5,
+      "say": "The second digit is bigger than the sixth."
+     },
+     {
+      "type": "sum",
+      "total": 36,
+      "say": "The digits add up to 36."
+     }
+    ]
+   },
+   "checker": true,
+   "roles": [
+    "You solve: write the working and the answer.",
+    "You check: go through each step of the working against the clues and tell the solver exactly where it is wrong. You do not edit."
+   ]
+  }
+ ],
+ "repeats": 5
+}
