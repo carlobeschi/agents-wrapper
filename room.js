@@ -158,7 +158,9 @@ function check(c, lines) {
     case 'some': return body.some(t => new RegExp(c.pattern, 'i').test(t));
     case 'every': return body.length > 0 && body.every(t => new RegExp(c.pattern, 'i').test(t));
     case 'answer': {
-      const a = text.map(t => t.match(/^\s*ANSWER\s*:\s*(.*)$/i)).filter(Boolean).pop();
+      // "label": 3 reads the last "ANSWER 3: ..." line instead of "ANSWER: ...".
+      const re = new RegExp(`^\\s*ANSWER${c.label != null ? `\\s*${c.label}` : ''}\\s*:\\s*(.*)$`, 'i');
+      const a = text.map(t => t.match(re)).filter(Boolean).pop();
       return !!a && new RegExp(c.pattern, 'i').test(a[1]);
     }
     case 'acrostic': return body.length > 0 && body.map(t => (t.match(/[a-z]/i) || [''])[0]).join('').toLowerCase() === c.word.toLowerCase();

@@ -116,3 +116,30 @@ esac`, 'x', '{prompt}'];
   expect(md).toContain('- together: right 0/2 (wrong: 2 missed)');
   expect(md).toContain('- writer + checker: checks 1/2 on average, all passed in 0/2');
 });
+
+test('scaling curve: 1 to 3 copies of one model on a bank of puzzles, scored by right answers', () => {
+  const { bankBrief, bankChecks } = require('../puzzles');
+  const { check, makeDoc } = require('../room');
+  const bank = [{ size: 2, code: '34', clues: [{ type: 'sum', total: 7, say: 'Sum 7.' }] }, { size: 2, code: '11', clues: [{ type: 'sum', total: 2, say: 'Sum 2.' }] }];
+  expect(bankBrief(bank)).toContain('Puzzle 2 (2 digits, each 0 to 9): (a) Sum 2.');
+  const [c1, c2] = bankChecks(bank);
+  expect(check(c1, makeDoc(['ANSWER 1: 3 4', 'ANSWER 2: 99']).lines)).toBe(true);
+  expect(check(c2, makeDoc(['ANSWER 1: 3 4', 'ANSWER 2: 99']).lines)).toBe(false);
+  expect(check(c2, makeDoc(['ANSWER 2: 99', 'ANSWER 2: 1 1']).lines)).toBe(true);
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'scale-home-'));
+  const fk = ['sh', '-c', `case "$1" in *"just finished"*) printf 'ok\\n';; *) printf 'INSERT AFTER 0\\nANSWER 1: 34\\nEND\\nSTATUS: done\\n';; esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'Agent', headless: fk }] }));
+  const file = path.join(home, 's.json');
+  fs.writeFileSync(file, JSON.stringify({ title: 'Scale', agents: ['a'], scale: { agent: 'a', sizes: [1, 3] }, room: { moves: 1, min_moves: 0, turns: false },
+    repeats: 2, tasks: [{ id: 'bank', judge: false, bank }] }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'study.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Study folder: (.+)/)[1].trim();
+  const s = JSON.parse(fs.readFileSync(path.join(dir, 'study.json'), 'utf8'));
+  const t = s.tasks[0];
+  expect(Object.keys(t.repeats[0].runs)).toEqual(['1 a alone', '3 a copies']);
+  const tl = JSON.parse(fs.readFileSync(path.join(t.repeats[0].runs['3 a copies'].dir, 'timeline.json'), 'utf8'));
+  expect(tl.agents.map(a => a.id)).toEqual(['a-1', 'a-2', 'a-3']);
+  expect(t.checks['1 a alone']).toMatchObject({ mean: 1, of: 2, all: 0, runs: 2 });
+  expect(fs.readFileSync(path.join(dir, 'summary.md'), 'utf8')).toContain('- 3 a copies: right 1/2 on average, all right in 0/2');
+});
