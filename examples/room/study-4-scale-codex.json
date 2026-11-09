@@ -1,0 +1,635 @@
+{
+ "title": "Study 4: scaling curve (codex, 1 to 4 copies, 12 puzzles, 6 minutes)",
+ "agents": [
+  "codex"
+ ],
+ "judges": [
+  "codex"
+ ],
+ "scale": {
+  "agent": "codex",
+  "sizes": [
+   1,
+   2,
+   3,
+   4
+  ]
+ },
+ "room": {
+  "silent": false,
+  "turns": false,
+  "moves": 6,
+  "min_moves": 0,
+  "lines_per_move": 4,
+  "max_minutes": 6,
+  "words": 30
+ },
+ "tasks": [
+  {
+   "id": "bank",
+   "judge": false,
+   "bank": [
+    {
+     "size": 6,
+     "code": "179664",
+     "clues": [
+      {
+       "type": "parity",
+       "i": 5,
+       "odd": false,
+       "say": "The sixth digit is even."
+      },
+      {
+       "type": "max",
+       "i": 2,
+       "say": "The third digit is the biggest of all."
+      },
+      {
+       "type": "diff",
+       "i": 1,
+       "j": 5,
+       "k": 3,
+       "say": "The second digit is 3 more than the sixth."
+      },
+      {
+       "type": "sum",
+       "total": 33,
+       "say": "The digits add up to 33."
+      },
+      {
+       "type": "diff",
+       "i": 2,
+       "j": 3,
+       "k": 3,
+       "say": "The third digit is 3 more than the fourth."
+      },
+      {
+       "type": "parity",
+       "i": 2,
+       "odd": true,
+       "say": "The third digit is odd."
+      },
+      {
+       "type": "product",
+       "i": 5,
+       "j": 4,
+       "p": 24,
+       "say": "The sixth and fifth digits multiply to 24."
+      }
+     ]
+    },
+    {
+     "size": 6,
+     "code": "666314",
+     "clues": [
+      {
+       "type": "sum",
+       "total": 26,
+       "say": "The digits add up to 26."
+      },
+      {
+       "type": "pairsum",
+       "i": 3,
+       "j": 2,
+       "s": 9,
+       "say": "The fourth and third digits add up to 9."
+      },
+      {
+       "type": "parity",
+       "i": 5,
+       "odd": false,
+       "say": "The sixth digit is even."
+      },
+      {
+       "type": "diff",
+       "i": 0,
+       "j": 4,
+       "k": 5,
+       "say": "The first digit is 5 more than the fifth."
+      },
+      {
+       "type": "pairsum",
+       "i": 5,
+       "j": 1,
+       "s": 10,
+       "say": "The sixth and second digits add up to 10."
+      },
+      {
+       "type": "product",
+       "i": 1,
+       "j": 3,
+       "p": 18,
+       "say": "The second and fourth digits multiply to 18."
+      },
+      {
+       "type": "gt",
+       "i": 0,
+       "j": 3,
+       "say": "The first digit is bigger than the fourth."
+      }
+     ]
+    },
+    {
+     "size": 6,
+     "code": "604732",
+     "clues": [
+      {
+       "type": "distinct",
+       "say": "No digit is used twice."
+      },
+      {
+       "type": "parity",
+       "i": 4,
+       "odd": true,
+       "say": "The fifth digit is odd."
+      },
+      {
+       "type": "gt",
+       "i": 4,
+       "j": 1,
+       "say": "The fifth digit is bigger than the second."
+      },
+      {
+       "type": "sum",
+       "total": 22,
+       "say": "The digits add up to 22."
+      },
+      {
+       "type": "diff",
+       "i": 4,
+       "j": 5,
+       "k": 1,
+       "say": "The fifth digit is 1 more than the sixth."
+      },
+      {
+       "type": "product",
+       "i": 4,
+       "j": 2,
+       "p": 12,
+       "say": "The fifth and third digits multiply to 12."
+      },
+      {
+       "type": "product",
+       "i": 0,
+       "j": 2,
+       "p": 24,
+       "say": "The first and third digits multiply to 24."
+      }
+     ]
+    },
+    {
+     "size": 6,
+     "code": "210847",
+     "clues": [
+      {
+       "type": "gt",
+       "i": 0,
+       "j": 2,
+       "say": "The first digit is bigger than the third."
+      },
+      {
+       "type": "sum",
+       "total": 22,
+       "say": "The digits add up to 22."
+      },
+      {
+       "type": "gt",
+       "i": 5,
+       "j": 4,
+       "say": "The sixth digit is bigger than the fifth."
+      },
+      {
+       "type": "product",
+       "i": 3,
+       "j": 4,
+       "p": 32,
+       "say": "The fourth and fifth digits multiply to 32."
+      },
+      {
+       "type": "distinct",
+       "say": "No digit is used twice."
+      },
+      {
+       "type": "parity",
+       "i": 0,
+       "odd": false,
+       "say": "The first digit is even."
+      },
+      {
+       "type": "diff",
+       "i": 3,
+       "j": 1,
+       "k": 7,
+       "say": "The fourth digit is 7 more than the second."
+      }
+     ]
+    },
+    {
+     "size": 6,
+     "code": "689821",
+     "clues": [
+      {
+       "type": "sum",
+       "total": 34,
+       "say": "The digits add up to 34."
+      },
+      {
+       "type": "diff",
+       "i": 3,
+       "j": 5,
+       "k": 7,
+       "say": "The fourth digit is 7 more than the sixth."
+      },
+      {
+       "type": "gt",
+       "i": 1,
+       "j": 0,
+       "say": "The second digit is bigger than the first."
+      },
+      {
+       "type": "parity",
+       "i": 1,
+       "odd": false,
+       "say": "The second digit is even."
+      },
+      {
+       "type": "parity",
+       "i": 0,
+       "odd": false,
+       "say": "The first digit is even."
+      },
+      {
+       "type": "parity",
+       "i": 5,
+       "odd": true,
+       "say": "The sixth digit is odd."
+      },
+      {
+       "type": "pairsum",
+       "i": 4,
+       "j": 3,
+       "s": 10,
+       "say": "The fifth and fourth digits add up to 10."
+      }
+     ]
+    },
+    {
+     "size": 6,
+     "code": "464831",
+     "clues": [
+      {
+       "type": "max",
+       "i": 3,
+       "say": "The fourth digit is the biggest of all."
+      },
+      {
+       "type": "pairsum",
+       "i": 0,
+       "j": 1,
+       "s": 10,
+       "say": "The first and second digits add up to 10."
+      },
+      {
+       "type": "pairsum",
+       "i": 5,
+       "j": 0,
+       "s": 5,
+       "say": "The sixth and first digits add up to 5."
+      },
+      {
+       "type": "oddcount",
+       "n": 2,
+       "say": "Exactly 2 of the digits are odd."
+      },
+      {
+       "type": "pairsum",
+       "i": 1,
+       "j": 4,
+       "s": 9,
+       "say": "The second and fifth digits add up to 9."
+      },
+      {
+       "type": "diff",
+       "i": 0,
+       "j": 5,
+       "k": 3,
+       "say": "The first digit is 3 more than the sixth."
+      },
+      {
+       "type": "sum",
+       "total": 26,
+       "say": "The digits add up to 26."
+      }
+     ]
+    },
+    {
+     "size": 6,
+     "code": "406459",
+     "clues": [
+      {
+       "type": "product",
+       "i": 3,
+       "j": 5,
+       "p": 36,
+       "say": "The fourth and sixth digits multiply to 36."
+      },
+      {
+       "type": "oddcount",
+       "n": 2,
+       "say": "Exactly 2 of the digits are odd."
+      },
+      {
+       "type": "gt",
+       "i": 5,
+       "j": 3,
+       "say": "The sixth digit is bigger than the fourth."
+      },
+      {
+       "type": "sum",
+       "total": 28,
+       "say": "The digits add up to 28."
+      },
+      {
+       "type": "gt",
+       "i": 0,
+       "j": 1,
+       "say": "The first digit is bigger than the second."
+      },
+      {
+       "type": "pairsum",
+       "i": 2,
+       "j": 3,
+       "s": 10,
+       "say": "The third and fourth digits add up to 10."
+      },
+      {
+       "type": "pairsum",
+       "i": 1,
+       "j": 0,
+       "s": 4,
+       "say": "The second and first digits add up to 4."
+      }
+     ]
+    },
+    {
+     "size": 6,
+     "code": "257607",
+     "clues": [
+      {
+       "type": "parity",
+       "i": 3,
+       "odd": false,
+       "say": "The fourth digit is even."
+      },
+      {
+       "type": "gt",
+       "i": 3,
+       "j": 4,
+       "say": "The fourth digit is bigger than the fifth."
+      },
+      {
+       "type": "product",
+       "i": 5,
+       "j": 4,
+       "p": 0,
+       "say": "The sixth and fifth digits multiply to 0."
+      },
+      {
+       "type": "gt",
+       "i": 2,
+       "j": 3,
+       "say": "The third digit is bigger than the fourth."
+      },
+      {
+       "type": "product",
+       "i": 0,
+       "j": 2,
+       "p": 14,
+       "say": "The first and third digits multiply to 14."
+      },
+      {
+       "type": "sum",
+       "total": 27,
+       "say": "The digits add up to 27."
+      },
+      {
+       "type": "diff",
+       "i": 3,
+       "j": 1,
+       "k": 1,
+       "say": "The fourth digit is 1 more than the second."
+      }
+     ]
+    },
+    {
+     "size": 6,
+     "code": "817549",
+     "clues": [
+      {
+       "type": "pairsum",
+       "i": 0,
+       "j": 1,
+       "s": 9,
+       "say": "The first and second digits add up to 9."
+      },
+      {
+       "type": "distinct",
+       "say": "No digit is used twice."
+      },
+      {
+       "type": "diff",
+       "i": 5,
+       "j": 2,
+       "k": 2,
+       "say": "The sixth digit is 2 more than the third."
+      },
+      {
+       "type": "gt",
+       "i": 4,
+       "j": 1,
+       "say": "The fifth digit is bigger than the second."
+      },
+      {
+       "type": "oddcount",
+       "n": 4,
+       "say": "Exactly 4 of the digits are odd."
+      },
+      {
+       "type": "product",
+       "i": 1,
+       "j": 4,
+       "p": 4,
+       "say": "The second and fifth digits multiply to 4."
+      },
+      {
+       "type": "pairsum",
+       "i": 3,
+       "j": 1,
+       "s": 6,
+       "say": "The fourth and second digits add up to 6."
+      }
+     ]
+    },
+    {
+     "size": 6,
+     "code": "860112",
+     "clues": [
+      {
+       "type": "pairsum",
+       "i": 4,
+       "j": 3,
+       "s": 2,
+       "say": "The fifth and fourth digits add up to 2."
+      },
+      {
+       "type": "sum",
+       "total": 18,
+       "say": "The digits add up to 18."
+      },
+      {
+       "type": "product",
+       "i": 3,
+       "j": 1,
+       "p": 6,
+       "say": "The fourth and second digits multiply to 6."
+      },
+      {
+       "type": "diff",
+       "i": 5,
+       "j": 3,
+       "k": 1,
+       "say": "The sixth digit is 1 more than the fourth."
+      },
+      {
+       "type": "oddcount",
+       "n": 2,
+       "say": "Exactly 2 of the digits are odd."
+      },
+      {
+       "type": "gt",
+       "i": 0,
+       "j": 1,
+       "say": "The first digit is bigger than the second."
+      },
+      {
+       "type": "pairsum",
+       "i": 3,
+       "j": 1,
+       "s": 7,
+       "say": "The fourth and second digits add up to 7."
+      }
+     ]
+    },
+    {
+     "size": 6,
+     "code": "922672",
+     "clues": [
+      {
+       "type": "gt",
+       "i": 3,
+       "j": 2,
+       "say": "The fourth digit is bigger than the third."
+      },
+      {
+       "type": "oddcount",
+       "n": 2,
+       "say": "Exactly 2 of the digits are odd."
+      },
+      {
+       "type": "pairsum",
+       "i": 3,
+       "j": 2,
+       "s": 8,
+       "say": "The fourth and third digits add up to 8."
+      },
+      {
+       "type": "diff",
+       "i": 3,
+       "j": 5,
+       "k": 4,
+       "say": "The fourth digit is 4 more than the sixth."
+      },
+      {
+       "type": "pairsum",
+       "i": 1,
+       "j": 5,
+       "s": 4,
+       "say": "The second and sixth digits add up to 4."
+      },
+      {
+       "type": "pairsum",
+       "i": 3,
+       "j": 4,
+       "s": 13,
+       "say": "The fourth and fifth digits add up to 13."
+      },
+      {
+       "type": "pairsum",
+       "i": 0,
+       "j": 2,
+       "s": 11,
+       "say": "The first and third digits add up to 11."
+      }
+     ]
+    },
+    {
+     "size": 6,
+     "code": "636063",
+     "clues": [
+      {
+       "type": "parity",
+       "i": 0,
+       "odd": false,
+       "say": "The first digit is even."
+      },
+      {
+       "type": "gt",
+       "i": 4,
+       "j": 1,
+       "say": "The fifth digit is bigger than the second."
+      },
+      {
+       "type": "pairsum",
+       "i": 5,
+       "j": 3,
+       "s": 3,
+       "say": "The sixth and fourth digits add up to 3."
+      },
+      {
+       "type": "sum",
+       "total": 24,
+       "say": "The digits add up to 24."
+      },
+      {
+       "type": "pairsum",
+       "i": 5,
+       "j": 4,
+       "s": 9,
+       "say": "The sixth and fifth digits add up to 9."
+      },
+      {
+       "type": "gt",
+       "i": 5,
+       "j": 3,
+       "say": "The sixth digit is bigger than the fourth."
+      },
+      {
+       "type": "product",
+       "i": 0,
+       "j": 1,
+       "p": 18,
+       "say": "The first and second digits multiply to 18."
+      },
+      {
+       "type": "parity",
+       "i": 4,
+       "odd": false,
+       "say": "The fifth digit is even."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "repeats": 3
+}

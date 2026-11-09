@@ -51,4 +51,12 @@ const brief = (p) => [
   `Work it out in the document. When you are sure, write one line "ANSWER: " followed by the ${p.size} digits. You cannot change it after you say done.`,
 ].join(' ');
 
-module.exports = { ORD, clueOk, solve, digitsOf, broken, brief };
+// A bank of puzzles in one document: "Puzzle 3: ..." each, answered "ANSWER 3: ...".
+const bankBrief = (bank) => [
+  `There are ${bank.length} code puzzles below. Each has exactly one answer. Solve as many as you can before time runs out; every right answer counts, a wrong one counts nothing.`,
+  `For puzzle N, write one line "ANSWER N: " followed by the digits. Only the last ANSWER line for each puzzle counts.`,
+  ...bank.map((p, n) => `Puzzle ${n + 1} (${p.size} digits, each 0 to 9): ${p.clues.map((c, i) => `(${String.fromCharCode(97 + i)}) ${c.say}`).join(' ')}`),
+].join('\n');
+const bankChecks = (bank) => bank.map((p, n) => ({ say: `Puzzle ${n + 1} is right.`, type: 'answer', label: n + 1, pattern: `^\\D*${p.code.split('').join('\\D*')}\\D*$` }));
+
+module.exports = { ORD, clueOk, solve, digitsOf, broken, brief, bankBrief, bankChecks };

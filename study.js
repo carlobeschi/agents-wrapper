@@ -41,6 +41,11 @@
 //   wrong answer the app lists the clues it breaks and asks "diagnose" (an
 //   agent, default the first judge) whether a clue was missed or misapplied.
 // - "judge": false on a task skips the judges (answers are right or wrong).
+// - Scaling curve: "scale": { "agent": "claude", "sizes": [1, 2, 3, 4] } runs
+//   every task with 1, 2, 3 and 4 copies of one model instead of alone and
+//   together. Every agent has the same moves and the same time box, so a
+//   bigger group has more hands but no more time. A task with "bank": [puzzles]
+//   is many code puzzles in one document; the score is how many are right.
 // Run folder: ~/.agent-dispatch/studies/<run>/: study.json, summary.md,
 // judge/ (pictures and prompts); each room run keeps its own folder.
 
@@ -140,7 +145,8 @@ async function main(file) {
   const minOf = t => t.min_moves ?? base.min_moves ?? 0;
   // A task as the room sees it: a puzzle becomes its brief and an answer check.
   const asRoom = t => {
-    const { roles, checker, puzzle, judge, repeats: _r, ...rest } = t;
+    const { roles, checker, puzzle, judge, repeats: _r, bank, ...rest } = t;
+    if (bank) return { kind: 'scratchpad', ...rest, brief: puzzles.bankBrief(bank) + (t.brief ? `\n${t.brief}` : ''), checks: [...(t.checks || []), ...puzzles.bankChecks(bank)] };
     return puzzle ? { kind: 'scratchpad', ...rest, brief: puzzles.brief(puzzle), checks: [...(t.checks || []), { say: 'The answer is right.', type: 'answer', pattern: `^\\D*${puzzle.code.split('').join('\\D*')}\\D*$` }] } : rest;
   };
   // A solo agent gets as many moves as the whole group put together.
@@ -168,8 +174,46 @@ async function main(file) {
     return got;
   };
 
-  // 1. Alone, then together.
   const repeats = cfg.repeats || 1;
+  // 0. A scaling curve: 1, 2, 3, 4 copies of one model, same moves each, same time.
+  if (cfg.scale) {
+    study.scale = cfg.scale;
+    for (const t of cfg.tasks) {
+      const task = { id: t.id, kind: t.kind || 'scratchpad', brief: t.brief, repeats: [] };
+      study.tasks.push(task);
+      for (let r = 0; r < repeats; r++) {
+        const runs = {};
+        task.repeats.push({ runs, judgings: [] });
+        for (const n of cfg.scale.sizes) {
+          const label = `${n} ${cfg.scale.agent}${n > 1 ? ' copies' : ' alone'}`;
+          console.log(`\n# ${t.id}, repeat ${r + 1} of ${repeats}: ${label}`);
+          const ids = Array.from({ length: n }, (_, i) => `${cfg.scale.agent}#${i + 1}`);
+          const c = { ...base, ...asRoom(t), agents: ids, title: `${t.id} · ${label}`, lesson: false };
+          if (n === 1) c.safe_word = undefined;
+          else c.brief = `${c.brief}\n${PAIR()}`;
+          runs[label] = await roomRun(c, t);
+          // Who wrote the answers that count: duplicated effort shows as answers rewritten by someone else.
+          const tl = JSON.parse(fs.readFileSync(path.join(runs[label].dir, 'timeline.json'), 'utf8'));
+          runs[label].answers = Object.fromEntries((tl.final || []).map(l => [l.text.match(/^\s*ANSWER\s*(\d+)\s*:/i)?.[1], l.by]).filter(([k]) => k));
+          runs[label].rewritten = (tl.moves || []).reduce((sum, m) => sum + (m.landed || []).filter(x => /^replace/.test(x)).length, 0);
+          save();
+        }
+      }
+      const labels = Object.keys(task.repeats[0].runs);
+      task.checks = Object.fromEntries(labels.map(l => {
+        const cs = task.repeats.map(x => x.runs[l]?.checks).filter(Boolean);
+        return [l, cs.length ? { mean: mean(cs.map(c => c.passed)), of: cs[0].of, all: cs.filter(c => c.passed === c.of).length, runs: cs.length,
+          seconds: mean(task.repeats.map(x => x.runs[l].seconds)), moves: mean(task.repeats.map(x => x.runs[l].moves)) } : null];
+      }));
+      save();
+    }
+    fs.writeFileSync(path.join(dir, 'summary.md'), summaryMd(study));
+    console.log(`\n${summaryMd(study)}`);
+    console.log(`Summary: ${path.join(dir, 'summary.md')}`);
+    return { dir, study };
+  }
+
+  // 1. Alone, then together.
   const lessons = Object.fromEntries(agents.map(a => [a.id, []]));
   const together = (t, extra = {}) => {
     const r = asRoom(t), min = minOf(t);
@@ -262,7 +306,7 @@ function summaryMd(s) {
         const c = t.checks?.[l], p = t.puzzle?.[l];
         return [`- ${l}:`, t.average?.[l] != null ? `${t.average[l]} · best ${t.best?.[l] ?? 0}` : null,
           p ? `right ${p.right}/${p.runs}${Object.keys(p.why).length ? ` (wrong: ${Object.entries(p.why).map(([k, n]) => `${n} ${k}`).join(', ')})` : ''}` : null,
-          c && !p ? `checks ${c.mean}/${c.of} on average, all passed in ${c.all}/${c.runs}` : null,
+          c && !p ? `${s.scale ? 'right' : 'checks'} ${c.mean}/${c.of} on average, all ${s.scale ? 'right' : 'passed'} in ${c.all}/${c.runs}${c.seconds != null ? ` · ${c.seconds}s · ${c.moves} moves` : ''}` : null,
           t.guesses?.[l]?.length ? `guesses ${t.guesses[l].join(', ')}` : null].filter(Boolean).join(' · ').replace(': · ', ': ');
       }));
     const errs = t.repeats.flatMap(x => (x.judgings || []).filter(j => j.error).map(j => `${j.judge}: ${j.error}`));
