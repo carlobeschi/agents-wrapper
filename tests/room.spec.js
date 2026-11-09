@@ -131,3 +131,11 @@ test('a drawing\'s <svg> tags are locked: edits to them are refused, and inserts
   expect(land(doc, snap, { kind: 'insert', after: 0, text: ['<circle/>'] }, 'a')).toBeNull();
   expect(doc.lines.map(l => l.text)).toEqual(['<svg viewBox="0 0 4 4">', '<circle/>', '<rect/>', '</svg>']);
 });
+
+test('acrostic and word-count checks', () => {
+  const { check, makeDoc } = require('../room');
+  const doc = makeDoc(['Moon over', 'Ink and', 'Dust']);
+  expect(check({ type: 'acrostic', word: 'mid' }, doc.lines)).toBe(true);
+  expect(check({ type: 'acrostic', word: 'mad' }, doc.lines)).toBe(false);
+  expect(check({ type: 'words', min: 5, max: 5 }, doc.lines)).toBe(true);
+});

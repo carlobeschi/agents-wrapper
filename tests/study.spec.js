@@ -65,3 +65,54 @@ test('a study runs alone and together, judges blind, and carries lessons into th
   expect(fs.readFileSync(path.join(la.practice.dir, 'steps', '01-a.prompt.md'), 'utf8')).not.toContain('saw a trick');
   expect(fs.readFileSync(path.join(dir, 'summary.md'), 'utf8')).toContain('Did they learn from each other?');
 });
+
+test('study 3: same-model pairs, a checker who can only talk, checks scored, and a puzzle with a diagnosis of each wrong answer', () => {
+  const { solve, broken, brief } = require('../puzzles');
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'study3-home-'));
+  const fake3 = ['sh', '-c', `case "$1" in
+  *"Why did they go wrong"*) printf 'KIND: MISSED | never used (b)\\n';;
+  *"just finished"*) printf 'AFTER\\n';;
+  *"code puzzle"*|*"-digit code"*) printf 'INSERT AFTER 0\\nANSWER: 1 2\\nEND\\nSAY: fix line 1\\nSTATUS: done\\n';;
+  *) printf 'SAY: line 1 is short\\nINSERT AFTER 0\\nflour flour\\nEND\\nSTATUS: done\\n';;
+esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'Agent', headless: fake3 }] }));
+  const puzzle = { size: 2, code: '34', clues: [
+    { type: 'sum', total: 7, say: 'The digits add up to 7.' },
+    { type: 'diff', i: 1, j: 0, k: 1, say: 'The second digit is 1 more than the first.' }] };
+  expect(solve(puzzle.clues, 2)).toEqual(['34']);
+  expect(broken(puzzle.clues, '1 2', 2).map(c => c.type)).toEqual(['sum']);
+  expect(brief(puzzle)).toContain('(b) The second digit is 1 more');
+  const file = path.join(home, 's.json');
+  fs.writeFileSync(file, JSON.stringify({ title: 'T3', agents: ['a#1', 'a#2'], judges: ['a'], room: { moves: 2, min_moves: 0, self_review: true },
+    repeats: 2, tasks: [
+      { id: 'bake', kind: 'poem', brief: 'a poem', judge: false, checker: true, roles: ['WRITE', 'CHECK'],
+        checks: [{ say: 'Says flour twice.', type: 'contains', word: 'flour', min: 2 }, { say: 'Eight lines.', type: 'lines', min: 8, max: 8 }] },
+      { id: 'code', judge: false, puzzle }] }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'study.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Study folder: (.+)/)[1].trim();
+  const s = JSON.parse(fs.readFileSync(path.join(dir, 'study.json'), 'utf8'));
+  const [bake, code] = s.tasks;
+  expect(Object.keys(bake.repeats[0].runs)).toEqual(['a-1 alone', 'a-2 alone', 'together', 'writer + checker']);
+  // Two agents of one model: told apart by number, and not called "other labs".
+  const tp = fs.readFileSync(path.join(bake.repeats[0].runs.together.dir, 'steps', '01-a-1.prompt.md'), 'utf8');
+  expect(tp).toContain('You are Agent 1. You and Agent 2, AI agents, are');
+  // The checker's edits are refused; it rotates to the other agent on repeat 2.
+  const wc = JSON.parse(fs.readFileSync(path.join(bake.repeats[0].runs['writer + checker'].dir, 'timeline.json'), 'utf8'));
+  const byB = wc.moves.filter(m => m.agent === 'a-2');
+  expect(byB.length).toBeGreaterThan(0);
+  expect(byB.every(m => !m.landed.length && m.dropped.every(d => /check, not to edit/.test(d.why)))).toBe(true);
+  expect(wc.final.every(l => l.by !== 'a-2')).toBe(true);
+  expect(bake.repeats[1].roles).toEqual({ 'a-2': 'WRITE', 'a-1': 'CHECK' });
+  // Self review: a solo "done" first gets a review move.
+  const solo = bake.repeats[0].runs['a-1 alone'].dir;
+  expect(fs.readFileSync(path.join(solo, 'steps', '02-a-1.prompt.md'), 'utf8')).toContain('Review pass');
+  expect(bake.checks['writer + checker']).toEqual({ mean: 1, of: 2, all: 0, runs: 2 });
+  // The puzzle: wrong answers are diagnosed, and the summary counts them.
+  const p = code.repeats[0].runs.together.puzzle;
+  expect(p).toMatchObject({ answer: '1 2', right: false, broke: ['The digits add up to 7.'], why: { kind: 'missed' } });
+  expect(code.puzzle.together).toEqual({ right: 0, runs: 2, why: { missed: 2 } });
+  const md = fs.readFileSync(path.join(dir, 'summary.md'), 'utf8');
+  expect(md).toContain('- together: right 0/2 (wrong: 2 missed)');
+  expect(md).toContain('- writer + checker: checks 1/2 on average, all passed in 0/2');
+});
