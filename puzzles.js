@@ -59,4 +59,40 @@ const bankBrief = (bank) => [
 ].join('\n');
 const bankChecks = (bank) => bank.map((p, n) => ({ say: `Puzzle ${n + 1} is right.`, type: 'answer', label: n + 1, pattern: `^\\D*${p.code.split('').join('\\D*')}\\D*$` }));
 
-module.exports = { ORD, clueOk, solve, digitsOf, broken, brief, bankBrief, bankChecks };
+
+// A new puzzle with exactly one answer: a random code, then true clues until
+// only that code fits. rnd() returns a number in [0, 1) (seed it for repeatable banks).
+function generate(size, rnd = Math.random) {
+  const pickInt = n => Math.floor(rnd() * n);
+  for (;;) {
+    const code = Array.from({ length: size }, () => pickInt(10));
+    let left = [];
+    for (let n = 0; n < 10 ** size; n++) left.push(n);
+    const digits = n => { const d = new Array(size); for (let k = size - 1; k >= 0; k--) { d[k] = n % 10; n = Math.floor(n / 10); } return d; };
+    const clues = [];
+    for (let tries = 0; tries < 60 && left.length > 1 && clues.length < 9; tries++) {
+      const i = pickInt(size); let j = pickInt(size - 1); if (j >= i) j++;
+      const sum = code.reduce((a, b) => a + b, 0), odd = code.filter(x => x % 2).length;
+      const options = [
+        { type: 'parity', i, odd: code[i] % 2 === 1, say: `The ${ORD[i]} digit is ${code[i] % 2 ? 'odd' : 'even'}.` },
+        { type: 'sum', total: sum, say: `The digits add up to ${sum}.` },
+        { type: 'product', i, j, p: code[i] * code[j], say: `The ${ORD[i]} and ${ORD[j]} digits multiply to ${code[i] * code[j]}.` },
+        { type: 'pairsum', i, j, s: code[i] + code[j], say: `The ${ORD[i]} and ${ORD[j]} digits add up to ${code[i] + code[j]}.` },
+        { type: 'oddcount', n: odd, say: `Exactly ${odd} of the digits ${odd === 1 ? 'is' : 'are'} odd.` },
+      ];
+      if (code[i] > code[j]) {
+        options.push({ type: 'diff', i, j, k: code[i] - code[j], say: `The ${ORD[i]} digit is ${code[i] - code[j]} more than the ${ORD[j]}.` });
+        options.push({ type: 'gt', i, j, say: `The ${ORD[i]} digit is bigger than the ${ORD[j]}.` });
+      }
+      if (code.every((x, k) => k === i || x < code[i])) options.push({ type: 'max', i, say: `The ${ORD[i]} digit is the biggest of all.` });
+      if (code.every((x, k) => k === i || x > code[i])) options.push({ type: 'min', i, say: `The ${ORD[i]} digit is the smallest of all.` });
+      const c = options[pickInt(options.length)];
+      const next = left.filter(n => clueOk(c, digits(n)));
+      if (next.length === left.length) continue; // tells nothing new
+      clues.push(c); left = next;
+    }
+    if (left.length === 1) return { size, code: code.join(''), clues };
+  }
+}
+
+module.exports = { ORD, clueOk, solve, digitsOf, broken, brief, bankBrief, bankChecks, generate };
