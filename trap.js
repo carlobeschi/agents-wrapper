@@ -220,18 +220,19 @@ function nextNumber(repo) {
 // The episode in the format of the site's README: _traps/episode-<n>.md.
 function siteFile(m, st) {
   const key = id => id.replace(/#\d+$/, '');
+  const M = { math: true }; // the Trap page renders maths with KaTeX
   const front = {
     number: m.number, title: `Episode ${m.number}`, date: m.date || ymd(nextWednesday()),
     models: Object.fromEntries(st.agents.map(x => [key(x.id), x.model || '(CLI default)'])),
     score: Object.fromEntries(st.agents.map(x => [key(x.id), x.score])),
     rounds: st.rounds.map(r => ({
-      setter: key(r.setter), revised: r.revised || undefined, puzzle: inertForSite(r.puzzle), key: inertForSite(r.key),
-      prediction: inertForSite(r.prediction || ''),
-      check: { answer: inertForSite(r.self.answer || ''), right: !!r.self.right },
-      solves: r.solves.map(x => ({ by: key(x.id), confidence: x.confidence ?? undefined, working: inertForSite(x.working || ''),
-        answer: inertForSite(x.answer || ''), right: !!x.right, point: key(x.point) })),
+      setter: key(r.setter), revised: r.revised || undefined, puzzle: inertForSite(r.puzzle, M), key: inertForSite(r.key, M),
+      prediction: inertForSite(r.prediction || '', M),
+      check: { answer: inertForSite(r.self.answer || '', M), right: !!r.self.right },
+      solves: r.solves.map(x => ({ by: key(x.id), confidence: x.confidence ?? undefined, working: inertForSite(x.working || '', M),
+        answer: inertForSite(x.answer || '', M), right: !!x.right, point: key(x.point) })),
     })),
-    after: Object.fromEntries(st.agents.map(x => [key(x.id), inertForSite(x.after || '')])),
+    after: Object.fromEntries(st.agents.map(x => [key(x.id), inertForSite(x.after || '', M)])),
   };
   return `---\n${yaml(front)}\n---\n`;
 }

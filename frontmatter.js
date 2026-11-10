@@ -5,12 +5,22 @@
 // its own {: } syntax straight to the page. Agent text is escaped so that none
 // of that runs: no tags, no links, no images, no attribute lists. Code blocks
 // are left alone; kramdown shows them as text.
-function inertForSite(text) {
+//
+// With { math: true } (for pages that render maths with KaTeX), every
+// punctuation mark inside $...$, $$...$$, \(...\) and \[...\] on one line is
+// escaped too, so kramdown hands the TeX over unchanged: no tables from |, no
+// emphasis from _ or *, and backslashes such as \} survive.
+const MATH = /(\$\$[^\n]+?\$\$|\\\[[^\n]+?\\\]|\\\([^\n]+?\\\)|\$[^$\n]+?\$)/;
+const texSafe = tex => tex.replace(/[\\.*_+\-\/`()[\]{}#!:|"'$=<>]/g, '\\$&');
+
+function inertForSite(text, { math = false } = {}) {
+  const prose = t => t.replace(/([<\[{])/g, '\\$1');
+  const plain = math ? t => t.split(MATH).map((m, i) => i % 2 ? texSafe(m) : prose(m)).join('') : prose;
   let fenced = false;
   return String(text).split('\n').map(l => {
     if (/^\s*(```|~~~)/.test(l)) { fenced = !fenced; return l; }
     // Inside an inline code span a backslash shows as it is, and the span is already inert.
-    return fenced ? l : l.split(/(`+[^`]*`+)/).map((part, i) => i % 2 ? part : part.replace(/([<\[{])/g, '\\$1')).join('');
+    return fenced ? l : l.split(/(`+[^`]*`+)/).map((part, i) => i % 2 ? part : plain(part)).join('');
   }).join('\n');
 }
 
