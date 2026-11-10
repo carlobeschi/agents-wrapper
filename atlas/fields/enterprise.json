@@ -343,6 +343,13 @@
      "url": "https://futurumgroup.com/insights/openai-frontier-close-the-enterprise-ai-opportunity-gap-or-widen-it/",
      "kind": "report",
      "why": "Analyst assessment of the platform play and its lock-in risks."
+    },
+    {
+     "title": "Model Context Protocol",
+     "url": "https://modelcontextprotocol.io/",
+     "kind": "overview",
+     "why": "Specification and documentation for the protocol connecting models to tools.",
+     "unchecked": true
     }
    ]
   },
@@ -404,6 +411,20 @@
      "url": "https://www.pillsburylaw.com/en/news-and-insights/nist-ai-agent-standards.html",
      "kind": "overview",
      "why": "Legal explainer of the initiative's pillars and comment opportunities."
+    },
+    {
+     "title": "OWASP GenAI Security Project",
+     "url": "https://genai.owasp.org/",
+     "kind": "report",
+     "why": "Top 10 risks for LLM and agentic applications, with mitigations.",
+     "unchecked": true
+    },
+    {
+     "title": "Simon Willison on prompt injection",
+     "url": "https://simonwillison.net/tags/prompt-injection/",
+     "kind": "newsletter",
+     "why": "Running commentary on the attack class behind most agent security incidents.",
+     "unchecked": true
     }
    ]
   },
@@ -454,6 +475,13 @@
      "url": "https://snorkel.ai/research-paper/os-world-2/",
      "kind": "paper",
      "why": "Benchmark design, checkpoint grading and the failure modes agents show on long tasks."
+    },
+    {
+     "title": "OSWorld",
+     "url": "https://os-world.github.io/",
+     "kind": "tracker",
+     "why": "Benchmark of real computer tasks used to measure computer-use agents.",
+     "unchecked": true
     }
    ]
   },

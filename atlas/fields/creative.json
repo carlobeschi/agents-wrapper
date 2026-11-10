@@ -94,7 +94,29 @@
    ],
    "whyItMatters": "Video is the costliest media to generate, so it shows whether consumer generative AI can pay for its own compute.",
    "openQuestion": "Will studios license characters and libraries to video models, or keep the tools in-house for effects work?",
-   "deepDives": []
+   "deepDives": [
+    {
+     "title": "Video generation models as world simulators",
+     "url": "https://openai.com/index/video-generation-models-as-world-simulators/",
+     "kind": "paper",
+     "why": "How diffusion transformers generate video, in OpenAI's own technical note.",
+     "unchecked": true
+    },
+    {
+     "title": "Artificial Analysis",
+     "url": "https://artificialanalysis.ai/",
+     "kind": "tracker",
+     "why": "Blind-vote arenas ranking text-to-video and image-to-video models.",
+     "unchecked": true
+    },
+    {
+     "title": "C2PA content credentials",
+     "url": "https://c2pa.org/",
+     "kind": "overview",
+     "why": "The provenance standard used to label generated and edited media.",
+     "unchecked": true
+    }
+   ]
   },
   {
    "id": "creative.music",
@@ -138,6 +160,13 @@
      "url": "https://newsroom-deezer.com/2026/07/ai-music-exceeds-50-percent-daily-uploads-deezer/",
      "kind": "report",
      "why": "The only regular platform data on AI upload volumes, stream share and detection"
+    },
+    {
+     "title": "US Copyright Office: Copyright and AI",
+     "url": "https://www.copyright.gov/ai/",
+     "kind": "report",
+     "why": "The Office's multi-part report on digital replicas, copyrightability and training.",
+     "unchecked": true
     }
    ]
   },

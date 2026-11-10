@@ -428,7 +428,22 @@
      "note": "Plausible and important; article could not be opened or searched this pass."
     }
    ],
-   "deepDives": []
+   "deepDives": [
+    {
+     "title": "Open Source AI Definition",
+     "url": "https://opensource.org/ai",
+     "kind": "overview",
+     "why": "The OSI's definition of what counts as open source AI, and why weights alone do not.",
+     "unchecked": true
+    },
+    {
+     "title": "Hugging Face model hub",
+     "url": "https://huggingface.co/models",
+     "kind": "tracker",
+     "why": "Where open-weight models are published; sort by trending to see what is being used.",
+     "unchecked": true
+    }
+   ]
   },
   {
    "id": "geo.regulation",
@@ -458,7 +473,29 @@
      "note": "Not re-checked this pass (search budget ran out); marked verified by the earlier pass."
     }
    ],
-   "deepDives": []
+   "deepDives": [
+    {
+     "title": "EU AI Act Explorer",
+     "url": "https://artificialintelligenceact.eu/",
+     "kind": "overview",
+     "why": "Searchable text of the Act with timelines and summaries.",
+     "unchecked": true
+    },
+    {
+     "title": "European Commission: AI regulatory framework",
+     "url": "https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai",
+     "kind": "overview",
+     "why": "The Commission's own page on the Act, its codes and guidance.",
+     "unchecked": true
+    },
+    {
+     "title": "NCSL: AI legislation in the US states",
+     "url": "https://www.ncsl.org/technology-and-communication/artificial-intelligence-2025-legislation",
+     "kind": "tracker",
+     "why": "State-by-state list of introduced and enacted AI bills.",
+     "unchecked": true
+    }
+   ]
   }
  ],
  "deepDives": [

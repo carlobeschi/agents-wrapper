@@ -1,12 +1,12 @@
 {
  "id": "software",
  "name": "Software Development",
- "summary": "Coding agents are AI's largest commercial use so far, with multi-billion run rates. Agents are spreading into review, security, incident response and legacy migration, while productivity evidence stays mixed.",
+ "summary": "Coding agents are among AI's largest commercial uses, with multi-billion run rates and a major acquisition. Agents are spreading into review, security, incident response and legacy migration, while productivity evidence stays mixed.",
  "regions": [
   {
    "id": "software.coding-agents",
    "name": "Coding agents",
-   "summary": "Terminal, IDE and cloud agents that write, run and fix code across whole repos. Claude Code, Codex and Cursor lead a market with very fast revenue growth.",
+   "summary": "Terminal, IDE and cloud agents that write, run and fix code across whole repos. Claude Code, Codex and Cursor lead a fast-growing market that is now consolidating.",
    "activity": 5,
    "maturity": "adopting",
    "whyItMatters": "This is where AI earns the most revenue today and where claims about automating knowledge work are tested first.",
@@ -18,51 +18,63 @@
      "date": "2026-02",
      "kind": "deal",
      "source": "https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
-     "name": "Cursor reported at $2B annualized revenue",
-     "summary": "Bloomberg reported Cursor's annualized revenue passed $2B in February 2026, doubling in three months, about 60% from enterprises. Not company-confirmed.",
-     "date": "2026-03",
+     "name": "SpaceX completes Cursor acquisition",
+     "summary": "Cursor said SpaceX had completed its acquisition, a process that began in April 2026 with a model-training partnership. The price was reported as $60B in stock.",
+     "date": "2026-08",
      "kind": "deal",
-     "source": "https://www.bloomberg.com/news/articles/2026-03-02/cursor-recurring-revenue-doubles-in-three-months-to-2-billion",
-     "verified": true
+     "source": "https://cursor.com/blog/joining-spacex",
+     "verified": true,
+     "check": "page",
+     "note": "Price is from press reports cited on Wikipedia, not from Cursor's post."
     },
     {
      "name": "GPT-5.3-Codex launched",
-     "summary": "OpenAI's agentic coding model; the company says it is 25% faster and the first it rates high capability for cybersecurity under its Preparedness Framework.",
+     "summary": "OpenAI released GPT-5.3-Codex, which it describes as a Codex-native agent pairing frontier coding performance with general reasoning for long-horizon technical work.",
      "date": "2026-02",
      "kind": "product",
-     "source": "https://www.openai.com/index/introducing-gpt-5-3-codex",
-     "verified": true
+     "source": "https://openai.com/index/introducing-gpt-5-3-codex",
+     "verified": true,
+     "check": "page",
+     "note": "Confirmed in OpenAI's news feed; the article page itself blocks scripts."
     },
     {
      "name": "METR revisits developer slowdown study",
-     "summary": "METR said developers are likely more sped up by AI than in its 2025 study, but selection effects make the new estimate unreliable, so it is redesigning the study.",
+     "summary": "METR said developers are likely more sped up by AI than in its 2025 study, but selection effects make the new data weak evidence, so it is changing the study design.",
      "date": "2026-02",
      "kind": "research",
      "source": "https://metr.org/blog/2026-02-24-uplift-update/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
-     "title": "SWE-bench: code, data and leaderboards",
-     "url": "https://github.com/SWE-bench/SWE-bench",
+     "title": "SWE-bench Leaderboards",
+     "url": "https://www.swebench.com/",
      "kind": "tracker",
-     "why": "The standard benchmark of real GitHub issues that coding agents are scored on."
+     "why": "Scores for resolving real GitHub issues, including a like-for-like Bash Only view."
     },
     {
      "title": "Terminal-Bench",
-     "url": "https://github.com/laude-institute/terminal-bench",
+     "url": "https://www.tbench.ai/",
      "kind": "tracker",
-     "why": "Benchmark of realistic terminal tasks, widely quoted in coding model launches."
+     "why": "Leaderboard of agents on hard terminal tasks, with cost and tokens per run."
     },
     {
-     "title": "METR: developer productivity study update",
-     "url": "https://metr.org/blog/2026-02-24-uplift-update/",
-     "kind": "report",
-     "why": "Careful account of why measuring AI speedup for developers is hard."
+     "title": "METR: Early-2025 AI and experienced open-source developers",
+     "url": "https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/",
+     "kind": "paper",
+     "why": "The randomised trial in which 16 developers took 19% longer with early-2025 tools."
+    },
+    {
+     "title": "Simon Willison on coding agents",
+     "url": "https://simonwillison.net/tags/coding-agents/",
+     "kind": "newsletter",
+     "why": "A practitioner's running notes on what coding agents can and cannot do."
     }
    ]
   },
@@ -80,16 +92,27 @@
      "summary": "Multi-agent PR reviewer in research preview for Team and Enterprise. Anthropic said PRs with substantive review comments rose from 16% to 54% internally.",
      "date": "2026-03",
      "kind": "product",
-     "source": "https://venturebeat.com/technology/anthropic-rolls-out-code-review-for-claude-code-as-it-sues-over-pentagon",
-     "verified": true
+     "source": "https://claude.com/blog/code-review",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "CodeRabbit raises $143M at $1.5B",
-     "summary": "Series C co-led by Atomico and Smash Capital, paired with an 'Agentic Change Management' product. The company reports over 2M reviews a week.",
+     "summary": "Series C co-led by Atomico and Smash Capital, announced with a new 'Agentic Change Management' product that goes beyond AI code review.",
      "date": "2026-08",
      "kind": "deal",
      "source": "https://www.coderabbit.ai/newsroom/coderabbit-series-c-agentic-change-management",
-     "verified": true
+     "verified": true,
+     "check": "page"
+    },
+    {
+     "name": "Cursor reports Bugbot gains",
+     "summary": "Cursor said 40 experiments since Bugbot's July 2025 launch raised the share of flagged bugs that get resolved from 52% to over 70%. Self-reported.",
+     "date": "2026-01",
+     "kind": "research",
+     "source": "https://cursor.com/blog/building-bugbot",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Greptile $25M Series A",
@@ -97,27 +120,34 @@
      "date": "2025-09",
      "kind": "deal",
      "source": "https://siliconangle.com/2025/09/23/greptile-bags-25m-funding-take-coderabbit-graphite-ai-code-validation/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
-     "title": "InfoQ: how Claude Code Review works",
-     "url": "https://infoq.com/news/2026/04/claude-code-review",
-     "kind": "overview",
-     "why": "Independent engineering write-up of a multi-agent reviewer, with pricing and limits."
+     "title": "Automating Code Review Activities by Large-Scale Pre-training",
+     "url": "https://arxiv.org/abs/2203.09095",
+     "kind": "paper",
+     "why": "The CodeReviewer paper that framed review as tasks a model can learn and be scored on."
     },
     {
-     "title": "Claude Code GitHub Action",
+     "title": "Google Research: Resolving code review comments with ML",
+     "url": "https://research.google/blog/resolving-code-review-comments-with-ml/",
+     "kind": "overview",
+     "why": "How a large engineering organisation deployed ML-suggested edits in review."
+    },
+    {
+     "title": "Greptile: AI Code Review Benchmarks 2025",
+     "url": "https://www.greptile.com/benchmarks",
+     "kind": "tracker",
+     "why": "Five review tools on 50 real bugs. Run by a vendor, so read it with care."
+    },
+    {
+     "title": "Claude Code Action",
      "url": "https://github.com/anthropics/claude-code-action",
      "kind": "community",
      "why": "Open-source action showing how agent PR review is wired into a repository."
-    },
-    {
-     "title": "Greptile blog: Series A and v3",
-     "url": "https://www.greptile.com/blog/series-a",
-     "kind": "newsletter",
-     "why": "A vendor's account of its reviewer architecture and how it measures bug catching."
     }
    ]
   },
@@ -136,50 +166,59 @@
      "date": "2026-03",
      "kind": "product",
      "source": "https://smartbear.com/news/news-releases/smartbear-introduces-bearqautonomous-testing-for/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Tricentis agentic QE platform",
-     "summary": "Tricentis launched an agentic quality engineering platform with an AI Workspace that orchestrates and audits testing agents, plus four pre-built agents.",
+     "summary": "Tricentis launched an agentic quality engineering platform with an AI Workspace that orchestrates and governs testing agents, plus pre-built agents.",
      "date": "2026-03",
      "kind": "product",
      "source": "https://www.tricentis.com/news/tricentis-introduces-agentic-software-quality-platform",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Momentic Mo scriptless QA agent",
-     "summary": "Agent that tests web, iOS and Android apps from a plain-English goal and files bugs with repro steps. Usage and benchmark figures are vendor-reported.",
+     "summary": "Agent that tests web, iOS and Android apps from a brief instead of scripts, then reports what failed with steps to reproduce and video evidence.",
      "date": "2026-09",
      "kind": "product",
      "source": "https://siliconangle.com/2026/09/28/momentic-debuts-mo-ai-agent-to-automate-software-testing-without-scripts/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
-     "title": "SWT-Bench",
-     "url": "https://github.com/logic-star-ai/swt-bench",
+     "title": "SWT-Bench leaderboard",
+     "url": "https://swtbench.com/",
      "kind": "tracker",
-     "why": "Benchmark and NeurIPS 2024 paper on whether agents can write tests that reproduce real bugs."
+     "why": "Scores agents on writing tests that reproduce real GitHub issues."
     },
     {
-     "title": "Playwright MCP server",
+     "title": "Automated Unit Test Improvement using LLMs at Meta",
+     "url": "https://arxiv.org/abs/2402.09171",
+     "kind": "paper",
+     "why": "Industrial study of LLM-written tests with filters that guarantee measurable improvement."
+    },
+    {
+     "title": "Playwright MCP",
      "url": "https://github.com/microsoft/playwright-mcp",
      "kind": "community",
      "why": "The widely used open-source bridge that lets agents drive a browser for testing."
     },
     {
-     "title": "Momentic Mo documentation",
+     "title": "Momentic docs: Mo",
      "url": "https://momentic.ai/docs/mo",
      "kind": "overview",
-     "why": "Concrete view of how an exploratory QA agent is set up and what it cannot do."
+     "why": "Concrete view of how an exploratory QA agent is set up and when to use it."
     }
    ]
   },
   {
    "id": "software.observability",
    "name": "Observability & SRE",
-   "summary": "AI SRE agents investigate alerts, test root-cause hypotheses against telemetry and suggest fixes. Vendors ship them as GA products, though open benchmarks show low scores.",
+   "summary": "AI SRE agents investigate alerts, test root-cause hypotheses against telemetry and suggest fixes. Vendors ship them as GA products, while open benchmarks show modest scores.",
    "activity": 3,
    "maturity": "adopting",
    "whyItMatters": "Incident response is a high-stakes test of whether agents can reason over live systems, not only over code.",
@@ -191,7 +230,8 @@
      "date": "2025-12",
      "kind": "product",
      "source": "https://www.datadoghq.com/about/latest-news/press-releases/datadog-launches-bits-ai-sre-agent-to-resolve-incidents-faster/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "AWS DevOps Agent generally available",
@@ -199,48 +239,50 @@
      "date": "2026-03",
      "kind": "product",
      "source": "https://aws.amazon.com/about-aws/whats-new/2026/03/aws-devops-agent-generally-available",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
-     "name": "ITBench-AA: models score below 50% on SRE",
-     "summary": "Artificial Analysis and IBM Research launched ITBench-AA; across its 59 SRE tasks, all evaluated models scored below 50%.",
-     "date": "2026-05",
+     "name": "ITBench: agents resolve 13.8% of SRE tasks",
+     "summary": "IBM-led benchmark of 94 real-world IT scenarios found agents resolved 13.8% of SRE, 25.2% of compliance and security, and 0% of FinOps scenarios.",
+     "date": "2025-02",
      "kind": "research",
-     "source": "https://github.com/itbench-hub/ITBench",
-     "verified": true
+     "source": "https://arxiv.org/abs/2502.05352",
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
-     "title": "ITBench: benchmark for IT automation agents",
-     "url": "https://github.com/itbench-hub/ITBench",
+     "title": "ITBench-AA Benchmark (Artificial Analysis)",
+     "url": "https://artificialanalysis.ai/evaluations/itbench-aa",
      "kind": "tracker",
-     "why": "Open benchmark and leaderboards for SRE, compliance and FinOps agents, with ICML 2025 paper."
+     "why": "Independent leaderboard on 59 Kubernetes incident tasks; top models score just over half."
     },
     {
-     "title": "AIOpsLab (Microsoft Research)",
-     "url": "https://github.com/microsoft/AIOpsLab",
+     "title": "AIOpsLab: evaluating AI agents for autonomous clouds",
+     "url": "https://arxiv.org/abs/2501.06706",
      "kind": "paper",
-     "why": "Framework and MLSys 2025 paper for evaluating agents on injected cloud faults."
+     "why": "Microsoft framework for testing agents on injected cloud faults."
     },
     {
-     "title": "Datadog engineering blog: Bits AI SRE",
+     "title": "Datadog: Introducing Bits Investigation",
      "url": "https://datadoghq.com/blog/bits-ai-sre/",
      "kind": "overview",
      "why": "How a production SRE agent forms and tests root-cause hypotheses."
     },
     {
-     "title": "AWS: DevOps Agent general availability",
-     "url": "https://aws.amazon.com/blogs/mt/announcing-general-availability-of-aws-devops-agent",
-     "kind": "overview",
-     "why": "Detailed walkthrough of capabilities, integrations and pricing model at GA."
+     "title": "ITBench",
+     "url": "https://github.com/itbench-hub/ITBench",
+     "kind": "community",
+     "why": "Open scenarios and code for SRE, compliance and FinOps agent evaluation."
     }
    ]
   },
   {
    "id": "software.security",
    "name": "AppSec & vulnerability finding",
-   "summary": "Models now find real vulnerabilities at scale. Labs ship code-scanning agents, an autonomous pentester topped a bug bounty board, and security stocks react to launches.",
+   "summary": "Models now find real vulnerabilities at scale. Labs ship code-scanning agents in preview, and an autonomous pentester topped a bug bounty leaderboard.",
    "activity": 4,
    "maturity": "adopting",
    "whyItMatters": "The same capability that finds and patches flaws for defenders also lowers the cost of finding them for attackers.",
@@ -248,61 +290,66 @@
    "landmarks": [
     {
      "name": "Claude Code Security",
-     "summary": "Anthropic codebase scanner that suggests patches for human review, in limited preview, after Opus 4.6 was reported to find 500+ high-severity flaws in open source.",
+     "summary": "Anthropic codebase scanner that suggests patches for human review, in limited research preview. Anthropic said Opus 4.6 found over 500 flaws in open-source code.",
      "date": "2026-02",
      "kind": "product",
-     "source": "https://venturebeat.com/security/anthropic-claude-code-security-reasoning-vulnerability-hunting",
-     "verified": true
+     "source": "https://www.anthropic.com/news/claude-code-security",
+     "verified": true,
+     "check": "page"
     },
     {
-     "name": "Aardvark becomes Codex Security",
-     "summary": "OpenAI renamed its agentic security researcher, which builds a threat model and tests suspected flaws in a sandbox, and opened a research preview to paid tiers.",
+     "name": "Codex Security research preview",
+     "summary": "OpenAI opened a research preview of Codex Security, an agent that detects, validates and patches vulnerabilities. It follows the Aardvark private beta of October 2025.",
      "date": "2026-03",
      "kind": "product",
      "source": "https://openai.com/index/codex-security-now-in-research-preview",
-     "verified": true
+     "verified": true,
+     "check": "page",
+     "note": "Confirmed in OpenAI's news feed; the article page itself blocks scripts."
     },
     {
      "name": "Google Big Sleep reports 20 bugs",
-     "summary": "Google's DeepMind and Project Zero agent reported its first 20 vulnerabilities in open-source software, found autonomously and reviewed by humans before filing.",
+     "summary": "Google's DeepMind and Project Zero agent reported its first 20 vulnerabilities in open-source software, found by the agent and checked by a human before reporting.",
      "date": "2025-08",
      "kind": "research",
      "source": "https://techcrunch.com/2025/08/04/google-says-its-ai-based-bug-hunter-found-20-security-vulnerabilities/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "XBOW tops HackerOne US leaderboard",
-     "summary": "An autonomous pentesting agent ranked first by reputation on HackerOne's US leaderboard, a first for an AI system; critics noted its findings were mostly XSS.",
+     "summary": "XBOW said its autonomous pentesting agent reached the top of HackerOne's US leaderboard, a first for an AI system, with findings confirmed by program owners.",
      "date": "2025-06",
      "kind": "experiment",
      "source": "https://xbow.com/blog/top-1-how-xbow-did-it/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
-     "title": "CyberGym benchmark",
-     "url": "https://github.com/sunblaze-ucb/cybergym",
+     "title": "CyberGym: AI agents' real-world cybersecurity capabilities",
+     "url": "https://arxiv.org/abs/2506.02548",
      "kind": "paper",
-     "why": "Large-scale evaluation of agents on real vulnerability analysis tasks, with paper."
+     "why": "Large-scale evaluation of agents on real vulnerability analysis tasks."
     },
     {
-     "title": "XBOW: how it reached the top of HackerOne",
+     "title": "Frontier AI Cybersecurity Observatory",
+     "url": "https://www.cybergym.io/",
+     "kind": "tracker",
+     "why": "Open tracker of AI capability across stages of attack and defence."
+    },
+    {
+     "title": "Project Zero: From Naptime to Big Sleep",
+     "url": "https://googleprojectzero.blogspot.com/2024/10/from-naptime-to-big-sleep.html",
+     "kind": "overview",
+     "why": "First-hand account of an agent finding an exploitable SQLite bug."
+    },
+    {
+     "title": "XBOW: The Road to Top 1",
      "url": "https://xbow.com/blog/top-1-how-xbow-did-it/",
      "kind": "overview",
-     "why": "First-hand account of running an autonomous pentester against live bounty programs."
-    },
-    {
-     "title": "OpenAI: introducing Aardvark",
-     "url": "https://openai.com/index/introducing-aardvark",
-     "kind": "overview",
-     "why": "Explains the agentic security researcher design: threat model, validate, patch."
-    },
-    {
-     "title": "Claude Code security review action",
-     "url": "https://github.com/anthropics/claude-code-security-review",
-     "kind": "community",
-     "why": "Open-source example of model-driven security review on pull requests."
+     "why": "Running an autonomous pentester against live bounty programs, and how findings are validated."
     }
    ]
   },
@@ -321,7 +368,8 @@
      "date": "2026-02",
      "kind": "product",
      "source": "https://github.blog/changelog/2026-02-13-github-agentic-workflows-are-now-in-technical-preview/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Register: use at your own risk",
@@ -329,7 +377,8 @@
      "date": "2026-02",
      "kind": "debate",
      "source": "https://www.theregister.com/software/2026/02/17/github-previews-agentic-workflows/5103216",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Agentic Workflows reach public preview",
@@ -337,7 +386,8 @@
      "date": "2026-06",
      "kind": "product",
      "source": "https://github.blog/changelog/2026-06-11-github-agentic-workflows-is-now-in-public-preview",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "AWS frontier agents announced",
@@ -345,33 +395,34 @@
      "date": "2025-12",
      "kind": "product",
      "source": "https://press.aboutamazon.com/2025/12/aws-unveils-frontier-agents-a-new-class-of-ai-agents-that-work-as-an-extension-of-your-software-development-team",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
-     "title": "GitHub blog: Agentic Workflows explained",
+     "title": "GitHub blog: Automate repository tasks with Agentic Workflows",
      "url": "https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/",
      "kind": "overview",
      "why": "GitHub's own walkthrough of running coding agents inside CI with guardrails."
     },
     {
-     "title": "gh-aw: Agentic Workflows source",
-     "url": "https://github.com/github/gh-aw",
+     "title": "GitHub Agentic Workflows documentation",
+     "url": "https://github.github.com/gh-aw/",
      "kind": "community",
-     "why": "The open-source CLI extension that compiles Markdown workflows into GitHub Actions."
+     "why": "Reference for the open-source tool: workflow format, safe outputs, sandbox and firewall."
     },
     {
-     "title": "Awesome Continuous AI",
-     "url": "https://github.com/githubnext/awesome-continuous-ai",
-     "kind": "community",
-     "why": "GitHub Next's curated list of tools and actions for automated AI in repositories."
-    },
-    {
-     "title": "InfoQ: GitHub Agentic Workflows",
-     "url": "https://www.infoq.com/news/2026/02/github-agentic-workflows",
+     "title": "GitHub Next: Continuous AI",
+     "url": "https://githubnext.com/projects/continuous-ai/",
      "kind": "overview",
-     "why": "Independent summary of the design, its safety model and production readiness."
+     "why": "The research framing behind automated AI in repositories, by analogy with CI/CD."
+    },
+    {
+     "title": "DORA: State of AI-assisted Software Development 2025",
+     "url": "https://dora.dev/research/2025/dora-report/",
+     "kind": "report",
+     "why": "Survey-based research on how AI adoption relates to delivery performance."
     }
    ]
   },
@@ -386,53 +437,57 @@
    "landmarks": [
     {
      "name": "IBM stock drops on Anthropic COBOL post",
-     "summary": "IBM shares fell about 13% in a day, the most since October 2000, after Anthropic said Claude Code can automate COBOL exploration and analysis.",
+     "summary": "IBM shares fell 13.2% in a day, the most since October 2000, after Anthropic said Claude Code could be used to modernize COBOL running on IBM systems.",
      "date": "2026-02",
      "kind": "debate",
      "source": "https://www.thestar.com.my/tech/tech-news/2026/02/24/ibm-posts-steepest-daily-drop-since-2000-after-anthropic-says-ai-can-modernize-cobol",
-     "verified": true
+     "verified": true,
+     "check": "page",
+     "note": "Reuters report, read in a syndicated copy."
     },
     {
      "name": "IBM Bob multi-agent modernization",
-     "summary": "IBM added multi-agent execution, usage and cost analytics, and premium workflow packages for IBM Z, IBM i and Java modernization to its Bob platform.",
+     "summary": "IBM added multi-agent capabilities, AI cost and use analytics, and Premium Packages of workflows for IBM Z, IBM i and Java modernization to its Bob platform.",
      "date": "2026-07",
      "kind": "product",
      "source": "https://newsroom.ibm.com/2026-07-09-ibm-advances-enterprise-ai-software-development-with-multi-agent-capabilities-and-specialized-modernization-workflows",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Google mainframe modernization agents",
-     "summary": "Google paired business-rule extraction in its Mainframe Assessment Tool with Mainframe Modernization Agents that forward-engineer code to Java or C#.",
+     "summary": "Google paired business-rule extraction in its Mainframe Assessment Tool with Mainframe Modernization Agents that forward-engineer rewritten applications.",
      "date": "2026-08",
      "kind": "product",
      "source": "https://cloud.google.com/blog/products/infrastructure-modernization/mainframe-migration-and-modernization-with-ai",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
-     "title": "Google Cloud mainframe modernization",
+     "title": "Martin Fowler: Legacy Modernization meets GenAI",
+     "url": "https://martinfowler.com/articles/legacy-modernization-gen-ai.html",
+     "kind": "overview",
+     "why": "Practitioner account of using LLMs to understand legacy code before rewriting it."
+    },
+    {
+     "title": "Google Cloud: Mainframe Modernization solutions",
      "url": "https://cloud.google.com/solutions/mainframe-modernization",
      "kind": "overview",
      "why": "Shows the assess, rewrite and validate pipeline a hyperscaler now sells."
     },
     {
-     "title": "Microsoft Legacy Modernization Agents",
+     "title": "Legacy Modernization Agents: COBOL to Java/C#",
      "url": "https://github.com/Azure-Samples/Legacy-Modernization-Agents",
      "kind": "community",
-     "why": "Open-source COBOL to Java or C# agent pipeline you can read and run."
+     "why": "Open-source agent migration pipeline from Microsoft that you can read and run."
     },
     {
-     "title": "AWS CardDemo mainframe sample app",
+     "title": "AWS CardDemo mainframe application",
      "url": "https://github.com/aws-samples/aws-mainframe-modernization-carddemo",
-     "kind": "tracker",
+     "kind": "community",
      "why": "A public COBOL application commonly used to demonstrate and compare migration tools."
-    },
-    {
-     "title": "IBM Bob newsroom page",
-     "url": "https://uk.newsroom.ibm.com/IBM-Bob",
-     "kind": "overview",
-     "why": "IBM's running record of announcements for its AI development and modernization platform."
     }
    ]
   },
@@ -447,57 +502,65 @@
    "landmarks": [
     {
      "name": "Lovable raises $400M at $13.3B",
-     "summary": "Series C led by Menlo Ventures doubled the Swedish prompt-to-app builder's valuation; it reported a $500M annualized run rate in June 2026.",
+     "summary": "Series C co-led by Menlo Ventures and the EQT-managed Scaleup Europe Fund doubled the Swedish prompt-to-app builder's valuation from $6.6B in December 2025.",
      "date": "2026-08",
      "kind": "deal",
      "source": "https://tech.eu/2026/08/12/lovables-valuation-doubles-to-13bn-as-raises-400m/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
-     "name": "Figma Make drives Figma growth",
-     "summary": "Figma's Q4 2025 results tied 40% revenue growth to AI adoption; about 75% of large customers use AI credits weekly.",
+     "name": "Figma Make adoption lifts Figma results",
+     "summary": "Figma's Q4 2025 revenue rose 40% to $303.8M. Figma Make weekly users grew over 70% in the quarter, and over half of $100k+ customers used it weekly.",
      "date": "2026-02",
      "kind": "product",
      "source": "https://siliconangle.com/2026/02/18/figma-stock-climbs-40-revenue-growth-surging-figma-make-adoption/",
      "verified": true,
-     "note": "First-pass check kept; not re-checked in second pass (search limit reached)."
+     "check": "page"
+    },
+    {
+     "name": "GitHub Spec Kit released",
+     "summary": "GitHub open-sourced a toolkit that makes a written spec drive plans, task breakdowns and implementation by coding agents such as Copilot, Claude Code and Gemini CLI.",
+     "date": "2025-09",
+     "kind": "product",
+     "source": "https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open-source-toolkit/",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "AWS Kiro spec-driven IDE",
-     "summary": "Agentic IDE built around specs that structure requirements, design decisions and tasks before code, a counterpoint to unstructured vibe coding.",
+     "summary": "Agentic IDE launched in preview around specs that turn a prompt into requirements, design and tasks before code, pitched as a step beyond vibe coding.",
      "date": "2025-07",
      "kind": "product",
-     "source": "https://github.com/kirodotdev/Kiro",
-     "verified": false,
-     "note": "Spec workflow confirmed on Kiro's repo; July 2025 launch date not re-checked."
-    },
-    {
-     "name": "GitHub Spec Kit near 150k stars",
-     "summary": "GitHub's open-source toolkit for spec-driven development with coding agents showed about 149k stars, a sign of how widely the approach is being tried.",
-     "date": "2026-11",
-     "kind": "product",
-     "source": "https://github.com/github/spec-kit",
-     "verified": true
+     "source": "https://kiro.dev/blog/introducing-kiro/",
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
+     "title": "Martin Fowler site: Understanding Spec-Driven Development",
+     "url": "https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html",
+     "kind": "overview",
+     "why": "Independent, sceptical comparison of Kiro, Spec Kit and Tessl by Birgitta Böckeler."
+    },
+    {
      "title": "GitHub Spec Kit",
      "url": "https://github.com/github/spec-kit",
      "kind": "community",
-     "why": "The most used open toolkit for spec-driven development; read the method and try it."
+     "why": "The open toolkit for spec-driven development; read the method and try it."
     },
     {
-     "title": "Kiro public repository",
-     "url": "https://github.com/kirodotdev/Kiro",
+     "title": "Kiro docs: Specs",
+     "url": "https://kiro.dev/docs/specs/",
      "kind": "overview",
      "why": "How a spec-first agentic IDE structures requirements, design and tasks."
     },
     {
-     "title": "AGENTS.md open format",
-     "url": "https://github.com/agentsmd/agents.md",
-     "kind": "community",
-     "why": "The shared convention for giving coding agents project context and instructions."
+     "title": "Design2Code: benchmarking front-end code generation",
+     "url": "https://arxiv.org/abs/2403.03163",
+     "kind": "paper",
+     "why": "Benchmark for how well multimodal models turn page designs into working code."
     }
    ]
   },
@@ -512,91 +575,99 @@
    "landmarks": [
     {
      "name": "Google Code Wiki preview",
-     "summary": "Gemini-powered wiki that regenerates docs and diagrams after every code change, with a chat agent grounded in the repo.",
+     "summary": "Gemini-powered wiki in public preview that regenerates docs for public repositories after each code change, with a chat agent grounded in the repo.",
      "date": "2025-11",
      "kind": "product",
      "source": "https://developers.googleblog.com/en/introducing-code-wiki-accelerating-your-code-understanding/",
      "verified": true,
-     "note": "First-pass check kept; not re-checked in second pass (search limit reached)."
+     "check": "page"
     },
     {
      "name": "Cognition DeepWiki",
-     "summary": "Auto-generated wikis for public repos, built to help the Devin agent, now also served to other agents through a free MCP server.",
+     "summary": "Free public version of Devin's wiki and search for any public GitHub repo, launched with over 50,000 repos indexed. An MCP server followed later in May 2025.",
+     "date": "2025-05",
+     "kind": "product",
+     "source": "https://cognition.ai/blog/deepwiki",
+     "verified": true,
+     "check": "page"
+    },
+    {
+     "name": "Context7 MCP docs server launched",
+     "summary": "Upstash released an MCP server that feeds current, version-specific library documentation to coding agents, to counter answers based on outdated training data.",
      "date": "2025-04",
      "kind": "product",
-     "source": "https://www.zenml.io/llmops-database/auto-generated-codebase-documentation-and-intelligence-at-scale",
-     "verified": false,
-     "note": "Defines the topic; weak source, could not re-check (search limit reached)."
+     "source": "https://upstash.com/blog/context7-mcp",
+     "verified": true,
+     "check": "page"
     },
     {
-     "name": "Context7 docs server passes 64k stars",
-     "summary": "Upstash's open-source MCP server, which feeds current, version-specific library documentation to coding agents, showed about 64k GitHub stars.",
-     "date": "2026-11",
-     "kind": "product",
-     "source": "https://github.com/upstash/context7",
-     "verified": true
-    },
-    {
-     "name": "AGENTS.md becomes a shared convention",
-     "summary": "The open 'README for agents' format for giving coding agents project context showed about 25k stars on its repository.",
-     "date": "2026-11",
-     "kind": "product",
-     "source": "https://github.com/agentsmd/agents.md",
-     "verified": true
+     "name": "AGENTS.md joins Agentic AI Foundation",
+     "summary": "OpenAI contributed the AGENTS.md format to the Linux Foundation's new Agentic AI Foundation, alongside Anthropic's MCP and Block's goose.",
+     "date": "2025-12",
+     "kind": "policy",
+     "source": "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation",
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
-     "title": "AGENTS.md open format",
-     "url": "https://github.com/agentsmd/agents.md",
+     "title": "AGENTS.md",
+     "url": "https://agents.md/",
      "kind": "community",
-     "why": "The shared convention for giving coding agents project context and instructions."
+     "why": "The shared format for giving agents project context; its site cites 60k+ projects."
     },
     {
-     "title": "Context7 MCP server",
+     "title": "RepoAgent: repository-level code documentation generation",
+     "url": "https://arxiv.org/abs/2402.16667",
+     "kind": "paper",
+     "why": "Open framework and paper on generating and maintaining docs for a whole repository."
+    },
+    {
+     "title": "The /llms.txt file",
+     "url": "https://llmstxt.org/",
+     "kind": "overview",
+     "why": "Proposal for a standard file that points models at a site's key documentation."
+    },
+    {
+     "title": "Context7",
      "url": "https://github.com/upstash/context7",
      "kind": "community",
      "why": "See how up-to-date library docs are delivered to agents over MCP."
-    },
-    {
-     "title": "DeepWiki-Open",
-     "url": "https://github.com/AsyncFuncAI/deepwiki-open",
-     "kind": "community",
-     "why": "Self-hostable open-source wiki generator; shows how repo wikis are built."
     }
    ]
   }
  ],
  "deepDives": [
   {
-   "title": "SWE-bench: code, data and leaderboards",
-   "url": "https://github.com/SWE-bench/SWE-bench",
+   "title": "SWE-bench Leaderboards",
+   "url": "https://www.swebench.com/",
    "kind": "tracker",
    "why": "The standard benchmark of real GitHub issues that coding agents are scored on."
   },
   {
-   "title": "METR: developer productivity study update",
+   "title": "METR: We are Changing our Developer Productivity Experiment Design",
    "url": "https://metr.org/blog/2026-02-24-uplift-update/",
    "kind": "report",
    "why": "Careful account of why measuring AI speedup for developers is hard."
   },
   {
+   "title": "The Pragmatic Engineer",
+   "url": "https://newsletter.pragmaticengineer.com/",
+   "kind": "newsletter",
+   "why": "Widely read newsletter on how engineering teams actually use AI tools."
+  },
+  {
+   "title": "Stack Overflow Developer Survey 2025: AI",
+   "url": "https://survey.stackoverflow.co/2025/ai",
+   "kind": "report",
+   "why": "Large survey: 84% use or plan to use AI tools, yet more distrust than trust the output."
+  },
+  {
    "title": "Terminal-Bench",
-   "url": "https://github.com/laude-institute/terminal-bench",
+   "url": "https://www.tbench.ai/",
    "kind": "tracker",
    "why": "Benchmark of realistic terminal tasks, widely quoted in coding model launches."
-  },
-  {
-   "title": "GitHub blog: Agentic Workflows explained",
-   "url": "https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/",
-   "kind": "overview",
-   "why": "GitHub's own walkthrough of running coding agents inside CI with guardrails."
-  },
-  {
-   "title": "AGENTS.md open format",
-   "url": "https://github.com/agentsmd/agents.md",
-   "kind": "community",
-   "why": "The shared convention for giving coding agents project context and instructions."
   }
  ]
 }

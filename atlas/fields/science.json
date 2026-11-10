@@ -100,7 +100,29 @@
    ],
    "whyItMatters": "New materials underpin batteries, chips and energy, but a prediction only counts once it is made and measured.",
    "openQuestion": "Can AI-driven labs deliver a useful new material that is synthesized, verified and adopted by industry?",
-   "deepDives": []
+   "deepDives": [
+    {
+     "title": "Matbench Discovery",
+     "url": "https://matbench-discovery.materialsproject.org/",
+     "kind": "tracker",
+     "why": "Leaderboard for models predicting stable crystals.",
+     "unchecked": true
+    },
+    {
+     "title": "GNoME: millions of new materials",
+     "url": "https://deepmind.google/discover/blog/millions-of-new-materials-discovered-with-deep-learning/",
+     "kind": "overview",
+     "why": "DeepMind's account of predicting 2.2 million crystal structures.",
+     "unchecked": true
+    },
+    {
+     "title": "Materials Project",
+     "url": "https://next-gen.materialsproject.org/",
+     "kind": "tracker",
+     "why": "Open database of computed material properties used to train and test models.",
+     "unchecked": true
+    }
+   ]
   },
   {
    "id": "science.math",

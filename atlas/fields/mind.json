@@ -69,6 +69,20 @@
      "url": "https://thezvi.substack.com/p/opus-48-part-2-model-welfare",
      "kind": "newsletter",
      "why": "Independent close reading of a recent system card's welfare section."
+    },
+    {
+     "title": "Could a Large Language Model be Conscious? (Chalmers)",
+     "url": "https://arxiv.org/abs/2303.07103",
+     "kind": "paper",
+     "why": "A philosopher's checklist of what current models lack and might gain.",
+     "unchecked": true
+    },
+    {
+     "title": "Consciousness (Stanford Encyclopedia of Philosophy)",
+     "url": "https://plato.stanford.edu/entries/consciousness/",
+     "kind": "overview",
+     "why": "Reference entry on the concepts and theories the debate relies on.",
+     "unchecked": true
     }
    ]
   },
@@ -132,6 +146,20 @@
      "url": "https://www.anthropic.com/research",
      "kind": "tracker",
      "why": "Running list of interpretability work on what models represent internally."
+    },
+    {
+     "title": "The Computational Theory of Mind (SEP)",
+     "url": "https://plato.stanford.edu/entries/computational-mind/",
+     "kind": "overview",
+     "why": "Background on the view that thinking is computation, and its critics.",
+     "unchecked": true
+    },
+    {
+     "title": "The Chinese Room Argument (SEP)",
+     "url": "https://plato.stanford.edu/entries/chinese-room/",
+     "kind": "overview",
+     "why": "Searle's argument that symbol manipulation is not understanding, with replies.",
+     "unchecked": true
     }
    ]
   },
@@ -256,6 +284,13 @@
      "url": "https://www.anthropic.com/research/claude-character",
      "kind": "overview",
      "why": "Background on training models for character traits instead of only harm avoidance."
+    },
+    {
+     "title": "Ethics of Artificial Intelligence and Robotics (SEP)",
+     "url": "https://plato.stanford.edu/entries/ethics-ai/",
+     "kind": "overview",
+     "why": "Survey of the main ethical debates, from bias to machine moral status.",
+     "unchecked": true
     }
    ]
   },
@@ -335,6 +370,13 @@
      "url": "https://www.anthropic.com/research/team/economics",
      "kind": "overview",
      "why": "Index of reports on productivity, retraining evidence and country-level usage."
+    },
+    {
+     "title": "The Simple Macroeconomics of AI (Acemoglu)",
+     "url": "https://www.nber.org/papers/w32487",
+     "kind": "paper",
+     "why": "A sceptical estimate of AI's productivity effect over the next decade.",
+     "unchecked": true
     }
    ]
   },
@@ -465,6 +507,27 @@
      "url": "https://www.anthropic.com/news/core-views-on-ai-safety",
      "kind": "overview",
      "why": "One lab's 2023 statement of why it expects transformative AI and how it plans for it."
+    },
+    {
+     "title": "On the Measure of Intelligence (Chollet)",
+     "url": "https://arxiv.org/abs/1911.01547",
+     "kind": "paper",
+     "why": "Argues intelligence is skill-acquisition efficiency, the basis of ARC.",
+     "unchecked": true
+    },
+    {
+     "title": "Levels of AGI (Morris et al.)",
+     "url": "https://arxiv.org/abs/2311.02462",
+     "kind": "paper",
+     "why": "Google DeepMind's framework of performance and generality levels.",
+     "unchecked": true
+    },
+    {
+     "title": "ARC Prize",
+     "url": "https://arcprize.org/",
+     "kind": "tracker",
+     "why": "Live test of the claim that current models lack fluid reasoning.",
+     "unchecked": true
     }
    ]
   }

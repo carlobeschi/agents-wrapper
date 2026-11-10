@@ -61,6 +61,13 @@
      "url": "https://www.auntminnie.com/imaging-informatics/artificial-intelligence/article/15830219/radiology-dominates-thirty-years-of-fda-ai-device-approvals",
      "kind": "overview",
      "why": "Trade-press analysis of how the FDA's AI authorizations split across specialties."
+    },
+    {
+     "title": "NEJM AI",
+     "url": "https://ai.nejm.org/",
+     "kind": "newsletter",
+     "why": "Journal dedicated to clinical evaluations of AI.",
+     "unchecked": true
     }
    ]
   },
@@ -289,6 +296,13 @@
      "url": "https://www.cooley.com/news/insight/2026/2026-01-20-automation-bias-and-clinical-practice-fda-makes-incremental-updates-to-clinical-decision-support-software-guidance",
      "kind": "overview",
      "why": "Close reading of how the FDA now interprets the four decision-support criteria."
+    },
+    {
+     "title": "FDA list of AI-enabled medical devices",
+     "url": "https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-enabled-medical-devices",
+     "kind": "tracker",
+     "why": "The agency's own list of authorised devices, updated periodically.",
+     "unchecked": true
     }
    ]
   }

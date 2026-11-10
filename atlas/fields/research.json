@@ -114,7 +114,23 @@
     }
    ],
    "whyItMatters": "RL on checkable tasks is the main source of recent capability gains and is now reproducible outside the top labs.",
-   "openQuestion": "How far does RL on verifiable tasks transfer to open-ended work with no automatic checker?"
+   "openQuestion": "How far does RL on verifiable tasks transfer to open-ended work with no automatic checker?",
+   "deepDives": [
+    {
+     "title": "ARC Prize",
+     "url": "https://arcprize.org/",
+     "kind": "tracker",
+     "why": "Benchmark and leaderboard for novel reasoning tasks that models still find hard.",
+     "unchecked": true
+    },
+    {
+     "title": "FrontierMath",
+     "url": "https://epoch.ai/frontiermath",
+     "kind": "tracker",
+     "why": "Epoch AI's benchmark of research-level mathematics problems.",
+     "unchecked": true
+    }
+   ]
   },
   {
    "id": "research.interpretability",
@@ -159,7 +175,30 @@
     }
    ],
    "whyItMatters": "Reading a model's internals is one of the few ways to check what it is doing beyond its outputs.",
-   "openQuestion": "Can interpretability methods scale to give reliable, complete accounts of frontier model behavior?"
+   "openQuestion": "Can interpretability methods scale to give reliable, complete accounts of frontier model behavior?",
+   "deepDives": [
+    {
+     "title": "Transformer Circuits Thread",
+     "url": "https://transformer-circuits.pub/",
+     "kind": "community",
+     "why": "Anthropic's running series of interpretability papers and monthly updates.",
+     "unchecked": true
+    },
+    {
+     "title": "Zoom In: An Introduction to Circuits",
+     "url": "https://distill.pub/2020/circuits/zoom-in/",
+     "kind": "paper",
+     "why": "The essay that set out the circuits approach to reading neural networks.",
+     "unchecked": true
+    },
+    {
+     "title": "Neuronpedia",
+     "url": "https://www.neuronpedia.org/",
+     "kind": "tracker",
+     "why": "Browse features and attribution graphs from published interpretability work.",
+     "unchecked": true
+    }
+   ]
   },
   {
    "id": "research.alignment",
@@ -259,7 +298,37 @@
     }
    ],
    "whyItMatters": "Benchmarks shape how progress is perceived, and saturated ones hide what models can and cannot do.",
-   "openQuestion": "How can long, open-ended task ability be measured once fixed task suites saturate?"
+   "openQuestion": "How can long, open-ended task ability be measured once fixed task suites saturate?",
+   "deepDives": [
+    {
+     "title": "METR",
+     "url": "https://metr.org/",
+     "kind": "report",
+     "why": "Time-horizon measurements and evaluations of autonomous capabilities.",
+     "unchecked": true
+    },
+    {
+     "title": "SWE-bench",
+     "url": "https://www.swebench.com/",
+     "kind": "tracker",
+     "why": "Leaderboards for resolving real GitHub issues, the standard coding-agent test.",
+     "unchecked": true
+    },
+    {
+     "title": "LMArena",
+     "url": "https://lmarena.ai/",
+     "kind": "tracker",
+     "why": "Crowd-voted head-to-head model rankings across text, vision and code.",
+     "unchecked": true
+    },
+    {
+     "title": "Stanford AI Index Report",
+     "url": "https://aiindex.stanford.edu/report/",
+     "kind": "report",
+     "why": "Annual reference on benchmark trends, investment and adoption.",
+     "unchecked": true
+    }
+   ]
   },
   {
    "id": "research.efficiency",
@@ -345,7 +414,30 @@
     }
    ],
    "whyItMatters": "Video and world models extend AI from text to simulation, media and training data for robots.",
-   "openQuestion": "Do generated worlds stay consistent enough to train agents and robots that work in reality?"
+   "openQuestion": "Do generated worlds stay consistent enough to train agents and robots that work in reality?",
+   "deepDives": [
+    {
+     "title": "World Models (Ha and Schmidhuber)",
+     "url": "https://arxiv.org/abs/1803.10122",
+     "kind": "paper",
+     "why": "The 2018 paper that framed learning a compressed model of an environment.",
+     "unchecked": true
+    },
+    {
+     "title": "Video generation models as world simulators",
+     "url": "https://openai.com/index/video-generation-models-as-world-simulators/",
+     "kind": "paper",
+     "why": "OpenAI's technical note arguing video models learn physical regularities.",
+     "unchecked": true
+    },
+    {
+     "title": "Artificial Analysis",
+     "url": "https://artificialanalysis.ai/",
+     "kind": "tracker",
+     "why": "Independent comparisons of language, image and video models.",
+     "unchecked": true
+    }
+   ]
   },
   {
    "id": "research.agents",
@@ -438,7 +530,30 @@
     }
    ],
    "whyItMatters": "Robotics tests whether foundation-model progress carries over to physical work.",
-   "openQuestion": "Can general robot models reach the reliability needed for unsupervised use in homes and factories?"
+   "openQuestion": "Can general robot models reach the reliability needed for unsupervised use in homes and factories?",
+   "deepDives": [
+    {
+     "title": "Open X-Embodiment",
+     "url": "https://robotics-transformer-x.github.io/",
+     "kind": "paper",
+     "why": "Cross-lab robot dataset and models that started the generalist-policy push.",
+     "unchecked": true
+    },
+    {
+     "title": "RT-2: Vision-Language-Action Models",
+     "url": "https://arxiv.org/abs/2307.15818",
+     "kind": "paper",
+     "why": "Showed web-scale vision-language models can output robot actions.",
+     "unchecked": true
+    },
+    {
+     "title": "Physical Intelligence blog",
+     "url": "https://www.physicalintelligence.company/blog",
+     "kind": "newsletter",
+     "why": "Research notes from one of the main generalist robot policy labs.",
+     "unchecked": true
+    }
+   ]
   }
  ],
  "deepDives": [

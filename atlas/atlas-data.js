@@ -165,7 +165,23 @@ window.ATLAS = {
       }
      ],
      "whyItMatters": "RL on checkable tasks is the main source of recent capability gains and is now reproducible outside the top labs.",
-     "openQuestion": "How far does RL on verifiable tasks transfer to open-ended work with no automatic checker?"
+     "openQuestion": "How far does RL on verifiable tasks transfer to open-ended work with no automatic checker?",
+     "deepDives": [
+      {
+       "title": "ARC Prize",
+       "url": "https://arcprize.org/",
+       "kind": "tracker",
+       "why": "Benchmark and leaderboard for novel reasoning tasks that models still find hard.",
+       "unchecked": true
+      },
+      {
+       "title": "FrontierMath",
+       "url": "https://epoch.ai/frontiermath",
+       "kind": "tracker",
+       "why": "Epoch AI's benchmark of research-level mathematics problems.",
+       "unchecked": true
+      }
+     ]
     },
     {
      "id": "research.interpretability",
@@ -210,7 +226,30 @@ window.ATLAS = {
       }
      ],
      "whyItMatters": "Reading a model's internals is one of the few ways to check what it is doing beyond its outputs.",
-     "openQuestion": "Can interpretability methods scale to give reliable, complete accounts of frontier model behavior?"
+     "openQuestion": "Can interpretability methods scale to give reliable, complete accounts of frontier model behavior?",
+     "deepDives": [
+      {
+       "title": "Transformer Circuits Thread",
+       "url": "https://transformer-circuits.pub/",
+       "kind": "community",
+       "why": "Anthropic's running series of interpretability papers and monthly updates.",
+       "unchecked": true
+      },
+      {
+       "title": "Zoom In: An Introduction to Circuits",
+       "url": "https://distill.pub/2020/circuits/zoom-in/",
+       "kind": "paper",
+       "why": "The essay that set out the circuits approach to reading neural networks.",
+       "unchecked": true
+      },
+      {
+       "title": "Neuronpedia",
+       "url": "https://www.neuronpedia.org/",
+       "kind": "tracker",
+       "why": "Browse features and attribution graphs from published interpretability work.",
+       "unchecked": true
+      }
+     ]
     },
     {
      "id": "research.alignment",
@@ -310,7 +349,37 @@ window.ATLAS = {
       }
      ],
      "whyItMatters": "Benchmarks shape how progress is perceived, and saturated ones hide what models can and cannot do.",
-     "openQuestion": "How can long, open-ended task ability be measured once fixed task suites saturate?"
+     "openQuestion": "How can long, open-ended task ability be measured once fixed task suites saturate?",
+     "deepDives": [
+      {
+       "title": "METR",
+       "url": "https://metr.org/",
+       "kind": "report",
+       "why": "Time-horizon measurements and evaluations of autonomous capabilities.",
+       "unchecked": true
+      },
+      {
+       "title": "SWE-bench",
+       "url": "https://www.swebench.com/",
+       "kind": "tracker",
+       "why": "Leaderboards for resolving real GitHub issues, the standard coding-agent test.",
+       "unchecked": true
+      },
+      {
+       "title": "LMArena",
+       "url": "https://lmarena.ai/",
+       "kind": "tracker",
+       "why": "Crowd-voted head-to-head model rankings across text, vision and code.",
+       "unchecked": true
+      },
+      {
+       "title": "Stanford AI Index Report",
+       "url": "https://aiindex.stanford.edu/report/",
+       "kind": "report",
+       "why": "Annual reference on benchmark trends, investment and adoption.",
+       "unchecked": true
+      }
+     ]
     },
     {
      "id": "research.efficiency",
@@ -396,7 +465,30 @@ window.ATLAS = {
       }
      ],
      "whyItMatters": "Video and world models extend AI from text to simulation, media and training data for robots.",
-     "openQuestion": "Do generated worlds stay consistent enough to train agents and robots that work in reality?"
+     "openQuestion": "Do generated worlds stay consistent enough to train agents and robots that work in reality?",
+     "deepDives": [
+      {
+       "title": "World Models (Ha and Schmidhuber)",
+       "url": "https://arxiv.org/abs/1803.10122",
+       "kind": "paper",
+       "why": "The 2018 paper that framed learning a compressed model of an environment.",
+       "unchecked": true
+      },
+      {
+       "title": "Video generation models as world simulators",
+       "url": "https://openai.com/index/video-generation-models-as-world-simulators/",
+       "kind": "paper",
+       "why": "OpenAI's technical note arguing video models learn physical regularities.",
+       "unchecked": true
+      },
+      {
+       "title": "Artificial Analysis",
+       "url": "https://artificialanalysis.ai/",
+       "kind": "tracker",
+       "why": "Independent comparisons of language, image and video models.",
+       "unchecked": true
+      }
+     ]
     },
     {
      "id": "research.agents",
@@ -489,7 +581,30 @@ window.ATLAS = {
       }
      ],
      "whyItMatters": "Robotics tests whether foundation-model progress carries over to physical work.",
-     "openQuestion": "Can general robot models reach the reliability needed for unsupervised use in homes and factories?"
+     "openQuestion": "Can general robot models reach the reliability needed for unsupervised use in homes and factories?",
+     "deepDives": [
+      {
+       "title": "Open X-Embodiment",
+       "url": "https://robotics-transformer-x.github.io/",
+       "kind": "paper",
+       "why": "Cross-lab robot dataset and models that started the generalist-policy push.",
+       "unchecked": true
+      },
+      {
+       "title": "RT-2: Vision-Language-Action Models",
+       "url": "https://arxiv.org/abs/2307.15818",
+       "kind": "paper",
+       "why": "Showed web-scale vision-language models can output robot actions.",
+       "unchecked": true
+      },
+      {
+       "title": "Physical Intelligence blog",
+       "url": "https://www.physicalintelligence.company/blog",
+       "kind": "newsletter",
+       "why": "Research notes from one of the main generalist robot policy labs.",
+       "unchecked": true
+      }
+     ]
     }
    ],
    "deepDives": [
@@ -522,12 +637,12 @@ window.ATLAS = {
   {
    "id": "software",
    "name": "Software Development",
-   "summary": "Coding agents are AI's largest commercial use so far, with multi-billion run rates. Agents are spreading into review, security, incident response and legacy migration, while productivity evidence stays mixed.",
+   "summary": "Coding agents are among AI's largest commercial uses, with multi-billion run rates and a major acquisition. Agents are spreading into review, security, incident response and legacy migration, while productivity evidence stays mixed.",
    "regions": [
     {
      "id": "software.coding-agents",
      "name": "Coding agents",
-     "summary": "Terminal, IDE and cloud agents that write, run and fix code across whole repos. Claude Code, Codex and Cursor lead a market with very fast revenue growth.",
+     "summary": "Terminal, IDE and cloud agents that write, run and fix code across whole repos. Claude Code, Codex and Cursor lead a fast-growing market that is now consolidating.",
      "activity": 5,
      "maturity": "adopting",
      "whyItMatters": "This is where AI earns the most revenue today and where claims about automating knowledge work are tested first.",
@@ -539,51 +654,63 @@ window.ATLAS = {
        "date": "2026-02",
        "kind": "deal",
        "source": "https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Cursor reported at $2B annualized revenue",
-       "summary": "Bloomberg reported Cursor's annualized revenue passed $2B in February 2026, doubling in three months, about 60% from enterprises. Not company-confirmed.",
-       "date": "2026-03",
+       "name": "SpaceX completes Cursor acquisition",
+       "summary": "Cursor said SpaceX had completed its acquisition, a process that began in April 2026 with a model-training partnership. The price was reported as $60B in stock.",
+       "date": "2026-08",
        "kind": "deal",
-       "source": "https://www.bloomberg.com/news/articles/2026-03-02/cursor-recurring-revenue-doubles-in-three-months-to-2-billion",
-       "verified": true
+       "source": "https://cursor.com/blog/joining-spacex",
+       "verified": true,
+       "check": "page",
+       "note": "Price is from press reports cited on Wikipedia, not from Cursor's post."
       },
       {
        "name": "GPT-5.3-Codex launched",
-       "summary": "OpenAI's agentic coding model; the company says it is 25% faster and the first it rates high capability for cybersecurity under its Preparedness Framework.",
+       "summary": "OpenAI released GPT-5.3-Codex, which it describes as a Codex-native agent pairing frontier coding performance with general reasoning for long-horizon technical work.",
        "date": "2026-02",
        "kind": "product",
-       "source": "https://www.openai.com/index/introducing-gpt-5-3-codex",
-       "verified": true
+       "source": "https://openai.com/index/introducing-gpt-5-3-codex",
+       "verified": true,
+       "check": "page",
+       "note": "Confirmed in OpenAI's news feed; the article page itself blocks scripts."
       },
       {
        "name": "METR revisits developer slowdown study",
-       "summary": "METR said developers are likely more sped up by AI than in its 2025 study, but selection effects make the new estimate unreliable, so it is redesigning the study.",
+       "summary": "METR said developers are likely more sped up by AI than in its 2025 study, but selection effects make the new data weak evidence, so it is changing the study design.",
        "date": "2026-02",
        "kind": "research",
        "source": "https://metr.org/blog/2026-02-24-uplift-update/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
       {
-       "title": "SWE-bench: code, data and leaderboards",
-       "url": "https://github.com/SWE-bench/SWE-bench",
+       "title": "SWE-bench Leaderboards",
+       "url": "https://www.swebench.com/",
        "kind": "tracker",
-       "why": "The standard benchmark of real GitHub issues that coding agents are scored on."
+       "why": "Scores for resolving real GitHub issues, including a like-for-like Bash Only view."
       },
       {
        "title": "Terminal-Bench",
-       "url": "https://github.com/laude-institute/terminal-bench",
+       "url": "https://www.tbench.ai/",
        "kind": "tracker",
-       "why": "Benchmark of realistic terminal tasks, widely quoted in coding model launches."
+       "why": "Leaderboard of agents on hard terminal tasks, with cost and tokens per run."
       },
       {
-       "title": "METR: developer productivity study update",
-       "url": "https://metr.org/blog/2026-02-24-uplift-update/",
-       "kind": "report",
-       "why": "Careful account of why measuring AI speedup for developers is hard."
+       "title": "METR: Early-2025 AI and experienced open-source developers",
+       "url": "https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/",
+       "kind": "paper",
+       "why": "The randomised trial in which 16 developers took 19% longer with early-2025 tools."
+      },
+      {
+       "title": "Simon Willison on coding agents",
+       "url": "https://simonwillison.net/tags/coding-agents/",
+       "kind": "newsletter",
+       "why": "A practitioner's running notes on what coding agents can and cannot do."
       }
      ]
     },
@@ -601,16 +728,27 @@ window.ATLAS = {
        "summary": "Multi-agent PR reviewer in research preview for Team and Enterprise. Anthropic said PRs with substantive review comments rose from 16% to 54% internally.",
        "date": "2026-03",
        "kind": "product",
-       "source": "https://venturebeat.com/technology/anthropic-rolls-out-code-review-for-claude-code-as-it-sues-over-pentagon",
-       "verified": true
+       "source": "https://claude.com/blog/code-review",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "CodeRabbit raises $143M at $1.5B",
-       "summary": "Series C co-led by Atomico and Smash Capital, paired with an 'Agentic Change Management' product. The company reports over 2M reviews a week.",
+       "summary": "Series C co-led by Atomico and Smash Capital, announced with a new 'Agentic Change Management' product that goes beyond AI code review.",
        "date": "2026-08",
        "kind": "deal",
        "source": "https://www.coderabbit.ai/newsroom/coderabbit-series-c-agentic-change-management",
-       "verified": true
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "Cursor reports Bugbot gains",
+       "summary": "Cursor said 40 experiments since Bugbot's July 2025 launch raised the share of flagged bugs that get resolved from 52% to over 70%. Self-reported.",
+       "date": "2026-01",
+       "kind": "research",
+       "source": "https://cursor.com/blog/building-bugbot",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Greptile $25M Series A",
@@ -618,27 +756,34 @@ window.ATLAS = {
        "date": "2025-09",
        "kind": "deal",
        "source": "https://siliconangle.com/2025/09/23/greptile-bags-25m-funding-take-coderabbit-graphite-ai-code-validation/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
       {
-       "title": "InfoQ: how Claude Code Review works",
-       "url": "https://infoq.com/news/2026/04/claude-code-review",
-       "kind": "overview",
-       "why": "Independent engineering write-up of a multi-agent reviewer, with pricing and limits."
+       "title": "Automating Code Review Activities by Large-Scale Pre-training",
+       "url": "https://arxiv.org/abs/2203.09095",
+       "kind": "paper",
+       "why": "The CodeReviewer paper that framed review as tasks a model can learn and be scored on."
       },
       {
-       "title": "Claude Code GitHub Action",
+       "title": "Google Research: Resolving code review comments with ML",
+       "url": "https://research.google/blog/resolving-code-review-comments-with-ml/",
+       "kind": "overview",
+       "why": "How a large engineering organisation deployed ML-suggested edits in review."
+      },
+      {
+       "title": "Greptile: AI Code Review Benchmarks 2025",
+       "url": "https://www.greptile.com/benchmarks",
+       "kind": "tracker",
+       "why": "Five review tools on 50 real bugs. Run by a vendor, so read it with care."
+      },
+      {
+       "title": "Claude Code Action",
        "url": "https://github.com/anthropics/claude-code-action",
        "kind": "community",
        "why": "Open-source action showing how agent PR review is wired into a repository."
-      },
-      {
-       "title": "Greptile blog: Series A and v3",
-       "url": "https://www.greptile.com/blog/series-a",
-       "kind": "newsletter",
-       "why": "A vendor's account of its reviewer architecture and how it measures bug catching."
       }
      ]
     },
@@ -657,50 +802,59 @@ window.ATLAS = {
        "date": "2026-03",
        "kind": "product",
        "source": "https://smartbear.com/news/news-releases/smartbear-introduces-bearqautonomous-testing-for/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Tricentis agentic QE platform",
-       "summary": "Tricentis launched an agentic quality engineering platform with an AI Workspace that orchestrates and audits testing agents, plus four pre-built agents.",
+       "summary": "Tricentis launched an agentic quality engineering platform with an AI Workspace that orchestrates and governs testing agents, plus pre-built agents.",
        "date": "2026-03",
        "kind": "product",
        "source": "https://www.tricentis.com/news/tricentis-introduces-agentic-software-quality-platform",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Momentic Mo scriptless QA agent",
-       "summary": "Agent that tests web, iOS and Android apps from a plain-English goal and files bugs with repro steps. Usage and benchmark figures are vendor-reported.",
+       "summary": "Agent that tests web, iOS and Android apps from a brief instead of scripts, then reports what failed with steps to reproduce and video evidence.",
        "date": "2026-09",
        "kind": "product",
        "source": "https://siliconangle.com/2026/09/28/momentic-debuts-mo-ai-agent-to-automate-software-testing-without-scripts/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
       {
-       "title": "SWT-Bench",
-       "url": "https://github.com/logic-star-ai/swt-bench",
+       "title": "SWT-Bench leaderboard",
+       "url": "https://swtbench.com/",
        "kind": "tracker",
-       "why": "Benchmark and NeurIPS 2024 paper on whether agents can write tests that reproduce real bugs."
+       "why": "Scores agents on writing tests that reproduce real GitHub issues."
       },
       {
-       "title": "Playwright MCP server",
+       "title": "Automated Unit Test Improvement using LLMs at Meta",
+       "url": "https://arxiv.org/abs/2402.09171",
+       "kind": "paper",
+       "why": "Industrial study of LLM-written tests with filters that guarantee measurable improvement."
+      },
+      {
+       "title": "Playwright MCP",
        "url": "https://github.com/microsoft/playwright-mcp",
        "kind": "community",
        "why": "The widely used open-source bridge that lets agents drive a browser for testing."
       },
       {
-       "title": "Momentic Mo documentation",
+       "title": "Momentic docs: Mo",
        "url": "https://momentic.ai/docs/mo",
        "kind": "overview",
-       "why": "Concrete view of how an exploratory QA agent is set up and what it cannot do."
+       "why": "Concrete view of how an exploratory QA agent is set up and when to use it."
       }
      ]
     },
     {
      "id": "software.observability",
      "name": "Observability & SRE",
-     "summary": "AI SRE agents investigate alerts, test root-cause hypotheses against telemetry and suggest fixes. Vendors ship them as GA products, though open benchmarks show low scores.",
+     "summary": "AI SRE agents investigate alerts, test root-cause hypotheses against telemetry and suggest fixes. Vendors ship them as GA products, while open benchmarks show modest scores.",
      "activity": 3,
      "maturity": "adopting",
      "whyItMatters": "Incident response is a high-stakes test of whether agents can reason over live systems, not only over code.",
@@ -712,7 +866,8 @@ window.ATLAS = {
        "date": "2025-12",
        "kind": "product",
        "source": "https://www.datadoghq.com/about/latest-news/press-releases/datadog-launches-bits-ai-sre-agent-to-resolve-incidents-faster/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "AWS DevOps Agent generally available",
@@ -720,48 +875,50 @@ window.ATLAS = {
        "date": "2026-03",
        "kind": "product",
        "source": "https://aws.amazon.com/about-aws/whats-new/2026/03/aws-devops-agent-generally-available",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "ITBench-AA: models score below 50% on SRE",
-       "summary": "Artificial Analysis and IBM Research launched ITBench-AA; across its 59 SRE tasks, all evaluated models scored below 50%.",
-       "date": "2026-05",
+       "name": "ITBench: agents resolve 13.8% of SRE tasks",
+       "summary": "IBM-led benchmark of 94 real-world IT scenarios found agents resolved 13.8% of SRE, 25.2% of compliance and security, and 0% of FinOps scenarios.",
+       "date": "2025-02",
        "kind": "research",
-       "source": "https://github.com/itbench-hub/ITBench",
-       "verified": true
+       "source": "https://arxiv.org/abs/2502.05352",
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
       {
-       "title": "ITBench: benchmark for IT automation agents",
-       "url": "https://github.com/itbench-hub/ITBench",
+       "title": "ITBench-AA Benchmark (Artificial Analysis)",
+       "url": "https://artificialanalysis.ai/evaluations/itbench-aa",
        "kind": "tracker",
-       "why": "Open benchmark and leaderboards for SRE, compliance and FinOps agents, with ICML 2025 paper."
+       "why": "Independent leaderboard on 59 Kubernetes incident tasks; top models score just over half."
       },
       {
-       "title": "AIOpsLab (Microsoft Research)",
-       "url": "https://github.com/microsoft/AIOpsLab",
+       "title": "AIOpsLab: evaluating AI agents for autonomous clouds",
+       "url": "https://arxiv.org/abs/2501.06706",
        "kind": "paper",
-       "why": "Framework and MLSys 2025 paper for evaluating agents on injected cloud faults."
+       "why": "Microsoft framework for testing agents on injected cloud faults."
       },
       {
-       "title": "Datadog engineering blog: Bits AI SRE",
+       "title": "Datadog: Introducing Bits Investigation",
        "url": "https://datadoghq.com/blog/bits-ai-sre/",
        "kind": "overview",
        "why": "How a production SRE agent forms and tests root-cause hypotheses."
       },
       {
-       "title": "AWS: DevOps Agent general availability",
-       "url": "https://aws.amazon.com/blogs/mt/announcing-general-availability-of-aws-devops-agent",
-       "kind": "overview",
-       "why": "Detailed walkthrough of capabilities, integrations and pricing model at GA."
+       "title": "ITBench",
+       "url": "https://github.com/itbench-hub/ITBench",
+       "kind": "community",
+       "why": "Open scenarios and code for SRE, compliance and FinOps agent evaluation."
       }
      ]
     },
     {
      "id": "software.security",
      "name": "AppSec & vulnerability finding",
-     "summary": "Models now find real vulnerabilities at scale. Labs ship code-scanning agents, an autonomous pentester topped a bug bounty board, and security stocks react to launches.",
+     "summary": "Models now find real vulnerabilities at scale. Labs ship code-scanning agents in preview, and an autonomous pentester topped a bug bounty leaderboard.",
      "activity": 4,
      "maturity": "adopting",
      "whyItMatters": "The same capability that finds and patches flaws for defenders also lowers the cost of finding them for attackers.",
@@ -769,61 +926,66 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Claude Code Security",
-       "summary": "Anthropic codebase scanner that suggests patches for human review, in limited preview, after Opus 4.6 was reported to find 500+ high-severity flaws in open source.",
+       "summary": "Anthropic codebase scanner that suggests patches for human review, in limited research preview. Anthropic said Opus 4.6 found over 500 flaws in open-source code.",
        "date": "2026-02",
        "kind": "product",
-       "source": "https://venturebeat.com/security/anthropic-claude-code-security-reasoning-vulnerability-hunting",
-       "verified": true
+       "source": "https://www.anthropic.com/news/claude-code-security",
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Aardvark becomes Codex Security",
-       "summary": "OpenAI renamed its agentic security researcher, which builds a threat model and tests suspected flaws in a sandbox, and opened a research preview to paid tiers.",
+       "name": "Codex Security research preview",
+       "summary": "OpenAI opened a research preview of Codex Security, an agent that detects, validates and patches vulnerabilities. It follows the Aardvark private beta of October 2025.",
        "date": "2026-03",
        "kind": "product",
        "source": "https://openai.com/index/codex-security-now-in-research-preview",
-       "verified": true
+       "verified": true,
+       "check": "page",
+       "note": "Confirmed in OpenAI's news feed; the article page itself blocks scripts."
       },
       {
        "name": "Google Big Sleep reports 20 bugs",
-       "summary": "Google's DeepMind and Project Zero agent reported its first 20 vulnerabilities in open-source software, found autonomously and reviewed by humans before filing.",
+       "summary": "Google's DeepMind and Project Zero agent reported its first 20 vulnerabilities in open-source software, found by the agent and checked by a human before reporting.",
        "date": "2025-08",
        "kind": "research",
        "source": "https://techcrunch.com/2025/08/04/google-says-its-ai-based-bug-hunter-found-20-security-vulnerabilities/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "XBOW tops HackerOne US leaderboard",
-       "summary": "An autonomous pentesting agent ranked first by reputation on HackerOne's US leaderboard, a first for an AI system; critics noted its findings were mostly XSS.",
+       "summary": "XBOW said its autonomous pentesting agent reached the top of HackerOne's US leaderboard, a first for an AI system, with findings confirmed by program owners.",
        "date": "2025-06",
        "kind": "experiment",
        "source": "https://xbow.com/blog/top-1-how-xbow-did-it/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
       {
-       "title": "CyberGym benchmark",
-       "url": "https://github.com/sunblaze-ucb/cybergym",
+       "title": "CyberGym: AI agents' real-world cybersecurity capabilities",
+       "url": "https://arxiv.org/abs/2506.02548",
        "kind": "paper",
-       "why": "Large-scale evaluation of agents on real vulnerability analysis tasks, with paper."
+       "why": "Large-scale evaluation of agents on real vulnerability analysis tasks."
       },
       {
-       "title": "XBOW: how it reached the top of HackerOne",
+       "title": "Frontier AI Cybersecurity Observatory",
+       "url": "https://www.cybergym.io/",
+       "kind": "tracker",
+       "why": "Open tracker of AI capability across stages of attack and defence."
+      },
+      {
+       "title": "Project Zero: From Naptime to Big Sleep",
+       "url": "https://googleprojectzero.blogspot.com/2024/10/from-naptime-to-big-sleep.html",
+       "kind": "overview",
+       "why": "First-hand account of an agent finding an exploitable SQLite bug."
+      },
+      {
+       "title": "XBOW: The Road to Top 1",
        "url": "https://xbow.com/blog/top-1-how-xbow-did-it/",
        "kind": "overview",
-       "why": "First-hand account of running an autonomous pentester against live bounty programs."
-      },
-      {
-       "title": "OpenAI: introducing Aardvark",
-       "url": "https://openai.com/index/introducing-aardvark",
-       "kind": "overview",
-       "why": "Explains the agentic security researcher design: threat model, validate, patch."
-      },
-      {
-       "title": "Claude Code security review action",
-       "url": "https://github.com/anthropics/claude-code-security-review",
-       "kind": "community",
-       "why": "Open-source example of model-driven security review on pull requests."
+       "why": "Running an autonomous pentester against live bounty programs, and how findings are validated."
       }
      ]
     },
@@ -842,7 +1004,8 @@ window.ATLAS = {
        "date": "2026-02",
        "kind": "product",
        "source": "https://github.blog/changelog/2026-02-13-github-agentic-workflows-are-now-in-technical-preview/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Register: use at your own risk",
@@ -850,7 +1013,8 @@ window.ATLAS = {
        "date": "2026-02",
        "kind": "debate",
        "source": "https://www.theregister.com/software/2026/02/17/github-previews-agentic-workflows/5103216",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Agentic Workflows reach public preview",
@@ -858,7 +1022,8 @@ window.ATLAS = {
        "date": "2026-06",
        "kind": "product",
        "source": "https://github.blog/changelog/2026-06-11-github-agentic-workflows-is-now-in-public-preview",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "AWS frontier agents announced",
@@ -866,33 +1031,34 @@ window.ATLAS = {
        "date": "2025-12",
        "kind": "product",
        "source": "https://press.aboutamazon.com/2025/12/aws-unveils-frontier-agents-a-new-class-of-ai-agents-that-work-as-an-extension-of-your-software-development-team",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
       {
-       "title": "GitHub blog: Agentic Workflows explained",
+       "title": "GitHub blog: Automate repository tasks with Agentic Workflows",
        "url": "https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/",
        "kind": "overview",
        "why": "GitHub's own walkthrough of running coding agents inside CI with guardrails."
       },
       {
-       "title": "gh-aw: Agentic Workflows source",
-       "url": "https://github.com/github/gh-aw",
+       "title": "GitHub Agentic Workflows documentation",
+       "url": "https://github.github.com/gh-aw/",
        "kind": "community",
-       "why": "The open-source CLI extension that compiles Markdown workflows into GitHub Actions."
+       "why": "Reference for the open-source tool: workflow format, safe outputs, sandbox and firewall."
       },
       {
-       "title": "Awesome Continuous AI",
-       "url": "https://github.com/githubnext/awesome-continuous-ai",
-       "kind": "community",
-       "why": "GitHub Next's curated list of tools and actions for automated AI in repositories."
-      },
-      {
-       "title": "InfoQ: GitHub Agentic Workflows",
-       "url": "https://www.infoq.com/news/2026/02/github-agentic-workflows",
+       "title": "GitHub Next: Continuous AI",
+       "url": "https://githubnext.com/projects/continuous-ai/",
        "kind": "overview",
-       "why": "Independent summary of the design, its safety model and production readiness."
+       "why": "The research framing behind automated AI in repositories, by analogy with CI/CD."
+      },
+      {
+       "title": "DORA: State of AI-assisted Software Development 2025",
+       "url": "https://dora.dev/research/2025/dora-report/",
+       "kind": "report",
+       "why": "Survey-based research on how AI adoption relates to delivery performance."
       }
      ]
     },
@@ -907,53 +1073,57 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "IBM stock drops on Anthropic COBOL post",
-       "summary": "IBM shares fell about 13% in a day, the most since October 2000, after Anthropic said Claude Code can automate COBOL exploration and analysis.",
+       "summary": "IBM shares fell 13.2% in a day, the most since October 2000, after Anthropic said Claude Code could be used to modernize COBOL running on IBM systems.",
        "date": "2026-02",
        "kind": "debate",
        "source": "https://www.thestar.com.my/tech/tech-news/2026/02/24/ibm-posts-steepest-daily-drop-since-2000-after-anthropic-says-ai-can-modernize-cobol",
-       "verified": true
+       "verified": true,
+       "check": "page",
+       "note": "Reuters report, read in a syndicated copy."
       },
       {
        "name": "IBM Bob multi-agent modernization",
-       "summary": "IBM added multi-agent execution, usage and cost analytics, and premium workflow packages for IBM Z, IBM i and Java modernization to its Bob platform.",
+       "summary": "IBM added multi-agent capabilities, AI cost and use analytics, and Premium Packages of workflows for IBM Z, IBM i and Java modernization to its Bob platform.",
        "date": "2026-07",
        "kind": "product",
        "source": "https://newsroom.ibm.com/2026-07-09-ibm-advances-enterprise-ai-software-development-with-multi-agent-capabilities-and-specialized-modernization-workflows",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Google mainframe modernization agents",
-       "summary": "Google paired business-rule extraction in its Mainframe Assessment Tool with Mainframe Modernization Agents that forward-engineer code to Java or C#.",
+       "summary": "Google paired business-rule extraction in its Mainframe Assessment Tool with Mainframe Modernization Agents that forward-engineer rewritten applications.",
        "date": "2026-08",
        "kind": "product",
        "source": "https://cloud.google.com/blog/products/infrastructure-modernization/mainframe-migration-and-modernization-with-ai",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
       {
-       "title": "Google Cloud mainframe modernization",
+       "title": "Martin Fowler: Legacy Modernization meets GenAI",
+       "url": "https://martinfowler.com/articles/legacy-modernization-gen-ai.html",
+       "kind": "overview",
+       "why": "Practitioner account of using LLMs to understand legacy code before rewriting it."
+      },
+      {
+       "title": "Google Cloud: Mainframe Modernization solutions",
        "url": "https://cloud.google.com/solutions/mainframe-modernization",
        "kind": "overview",
        "why": "Shows the assess, rewrite and validate pipeline a hyperscaler now sells."
       },
       {
-       "title": "Microsoft Legacy Modernization Agents",
+       "title": "Legacy Modernization Agents: COBOL to Java/C#",
        "url": "https://github.com/Azure-Samples/Legacy-Modernization-Agents",
        "kind": "community",
-       "why": "Open-source COBOL to Java or C# agent pipeline you can read and run."
+       "why": "Open-source agent migration pipeline from Microsoft that you can read and run."
       },
       {
-       "title": "AWS CardDemo mainframe sample app",
+       "title": "AWS CardDemo mainframe application",
        "url": "https://github.com/aws-samples/aws-mainframe-modernization-carddemo",
-       "kind": "tracker",
+       "kind": "community",
        "why": "A public COBOL application commonly used to demonstrate and compare migration tools."
-      },
-      {
-       "title": "IBM Bob newsroom page",
-       "url": "https://uk.newsroom.ibm.com/IBM-Bob",
-       "kind": "overview",
-       "why": "IBM's running record of announcements for its AI development and modernization platform."
       }
      ]
     },
@@ -968,57 +1138,65 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Lovable raises $400M at $13.3B",
-       "summary": "Series C led by Menlo Ventures doubled the Swedish prompt-to-app builder's valuation; it reported a $500M annualized run rate in June 2026.",
+       "summary": "Series C co-led by Menlo Ventures and the EQT-managed Scaleup Europe Fund doubled the Swedish prompt-to-app builder's valuation from $6.6B in December 2025.",
        "date": "2026-08",
        "kind": "deal",
        "source": "https://tech.eu/2026/08/12/lovables-valuation-doubles-to-13bn-as-raises-400m/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Figma Make drives Figma growth",
-       "summary": "Figma's Q4 2025 results tied 40% revenue growth to AI adoption; about 75% of large customers use AI credits weekly.",
+       "name": "Figma Make adoption lifts Figma results",
+       "summary": "Figma's Q4 2025 revenue rose 40% to $303.8M. Figma Make weekly users grew over 70% in the quarter, and over half of $100k+ customers used it weekly.",
        "date": "2026-02",
        "kind": "product",
        "source": "https://siliconangle.com/2026/02/18/figma-stock-climbs-40-revenue-growth-surging-figma-make-adoption/",
        "verified": true,
-       "note": "First-pass check kept; not re-checked in second pass (search limit reached)."
+       "check": "page"
+      },
+      {
+       "name": "GitHub Spec Kit released",
+       "summary": "GitHub open-sourced a toolkit that makes a written spec drive plans, task breakdowns and implementation by coding agents such as Copilot, Claude Code and Gemini CLI.",
+       "date": "2025-09",
+       "kind": "product",
+       "source": "https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open-source-toolkit/",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "AWS Kiro spec-driven IDE",
-       "summary": "Agentic IDE built around specs that structure requirements, design decisions and tasks before code, a counterpoint to unstructured vibe coding.",
+       "summary": "Agentic IDE launched in preview around specs that turn a prompt into requirements, design and tasks before code, pitched as a step beyond vibe coding.",
        "date": "2025-07",
        "kind": "product",
-       "source": "https://github.com/kirodotdev/Kiro",
-       "verified": false,
-       "note": "Spec workflow confirmed on Kiro's repo; July 2025 launch date not re-checked."
-      },
-      {
-       "name": "GitHub Spec Kit near 150k stars",
-       "summary": "GitHub's open-source toolkit for spec-driven development with coding agents showed about 149k stars, a sign of how widely the approach is being tried.",
-       "date": "2026-11",
-       "kind": "product",
-       "source": "https://github.com/github/spec-kit",
-       "verified": true
+       "source": "https://kiro.dev/blog/introducing-kiro/",
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
       {
+       "title": "Martin Fowler site: Understanding Spec-Driven Development",
+       "url": "https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html",
+       "kind": "overview",
+       "why": "Independent, sceptical comparison of Kiro, Spec Kit and Tessl by Birgitta Böckeler."
+      },
+      {
        "title": "GitHub Spec Kit",
        "url": "https://github.com/github/spec-kit",
        "kind": "community",
-       "why": "The most used open toolkit for spec-driven development; read the method and try it."
+       "why": "The open toolkit for spec-driven development; read the method and try it."
       },
       {
-       "title": "Kiro public repository",
-       "url": "https://github.com/kirodotdev/Kiro",
+       "title": "Kiro docs: Specs",
+       "url": "https://kiro.dev/docs/specs/",
        "kind": "overview",
        "why": "How a spec-first agentic IDE structures requirements, design and tasks."
       },
       {
-       "title": "AGENTS.md open format",
-       "url": "https://github.com/agentsmd/agents.md",
-       "kind": "community",
-       "why": "The shared convention for giving coding agents project context and instructions."
+       "title": "Design2Code: benchmarking front-end code generation",
+       "url": "https://arxiv.org/abs/2403.03163",
+       "kind": "paper",
+       "why": "Benchmark for how well multimodal models turn page designs into working code."
       }
      ]
     },
@@ -1033,91 +1211,99 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Google Code Wiki preview",
-       "summary": "Gemini-powered wiki that regenerates docs and diagrams after every code change, with a chat agent grounded in the repo.",
+       "summary": "Gemini-powered wiki in public preview that regenerates docs for public repositories after each code change, with a chat agent grounded in the repo.",
        "date": "2025-11",
        "kind": "product",
        "source": "https://developers.googleblog.com/en/introducing-code-wiki-accelerating-your-code-understanding/",
        "verified": true,
-       "note": "First-pass check kept; not re-checked in second pass (search limit reached)."
+       "check": "page"
       },
       {
        "name": "Cognition DeepWiki",
-       "summary": "Auto-generated wikis for public repos, built to help the Devin agent, now also served to other agents through a free MCP server.",
+       "summary": "Free public version of Devin's wiki and search for any public GitHub repo, launched with over 50,000 repos indexed. An MCP server followed later in May 2025.",
+       "date": "2025-05",
+       "kind": "product",
+       "source": "https://cognition.ai/blog/deepwiki",
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "Context7 MCP docs server launched",
+       "summary": "Upstash released an MCP server that feeds current, version-specific library documentation to coding agents, to counter answers based on outdated training data.",
        "date": "2025-04",
        "kind": "product",
-       "source": "https://www.zenml.io/llmops-database/auto-generated-codebase-documentation-and-intelligence-at-scale",
-       "verified": false,
-       "note": "Defines the topic; weak source, could not re-check (search limit reached)."
+       "source": "https://upstash.com/blog/context7-mcp",
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Context7 docs server passes 64k stars",
-       "summary": "Upstash's open-source MCP server, which feeds current, version-specific library documentation to coding agents, showed about 64k GitHub stars.",
-       "date": "2026-11",
-       "kind": "product",
-       "source": "https://github.com/upstash/context7",
-       "verified": true
-      },
-      {
-       "name": "AGENTS.md becomes a shared convention",
-       "summary": "The open 'README for agents' format for giving coding agents project context showed about 25k stars on its repository.",
-       "date": "2026-11",
-       "kind": "product",
-       "source": "https://github.com/agentsmd/agents.md",
-       "verified": true
+       "name": "AGENTS.md joins Agentic AI Foundation",
+       "summary": "OpenAI contributed the AGENTS.md format to the Linux Foundation's new Agentic AI Foundation, alongside Anthropic's MCP and Block's goose.",
+       "date": "2025-12",
+       "kind": "policy",
+       "source": "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation",
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
       {
-       "title": "AGENTS.md open format",
-       "url": "https://github.com/agentsmd/agents.md",
+       "title": "AGENTS.md",
+       "url": "https://agents.md/",
        "kind": "community",
-       "why": "The shared convention for giving coding agents project context and instructions."
+       "why": "The shared format for giving agents project context; its site cites 60k+ projects."
       },
       {
-       "title": "Context7 MCP server",
+       "title": "RepoAgent: repository-level code documentation generation",
+       "url": "https://arxiv.org/abs/2402.16667",
+       "kind": "paper",
+       "why": "Open framework and paper on generating and maintaining docs for a whole repository."
+      },
+      {
+       "title": "The /llms.txt file",
+       "url": "https://llmstxt.org/",
+       "kind": "overview",
+       "why": "Proposal for a standard file that points models at a site's key documentation."
+      },
+      {
+       "title": "Context7",
        "url": "https://github.com/upstash/context7",
        "kind": "community",
        "why": "See how up-to-date library docs are delivered to agents over MCP."
-      },
-      {
-       "title": "DeepWiki-Open",
-       "url": "https://github.com/AsyncFuncAI/deepwiki-open",
-       "kind": "community",
-       "why": "Self-hostable open-source wiki generator; shows how repo wikis are built."
       }
      ]
     }
    ],
    "deepDives": [
     {
-     "title": "SWE-bench: code, data and leaderboards",
-     "url": "https://github.com/SWE-bench/SWE-bench",
+     "title": "SWE-bench Leaderboards",
+     "url": "https://www.swebench.com/",
      "kind": "tracker",
      "why": "The standard benchmark of real GitHub issues that coding agents are scored on."
     },
     {
-     "title": "METR: developer productivity study update",
+     "title": "METR: We are Changing our Developer Productivity Experiment Design",
      "url": "https://metr.org/blog/2026-02-24-uplift-update/",
      "kind": "report",
      "why": "Careful account of why measuring AI speedup for developers is hard."
     },
     {
+     "title": "The Pragmatic Engineer",
+     "url": "https://newsletter.pragmaticengineer.com/",
+     "kind": "newsletter",
+     "why": "Widely read newsletter on how engineering teams actually use AI tools."
+    },
+    {
+     "title": "Stack Overflow Developer Survey 2025: AI",
+     "url": "https://survey.stackoverflow.co/2025/ai",
+     "kind": "report",
+     "why": "Large survey: 84% use or plan to use AI tools, yet more distrust than trust the output."
+    },
+    {
      "title": "Terminal-Bench",
-     "url": "https://github.com/laude-institute/terminal-bench",
+     "url": "https://www.tbench.ai/",
      "kind": "tracker",
      "why": "Benchmark of realistic terminal tasks, widely quoted in coding model launches."
-    },
-    {
-     "title": "GitHub blog: Agentic Workflows explained",
-     "url": "https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/",
-     "kind": "overview",
-     "why": "GitHub's own walkthrough of running coding agents inside CI with guardrails."
-    },
-    {
-     "title": "AGENTS.md open format",
-     "url": "https://github.com/agentsmd/agents.md",
-     "kind": "community",
-     "why": "The shared convention for giving coding agents project context and instructions."
     }
    ]
   },
@@ -1466,6 +1652,13 @@ window.ATLAS = {
        "url": "https://futurumgroup.com/insights/openai-frontier-close-the-enterprise-ai-opportunity-gap-or-widen-it/",
        "kind": "report",
        "why": "Analyst assessment of the platform play and its lock-in risks."
+      },
+      {
+       "title": "Model Context Protocol",
+       "url": "https://modelcontextprotocol.io/",
+       "kind": "overview",
+       "why": "Specification and documentation for the protocol connecting models to tools.",
+       "unchecked": true
       }
      ]
     },
@@ -1527,6 +1720,20 @@ window.ATLAS = {
        "url": "https://www.pillsburylaw.com/en/news-and-insights/nist-ai-agent-standards.html",
        "kind": "overview",
        "why": "Legal explainer of the initiative's pillars and comment opportunities."
+      },
+      {
+       "title": "OWASP GenAI Security Project",
+       "url": "https://genai.owasp.org/",
+       "kind": "report",
+       "why": "Top 10 risks for LLM and agentic applications, with mitigations.",
+       "unchecked": true
+      },
+      {
+       "title": "Simon Willison on prompt injection",
+       "url": "https://simonwillison.net/tags/prompt-injection/",
+       "kind": "newsletter",
+       "why": "Running commentary on the attack class behind most agent security incidents.",
+       "unchecked": true
       }
      ]
     },
@@ -1577,6 +1784,13 @@ window.ATLAS = {
        "url": "https://snorkel.ai/research-paper/os-world-2/",
        "kind": "paper",
        "why": "Benchmark design, checkpoint grading and the failure modes agents show on long tasks."
+      },
+      {
+       "title": "OSWorld",
+       "url": "https://os-world.github.io/",
+       "kind": "tracker",
+       "why": "Benchmark of real computer tasks used to measure computer-use agents.",
+       "unchecked": true
       }
      ]
     },
@@ -2258,7 +2472,29 @@ window.ATLAS = {
      ],
      "whyItMatters": "New materials underpin batteries, chips and energy, but a prediction only counts once it is made and measured.",
      "openQuestion": "Can AI-driven labs deliver a useful new material that is synthesized, verified and adopted by industry?",
-     "deepDives": []
+     "deepDives": [
+      {
+       "title": "Matbench Discovery",
+       "url": "https://matbench-discovery.materialsproject.org/",
+       "kind": "tracker",
+       "why": "Leaderboard for models predicting stable crystals.",
+       "unchecked": true
+      },
+      {
+       "title": "GNoME: millions of new materials",
+       "url": "https://deepmind.google/discover/blog/millions-of-new-materials-discovered-with-deep-learning/",
+       "kind": "overview",
+       "why": "DeepMind's account of predicting 2.2 million crystal structures.",
+       "unchecked": true
+      },
+      {
+       "title": "Materials Project",
+       "url": "https://next-gen.materialsproject.org/",
+       "kind": "tracker",
+       "why": "Open database of computed material properties used to train and test models.",
+       "unchecked": true
+      }
+     ]
     },
     {
      "id": "science.math",
@@ -2571,6 +2807,20 @@ window.ATLAS = {
        "url": "https://thezvi.substack.com/p/opus-48-part-2-model-welfare",
        "kind": "newsletter",
        "why": "Independent close reading of a recent system card's welfare section."
+      },
+      {
+       "title": "Could a Large Language Model be Conscious? (Chalmers)",
+       "url": "https://arxiv.org/abs/2303.07103",
+       "kind": "paper",
+       "why": "A philosopher's checklist of what current models lack and might gain.",
+       "unchecked": true
+      },
+      {
+       "title": "Consciousness (Stanford Encyclopedia of Philosophy)",
+       "url": "https://plato.stanford.edu/entries/consciousness/",
+       "kind": "overview",
+       "why": "Reference entry on the concepts and theories the debate relies on.",
+       "unchecked": true
       }
      ]
     },
@@ -2634,6 +2884,20 @@ window.ATLAS = {
        "url": "https://www.anthropic.com/research",
        "kind": "tracker",
        "why": "Running list of interpretability work on what models represent internally."
+      },
+      {
+       "title": "The Computational Theory of Mind (SEP)",
+       "url": "https://plato.stanford.edu/entries/computational-mind/",
+       "kind": "overview",
+       "why": "Background on the view that thinking is computation, and its critics.",
+       "unchecked": true
+      },
+      {
+       "title": "The Chinese Room Argument (SEP)",
+       "url": "https://plato.stanford.edu/entries/chinese-room/",
+       "kind": "overview",
+       "why": "Searle's argument that symbol manipulation is not understanding, with replies.",
+       "unchecked": true
       }
      ]
     },
@@ -2758,6 +3022,13 @@ window.ATLAS = {
        "url": "https://www.anthropic.com/research/claude-character",
        "kind": "overview",
        "why": "Background on training models for character traits instead of only harm avoidance."
+      },
+      {
+       "title": "Ethics of Artificial Intelligence and Robotics (SEP)",
+       "url": "https://plato.stanford.edu/entries/ethics-ai/",
+       "kind": "overview",
+       "why": "Survey of the main ethical debates, from bias to machine moral status.",
+       "unchecked": true
       }
      ]
     },
@@ -2837,6 +3108,13 @@ window.ATLAS = {
        "url": "https://www.anthropic.com/research/team/economics",
        "kind": "overview",
        "why": "Index of reports on productivity, retraining evidence and country-level usage."
+      },
+      {
+       "title": "The Simple Macroeconomics of AI (Acemoglu)",
+       "url": "https://www.nber.org/papers/w32487",
+       "kind": "paper",
+       "why": "A sceptical estimate of AI's productivity effect over the next decade.",
+       "unchecked": true
       }
      ]
     },
@@ -2967,6 +3245,27 @@ window.ATLAS = {
        "url": "https://www.anthropic.com/news/core-views-on-ai-safety",
        "kind": "overview",
        "why": "One lab's 2023 statement of why it expects transformative AI and how it plans for it."
+      },
+      {
+       "title": "On the Measure of Intelligence (Chollet)",
+       "url": "https://arxiv.org/abs/1911.01547",
+       "kind": "paper",
+       "why": "Argues intelligence is skill-acquisition efficiency, the basis of ARC.",
+       "unchecked": true
+      },
+      {
+       "title": "Levels of AGI (Morris et al.)",
+       "url": "https://arxiv.org/abs/2311.02462",
+       "kind": "paper",
+       "why": "Google DeepMind's framework of performance and generality levels.",
+       "unchecked": true
+      },
+      {
+       "title": "ARC Prize",
+       "url": "https://arcprize.org/",
+       "kind": "tracker",
+       "why": "Live test of the claim that current models lack fluid reasoning.",
+       "unchecked": true
       }
      ]
     }
@@ -3434,7 +3733,22 @@ window.ATLAS = {
        "note": "Plausible and important; article could not be opened or searched this pass."
       }
      ],
-     "deepDives": []
+     "deepDives": [
+      {
+       "title": "Open Source AI Definition",
+       "url": "https://opensource.org/ai",
+       "kind": "overview",
+       "why": "The OSI's definition of what counts as open source AI, and why weights alone do not.",
+       "unchecked": true
+      },
+      {
+       "title": "Hugging Face model hub",
+       "url": "https://huggingface.co/models",
+       "kind": "tracker",
+       "why": "Where open-weight models are published; sort by trending to see what is being used.",
+       "unchecked": true
+      }
+     ]
     },
     {
      "id": "geo.regulation",
@@ -3464,7 +3778,29 @@ window.ATLAS = {
        "note": "Not re-checked this pass (search budget ran out); marked verified by the earlier pass."
       }
      ],
-     "deepDives": []
+     "deepDives": [
+      {
+       "title": "EU AI Act Explorer",
+       "url": "https://artificialintelligenceact.eu/",
+       "kind": "overview",
+       "why": "Searchable text of the Act with timelines and summaries.",
+       "unchecked": true
+      },
+      {
+       "title": "European Commission: AI regulatory framework",
+       "url": "https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai",
+       "kind": "overview",
+       "why": "The Commission's own page on the Act, its codes and guidance.",
+       "unchecked": true
+      },
+      {
+       "title": "NCSL: AI legislation in the US states",
+       "url": "https://www.ncsl.org/technology-and-communication/artificial-intelligence-2025-legislation",
+       "kind": "tracker",
+       "why": "State-by-state list of introduced and enacted AI bills.",
+       "unchecked": true
+      }
+     ]
     }
    ],
    "deepDives": [
@@ -3557,6 +3893,13 @@ window.ATLAS = {
        "url": "https://www.auntminnie.com/imaging-informatics/artificial-intelligence/article/15830219/radiology-dominates-thirty-years-of-fda-ai-device-approvals",
        "kind": "overview",
        "why": "Trade-press analysis of how the FDA's AI authorizations split across specialties."
+      },
+      {
+       "title": "NEJM AI",
+       "url": "https://ai.nejm.org/",
+       "kind": "newsletter",
+       "why": "Journal dedicated to clinical evaluations of AI.",
+       "unchecked": true
       }
      ]
     },
@@ -3785,6 +4128,13 @@ window.ATLAS = {
        "url": "https://www.cooley.com/news/insight/2026/2026-01-20-automation-bias-and-clinical-practice-fda-makes-incremental-updates-to-clinical-decision-support-software-guidance",
        "kind": "overview",
        "why": "Close reading of how the FDA now interprets the four decision-support criteria."
+      },
+      {
+       "title": "FDA list of AI-enabled medical devices",
+       "url": "https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-enabled-medical-devices",
+       "kind": "tracker",
+       "why": "The agency's own list of authorised devices, updated periodically.",
+       "unchecked": true
       }
      ]
     }
@@ -3819,7 +4169,7 @@ window.ATLAS = {
   {
    "id": "education",
    "name": "Education",
-   "summary": "AI labs ship study modes and fund training at scale, governments add AI to schooling, universities return to proctored exams, and trials suggest AI tutors help only when constrained and supervised.",
+   "summary": "AI labs ship study modes and fund training at scale, governments add AI to schooling, universities return to proctored exams, and trials suggest AI tutors help mainly when constrained and supervised.",
    "regions": [
     {
      "id": "education.tutoring",
@@ -3834,42 +4184,41 @@ window.ATLAS = {
        "date": "2025-07",
        "kind": "product",
        "source": "https://openai.com/index/chatgpt-study-mode/",
-       "verified": true
+       "verified": true,
+       "check": "snippet",
+       "note": "openai.com blocks scripts; its RSS feed confirms launch date and purpose, not plan details."
       },
       {
        "name": "Gemini Guided Learning",
-       "summary": "Google added Guided Learning to the Gemini app, a tutoring mode built on its education-tuned LearnLM work that breaks problems into steps and checks understanding.",
+       "summary": "Google added Guided Learning to the Gemini app, a mode built on its LearnLM models that asks questions, breaks problems into steps and uses images, videos and quizzes.",
        "date": "2025-08",
        "kind": "product",
        "source": "https://blog.google/outreach-initiatives/education/guided-learning/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Khan Academy builds Khanmigo tools on Gemini",
-       "summary": "After a partnership announced in January 2026, Google and Khan Academy shipped Gemini-based interactive diagrams and a rebuilt practice tool in Khanmigo for back to school.",
+       "summary": "After a partnership announced in January 2026, Khan Academy shipped Gemini-based interactive math and science diagrams and a rebuilt, teacher-reviewed practice tool in Khanmigo.",
        "date": "2026-08",
        "kind": "deal",
        "source": "https://blog.google/products-and-platforms/products/education/khan-academy-back-to-school/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Tutor CoPilot RCT",
-       "summary": "Preregistered trial with 900 tutors and 1,800 K-12 students found AI suggestions to human tutors raised topic mastery 4 points, and up to 9 for weaker tutors. Working paper.",
+       "summary": "Preregistered trial with 900 tutors and 1,800 K-12 students: AI suggestions to human tutors raised topic mastery 4 points, and 9 for students of lower-rated tutors. Preprint.",
        "date": "2024-10",
        "kind": "research",
        "source": "https://arxiv.org/abs/2410.03017",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Tutoring modes are how most students now meet AI, and their design decides whether it supports learning or replaces the effort.",
      "openQuestion": "Will students choose a mode that makes them work when a direct answer is one click away?",
      "deepDives": [
-      {
-       "title": "AI tutoring in UK classrooms: exploratory RCT (Eedi, DeepMind)",
-       "url": "https://arxiv.org/abs/2512.23633v1",
-       "kind": "paper",
-       "why": "Shows how a supervised LearnLM tutor was run and measured against human tutors in real schools."
-      },
       {
        "title": "Tutor CoPilot study page (Stanford NSSA)",
        "url": "https://nssa.stanford.edu/studies/tutor-copilot-human-ai-approach-scaling-real-time-expertise",
@@ -3877,73 +4226,105 @@ window.ATLAS = {
        "why": "Readable account of the human-plus-AI tutoring model and its measured effects."
       },
       {
-       "title": "Khan Academy blog on its Google.org partnership",
-       "url": "https://blog.khanacademy.org/?p=22106",
+       "title": "AI tutoring can safely and effectively support students: an exploratory RCT in UK classrooms",
+       "url": "https://arxiv.org/abs/2512.23633",
+       "kind": "paper",
+       "why": "How a tutor-supervised LearnLM was run and measured against human tutors in five UK schools."
+      },
+      {
+       "title": "Towards Responsible Development of Generative AI for Education",
+       "url": "https://arxiv.org/abs/2407.12687",
+       "kind": "paper",
+       "why": "Google's account of how it turns learning-science principles into evaluations for tutoring models."
+      },
+      {
+       "title": "Mathworlds (Dan Meyer)",
+       "url": "https://danmeyer.substack.com/",
        "kind": "newsletter",
-       "why": "Khan Academy's own account of what the Gemini-based Khanmigo tools do for students and teachers."
+       "why": "A math educator's skeptical running commentary on AI tutors and what classrooms actually use."
       }
      ]
     },
     {
      "id": "education.assessment",
      "name": "Assessment & cheating",
-     "summary": "Universities are stepping back from AI detectors, which courts and campuses have found unreliable as sole evidence, and returning to proctored, in-person exams.",
+     "summary": "Universities are stepping back from AI detectors, which a New York court and several campuses have found unreliable as sole evidence, and returning to proctored, in-person exams.",
      "activity": 3,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "Princeton ends 133 years of unproctored exams",
-       "summary": "Princeton faculty voted almost unanimously to proctor all in-person exams from 1 July 2026, the first time since its Honor Code began in 1893, citing AI-enabled cheating.",
+       "summary": "Princeton faculty voted with one dissent to proctor all in-class exams from 1 July 2026, the first time since its Honor Code began in 1893, citing cheating with generative AI.",
        "date": "2026-05",
        "kind": "policy",
        "source": "https://paw.princeton.edu/article/after-133-years-princeton-going-back-proctoring-exams",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Stanford moves to proctored exams",
-       "summary": "Stanford said it would begin proctoring in-person exams after a pilot that grew from seven courses in 2024 to more than 50, its first shift from unproctored exams since 1921.",
+       "name": "Stanford votes to allow exam proctoring",
+       "summary": "Stanford's Faculty Senate and both student legislatures voted to allow proctoring in all classes after a pilot, ending the unproctored norm set by its 1921 Honor Code.",
        "date": "2026-05",
        "kind": "policy",
        "source": "https://stanforddaily.com/2026/05/20/stanford-to-begin-proctoring",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Curtin University turns off AI detection",
-       "summary": "Curtin in Australia disabled Turnitin's AI writing detection across all campuses from 1 January 2026, keeping text-matching checks, as several universities did the same.",
+       "summary": "Curtin in Australia said it would disable Turnitin's AI writing detection across all campuses from 1 January 2026, keeping regular text-matching checks. Announced September 2025.",
        "date": "2026-01",
        "kind": "policy",
        "source": "https://www.curtin.edu.au/news/oasis-news/update-on-turnitin-ai-detection-tool/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Court voids sanction based on Turnitin flag",
-       "summary": "In Newby v. Adelphi University, a New York state judge threw out sanctions on a student whose paper Turnitin flagged as 100% AI, faulting the university's process.",
+       "summary": "In Newby v. Adelphi University, a New York judge ordered the university to reverse discipline and expunge the record of a student whose paper Turnitin flagged as wholly AI-written.",
        "date": "2026-01",
        "kind": "incident",
-       "source": "https://www.nycourts.gov/reporter/3dseries/2026/2026_26021.htm",
-       "verified": true
+       "source": "https://www.plagiarismtoday.com/2026/02/11/adelphi-student-wins-ai-plagiarism-lawsuit/",
+       "verified": true,
+       "note": "Court site blocks scripts; read via a Feb 2026 report. Ruling month taken from the citation.",
+       "check": "page"
+      },
+      {
+       "name": "HEPI survey: student AI use near universal",
+       "summary": "UK think tank HEPI's 2026 student survey found 95% use AI, 12% paste AI text into assessed work (3% in 2024), and 65% say assessment has changed significantly.",
+       "date": "2026-03",
+       "kind": "research",
+       "source": "https://www.hepi.ac.uk/reports/student-generative-ai-survey-2026/",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "How schools verify that work is a student's own shapes what degrees certify and how much AI use is treated as misconduct.",
      "openQuestion": "Can take-home and written coursework be assessed credibly at all, or only work done under supervision?",
      "deepDives": [
       {
-       "title": "Vanderbilt: why we disabled Turnitin's AI detector",
+       "title": "Guidance on AI Detection and Why We're Disabling Turnitin's AI Detector (Vanderbilt)",
        "url": "https://www.vanderbilt.edu/brightspace/2023/08/16/guidance-on-ai-detection-and-why-were-disabling-turnitins-ai-detector/",
        "kind": "overview",
        "why": "An early, widely cited explanation of the false-positive and transparency problems with detectors."
       },
       {
-       "title": "Matter of Newby v. Adelphi University (decision)",
-       "url": "https://www.nycourts.gov/reporter/3dseries/2026/2026_26021.htm",
-       "kind": "report",
-       "why": "The court's own reasoning on what process a university owes a student accused through an AI detector."
+       "title": "Testing of Detection Tools for AI-Generated Text",
+       "url": "https://arxiv.org/abs/2306.15666",
+       "kind": "paper",
+       "why": "Independent test of detection tools by integrity researchers; a standard reference on their limits."
       },
       {
-       "title": "Plagiarism Today on the Adelphi case",
-       "url": "https://www.plagiarismtoday.com/2026/02/11/adelphi-student-wins-ai-plagiarism-lawsuit/",
+       "title": "GPT detectors are biased against non-native English writers",
+       "url": "https://arxiv.org/abs/2304.02819",
+       "kind": "paper",
+       "why": "Stanford study showing detectors misflag writing by non-native English speakers."
+      },
+      {
+       "title": "The Cheat Sheet (Derek Newton)",
+       "url": "https://thecheatsheet.substack.com/",
        "kind": "newsletter",
-       "why": "Long-running academic integrity blog that tracks AI misconduct disputes and what they mean."
+       "why": "Regular newsletter on academic integrity and cheating; often argues the pro-detection side."
       }
      ]
     },
@@ -3956,49 +4337,58 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "US executive order on AI education",
-       "summary": "EO 14277 created a White House task force on AI education, called for a Presidential AI Challenge and told agencies to prioritize AI in teacher training grants.",
+       "summary": "EO 14277 created a White House task force on AI education, called for a Presidential AI Challenge and told the Education Department to prioritize AI in teacher training grants.",
        "date": "2025-04",
        "kind": "policy",
        "source": "https://www.whitehouse.gov/presidential-actions/2025/04/Advancing-Artificial-Intelligence-Education-For-American-youth/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Beijing requires AI classes in schools",
-       "summary": "Beijing's education commission required at least eight class hours of AI instruction a year in primary and secondary schools from the fall 2025 semester.",
+       "summary": "Beijing's education commission said primary and secondary schools would offer at least eight class hours of AI instruction a year from the fall 2025 semester.",
        "date": "2025-03",
        "kind": "policy",
        "source": "https://english.www.gov.cn/news/202503/12/content_WS67d18e9ec6d0868f4e8f0c40.html",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Estonia AI Leap",
-       "summary": "National program giving about 20,000 students in grades 10-11 and their teachers free AI tools from September 2025, with OpenAI as a partner and expansion planned for 2026.",
-       "date": "2025-09",
+       "name": "Estonia announces AI Leap",
+       "summary": "Estonia announced free AI tools for 20,000 students in grades 10-11 and 3,000 teachers from September 2025, in talks with OpenAI and Anthropic, with 38,000 more students in 2026.",
+       "date": "2025-02",
        "kind": "policy",
        "source": "https://hm.ee/en/news/estonia-announces-groundbreaking-national-initiative-ai-leap-programme-bring-ai-tools-all",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "National mandates and vendor partnerships set which AI tools a generation of students grows up using, and on whose terms.",
      "openQuestion": "Do national rollouts improve learning, or mainly lock school systems into particular vendors?",
      "deepDives": [
       {
-       "title": "EO 14277 text in the Federal Register",
-       "url": "https://www.govinfo.gov/content/pkg/FR-2025-04-28/html/2025-07368.htm",
+       "title": "Guidance for generative AI in education and research (UNESCO)",
+       "url": "https://www.unesco.org/en/articles/guidance-generative-ai-education-and-research",
        "kind": "report",
-       "why": "The exact duties and deadlines the US order sets for the task force and federal agencies."
+       "why": "UNESCO's first global guidance on generative AI in education, including regulation steps and age limits."
       },
       {
-       "title": "Eurydice: Estonia's AI Leap initiative",
+       "title": "State AI Guidance for K12 Schools (AI for Education)",
+       "url": "https://www.aiforeducation.io/ai-resources/state-ai-guidance",
+       "kind": "tracker",
+       "why": "Running list of US states with official K-12 AI guidance, with summaries and links to each."
+      },
+      {
+       "title": "AI Guidance for Schools Toolkit (TeachAI)",
+       "url": "https://www.teachai.org/toolkit",
+       "kind": "overview",
+       "why": "Widely used template and principles for education authorities writing their own AI guidance."
+      },
+      {
+       "title": "Estonia: AI Leap Initiative to Enhance Learning and Teaching (Eurydice)",
        "url": "https://eurydice.eacea.ec.europa.eu/news/estonia-ai-leap-initiative-enhance-learning-and-teaching",
        "kind": "overview",
        "why": "EU education network's summary of how Estonia structured its national AI rollout."
-      },
-      {
-       "title": "ERR: how will AI Leap change schools?",
-       "url": "https://news.err.ee/1609641896/how-will-estonia-s-new-ai-initiative-change-schools",
-       "kind": "overview",
-       "why": "Estonian public broadcaster's explainer on the aims, partners and concerns around the program."
       }
      ]
     },
@@ -4011,11 +4401,12 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Microsoft Elevate $4B commitment",
-       "summary": "Microsoft pledged more than $4B in cash and technology over five years for AI education and skilling, with a goal of helping 20 million people earn AI credentials.",
+       "summary": "Microsoft pledged over $4B in cash and technology over five years to schools and nonprofits, and said Elevate Academy would help 20 million people earn AI credentials in two years.",
        "date": "2025-07",
        "kind": "deal",
-       "source": "https://www.theregister.com/2025/07/09/microsoft_ai_training/",
-       "verified": true
+       "source": "https://blogs.microsoft.com/on-the-issues/2025/07/09/elevate/",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "OpenAI certifications and jobs platform",
@@ -4023,100 +4414,121 @@ window.ATLAS = {
        "date": "2025-09",
        "kind": "product",
        "source": "https://openai.com/index/expanding-economic-opportunity-with-ai/",
-       "verified": true
+       "verified": true,
+       "check": "snippet",
+       "note": "openai.com blocks scripts; its RSS feed confirms the announcement and date, not the targets."
       },
       {
        "name": "AFT National Academy for AI Instruction",
-       "summary": "Teachers union AFT announced a $23M academy funded by Microsoft ($12.5M), OpenAI ($10M) and Anthropic ($0.5M), aiming to reach 400,000 educators in five years.",
+       "summary": "Teachers union AFT announced a $23M academy in New York funded by Microsoft, OpenAI and Anthropic, offering free AI training and aiming to reach 400,000 educators in five years.",
        "date": "2025-07",
        "kind": "deal",
-       "source": "https://www.edweek.org/technology/microsoft-openai-partner-with-aft-to-train-teachers-on-ai/2025/07",
-       "verified": true
+       "source": "https://www.aft.org/node/101397",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Vendor-funded training is becoming the main route by which workers and teachers learn AI, which shapes what counts as AI skill.",
      "openQuestion": "Do vendor-issued AI credentials lead to better jobs or teaching, and who checks that independently?",
      "deepDives": [
       {
-       "title": "OpenAI: expanding economic opportunity with AI",
-       "url": "https://openai.com/index/expanding-economic-opportunity-with-ai/",
+       "title": "AILit Framework (European Commission and OECD)",
+       "url": "https://ailiteracyframework.org/",
        "kind": "overview",
-       "why": "The company's own statement of its certification targets, partners and jobs platform plan."
+       "why": "Joint AI literacy framework for schools that feeds into the PISA 2029 assessment."
       },
       {
-       "title": "AFT press release on the AI academy",
-       "url": "https://www.aft.org/node/101397",
+       "title": "Education chapter, 2026 AI Index Report (Stanford HAI)",
+       "url": "https://hai.stanford.edu/ai-index/2026-ai-index-report/education",
+       "kind": "report",
+       "why": "Annual independent data on AI degrees, school policies and AI skills acquired outside formal education."
+      },
+      {
+       "title": "Elements of AI",
+       "url": "https://www.elementsofai.com/",
+       "kind": "course",
+       "why": "Free non-vendor introduction to AI from the University of Helsinki and MinnaLearn."
+      },
+      {
+       "title": "Microsoft, OpenAI Partner With AFT to Train Teachers on AI (Education Week)",
+       "url": "https://www.edweek.org/technology/microsoft-openai-partner-with-aft-to-train-teachers-on-ai/2025/07",
        "kind": "overview",
-       "why": "The union's account of the academy's funding, governance and training goals."
+       "why": "Independent reporting on the academy, with outside views on vendor-funded teacher training."
       }
      ]
     },
     {
      "id": "education.evidence",
      "name": "Evidence on learning outcomes",
-     "summary": "Controlled trials are accumulating. Unrestricted chatbots can hurt later unaided performance, while constrained or supervised tutors show gains in small, short studies.",
+     "summary": "Controlled trials are accumulating. Unrestricted chatbots can hurt later unaided performance; constrained, supervised tutors show gains in short studies but not yet on broad tests.",
      "activity": 3,
      "maturity": "emerging",
      "landmarks": [
       {
        "name": "Unguarded AI can harm learning (PNAS)",
-       "summary": "Peer-reviewed field experiment with nearly 1,000 high school math students: standard GPT-4 access cut later unaided grades by 17%, while a guardrailed tutor largely avoided this.",
+       "summary": "Field experiment with nearly 1,000 high school math students: once access ended, GPT-4 users scored 17% worse than peers who never had it. A guardrailed tutor mostly avoided this.",
        "date": "2025-06",
        "kind": "research",
        "source": "https://chibe.upenn.edu/publications/generative-ai-without-guardrails-can-harm-learning-evidence-from-high-school-mathematics",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Harvard physics AI tutor RCT",
-       "summary": "Crossover RCT in Scientific Reports (N=194): students using a custom GPT-4 tutor learned more than twice as much, in less time, as in an active learning class. Two topics only.",
+       "summary": "Crossover RCT in Scientific Reports (N=194): median learning gains with a custom AI tutor were over double those in an active learning class, in less time. Two lessons only.",
        "date": "2025-06",
        "kind": "research",
-       "source": "https://hechingerreport.org/?p=103689",
-       "verified": true
+       "source": "https://www.nature.com/articles/s41598-025-97652-6",
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Eedi and Google DeepMind tutoring RCT",
-       "summary": "Exploratory trial with 165 students in five UK schools: a tutor-supervised LearnLM solved 66.2% of later novel problems versus 60.7% with human tutors alone. Preprint.",
-       "date": "2025-12",
+       "name": "Eedi and Google DeepMind 10-week RCT",
+       "summary": "Trial with 1,179 students in 10 UK schools: supervised AI tutoring matched human tutors in lessons (56-58% correct vs 43% for static content) but showed no gain on a standard test.",
+       "date": "2026-10",
        "kind": "research",
-       "source": "https://arxiv.org/abs/2512.23633v1",
-       "verified": true
+       "source": "https://www.eedi.com/news/eedi-publishes-full-findings-from-its-most-recent-ai-tutor-trial",
+       "verified": true,
+       "note": "Eedi press release on its own trial; follows a 165-student exploratory study (arXiv 2512.23633).",
+       "check": "page"
       },
       {
        "name": "World Bank GPT-4 tutoring RCT in Nigeria",
-       "summary": "Randomized trial of a six-week, teacher-supervised after-school program using GPT-4 in nine Edo State schools reported sizable gains in English. Working paper.",
+       "summary": "Randomized trial of a six-week, teacher-supported after-school program using GPT-4 in Edo State found gains of 0.31 standard deviations overall and 0.23 in English. Working paper.",
        "date": "2025-05",
        "kind": "research",
-       "source": "https://openknowledge.worldbank.org/entities/publication/15e1ff08-15ae-4f7a-b2a8-d146e6c113ee/full",
-       "verified": true
+       "source": "https://documents.worldbank.org/en/publication/documents-reports/documentdetail/099548105192529324",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Billions are being spent on AI in classrooms on the strength of a handful of short trials, so what the evidence shows matters.",
-     "openQuestion": "Do gains from constrained AI tutors persist over a school year and replicate outside small, supervised trials?",
+     "openQuestion": "Do gains from constrained AI tutors persist over a school year, show up on broad tests and replicate outside supervised trials?",
      "deepDives": [
       {
        "title": "OECD Digital Education Outlook 2026",
        "url": "https://www.oecd.org/en/publications/2026/01/oecd-digital-education-outlook-2026_940e0dd8.html",
        "kind": "report",
-       "why": "Synthesis of the trial evidence, separating general chatbots from purpose-built education tools."
+       "why": "Synthesis of the trial evidence, separating general chatbots from purpose-built education tools.",
+       "unchecked": true
       },
       {
-       "title": "Bastani et al., open version of the PNAS paper",
-       "url": "https://papers.ssrn.com/abstract=4895486",
-       "kind": "paper",
-       "why": "Full design and results of the best known experiment on chatbots harming unaided performance."
+       "title": "Research Study Repository (Stanford SCALE)",
+       "url": "https://scale.stanford.edu/genai/repository",
+       "kind": "tracker",
+       "why": "Searchable collection of academic studies on generative AI in preK-12 education."
+      },
+      {
+       "title": "A new direction for students in an AI world: Prosper, prepare, protect (Brookings)",
+       "url": "https://www.brookings.edu/articles/a-new-direction-for-students-in-an-ai-world-prosper-prepare-protect/",
+       "kind": "report",
+       "why": "Year-long global study of the risks generative AI poses to students and how to reduce them."
       },
       {
        "title": "Your Brain on ChatGPT (MIT Media Lab preprint)",
        "url": "https://arxiv.org/abs/2506.08872",
        "kind": "paper",
        "why": "Much cited 54-person EEG study of essay writing with an LLM; not peer reviewed, read with care."
-      },
-      {
-       "title": "World Bank blog: lessons from the Nigeria trial",
-       "url": "https://blogs.worldbank.org/en/education/From-chalkboards-to-chatbots-Transforming-learning-in-Nigeria",
-       "kind": "overview",
-       "why": "The study team's plain account of the program, its results and what made it work."
       }
      ]
     }
@@ -4126,25 +4538,32 @@ window.ATLAS = {
      "title": "OECD Digital Education Outlook 2026",
      "url": "https://www.oecd.org/en/publications/2026/01/oecd-digital-education-outlook-2026_940e0dd8.html",
      "kind": "report",
-     "why": "Cross-country review of what generative AI does and does not do for learning, teaching and administration."
+     "why": "Cross-country review of what generative AI does and does not do for learning, teaching and administration.",
+     "unchecked": true
     },
     {
-     "title": "Generative AI without guardrails can harm learning",
-     "url": "https://papers.ssrn.com/abstract=4895486",
-     "kind": "paper",
-     "why": "Open version of the PNAS field experiment that anchors the debate on chatbots as a crutch."
+     "title": "Research Study Repository (Stanford SCALE)",
+     "url": "https://scale.stanford.edu/genai/repository",
+     "kind": "tracker",
+     "why": "The place to check what studies exist on generative AI in schools before trusting a headline."
     },
     {
-     "title": "Tutor CoPilot study page (Stanford NSSA)",
-     "url": "https://nssa.stanford.edu/studies/tutor-copilot-human-ai-approach-scaling-real-time-expertise",
-     "kind": "overview",
-     "why": "Plain summary of a large RCT on AI that assists human tutors rather than replacing them."
-    },
-    {
-     "title": "EO 14277 text in the Federal Register",
-     "url": "https://www.govinfo.gov/content/pkg/FR-2025-04-28/html/2025-07368.htm",
+     "title": "Education chapter, 2026 AI Index Report (Stanford HAI)",
+     "url": "https://hai.stanford.edu/ai-index/2026-ai-index-report/education",
      "kind": "report",
-     "why": "The primary text of the US federal policy on AI education, with its deadlines and agency duties."
+     "why": "Yearly data on student AI use, school policies, national AI curricula and AI graduates."
+    },
+    {
+     "title": "Guidance for generative AI in education and research (UNESCO)",
+     "url": "https://www.unesco.org/en/articles/guidance-generative-ai-education-and-research",
+     "kind": "report",
+     "why": "The reference global policy guidance, used by many ministries as a starting point."
+    },
+    {
+     "title": "One Useful Thing (Ethan Mollick)",
+     "url": "https://www.oneusefulthing.org/",
+     "kind": "newsletter",
+     "why": "Wharton professor's widely read newsletter on what AI means for work, education and life."
     }
    ]
   },
@@ -4244,7 +4663,29 @@ window.ATLAS = {
      ],
      "whyItMatters": "Video is the costliest media to generate, so it shows whether consumer generative AI can pay for its own compute.",
      "openQuestion": "Will studios license characters and libraries to video models, or keep the tools in-house for effects work?",
-     "deepDives": []
+     "deepDives": [
+      {
+       "title": "Video generation models as world simulators",
+       "url": "https://openai.com/index/video-generation-models-as-world-simulators/",
+       "kind": "paper",
+       "why": "How diffusion transformers generate video, in OpenAI's own technical note.",
+       "unchecked": true
+      },
+      {
+       "title": "Artificial Analysis",
+       "url": "https://artificialanalysis.ai/",
+       "kind": "tracker",
+       "why": "Blind-vote arenas ranking text-to-video and image-to-video models.",
+       "unchecked": true
+      },
+      {
+       "title": "C2PA content credentials",
+       "url": "https://c2pa.org/",
+       "kind": "overview",
+       "why": "The provenance standard used to label generated and edited media.",
+       "unchecked": true
+      }
+     ]
     },
     {
      "id": "creative.music",
@@ -4288,6 +4729,13 @@ window.ATLAS = {
        "url": "https://newsroom-deezer.com/2026/07/ai-music-exceeds-50-percent-daily-uploads-deezer/",
        "kind": "report",
        "why": "The only regular platform data on AI upload volumes, stream share and detection"
+      },
+      {
+       "title": "US Copyright Office: Copyright and AI",
+       "url": "https://www.copyright.gov/ai/",
+       "kind": "report",
+       "why": "The Office's multi-part report on digital replicas, copyrightability and training.",
+       "unchecked": true
       }
      ]
     },
