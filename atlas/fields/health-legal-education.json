@@ -1,0 +1,602 @@
+{
+  "fields": [
+    {
+      "id": "health",
+      "name": "Health & Medicine",
+      "summary": "AI is widely used in radiology and note-taking, consumer chatbots field health questions at scale, AI-designed drugs reach late-stage trials, and regulators loosen some rules while debating others.",
+      "regions": [
+        {
+          "id": "health.diagnostics",
+          "name": "Imaging & diagnostics",
+          "summary": "Radiology accounts for about three quarters of FDA-cleared AI devices. Large randomized trials now show AI-supported screening can detect more cancers without raising radiologist workload.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "MASAI trial final results in The Lancet",
+              "summary": "Swedish RCT of 100,000+ women: AI-supported mammography found more cancers and cut interval cancers about 12% versus standard double reading.",
+              "date": "2026-01",
+              "kind": "research",
+              "source": "https://ascopost.com/news/february-2026/randomized-trial-shows-ai-supported-mammography-improves-sensitivity-and-lowers-interval-cancer-rate",
+              "verified": true
+            },
+            {
+              "name": "FDA AI device list passes 1,500",
+              "summary": "Analyses of the FDA list count about 1,524 AI-enabled device authorizations through March 2026, roughly 76% in radiology, with 92 added in Q1 2026 alone.",
+              "date": "2026-03",
+              "kind": "policy",
+              "source": "https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/list-artificial-intelligence-enabled-medical-devices",
+              "verified": true
+            },
+            {
+              "name": "Radiology AI tools dominate new clearances",
+              "summary": "Recent FDA authorizations continue to be led by imaging tools such as CT triage and coronary analysis from vendors including Siemens, GE HealthCare and Aidoc.",
+              "date": "2026-06",
+              "kind": "product",
+              "source": "https://www.appliedradiationoncology.com/articles/radiology-ai-tools-dominate-latest-fda-device-approvals",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "health.scribes",
+          "name": "Clinical documentation & scribes",
+          "summary": "Ambient AI scribes that draft visit notes are spreading fast across US health systems. Studies show modest time savings and some burnout relief, with vendor competition intensifying.",
+          "activity": 5,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "JAMA multisite study of AI scribes",
+              "summary": "Study of 8,581 ambulatory clinicians at five sites found AI scribes cut documentation time about 16 minutes a day, with no change in after-hours EHR time.",
+              "date": "2026-04",
+              "kind": "research",
+              "source": "https://hitconsultant.net/2026/04/01/jama-ai-scribe-study-ehr-time-savings-burnout-reality-check/",
+              "verified": true
+            },
+            {
+              "name": "Microsoft Dragon Copilot scale",
+              "summary": "Microsoft reported 600+ health systems adopting DAX Copilot and 100,000+ clinicians using Dragon Copilot daily; Abridge reports 300+ health systems.",
+              "date": "2026-02",
+              "kind": "product",
+              "source": "https://ehrsource.com/articles/ambient-ai-scribes-comparison/",
+              "verified": false
+            },
+            {
+              "name": "Three vendors hold 80% of Epic deployments",
+              "summary": "AJMC cross-sectional study found DAX Copilot, Abridge and one other vendor made up over 80% of ambient AI implementations among Epic hospitals.",
+              "date": "2026-01",
+              "kind": "research",
+              "source": "https://www.academicjobs.com/research-publication-news/ambient-ai-adoption-63percent-us-epic-hospitals-or-academicjobs-2698",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "health.drug-dev",
+          "name": "Drug development & trials",
+          "summary": "The first AI-discovered drugs are entering Phase III, large funding rounds continue, and US and EU regulators have published shared principles for AI use across the medicines lifecycle.",
+          "activity": 4,
+          "maturity": "emerging",
+          "landmarks": [
+            {
+              "name": "Insilico starts Phase III for rentosertib",
+              "summary": "Insilico began a 320-patient Phase III trial in China for its AI-discovered TNIK inhibitor for idiopathic pulmonary fibrosis, a first for a drug of this kind.",
+              "date": "2026-07",
+              "kind": "research",
+              "source": "https://www.clinicalresearchnewsonline.com/news/2026/07/08/insilico-medicine-launches-phase-iii-trial-for-ai-developed-drug",
+              "verified": true
+            },
+            {
+              "name": "Isomorphic Labs raises $2.1B",
+              "summary": "The DeepMind spinout raised a $2.1B Series B but pushed its first human trials of AI-designed drugs to end of 2026, prioritizing oncology.",
+              "date": "2026-05",
+              "kind": "deal",
+              "source": "https://ai2.work/blog/isomorphic-labs-2-1b-round-pushes-alphafold-drugs-to-trials",
+              "verified": false
+            },
+            {
+              "name": "FDA and EMA joint AI principles",
+              "summary": "The two regulators issued 10 shared principles for good AI practice in drug development, covering risk-based use, context of use, data governance and lifecycle management.",
+              "date": "2026-01",
+              "kind": "policy",
+              "source": "https://www.jonesday.com/de/insights/2026/01/ema-and-fda-align-on-good-ai-practice-in-drug-development",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "health.patient",
+          "name": "Patient-facing assistants & mental health",
+          "summary": "Hundreds of millions ask chatbots health questions weekly. Products now connect to medical records, while US states restrict AI therapy and companion bots after safety concerns.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "OpenAI launches ChatGPT Health",
+              "summary": "A dedicated ChatGPT space that links patient portals and wellness apps; OpenAI says 230M+ people ask health questions on ChatGPT each week.",
+              "date": "2026-01",
+              "kind": "product",
+              "source": "https://fortune.com/2026/01/07/openai-launches-chatgpt-health-in-a-push-to-become-a-hub-for-personal-health-data/",
+              "verified": true
+            },
+            {
+              "name": "Illinois bans AI therapy",
+              "summary": "Illinois law bars AI from independently providing therapy or mental health treatment, with fines up to $10,000; Nevada and Utah passed related limits.",
+              "date": "2025-08",
+              "kind": "policy",
+              "source": "https://www.axios.com/local/chicago/2025/08/06/illinois-ai-therapy-ban-mental-health-regulation",
+              "verified": true
+            },
+            {
+              "name": "California SB 243 on companion chatbots",
+              "summary": "First US state law with binding safety rules for companion chatbots, including self-harm protocols and crisis referrals, effective January 2026.",
+              "date": "2025-10",
+              "kind": "policy",
+              "source": "https://techcrunch.com/2025/10/13/california-becomes-first-state-to-regulate-ai-companion-chatbots",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "health.regulation",
+          "name": "Medical AI regulation & validation",
+          "summary": "The FDA has relaxed oversight of decision-support software and wearables, while questions remain on generative AI devices and real-world performance monitoring. EU high-risk rules are delayed.",
+          "activity": 3,
+          "maturity": "emerging",
+          "landmarks": [
+            {
+              "name": "FDA relaxes CDS and wellness guidance",
+              "summary": "Revised final guidances widened enforcement discretion for clinical decision support software and let more non-invasive wearables count as general wellness products.",
+              "date": "2026-01",
+              "kind": "policy",
+              "source": "https://www.arnoldporter.com/en/perspectives/advisories/2026/01/fda-cuts-red-tape-on-clinical-decision-support-software",
+              "verified": true
+            },
+            {
+              "name": "FDA panel on generative AI mental health devices",
+              "summary": "FDA's Digital Health Advisory Committee weighed evidence standards for generative AI therapy chatbots; no such device is yet authorized for mental health.",
+              "date": "2025-11",
+              "kind": "debate",
+              "source": "https://www.orrick.com/en/insights/2025/11/fdas-digital-health-advisory-committee-considers-generative-ai-therapy-chatbots-for-depression",
+              "verified": true
+            },
+            {
+              "name": "EU delays AI Act rules for regulated products",
+              "summary": "Provisional AI Omnibus deal moves high-risk obligations for AI embedded in regulated products, including medical devices, to August 2028.",
+              "date": "2026-05",
+              "kind": "policy",
+              "source": "https://www.simmons-simmons.com/en/publications/cmoveo6ke00icuxskpgueb0od/ai-omnibus-update",
+              "verified": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "legal",
+      "name": "Legal",
+      "summary": "Legal AI startups are raising multibillion-dollar rounds, courts keep sanctioning fabricated citations, copyright cases over training data are splitting, and AI-specific laws are being delayed or contested.",
+      "regions": [
+        {
+          "id": "legal.contracts",
+          "name": "Contract review & drafting",
+          "summary": "AI platforms for drafting, due diligence and document review are used by large firms and in-house teams. Two startups, Harvey and Legora, are raising rounds at rapidly rising valuations.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "Harvey raises $550M at $15.5B",
+              "summary": "Legal AI company Harvey raised $550M co-led by Diffusion and Lightspeed, up from an $11B valuation in March 2026; it reports 100,000+ lawyer users.",
+              "date": "2026-09",
+              "kind": "deal",
+              "source": "https://www.harvey.ai/blog/harvey-raises-dollar550m-at-a-dollar155b-valuation-to-help-legal-teams-own-their-intelligence",
+              "verified": true
+            },
+            {
+              "name": "Legora Series E at $8.8B",
+              "summary": "Swedish rival Legora closed a $550M Series E at an $8.8B post-money valuation, months after a $5.6B round, to fund US expansion.",
+              "date": "2026-10",
+              "kind": "deal",
+              "source": "https://legora.com/blog/series-e",
+              "verified": true
+            },
+            {
+              "name": "Harvey $11B round led by GIC and Sequoia",
+              "summary": "A $200M round valued Harvey at $11B, taking total funding past $1B and showing investor appetite for agent tools for M&A, diligence and drafting.",
+              "date": "2026-03",
+              "kind": "deal",
+              "source": "https://news.bloomberglaw.com/bloomberg-government-news/legal-ai-startup-harvey-raises-funds-at-11-billion-valuation",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "legal.research",
+          "name": "Legal research & hallucinated citations",
+          "summary": "AI research tools are common, but fabricated case citations in filings keep growing. A public tracker counts over 1,600 court decisions worldwide, and sanctions are rising.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "Hallucination case tracker passes 1,600",
+              "summary": "Damien Charlotin's database of court decisions involving AI-fabricated content reached about 1,624 cases by June 2026, up from about 719 in January.",
+              "date": "2026-06",
+              "kind": "incident",
+              "source": "https://haqq.ai/blog/ai-legal-hallucination-audit.html",
+              "verified": true
+            },
+            {
+              "name": "$145K in sanctions in Q1 2026",
+              "summary": "US courts imposed at least $145,000 in sanctions for fabricated citations in the first quarter of 2026, signaling less tolerance for unchecked AI filings.",
+              "date": "2026-04",
+              "kind": "incident",
+              "source": "https://www.jdsupra.com/legalnews/the-ai-sanction-wave-145k-in-q1-1240943/",
+              "verified": true
+            },
+            {
+              "name": "Three years of handling hallucinations",
+              "summary": "UNC law library review traces how courts, bars and firms have responded to AI hallucinations since 2023, from standing orders to verification duties.",
+              "date": "2026-06",
+              "kind": "debate",
+              "source": "https://library.law.unc.edu/2026/06/handling-hallucinations-a-reflection/",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "legal.ediscovery",
+          "name": "E-discovery & litigation support",
+          "summary": "Generative AI document review is now bundled into major e-discovery platforms, pushing per-document prices down and driving consolidation among vendors.",
+          "activity": 3,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "Relativity bundles aiR at no extra charge",
+              "summary": "Relativity said aiR for Review and aiR for Privilege would be included in standard RelativityOne from early 2026, making AI review a default feature.",
+              "date": "2026-01",
+              "kind": "product",
+              "source": "https://pdpspectra.com/blog/ai-legal-ediscovery-2026",
+              "verified": false
+            },
+            {
+              "name": "DISCO all-inclusive AI platform",
+              "summary": "DISCO combined e-discovery, its Cecilia AI assistant, depositions and timelines in one package at no added charge, part of a wider AI pricing reset.",
+              "date": "2026-02",
+              "kind": "product",
+              "source": "https://blog.platinumids.com/blog/ediscovery-pricing-revolution-2026",
+              "verified": false
+            },
+            {
+              "name": "ILTACON e-discovery AI announcements",
+              "summary": "At ILTACON 2026, DISCO, Everlaw, Nuix, Relativity and Reveal announced new generative AI features, chat tools and partnerships.",
+              "date": "2026-09",
+              "kind": "product",
+              "source": "https://www.lawnext.com/2026/09/iltacon-news-round-up-part-1-e-discovery-disco-everlaw-nuix-relativity-reveal.html",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "legal.compliance",
+          "name": "Regulatory compliance",
+          "summary": "Banks and firms use AI for regulatory change monitoring, KYC and AML, mostly with humans in the loop. Supervisors have not yet set clear rules for generative AI models.",
+          "activity": 3,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "US bank regulators issue SR 26-2",
+              "summary": "Fed, OCC and FDIC replaced 2011 model risk guidance but excluded generative and agentic AI from scope, leaving banks without a specific framework for them.",
+              "date": "2026-04",
+              "kind": "policy",
+              "source": "https://www.monitaur.ai/blog-posts/governing-generative-and-agentic-ai-under-sr-26-2-what-financial-institutions-need-to-know",
+              "verified": true
+            },
+            {
+              "name": "RegTech operationalisation benchmark",
+              "summary": "Ascent RegTech's 2026 benchmark argues AI now detects rule changes well, and the bottleneck is turning them into updated policies and controls.",
+              "date": "2026-05",
+              "kind": "research",
+              "source": "https://fintech.global/2026/05/26/how-ai-is-fixing-regtechs-operationalisation-problem/",
+              "verified": true
+            },
+            {
+              "name": "Few firms have a defined AI strategy",
+              "summary": "A Wolters Kluwer Q1 2026 survey found only about 12% of financial institutions call their AI strategy well-defined and resourced.",
+              "date": "2026-03",
+              "kind": "research",
+              "source": "",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "legal.ai-law",
+          "name": "Law of AI (EU AI Act, liability)",
+          "summary": "The EU has agreed to delay high-risk AI Act obligations to 2027-2028, while the US federal government is challenging state AI laws through an executive order and a DOJ task force.",
+          "activity": 4,
+          "maturity": "emerging",
+          "landmarks": [
+            {
+              "name": "EU AI Omnibus delays high-risk rules",
+              "summary": "Provisional deal moves standalone high-risk obligations from August 2026 to December 2027 and product-embedded AI to August 2028.",
+              "date": "2026-05",
+              "kind": "policy",
+              "source": "https://datamatters.sidley.com/2026/06/22/eu-lawmakers-reach-provisional-agreement-to-delay-key-eu-ai-act-obligations/",
+              "verified": true
+            },
+            {
+              "name": "US executive order on state AI laws",
+              "summary": "EO 14365 directed the DOJ to form an AI Litigation Task Force to challenge state AI laws and tied some federal funding to state compliance.",
+              "date": "2025-12",
+              "kind": "policy",
+              "source": "https://www.coloradopolitics.com/2025/12/11/trump-signs-executive-order-to-block-state-ai-regulations",
+              "verified": true
+            },
+            {
+              "name": "xAI sues Colorado over AI Act",
+              "summary": "xAI filed a federal suit to block the Colorado AI Act, the first major state algorithmic discrimination law; reports say the DOJ task force joined.",
+              "date": "2026-04",
+              "kind": "debate",
+              "source": "https://www.wlf.org/wp-content/uploads/2026/06/062226Jung_LP.pdf",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "legal.copyright",
+          "name": "Copyright & training data",
+          "summary": "Courts are split on whether training on copyrighted works is lawful. Large settlements, a German ruling against OpenAI and a UK ruling for Stability AI point in different directions.",
+          "activity": 4,
+          "maturity": "emerging",
+          "landmarks": [
+            {
+              "name": "GEMA v OpenAI in Munich",
+              "summary": "Munich court held that memorizing and reproducing song lyrics in ChatGPT infringes copyright and rejected the text and data mining defense; OpenAI is appealing.",
+              "date": "2025-11",
+              "kind": "policy",
+              "source": "https://www.williamfry.com/knowledge/gema-v-openai-europes-direction-on-ai-infringement/",
+              "verified": true
+            },
+            {
+              "name": "Getty v Stability AI in UK High Court",
+              "summary": "English court found model weights are not infringing copies, rejecting Getty's secondary infringement claim, with a narrow trademark win on watermarks.",
+              "date": "2025-11",
+              "kind": "policy",
+              "source": "https://www.osler.com/en/insights/updates/german-and-u-k-courts-diverge-on-whether-ai-models-infringe-copyright/?pdf=1",
+              "verified": true
+            },
+            {
+              "name": "Bartz v Anthropic $1.5B settlement",
+              "summary": "Authors' class action over pirated books settled for $1.5B, described as the largest copyright class settlement on record; reports say final approval came in July 2026.",
+              "date": "2025-09",
+              "kind": "deal",
+              "source": "",
+              "verified": false
+            },
+            {
+              "name": "Thomson Reuters v Ross on appeal",
+              "summary": "Third Circuit heard argument in the first US AI training fair use case, which involved a non-generative legal research tool.",
+              "date": "2026-06",
+              "kind": "debate",
+              "source": "https://www.americanbar.org/groups/business_law/resources/business-law-today/2026-september/thomson-reuters-v-ross-one-year-later/",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "legal.access",
+          "name": "Access to justice",
+          "summary": "Self-represented litigants increasingly use chatbots to file cases, and some courts offer AI assistants. Filings are more polished but outcomes have not clearly improved.",
+          "activity": 2,
+          "maturity": "emerging",
+          "landmarks": [
+            {
+              "name": "Pro se filings rise with AI use",
+              "summary": "Study of US federal courts found the share of suits by self-represented people rose from 11% in 2022 to 16.8% in 2025, alongside growing AI-drafted complaints.",
+              "date": "2026-05",
+              "kind": "research",
+              "source": "https://www.pulse.bot/ai/news/access-to-justice-in-the-age-of-ai-evidence-from-us-federal-courts-66cb53c8-0889-4ab5-ade7-b346adb63c0a/",
+              "verified": false
+            },
+            {
+              "name": "Courts cope with AI-generated lawsuits",
+              "summary": "MIT Technology Review reports courts adding triage, filing checks and help desks as AI-drafted pro se lawsuits increase caseloads.",
+              "date": "2026-06",
+              "kind": "debate",
+              "source": "https://www.technologyreview.com/2026/06/04/1138391/courts-coping-ai-lawsuits/?lang=pt",
+              "verified": true
+            },
+            {
+              "name": "Court AI assistants for self-represented users",
+              "summary": "Courts including the Northern District of New York and Alaska (with LawDroid) have launched chatbots to guide self-represented litigants through procedures.",
+              "date": "2026-01",
+              "kind": "experiment",
+              "source": "https://www.law.georgetown.edu/legal-ethics-journal/blog/gpt-esquire-how-the-nippon-case-may-shape-the-future-of-ai-in-pro-se-litigation/",
+              "verified": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "education",
+      "name": "Education",
+      "summary": "Students use AI widely, tech firms offer study modes and free tools to schools, institutions are reworking exams around it, and trials show AI tutors help only when designed and supervised with care.",
+      "regions": [
+        {
+          "id": "education.tutoring",
+          "name": "AI tutors",
+          "summary": "Major AI labs ship tutoring modes that guide rather than answer, and Khan Academy's Khanmigo runs on Gemini. Use is broad, but quality depends on design and school setup.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "ChatGPT Study Mode",
+              "summary": "OpenAI added a Socratic study mode to all ChatGPT plans that quizzes students and breaks problems into steps instead of giving answers.",
+              "date": "2025-07",
+              "kind": "product",
+              "source": "https://dupple.com/learn/best-ai-education-tools",
+              "verified": false
+            },
+            {
+              "name": "Khanmigo rebuilt on Gemini",
+              "summary": "Google and Khan Academy partnered to power Khanmigo with Gemini models, adding generated visual aids and diagrams for students and teachers.",
+              "date": "2026-08",
+              "kind": "deal",
+              "source": "https://blog.google/products-and-platforms/products/education/khan-academy-back-to-school/",
+              "verified": false
+            },
+            {
+              "name": "Gemini Guided Learning and LearnLM",
+              "summary": "Google folded its education-tuned LearnLM models into Gemini with a Guided Learning mode, offered to schools through Workspace for Education.",
+              "date": "2025-08",
+              "kind": "product",
+              "source": "https://services.google.com/fh/files/misc/learnlm_oct26.pdf",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "education.assessment",
+          "name": "Assessment & cheating",
+          "summary": "Most faculty report more cheating since generative AI. Institutions are moving away from AI detectors and back to proctored, handwritten and oral exams.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "Universities return to blue books and proctors",
+              "summary": "Stanford expanded proctoring to 50+ courses and Princeton set mandatory proctoring from July 2026 as AI detectors proved unreliable.",
+              "date": "2026-05",
+              "kind": "policy",
+              "source": "https://www.implicator.ai/universities-return-to-blue-books-and-proctors-as-ai-detectors-prove-unreliable/",
+              "verified": true
+            },
+            {
+              "name": "Curtin University turns off AI detection",
+              "summary": "Curtin in Australia disabled Turnitin's AI writing detector from January 2026, part of a wider retreat from detection tools.",
+              "date": "2026-01",
+              "kind": "policy",
+              "source": "https://etcjournal.com/2026/10/07/university-decisions-to-quit-ai-detection-are-short-sighted/",
+              "verified": false
+            },
+            {
+              "name": "Court sides with student flagged by Turnitin",
+              "summary": "A New York state judge ruled for an Adelphi University student whose paper Turnitin had flagged as fully AI-generated.",
+              "date": "2026-02",
+              "kind": "incident",
+              "source": "https://www.implicator.ai/universities-return-to-blue-books-and-proctors-as-ai-detectors-prove-unreliable/",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "education.policy",
+          "name": "School & university policy",
+          "summary": "Governments are mandating AI education in schools and providing AI tools to students, often through partnerships with AI companies, while universities sign campus-wide deals.",
+          "activity": 3,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "US executive order on AI education",
+              "summary": "EO 14277 created a White House task force on AI education and a Presidential AI Challenge, and encouraged AI training for teachers and students.",
+              "date": "2025-04",
+              "kind": "policy",
+              "source": "https://www.presidency.ucsb.edu/documents/executive-order-14277-advancing-artificial-intelligence-education-for-american-youth",
+              "verified": true
+            },
+            {
+              "name": "Beijing requires AI classes in schools",
+              "summary": "Beijing required at least eight hours of AI instruction a year in primary and secondary schools from fall 2025; national guidelines followed in May 2025.",
+              "date": "2025-03",
+              "kind": "policy",
+              "source": "https://govt.chinadaily.com.cn/s/202510/21/WS694a49c7498e368550339296/beijing-makes-ai-education-compulsory-in-public-schools.html",
+              "verified": true
+            },
+            {
+              "name": "Estonia AI Leap",
+              "summary": "National program giving secondary students and teachers free access to AI tools from September 2025, with OpenAI and Anthropic as partners.",
+              "date": "2025-09",
+              "kind": "policy",
+              "source": "https://hm.ee/en/news/estonia-announces-groundbreaking-national-initiative-ai-leap-programme-bring-ai-tools-all",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "education.skills",
+          "name": "Upskilling & workforce learning",
+          "summary": "AI companies are funding large training programs and credentials for workers and teachers, with goals in the tens of millions of people.",
+          "activity": 3,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "Microsoft Elevate $4B commitment",
+              "summary": "Microsoft pledged more than $4B over five years for AI education and skilling, aiming to help 20 million people earn AI credentials.",
+              "date": "2025-07",
+              "kind": "deal",
+              "source": "https://www.theregister.com/2025/07/09/microsoft_ai_training/",
+              "verified": true
+            },
+            {
+              "name": "OpenAI Certifications and Jobs Platform",
+              "summary": "OpenAI announced free AI certifications via OpenAI Academy and a hiring platform for AI-skilled workers, targeting 10 million certified Americans by 2030.",
+              "date": "2025-09",
+              "kind": "product",
+              "source": "https://builtin.com/articles/openai-jobs-platform",
+              "verified": false
+            },
+            {
+              "name": "AFT National Academy for AI Instruction",
+              "summary": "Teachers union AFT launched a $23M AI training academy funded by Microsoft, OpenAI and Anthropic, aiming to train 400,000 educators.",
+              "date": "2025-07",
+              "kind": "deal",
+              "source": "https://www.edweek.org/technology/microsoft-openai-partner-with-aft-to-train-teachers-on-ai/2025/07",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "education.evidence",
+          "name": "Evidence on learning outcomes",
+          "summary": "Rigorous trials are accumulating. Unrestricted chatbots can harm learning, while constrained, supervised tutors show gains in some studies and null results in others.",
+          "activity": 3,
+          "maturity": "frontier",
+          "landmarks": [
+            {
+              "name": "Unguarded AI can harm learning (PNAS)",
+              "summary": "Field experiment with ~1,000 high school math students found unrestricted GPT-4 access hurt later unaided performance; a hint-based tutor mostly avoided this.",
+              "date": "2025-06",
+              "kind": "research",
+              "source": "https://knowledge.wharton.upenn.edu/article/without-guardrails-generative-ai-can-harm-education/",
+              "verified": true
+            },
+            {
+              "name": "MIT 'Your Brain on ChatGPT' preprint",
+              "summary": "Small EEG study of 54 essay writers found lower engagement with ChatGPT use and weaker unaided writing afterward; not yet peer reviewed.",
+              "date": "2025-06",
+              "kind": "research",
+              "source": "https://aiforbeginners.substack.com/p/your-brain-on-chatgpt",
+              "verified": false
+            },
+            {
+              "name": "Eedi and Google AI tutoring RCT",
+              "summary": "UK classroom trial found a supervised, pedagogically tuned AI tutor raised correct answers on new questions 5.5 points versus human tutoring alone.",
+              "date": "2026-03",
+              "kind": "research",
+              "source": "https://www.eedi.com/news/just-launched---our-second-ai-tutor-rct",
+              "verified": false
+            },
+            {
+              "name": "OECD Digital Education Outlook 2026",
+              "summary": "OECD report reviews evidence on generative AI in education, citing a physics RCT where an AI tutor beat in-class active learning while noting limits.",
+              "date": "2026-01",
+              "kind": "research",
+              "source": "https://letsdatascience.com/news/oecd-report-cites-trial-where-ai-tutor-beat-classroom-learni-a231228d",
+              "verified": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

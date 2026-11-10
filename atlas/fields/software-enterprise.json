@@ -1,0 +1,233 @@
+{
+  "fields": [
+    {
+      "id": "software",
+      "name": "Software Development",
+      "summary": "Coding agents are the largest commercial use of AI so far, with multi-billion run rates. Agents are moving into review, security scanning, incident response and legacy migration, while productivity evidence stays mixed.",
+      "regions": [
+        {
+          "id": "software.coding-agents",
+          "name": "Coding agents",
+          "summary": "Terminal, IDE and cloud agents that write, run and fix code across whole repos. Claude Code, Codex and Cursor lead a market with very fast revenue growth.",
+          "activity": 5,
+          "maturity": "adopting",
+          "landmarks": [
+            {"name": "Claude Code reported near $2.5B run rate", "summary": "Reports put Anthropic's Claude Code at about $2.5B annualized revenue by early 2026, under a year after general release.", "date": "2026-02", "kind": "deal", "source": "https://contextstudios.ai/blog/claude-code-25b-arr-what-it-means-for-builders", "verified": false},
+            {"name": "Cursor reported at $2B ARR", "summary": "Anysphere's Cursor editor was reported to pass $2B annualized revenue about 26 months after launch, among the fastest SaaS ramps recorded.", "date": "2026-02", "kind": "deal", "source": "https://sulat.com/p/cursor-just-hit-2-billion-arr", "verified": false},
+            {"name": "GPT-5.3-Codex launched", "summary": "OpenAI released GPT-5.3-Codex alongside its Frontier enterprise platform, continuing a fast release cadence for coding models.", "date": "2026-02", "kind": "product", "source": "https://www.businesstoday.in/technology/news/story/openai-launches-frontier-to-help-enterprises-build-and-manage-ai-agents-514904-2026-02-06", "verified": true},
+            {"name": "METR revisits developer slowdown study", "summary": "METR said developers appear more sped up by AI in early 2026 than in its 2025 study, but selection effects make its new estimate unreliable, so it is redesigning the study.", "date": "2026-02", "kind": "research", "source": "https://metr.org/blog/2026-02-24-uplift-update/", "verified": true}
+          ]
+        },
+        {
+          "id": "software.code-review",
+          "name": "Code review",
+          "summary": "AI reviewers comment on pull requests to keep pace with the volume of AI-written code. Pure-play vendors raise large rounds while model labs ship their own reviewers.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {"name": "Anthropic Code Review for Claude Code", "summary": "Multi-agent PR reviewer that verifies and ranks findings. Anthropic said PRs with substantive review comments rose from 16% to 54% internally.", "date": "2026-03", "kind": "product", "source": "https://techcrunch.com/2026/03/09/anthropic-launches-code-review-tool-to-check-flood-of-ai-generated-code/", "verified": true},
+            {"name": "CodeRabbit raises $143M at $1.5B", "summary": "Series C for the largest standalone AI code review vendor, paired with an 'agentic change management' layer for governing code changes.", "date": "2026-08", "kind": "deal", "source": "https://www.vcaonline.com/news/2026081201/coderabbit-raises-143-million-at-1-5-billion-valuation-and-introduces-agentic-change-management/", "verified": true},
+            {"name": "Greptile $25M Series A", "summary": "Code review agent startup raised a Series A and shipped v3, positioning AI review as validation for AI-generated code.", "date": "2025-09", "kind": "deal", "source": "https://siliconangle.com/2025/09/23/greptile-bags-25m-funding-take-coderabbit-graphite-ai-code-validation/", "verified": true}
+          ]
+        },
+        {
+          "id": "software.testing",
+          "name": "Testing & QA",
+          "summary": "Incumbent test vendors and startups ship agents that explore apps, write and maintain tests, and check each PR. Performance claims are mostly vendor-reported.",
+          "activity": 3,
+          "maturity": "emerging",
+          "landmarks": [
+            {"name": "SmartBear BearQ", "summary": "Agentic QA system with always-on agents that explore and test applications on their own, from a major testing incumbent.", "date": "2026-03", "kind": "product", "source": "https://smartbear.com/news/news-releases/smartbear-introduces-bearqautonomous-testing-for/", "verified": true},
+            {"name": "Tricentis agentic QE platform", "summary": "Tricentis launched an agentic quality engineering platform with an AI Workspace for building custom testing agents.", "date": "2026-03", "kind": "product", "source": "https://www.tricentis.com/blog/agentic-quality-engineering-platform-launch-takeaways", "verified": true},
+            {"name": "Momentic Mo scriptless QA agent", "summary": "Agent that tests web, iOS and Android apps without scripts and files bug reports with repro steps. Metrics are vendor-reported only.", "date": "2026-09", "kind": "product", "source": "https://letsdatascience.com/news/momentic-launches-mo-for-scriptless-software-testing-ee886b16", "verified": false}
+          ]
+        },
+        {
+          "id": "software.observability",
+          "name": "Observability & SRE",
+          "summary": "AI SRE agents investigate alerts, test root-cause hypotheses against telemetry and suggest fixes. Cloud and observability vendors now ship them as GA products.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {"name": "Datadog Bits AI SRE", "summary": "Autonomous agent that investigates alerts and incidents across logs, traces and metrics. Datadog reports use in over 2,000 customer environments.", "date": "2025-12", "kind": "product", "source": "https://www.helpnetsecurity.com/2025/12/03/datadog-bits-ai-sre-agent/", "verified": true},
+            {"name": "AWS DevOps Agent generally available", "summary": "AWS agent that investigates and helps prevent incidents across AWS, multicloud and on-prem. AWS cites 3 to 5x faster resolution for preview customers.", "date": "2026-03", "kind": "product", "source": "https://aws.amazon.com/about-aws/whats-new/2026/03/aws-devops-agent-generally-available", "verified": true}
+          ]
+        },
+        {
+          "id": "software.security",
+          "name": "AppSec & vulnerability finding",
+          "summary": "Models now find real zero-days at scale. Labs ship code-scanning agents, autonomous hackers top bug bounty boards, and markets react to each launch.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {"name": "Claude Code Security", "summary": "Anthropic codebase scanner that suggests patches for human review, launched after Claude Opus 4.6 found over 500 vulnerabilities in open-source projects.", "date": "2026-02", "kind": "product", "source": "https://www.anthropic.com/news/claude-code-security", "verified": true},
+            {"name": "Aardvark becomes Codex Security", "summary": "OpenAI renamed its agentic security researcher, which validates flaws by trying to exploit them in a sandbox, and opened it to business customers.", "date": "2026-03", "kind": "product", "source": "https://ai-era.pages.dev/entities/products/codex-security", "verified": false},
+            {"name": "Google Big Sleep reports 20 bugs", "summary": "Google's DeepMind and Project Zero agent reported its first batch of 20 vulnerabilities in open-source software, found without human help.", "date": "2025-08", "kind": "research", "source": "https://techcrunch.com/2025/08/04/google-says-its-ai-based-bug-hunter-found-20-security-vulnerabilities/", "verified": true},
+            {"name": "XBOW tops HackerOne US leaderboard", "summary": "An autonomous pentesting agent ranked first on HackerOne's US bug bounty leaderboard, a first for a non-human hacker.", "date": "2025-06", "kind": "experiment", "source": "https://labs.cloudsecurityalliance.org/research/csa-whitepaper-ai-autonomous-vuln-discovery-threat-model-202/", "verified": false}
+          ]
+        },
+        {
+          "id": "software.devops",
+          "name": "CI/CD & platform engineering",
+          "summary": "Coding agents are being wired into CI to triage issues, fix failing builds and update docs. Platforms add sandboxing and permissions but tooling is early.",
+          "activity": 3,
+          "maturity": "emerging",
+          "landmarks": [
+            {"name": "GitHub Agentic Workflows preview", "summary": "Markdown-defined workflows run coding agents (Copilot, Claude Code, Codex) inside GitHub Actions with restricted permissions. GitHub calls it Continuous AI.", "date": "2026-02", "kind": "product", "source": "https://github.blog/2026-02-13-automate-repository-tasks-with-github-agentic-workflows/", "verified": true},
+            {"name": "Register: use at your own risk", "summary": "Coverage of the preview stressed breaking changes and risk, reflecting caution about giving agents write access in pipelines.", "date": "2026-02", "kind": "debate", "source": "https://www.theregister.com/software/2026/02/17/github-previews-agentic-workflows/5103216", "verified": true},
+            {"name": "AWS frontier agents for DevOps and security", "summary": "AWS introduced long-running 'frontier agents' for cloud operations and security testing as a new product category.", "date": "2025-12", "kind": "product", "source": "https://aws.amazon.com/jp/blogs/machine-learning/aws-launches-frontier-agents-for-security-testing-and-cloud-operations", "verified": false}
+          ]
+        },
+        {
+          "id": "software.modernization",
+          "name": "Legacy migration & modernization",
+          "summary": "Agents read COBOL and mainframe code, extract business rules and draft rewrites. Every major cloud and IBM now sells agentic modernization.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {"name": "IBM stock drops on Anthropic COBOL post", "summary": "IBM shares fell about 13% in a day, the most since 2000, after Anthropic said Claude Code can automate COBOL exploration and analysis.", "date": "2026-02", "kind": "debate", "source": "https://www.thestar.com.my/tech/tech-news/2026/02/24/ibm-posts-steepest-daily-drop-since-2000-after-anthropic-says-ai-can-modernize-cobol", "verified": true},
+            {"name": "IBM Bob multi-agent modernization", "summary": "IBM added multi-agent coordination, spend tracking and prebuilt workflows for IBM Z, IBM i and Java modernization to its Bob platform.", "date": "2026-07", "kind": "product", "source": "https://canada.newsroom.ibm.com/2026-07-09-ibm-advances-enterprise-ai-software-development-with-multi-agent-capabilities-and-specialized-modernization-workflows", "verified": true},
+            {"name": "Google mainframe modernization agents", "summary": "Google paired a business-rule extraction tool with agents for forward engineering, supporting rewrite and like-for-like paths.", "date": "2026-08", "kind": "product", "source": "https://cloud.google.com/blog/products/infrastructure-modernization/mainframe-migration-and-modernization-with-ai", "verified": false}
+          ]
+        },
+        {
+          "id": "software.spec-design",
+          "name": "Specs, design-to-code & prototyping",
+          "summary": "Prompt-to-app builders grow fast among non-engineers, design tools generate working code, and spec-driven workflows try to make agent output more predictable.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {"name": "Lovable raises $400M at $13.3B", "summary": "Swedish prompt-to-app builder's Series C, with reported annualized revenue above $500M, makes 'vibe coding' a large venture category.", "date": "2026-08", "kind": "deal", "source": "https://sifted.eu/articles/lovable-raises-e400m-series-c/", "verified": true},
+            {"name": "Figma Make drives Figma growth", "summary": "Figma's Q4 2025 results tied 40% revenue growth to AI adoption; about 75% of large customers use AI credits weekly.", "date": "2026-02", "kind": "product", "source": "https://siliconangle.com/2026/02/18/figma-stock-climbs-40-revenue-growth-surging-figma-make-adoption/", "verified": true},
+            {"name": "AWS Kiro spec-driven IDE", "summary": "Agentic IDE built around requirements, design and task files before code, a counterpoint to unstructured vibe coding.", "date": "2025-07", "kind": "product", "source": "https://tessl.io/blog/from-vibe-coding-to-viable-code-aws-dives-into-spec-driven-ai-software-development-with-kiro/", "verified": true}
+          ]
+        },
+        {
+          "id": "software.docs",
+          "name": "Docs & codebase understanding",
+          "summary": "Tools auto-generate and refresh wikis, diagrams and Q&A for repositories, and expose them to agents via MCP. Accuracy still needs human checking.",
+          "activity": 3,
+          "maturity": "adopting",
+          "landmarks": [
+            {"name": "Google Code Wiki preview", "summary": "Gemini-powered wiki that regenerates docs and diagrams after every code change, with a chat agent grounded in the repo.", "date": "2025-11", "kind": "product", "source": "https://developers.googleblog.com/en/introducing-code-wiki-accelerating-your-code-understanding/", "verified": true},
+            {"name": "Cognition DeepWiki", "summary": "Auto-generated wikis for public repos, built to help the Devin agent, now also served to other agents through a free MCP server.", "date": "2025-04", "kind": "product", "source": "https://www.zenml.io/llmops-database/auto-generated-codebase-documentation-and-intelligence-at-scale", "verified": false}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "enterprise",
+      "name": "Agentic Enterprise",
+      "summary": "Companies are deploying agents for support, sales, finance and HR, and standardizing on MCP. Spending and valuations are high, but many pilots stall and agent security is unresolved.",
+      "regions": [
+        {
+          "id": "enterprise.support",
+          "name": "Customer support agents",
+          "summary": "The most deployed enterprise agent use case. Startups like Sierra and Decagon reach multi-billion valuations, while some early adopters bring humans back.",
+          "activity": 5,
+          "maturity": "adopting",
+          "landmarks": [
+            {"name": "Sierra raises $950M at over $15B", "summary": "Bret Taylor's customer experience agent company raised a Series E, the largest round yet for a support-agent startup.", "date": "2026-05", "kind": "deal", "source": "https://pulse2.com/sierra-950-million-raised-at-15-billion-valuation-for-ai-customer-experience-platform/", "verified": true},
+            {"name": "Decagon $250M at $4.5B", "summary": "Support agent startup tripled its valuation in about seven months in a round led by Coatue and Index.", "date": "2026-01", "kind": "deal", "source": "https://ai2.work/blog/decagon-s-4-5b-valuation-signals-enterprise-ai-is-scaling-fast", "verified": false},
+            {"name": "Klarna brings human agents back", "summary": "After saying its AI assistant did the work of 700 agents, Klarna's CEO said quality suffered and the company began rehiring human support staff.", "date": "2025-05", "kind": "debate", "source": "https://dc.fortune.com/2025/05/09/klarna-ai-humans-return-on-investment/", "verified": true}
+          ]
+        },
+        {
+          "id": "enterprise.sales-marketing",
+          "name": "Sales & marketing",
+          "summary": "CRM vendors sell agents for prospecting, outreach and service, some priced per outcome. Agentforce revenue is growing but still small next to the core business.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {"name": "Agentforce ARR reaches $800M", "summary": "Salesforce reported Agentforce ARR up 169% year on year and over 29,000 deals since launch, in fiscal 2026 results.", "date": "2026-02", "kind": "deal", "source": "https://www.businesswire.com/news/home/20260225325122/en/Salesforce-Delivers-Record-Fourth-Quarter-Fiscal-2026-Results", "verified": true},
+            {"name": "Agentforce passes $1B ARR", "summary": "Salesforce's next quarterly results reportedly put Agentforce above $1B ARR, as Benioff pushed back on AI skeptics.", "date": "2026-05", "kind": "deal", "source": "https://www.salesforceben.com/salesforce-q1-results-agentforce-hits-1b-arr-as-benioff-takes-aim-at-ai-doubters/", "verified": false},
+            {"name": "HubSpot prospecting agent priced per lead", "summary": "HubSpot's Breeze Prospecting Agent watches buying signals and drafts outreach, reportedly priced per qualified lead instead of per seat.", "date": "2026-01", "kind": "product", "source": "https://www.spotdev.co.uk/blog/hubspot-breeze-prospecting-agent", "verified": false}
+          ]
+        },
+        {
+          "id": "enterprise.finance-ops",
+          "name": "Finance & back office",
+          "summary": "ERP and accounting vendors embed agents for accruals, reconciliations and month-end close, with humans keeping sign-off. Deployments are early.",
+          "activity": 3,
+          "maturity": "emerging",
+          "landmarks": [
+            {"name": "SAP Accounting Accruals Agent", "summary": "Joule agent that reads accrual policies, pulls history and drafts journal entries for close, under a financial closing orchestration agent.", "date": "2026-05", "kind": "product", "source": "https://erp.today/sap-accounting-accruals-agent-month-end-close/", "verified": false},
+            {"name": "Intuit agentic books close", "summary": "At Intuit Connect, Intuit added agentic monthly close to QuickBooks and its accountant suite, aimed at mid-market finance teams.", "date": "2026-10", "kind": "product", "source": "https://futurumgroup.com/?p=97190", "verified": false},
+            {"name": "Intuit four mid-market finance agents", "summary": "Intuit launched agents for finance, payments, accounting and project management in its Enterprise Suite.", "date": "2026-08", "kind": "product", "source": "https://getcoai.com/news/intuit-launches-4-ai-agents-saving-mid-market-finance-teams-20-hours-monthly/", "verified": false}
+          ]
+        },
+        {
+          "id": "enterprise.hr",
+          "name": "HR & recruiting",
+          "summary": "Agents source candidates, run screening chats and schedule interviews at scale. Bias litigation against AI screening is testing vendor liability.",
+          "activity": 3,
+          "maturity": "adopting",
+          "landmarks": [
+            {"name": "Workday completes Paradox acquisition", "summary": "Workday bought the conversational hiring agent behind about 1 in 10 US interviews scheduled, building an end-to-end AI hiring suite.", "date": "2025-10", "kind": "deal", "source": "https://newsroom.workday.com/2025-10-01-Workday-Completes-Acquisition-of-Paradox", "verified": true},
+            {"name": "Mobley v. Workday advances", "summary": "A court largely denied Workday's bid to dismiss age and disability bias claims over AI screening, a test case for vendor liability.", "date": "2026-06", "kind": "policy", "source": "https://www.uctoday.com/talent-hcm-platforms/workday-argues-california-law-should-not-apply-in-ai-hiring-case-testing-ai-accountability/", "verified": true},
+            {"name": "Juicebox $80M Series B", "summary": "AI outbound recruiting agent that finds, emails and schedules candidates raised at an $850M valuation.", "date": "2026-03", "kind": "deal", "source": "https://juicebox.ai/blog/juicebox-raises-80m-series-b", "verified": true}
+          ]
+        },
+        {
+          "id": "enterprise.knowledge",
+          "name": "Enterprise search & knowledge work",
+          "summary": "Work assistants search across company apps and run prebuilt agents. Glean grows quickly while Microsoft bundles agents into Office, though paid seat uptake is modest.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {"name": "Glean passes $300M ARR", "summary": "Enterprise search and agent vendor tripled revenue in 15 months, selling a neutral layer across SaaS apps.", "date": "2026-05", "kind": "deal", "source": "https://glean.com/press/glean-surpasses-300m-arr-unrivaled-enterprise-context-fuels-ai-adoption", "verified": true},
+            {"name": "Microsoft 365 E7 and Agent 365", "summary": "Microsoft bundled Copilot with Agent 365, a registry and control plane for agents, into a new top-tier suite.", "date": "2026-03", "kind": "product", "source": "https://itbrief.co.uk/story/microsoft-unveils-agent-365-new-microsoft-365-e7-suite", "verified": false}
+          ]
+        },
+        {
+          "id": "enterprise.protocols",
+          "name": "Agent platforms & protocols (MCP, A2A)",
+          "summary": "MCP is the default way to connect agents to tools, now under neutral foundation governance with A2A. Labs compete to be the enterprise agent platform.",
+          "activity": 5,
+          "maturity": "adopting",
+          "landmarks": [
+            {"name": "Agentic AI Foundation formed", "summary": "Linux Foundation body launched with Anthropic's MCP, Block's goose and OpenAI's AGENTS.md as founding projects.", "date": "2025-12", "kind": "policy", "source": "https://www.techzine.eu/news/infrastructure/137131/newly-launched-agentic-ai-foundation-to-take-charge-of-mcps-future", "verified": true},
+            {"name": "OpenAI Frontier", "summary": "Enterprise platform to build, deploy and manage agents, including third-party ones, with HP, Intuit, Oracle and Uber as early users.", "date": "2026-02", "kind": "product", "source": "https://openai.com/index/introducing-openai-frontier/", "verified": true},
+            {"name": "A2A joins the AAIF", "summary": "Google's agent-to-agent protocol reportedly became an AAIF project, placing it under the same governance as MCP.", "date": "2026-08", "kind": "policy", "source": "https://blckalpaca.at/fr/base-de-connaissances/agents-ia/protocole-agent-to-agent-a2a/ce-que-la-linux-foundation-et-laaif-signifient-pour-mcp-et-lia-agentique", "verified": false}
+          ]
+        },
+        {
+          "id": "enterprise.governance",
+          "name": "Agent governance, identity & security",
+          "summary": "Identity vendors and NIST define how agents get credentials and owners, while prompt injection causes real data leaks on major agent platforms.",
+          "activity": 4,
+          "maturity": "emerging",
+          "landmarks": [
+            {"name": "Okta for AI Agents", "summary": "Identity product giving each agent its own identity, a human owner and an off switch, plus a cross-app access protocol for federation.", "date": "2026-04", "kind": "product", "source": "https://www.okta.com/en-sg/blog/ai/okta-ai-agents-early-access-announcement/", "verified": false},
+            {"name": "NIST AI Agent Standards Initiative", "summary": "NIST's CAISI launched work on agent security and identity standards, later publishing ten design tenets for agent identity systems.", "date": "2026-02", "kind": "policy", "source": "https://labs.cloudsecurityalliance.org/research/csa-research-note-okta-ai-agent-iam-framework-enterprise-gap/", "verified": false},
+            {"name": "Prompt injection leaks in enterprise agents", "summary": "Researchers showed injected instructions could make enterprise agents on Microsoft and Salesforce platforms leak corporate data.", "date": "2026-04", "kind": "incident", "source": "https://oecd.ai/en/incidents/2026-04-15-d934", "verified": true}
+          ]
+        },
+        {
+          "id": "enterprise.browser",
+          "name": "Computer-use & browser agents",
+          "summary": "Agents that click through websites and desktops are improving but still fail most long tasks. Standalone AI browsers have struggled; extensions persist.",
+          "activity": 3,
+          "maturity": "emerging",
+          "landmarks": [
+            {"name": "ChatGPT Atlas launched", "summary": "OpenAI released an AI browser for macOS with an agent mode that acts on web pages, challenging Chrome.", "date": "2025-10", "kind": "product", "source": "https://www.techradar.com/ai-platforms-assistants/chatgpt/openai-takes-on-chrome-with-chatgpt-atlas-browser-for-macos-and-windows-ios-and-android-are-coming-soon", "verified": true},
+            {"name": "OpenAI retires Atlas", "summary": "Reports say OpenAI shut down Atlas under a year after launch and moved agentic browsing into ChatGPT and Codex.", "date": "2026-08", "kind": "incident", "source": "https://pasqualepillitteri.it/en/news/7783/openai-shuts-down-atlas-agentic-features-move-to", "verified": false},
+            {"name": "OSWorld 2.0 long-horizon results", "summary": "A harder computer-use benchmark of 108 long tasks reportedly saw the top model complete only about 20%, showing the gap to reliable use.", "date": "2026-09", "kind": "research", "source": "https://nerdleveltech.com/ai-browser-agents-claude-chatgpt-gemini", "verified": false}
+          ]
+        },
+        {
+          "id": "enterprise.roi",
+          "name": "Adoption, ROI & failure rates",
+          "summary": "Spending keeps rising, but studies and analysts report most pilots never reach production or measurable return, fueling debate over agent hype.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {"name": "MIT NANDA: 95% of pilots show no return", "summary": "The GenAI Divide report found most corporate generative AI pilots produced no measurable P&L impact; bought tools beat internal builds.", "date": "2025-08", "kind": "research", "source": "https://fortune.com/2025/08/18/mit-report-95-percent-generative-ai-pilots-at-companies-failing-cfo/", "verified": true},
+            {"name": "Gartner: 40% of agent projects to be cut", "summary": "Gartner predicted over 40% of agentic AI projects will be canceled by end of 2027 and warned of 'agent washing' by vendors.", "date": "2025-06", "kind": "research", "source": "https://www.silicon.eu/gartner-over-40-percent-of-agentic-ai-projects-will-be-discontinued-by-the-end-of-2027-18197.html", "verified": true},
+            {"name": "Firms reverse AI staff cuts", "summary": "Coverage of Klarna, Ford and others cites Gartner findings that replacing workers with AI does not reliably improve financial results.", "date": "2026-07", "kind": "debate", "source": "https://invezz.com/news/2026/07/01/from-klarna-to-ford-why-companies-are-bringing-humans-back-after-betting-big-on-ai/", "verified": false}
+          ]
+        }
+      ]
+    }
+  ]
+}

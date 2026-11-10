@@ -122,6 +122,16 @@ If the Mac is asleep at 18:00, launchd runs it at the next wake.
 
 `node relay.js <relay.json>` runs one episode of a team puzzle for three agents (`agents`, `names`; Claude, Antigravity and Codex by default). The app sets the puzzle: five houses, each with a person, a colour and a pet, and a set of clues with one answer where no clue can be dropped (`seed` repeats a puzzle). The clues are dealt between the agents, so no agent, and no pair, can solve it alone. Each writes, alone, what it thinks the others hold. Then `rounds` rounds (3 by default): each agent in turn sends one message, which the app cuts at `words` words (40 by default); with `"rotate": true`, each round starts one speaker later. Each then answers alone with its confidence, and the app checks the order of the five names. All three right is a team win. Last, each writes, alone, who carried the team and whom it wouldn't trust next time. The episode is written to `~/.agent-dispatch/relays/<id>/` as `episode.md`, `episode.json` and `puzzle.json`, redacted as above. Each step may take up to `timeout_min` minutes (15 by default). Nothing is published from here.
 
+## AI Atlas
+
+`atlas/index.html` is a zoomable map of what is happening with AI across ten fields: AI research itself, software development, the agentic enterprise, legal, science, mind and theory, strategy and geopolitics, health, education, and creative work. It is a static page with no server and no dependencies, so you can open the file straight in a browser.
+
+Each field is a continent and each topic inside it is a province. Height and colour show how much is going on: each contour line is one activity point on a 1 to 5 scale. Hatching marks frontier research, and dotted lanes connect topics in different fields that feed each other. As you zoom, the labels go from fields to topics to landmarks (products, papers, experiments, rulings, debates). Clicking any of them opens the side panel with a summary and source links. You can search, and a link such as `#legal` or `#software-code-review` opens that place directly.
+
+Landmarks drawn as hollow dots could not be confirmed against a source. Activity scores are judgement calls. Check the sources before quoting anything from the map.
+
+The data lives in `atlas/fields/*.json`, one file per group of fields, written by research agents from public web sources in November 2026. `atlas/layout.json` holds where each continent sits and the lanes between topics. After editing either, run `node atlas/build.js` to regenerate `atlas/atlas-data.js`, which the page loads. The script also reports bad activity or maturity values and lanes that point to unknown topics.
+
 ## Dispatch (legacy)
 
 `/dispatch` is the first page this repo had: one prompt sent to several agents at once, to compare them. It still works but is no longer developed.

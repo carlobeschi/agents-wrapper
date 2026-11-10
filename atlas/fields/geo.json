@@ -1,0 +1,308 @@
+{
+  "fields": [
+    {
+      "id": "geo",
+      "name": "Strategy & Geopolitics",
+      "summary": "AI is now treated as strategic infrastructure: chip controls swing between easing and tightening, states fund sovereign compute, militaries go AI-first, and power grids become the binding constraint.",
+      "regions": [
+        {
+          "id": "geo.compute",
+          "name": "Compute, chips & export controls",
+          "summary": "US rules on Nvidia sales to China loosened for H200 in early 2026 then tightened on offshore subsidiaries; Blackwell stays banned and actual China sales have stalled.",
+          "activity": 5,
+          "maturity": "established",
+          "landmarks": [
+            {
+              "name": "US conditionally allows Nvidia H200 sales to China",
+              "summary": "Commerce opened H200 exports under conditions, following a December 2025 deal giving the US government a 25% cut; the most advanced chips remain blocked.",
+              "date": "2026-01",
+              "kind": "policy",
+              "source": "https://investinglive.com/stocks/us-eases-nvidia-h200-export-rules-to-china-under-strict-conditions-shares-higher-20260113/amp",
+              "verified": true
+            },
+            {
+              "name": "Export enforcer: zero H200s sold to China",
+              "summary": "A Commerce official told Congress no H200s had shipped, as Beijing reportedly urged firms to pause purchases and favour domestic chips.",
+              "date": "2026-02",
+              "kind": "debate",
+              "source": "https://news.bgov.com/capital-markets/nvidia-has-sold-zero-h200s-to-china-top-us-export-enforcer-says",
+              "verified": true
+            },
+            {
+              "name": "BIS closes offshore subsidiary loophole",
+              "summary": "New guidance blocks exports of top chips such as Blackwell to subsidiaries of Chinese companies located outside China, clarifying license rules in place since 2023.",
+              "date": "2026-05",
+              "kind": "policy",
+              "source": "https://www.khaleejtimes.com/tech/us-takes-step-to-halt-nvidia-ai-chip-shipments-to-chinese-firms-outside-china-2",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "geo.us-china",
+          "name": "US-China competition",
+          "summary": "China is building a domestic AI stack on Huawei Ascend chips and open models while US-China summitry produced stability but no settlement on chips or rare earths.",
+          "activity": 5,
+          "maturity": "established",
+          "landmarks": [
+            {
+              "name": "DeepSeek V4 runs on Huawei Ascend",
+              "summary": "DeepSeek released V4-Pro and V4-Flash open weights with day-zero support on Huawei, Cambricon and other Chinese chips, a test of China's domestic hardware stack.",
+              "date": "2026-04",
+              "kind": "product",
+              "source": "https://www.theregister.com/2026/04/24/deepseek_v4/",
+              "verified": true
+            },
+            {
+              "name": "Trump-Xi Beijing summit",
+              "summary": "The May 14-15 summit extended the trade truce but left AI chip exports and rare-earth supply unresolved, per most analyses.",
+              "date": "2026-05",
+              "kind": "policy",
+              "source": "https://www.china-briefing.com/news/xi-trump-beijing-summit-what-was-agreed/",
+              "verified": true
+            },
+            {
+              "name": "China's 15th Five-Year Plan elevates AI+",
+              "summary": "Adopted in March 2026, the plan mentions AI 52 times and makes the AI+ integration initiative and chip self-reliance top national priorities.",
+              "date": "2026-03",
+              "kind": "policy",
+              "source": "https://www.scmp.com/tech/policy/article/3345586/chinas-five-year-plan-emphasises-orderly-ai-development-amid-global-tech-volatility",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "geo.national",
+          "name": "National AI strategies & sovereign AI",
+          "summary": "Governments from Canada and the UK to the Gulf and EU are funding domestic compute and models to reduce dependence on foreign providers, often through deals with US chipmakers.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "Canada's 'AI for All' strategy",
+              "summary": "Canada's national AI strategy commits over C$2bn, with a sovereign AI foundation as one of six pillars, after a sovereign compute strategy in April.",
+              "date": "2026-06",
+              "kind": "policy",
+              "source": "https://www.globalgovernmentforum.com/canada-publishes-new-national-ai-strategy-with-focus-on-trust-and-sovereignty/",
+              "verified": true
+            },
+            {
+              "name": "EU AI gigafactories tender",
+              "summary": "The EU is procuring up to seven AI gigafactories backed by about EUR 10bn in public funds; bids close 12 November 2026 with awards expected in early 2027.",
+              "date": "2026-11",
+              "kind": "policy",
+              "source": "https://www.eweek.com/news/eu-10-billion-ai-gigafactories/",
+              "verified": true
+            },
+            {
+              "name": "Saudi Humain expands Nvidia deal",
+              "summary": "PIF-owned Humain expanded its Nvidia agreement as it targets about 3GW of data centre capacity by 2030, part of a Gulf push alongside Stargate UAE.",
+              "date": "2026-10",
+              "kind": "deal",
+              "source": "https://www.thenationalnews.com/future/technology/2026/10/22/saudi-arabias-humain-expands-nvidia-deal-with-84mw-ai-computing-plan/",
+              "verified": true
+            },
+            {
+              "name": "US Genesis Mission for AI in science",
+              "summary": "Executive Order 14363 directs DOE and the national labs to build a shared AI platform for scientific discovery, with 2026 deadlines for an initial capability.",
+              "date": "2025-11",
+              "kind": "policy",
+              "source": "https://www.whitehouse.gov/fact-sheets/2025/11/launching-the-genesis-mission/",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "geo.governance",
+          "name": "International governance & safety institutes",
+          "summary": "Global AI governance has shifted to broad, nonbinding forums: the India summit, a new UN scientific panel and dialogue, and an annual international safety science report.",
+          "activity": 3,
+          "maturity": "emerging",
+          "landmarks": [
+            {
+              "name": "International AI Safety Report 2026",
+              "summary": "Chaired by Yoshua Bengio with 100+ experts, the second report finds fast capability gains and uneven, underdeveloped risk management practices.",
+              "date": "2026-02",
+              "kind": "research",
+              "source": "https://yoshuabengio.org/en/publication/international-ai-safety-report-2026",
+              "verified": true
+            },
+            {
+              "name": "New Delhi Declaration at AI Impact Summit",
+              "summary": "About 88 to 91 countries and organisations adopted a nonbinding declaration on inclusive AI; frontier firms signed voluntary commitments critics called weak on safety.",
+              "date": "2026-02",
+              "kind": "policy",
+              "source": "https://theprint.in/tech/ai-summit-ends-with-88-nations-adopting-new-delhi-declaration-calls-for-cooperation-sovereignty/2860446",
+              "verified": true
+            },
+            {
+              "name": "First UN Global Dialogue on AI Governance",
+              "summary": "All UN member states met in Geneva on 6-7 July, alongside the UN Scientific Panel on AI's first preliminary report; the next session is in New York in May 2027.",
+              "date": "2026-07",
+              "kind": "policy",
+              "source": "https://www.itu.int/en/mediacentre/Pages/PR-2026-07-06-Global-Dialogue.aspx",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "geo.defense",
+          "name": "Defense & military AI",
+          "summary": "The Pentagon declared an AI-first strategy and clashed with Anthropic over usage limits, while Ukraine scales AI-assisted drones and ground robots with humans still approving strikes.",
+          "activity": 5,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "Pentagon AI Acceleration Strategy",
+              "summary": "Hegseth's memo aims for an 'AI-first warfighting force', sets seven pace-setting projects and requires frontier models reach warfighters within 30 days of release.",
+              "date": "2026-01",
+              "kind": "policy",
+              "source": "https://nextgov.com/ideas/2026/02/dods-ai-acceleration-strategy/411135",
+              "verified": true
+            },
+            {
+              "name": "Pentagon labels Anthropic a supply chain risk",
+              "summary": "After Anthropic refused to drop bans on autonomous weapons and mass surveillance, DoD designated it a risk; a district court ruled the move arbitrary in August.",
+              "date": "2026-03",
+              "kind": "incident",
+              "source": "https://www.npr.org/2026/03/06/g-s1-112713/pentagon-labels-ai-company-anthropic-a-supply-chain-risk",
+              "verified": true
+            },
+            {
+              "name": "Ukraine bets on battlefield AI",
+              "summary": "Ukraine's Defense AI Center coordinates 2,000+ firms and reports 70+ AI and vision systems at the front, while officials say full autonomy is years away.",
+              "date": "2026-04",
+              "kind": "experiment",
+              "source": "https://wtop.com/russia-ukraine-war-news/2026/04/the-ap-interview-ukraine-bets-on-battlefield-ai-as-the-race-for-weapons-autonomy-intensifies/",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "geo.energy",
+          "name": "Energy & data centres",
+          "summary": "Gigawatt-scale AI campuses are coming online and data centre power use is rising about a quarter a year, pushing hyperscalers into nuclear deals and straining local grids like PJM.",
+          "activity": 5,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "Gartner: data centre power up 26% in 2026",
+              "summary": "Gartner forecasts global data centre electricity use of 565TWh in 2026, up from 447TWh in 2025, driven by AI-optimised servers.",
+              "date": "2026-06",
+              "kind": "research",
+              "source": "https://www.gartner.com/en/newsroom/press-releases/2026-06-10-gartner-says-data-center-electricity-demand-to-grow-26-percent-in-2026",
+              "verified": true
+            },
+            {
+              "name": "Meta signs up to 6.6GW of nuclear power",
+              "summary": "Deals with Vistra, TerraPower and Oklo cover existing plants and new advanced reactors, the largest tech-nuclear commitment so far, with most capacity due by 2035.",
+              "date": "2026-01",
+              "kind": "deal",
+              "source": "https://introl.com/fr/blog/meta-nuclear-power-deal-oklo-terrapower-vistra-6gw-2026",
+              "verified": true
+            },
+            {
+              "name": "Data centres projected at a fifth of US power",
+              "summary": "Bloomberg reporting projects data centres could reach about 20% of US electricity use by 2035, intensifying fights over grid costs and capacity.",
+              "date": "2026-05",
+              "kind": "research",
+              "source": "https://news.bloomberglaw.com/business-and-practice/data-centers-on-track-to-suck-up-a-fifth-of-us-power-use-by-2035",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "geo.info",
+          "name": "Elections & information integrity",
+          "summary": "The 2026 US midterms saw widespread AI-generated political ads, mostly without disclaimers, plus foreign influence operations; rules are a patchwork of state disclosure laws.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "AI deepfake ads in US midterms",
+              "summary": "A multimillion-dollar wave of AI-generated political ads ran in 2026 races; the Wesleyan Media Project found only 27% carried an AI disclaimer.",
+              "date": "2026-10",
+              "kind": "incident",
+              "source": "https://www.nst.com.my/amp/opinion/columnists/2026/10/1565001/ai-deepfake-ads-blur-truth-us-midterms",
+              "verified": true
+            },
+            {
+              "name": "OECD logs midterm deepfakes as realised harm",
+              "summary": "The OECD AI incident monitor recorded AI deepfakes used to mislead voters in 2026 US campaigns.",
+              "date": "2026-03",
+              "kind": "incident",
+              "source": "https://oecd.ai/en/incidents/2026-03-28-b14f",
+              "verified": true
+            },
+            {
+              "name": "Voters turn to chatbots for election info",
+              "summary": "A Pew survey found 8% of US adults used chatbots for 2026 election information, raising questions about accuracy and persuasion.",
+              "date": "2026-10",
+              "kind": "research",
+              "source": "https://www.eweek.com/news/ai-2026-midterms-deepfakes-chatbots-election-security/",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "geo.open-weights",
+          "name": "Open vs closed models",
+          "summary": "Chinese labs now lead open-weight models on usage and benchmarks, while Meta moved its frontier work to a closed model, leaving OpenAI's gpt-oss as a main US open option.",
+          "activity": 4,
+          "maturity": "established",
+          "landmarks": [
+            {
+              "name": "Meta launches closed Muse Spark",
+              "summary": "Meta's first closed frontier model ships with no public weights, a break from its Llama open-weights strategy.",
+              "date": "2026-04",
+              "kind": "product",
+              "source": "https://www.webpronews.com/metas-bold-ai-pivot-ditching-llamas-open-weights-for-muse-sparks-closed-power-play/",
+              "verified": true
+            },
+            {
+              "name": "Chinese models dominate open-weight usage",
+              "summary": "Analyses of OpenRouter data put Chinese open-weight models at roughly 61% of routed tokens by May 2026, led by Qwen, DeepSeek, GLM and Kimi.",
+              "date": "2026-05",
+              "kind": "research",
+              "source": "https://www.wing.vc/content/chinas-open-weight-takeover",
+              "verified": false
+            },
+            {
+              "name": "MIT Tech Review on China's open-source lead",
+              "summary": "Reporting examines how Chinese open models overtook US ones in downloads and why US policymakers now see open weights as a strategic issue.",
+              "date": "2026-04",
+              "kind": "debate",
+              "source": "https://www.technologyreview.com/2026/04/21/1135658/china-open-source-models-ai-artificial-intelligence/",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "geo.regulation",
+          "name": "Domestic AI regulation",
+          "summary": "The EU delayed AI Act high-risk rules to 2027-28 via a digital omnibus, and the US White House moved to preempt state AI laws through litigation and funding conditions.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "EU agrees AI Act omnibus delay",
+              "summary": "Provisional deal moves high-risk obligations to December 2027 and August 2028 and adds a ban on nudification apps.",
+              "date": "2026-05",
+              "kind": "policy",
+              "source": "https://www.euronews.com/2026/05/07/eu-reaches-tentative-deal-to-simplify-ai-rules",
+              "verified": true
+            },
+            {
+              "name": "US order targets state AI laws",
+              "summary": "A December 2025 executive order created a DOJ AI Litigation Task Force, formed in January 2026, and tied broadband funds to state AI rules; its legality is contested.",
+              "date": "2025-12",
+              "kind": "policy",
+              "source": "https://axios.com/2025/12/11/trump-signs-executive-order-state-ai-laws",
+              "verified": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

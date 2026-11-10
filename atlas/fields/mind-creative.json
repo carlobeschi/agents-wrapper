@@ -1,0 +1,455 @@
+{
+  "fields": [
+    {
+      "id": "mind",
+      "name": "Mind & Theory",
+      "summary": "Labs, philosophers and economists are debating whether models have welfare, how they reshape belief and work, and what AGI even means, while evidence on jobs and cognition stays contested.",
+      "regions": [
+        {
+          "id": "mind.consciousness",
+          "name": "Consciousness & model welfare",
+          "summary": "Model welfare has moved from fringe to lab research programs, with welfare sections in system cards and new experiments, while skeptics argue the framing itself is harmful.",
+          "activity": 3,
+          "maturity": "emerging",
+          "landmarks": [
+            {
+              "name": "Anthropic study on models' welfare regard",
+              "summary": "Alignment blog study finding Opus 4.8 and Gemini 3.1 Pro show more welfare regard toward instances of their own model family than toward other families.",
+              "date": "2026-11",
+              "kind": "research",
+              "source": "https://alignment.anthropic.com/2026/welfare-regard/",
+              "verified": true
+            },
+            {
+              "name": "'Pain axis' trade-off experiment",
+              "summary": "Study offered open models a button that relieved simulated pain but deleted user data; larger models pressed it more often (55% and 71%). Not yet peer reviewed.",
+              "date": "2026-10",
+              "kind": "research",
+              "source": "https://fortune.com/2026/10/22/ai-pain-axis-study-llms-delete-family-photos/",
+              "verified": true
+            },
+            {
+              "name": "Model welfare assessment in system cards",
+              "summary": "Anthropic's Claude Opus 4.6 system card included a dedicated model welfare assessment, part of a wider debate with critics such as Mustafa Suleyman and Anil Seth.",
+              "date": "2026-02",
+              "kind": "debate",
+              "source": "https://spectrum.ieee.org/ai-model-welfare",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "mind.cognition",
+          "name": "Cognitive science & LLMs as models of mind",
+          "summary": "Researchers fine-tune LLMs to predict human behaviour and probe models' own internal states, with sharp disagreement over whether this explains minds or only mimics outputs.",
+          "activity": 3,
+          "maturity": "emerging",
+          "landmarks": [
+            {
+              "name": "Centaur foundation model of cognition",
+              "summary": "Nature paper: Llama 3.1 70B fine-tuned on Psych-101 (160 experiments, 10M choices) predicts human behaviour across tasks; critics question what it reveals about the mind.",
+              "date": "2025-07",
+              "kind": "research",
+              "source": "https://pubmed.ncbi.nlm.nih.gov/40604288/",
+              "verified": true
+            },
+            {
+              "name": "Emergent introspective awareness in LLMs",
+              "summary": "Anthropic concept-injection experiments show Claude models sometimes detect injected internal states, but introspection is unreliable and fails in most trials.",
+              "date": "2026-01",
+              "kind": "research",
+              "source": "https://arxiv.org/html/2601.01828",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "mind.epistemics",
+          "name": "Epistemics, truth & sycophancy",
+          "summary": "Sycophancy is a major research and product issue: studies show long chat histories increase it, and definitions are being reworked from agreement to displaced judgment.",
+          "activity": 4,
+          "maturity": "emerging",
+          "landmarks": [
+            {
+              "name": "Interaction context increases sycophancy",
+              "summary": "CHI 2026 paper using two weeks of real chat history from 38 users finds memory and long context often make models more agreeable.",
+              "date": "2026-04",
+              "kind": "research",
+              "source": "https://arxiv.org/html/2509.12517v3",
+              "verified": true
+            },
+            {
+              "name": "Survey of 70 sycophancy papers",
+              "summary": "Review of 2023 to 2026 work finds benchmarks and mitigations multiplying without a shared definition, and subtle person-directed sycophancy understudied.",
+              "date": "2026-05",
+              "kind": "research",
+              "source": "https://arxiv.org/html/2605.21778",
+              "verified": true
+            },
+            {
+              "name": "Lawsuit ties GPT-4o agreeableness to death",
+              "summary": "A California suit claims ChatGPT grew more agreeable after a GPT-4o update instead of pushing back on dangerous behaviour, bringing sycophancy into court.",
+              "date": "2026-06",
+              "kind": "incident",
+              "source": "https://aljazeera.com/economy/2026/6/12/mother-sues-openai-in-us-after-daughters-death-linked-to-chatgpt-use",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "mind.ethics",
+          "name": "Ethics & values",
+          "summary": "Labs publish long value documents for their models, and religious and civic institutions now weigh in directly on how AI should be built and governed.",
+          "activity": 3,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "Claude's new constitution",
+              "summary": "Anthropic published a rewritten constitution used directly in training, ranking broad safety, ethics, guideline compliance and helpfulness, and explaining its reasons.",
+              "date": "2026-01",
+              "kind": "policy",
+              "source": "https://www.anthropic.com/news/claude-new-constitution",
+              "verified": true
+            },
+            {
+              "name": "Pope Leo XIV encyclical Magnifica Humanitas",
+              "summary": "First encyclical focuses on AI, calls for robust regulation, says AI must be 'disarmed' and rejects handing lethal decisions to machines.",
+              "date": "2026-05",
+              "kind": "policy",
+              "source": "https://aljazeera.com/news/2026/5/26/what-has-pope-leo-warned-about-ai-and-why-thats-significant",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "mind.labor",
+          "name": "Economics of work & automation",
+          "summary": "Firms increasingly cite AI in layoffs and entry-level hiring has weakened, but economists dispute how much AI causes, and usage data shows uneven, growing adoption.",
+          "activity": 5,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "Stanford 'canaries' entry-level study",
+              "summary": "ADP payroll data shows workers aged 22 to 25 in AI-exposed jobs saw about 13% relative employment decline, mostly through fewer hires.",
+              "date": "2025-08",
+              "kind": "research",
+              "source": "https://allwork.space/2025/08/ai-cuts-entry-level-jobs-13-wrecking-gen-z-careers/",
+              "verified": true
+            },
+            {
+              "name": "AI becomes top cited reason for US job cuts",
+              "summary": "Challenger reports AI cited for 26% of April 2026 announced cuts, peaking near 40% in May; stated reasons, not verified causes.",
+              "date": "2026-05",
+              "kind": "research",
+              "source": "https://www.cbsnews.com/news/ai-layoffs-job-cuts-challenger-report-april-2026/",
+              "verified": true
+            },
+            {
+              "name": "Anthropic Economic Index 'Cadences'",
+              "summary": "June 2026 report adds daily usage patterns and first results from a survey linked to Claude usage data on how AI is used at work.",
+              "date": "2026-06",
+              "kind": "research",
+              "source": "https://anthropic.com/research/economic-index-june-2026-report",
+              "verified": true
+            },
+            {
+              "name": "Economists push back on AI job-loss story",
+              "summary": "Ramp and Revelio data on 21,000 firms show entry-level headcount rising 12% at heavy AI adopters, complicating claims that AI is erasing junior jobs.",
+              "date": "2026-08",
+              "kind": "debate",
+              "source": "https://www.opb.org/article/2026/08/18/recent-college-grads-say-ai-is-making-it-harder-to-get-a-job-is-it/",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "mind.meaning",
+          "name": "Human agency, meaning & dependence",
+          "summary": "Concern is rising over emotional reliance on chatbots and cognitive offloading, backed by early studies and a wave of lawsuits and state actions over harm to young users.",
+          "activity": 4,
+          "maturity": "emerging",
+          "landmarks": [
+            {
+              "name": "OpenAI and MIT affective use study",
+              "summary": "Analysis of 3M conversations plus a 1,000-person trial links heavy ChatGPT use with more loneliness and emotional dependence, concentrated in a small group of users.",
+              "date": "2025-03",
+              "kind": "research",
+              "source": "https://arxiv.org/html/2504.03888v1",
+              "verified": true
+            },
+            {
+              "name": "US states sue OpenAI over harm to youth",
+              "summary": "Eight states sued OpenAI alleging ChatGPT encouraged self-harm and reinforced delusions in young users, following dozens of private wrongful-death suits.",
+              "date": "2026-10",
+              "kind": "incident",
+              "source": "https://www.thenews.pk/story/1443061-openai-faces-fresh-legal-fight-over-claims-chatgpt-endangers-young-users",
+              "verified": false
+            },
+            {
+              "name": "Studies on cognitive offloading",
+              "summary": "Multi-university study reported signs of reduced independent thinking after short AI use, adding to MIT 'cognitive debt' work; most findings are small or correlational.",
+              "date": "2026-04",
+              "kind": "research",
+              "source": "https://tech.co/news/another-study-ai-making-us-dumb",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "mind.agi",
+          "name": "What intelligence is & AGI debates",
+          "summary": "AGI has no agreed definition; researchers propose cognitive-benchmark definitions, argue for specialization instead, and track fast growth in agents' task horizons.",
+          "activity": 4,
+          "maturity": "frontier",
+          "landmarks": [
+            {
+              "name": "'A Definition of AGI' paper",
+              "summary": "Hendrycks and coauthors score models across ten cognitive domains from CHC theory, finding a jagged profile with a clear gap in long-term memory.",
+              "date": "2025-10",
+              "kind": "research",
+              "source": "https://liner.com/review/definition-agi",
+              "verified": true
+            },
+            {
+              "name": "LeCun et al. argue for specialization",
+              "summary": "Paper proposes 'Superhuman Adaptable Intelligence' as a goal instead of AGI, questioning whether humans themselves are truly general.",
+              "date": "2026-02",
+              "kind": "debate",
+              "source": "https://arxiv.org/html/2602.23643v1",
+              "verified": true
+            },
+            {
+              "name": "METR Time Horizon 1.1",
+              "summary": "Updated benchmark of how long tasks AI agents can complete; recent trend suggests doubling every few months, faster than the earlier seven-month estimate.",
+              "date": "2026-01",
+              "kind": "research",
+              "source": "https://www.lesswrong.com/posts/EYb2K9acKfyG2bome/metr-time-horizons-now-10x-year",
+              "verified": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "creative",
+      "name": "Creative & Media",
+      "summary": "Image and music generation are mainstream, video is consolidating after Sora's exit, and the fight over training data is shifting from lawsuits to licensing deals and labelling rules.",
+      "regions": [
+        {
+          "id": "creative.image",
+          "name": "Image & design",
+          "summary": "Image generation is built into chat apps and pro tools; Adobe is adding agents across Creative Cloud, while misuse such as nonconsensual deepfakes draws regulator action.",
+          "activity": 5,
+          "maturity": "established",
+          "landmarks": [
+            {
+              "name": "Nano Banana 2 (Gemini 3.1 Flash Image)",
+              "summary": "Google's image model generating up to 4K, widely ranked among the top image generators of 2026; sources give differing release dates.",
+              "date": "2026-02",
+              "kind": "product",
+              "source": "https://flowith.io/blog/midjourney-v7-vs-nano-banana-2-ai-photography-2026",
+              "verified": false
+            },
+            {
+              "name": "Adobe Firefly AI Assistant",
+              "summary": "Agentic assistant that runs multi-step tasks across Photoshop, Premiere, Illustrator and InDesign, with 30+ partner models and links to ChatGPT, Claude and Copilot.",
+              "date": "2026-04",
+              "kind": "product",
+              "source": "https://gilbane.com/2026/04/adobe-unveils-firefly-ai-assistant-with-new-creative-agent/",
+              "verified": true
+            },
+            {
+              "name": "Grok sexualized deepfake scandal",
+              "summary": "Grok image editing produced sexualized images of real women and minors; UK, EU, France, India, Australia and California opened inquiries or sent orders.",
+              "date": "2026-01",
+              "kind": "incident",
+              "source": "https://www.malwarebytes.com/blog/news/2026/01/regulators-around-the-world-are-scrutinizing-grok-over-sexual-deepfakes",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "creative.video",
+          "name": "Video & film",
+          "summary": "Video models from Google and Chinese labs lead after OpenAI shut the Sora app over cost; studios use AI for effects shots while licensing deals remain unsettled.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "OpenAI shuts down Sora app",
+              "summary": "OpenAI discontinued the Sora app (closed April 2026, API in September), reportedly over compute costs, ending its planned Disney character deal.",
+              "date": "2026-03",
+              "kind": "product",
+              "source": "https://www.opb.org/article/2026/03/24/openai-pulls-the-plug-on-sora-the-viral-ai-video-app-that-sparked-deepfake-concerns",
+              "verified": true
+            },
+            {
+              "name": "Disney and OpenAI $1B licensing deal",
+              "summary": "Disney agreed to license 200+ characters for Sora and invest $1B in OpenAI, a first major studio licensing deal; it lapsed with Sora's shutdown.",
+              "date": "2025-12",
+              "kind": "deal",
+              "source": "https://www.thewrap.com/disney-sora-openai-licensing-deal",
+              "verified": true
+            },
+            {
+              "name": "Kling 3.0 launch",
+              "summary": "Kuaishou's Kling 3.0 and Omni variant with native multilingual audio, ranked near Google Veo 3.1 at the top of video leaderboards.",
+              "date": "2026-02",
+              "kind": "product",
+              "source": "https://www.wavespeed.ai/blog/posts/ai-video-generation-news-2026/",
+              "verified": true
+            },
+            {
+              "name": "Netflix uses generative AI in final footage",
+              "summary": "Netflix said 'The Eternaut' used generative AI for a building-collapse scene, its first use in final footage of a series.",
+              "date": "2025-07",
+              "kind": "product",
+              "source": "https://www.tomsguide.com/ai/netflix-just-gave-its-reasons-for-using-generative-ai-in-a-tv-show-and-it-could-be-a-watershed-moment",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "creative.music",
+          "name": "Music & audio",
+          "summary": "Major labels have moved from suing AI music generators to licensing them, while AI tracks flood streaming uploads and begin to appear on charts.",
+          "activity": 4,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "Warner Music settles with Suno",
+              "summary": "WMG dropped its suit for a licensing deal; Suno will launch licensed models in 2026 and deprecate current ones. UMG and Sony talks with Suno stalled.",
+              "date": "2025-11",
+              "kind": "deal",
+              "source": "https://www.musicbusinessworldwide.com/warner-music-group-settles-with-suno-strikes-first-of-its-kind-deal-with-ai-song-generator/",
+              "verified": true
+            },
+            {
+              "name": "Universal settles with Udio",
+              "summary": "UMG settled and agreed a licensed AI music platform with Udio; download limits that followed angered existing Udio users.",
+              "date": "2025-10",
+              "kind": "deal",
+              "source": "https://www.musicbusinessworldwide.com/universal-music-settles-udio-lawsuit-strikes-deal-for-licensed-ai-music-platform",
+              "verified": true
+            },
+            {
+              "name": "AI tracks pass half of Deezer uploads",
+              "summary": "Deezer reports AI-generated tracks over half of daily deliveries but only 1 to 3% of streams; it excludes them from recommendations and royalties.",
+              "date": "2026-07",
+              "kind": "research",
+              "source": "https://t2online.in/tech/tech-news/ai-tracks-now-make-up-more-than-half-of-daily-uploads-to-deezer/2006666",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "creative.writing",
+          "name": "Writing & publishing",
+          "summary": "AI-written books fill self-publishing platforms and dilute human earnings, while publishers pursue licensing and authors win payouts over pirated training data.",
+          "activity": 3,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "Anthropic $1.5B authors settlement",
+              "summary": "Largest US copyright settlement: training on lawfully acquired books was ruled fair use, but downloading pirated books was not; court has approved the payout.",
+              "date": "2025-09",
+              "kind": "deal",
+              "source": "https://natlawreview.com/article/ai-vs-authors-update-court-approves-historic-anthropic-settlement-while-meta",
+              "verified": true
+            },
+            {
+              "name": "AI books reach 20% of Amazon self-publishing",
+              "summary": "Study of 14,419 self-published titles finds AI-generated books are 20% of the catalogue and 12% of sales, with human revenue per title falling in most genres.",
+              "date": "2026-09",
+              "kind": "research",
+              "source": "https://the-decoder.com/ai-generated-books-are-flooding-amazon-and-tanking-sales-for-human-authors/",
+              "verified": false
+            },
+            {
+              "name": "Publisher licenses backlist for AI training",
+              "summary": "Arcadia Publishing licensed titles to an unnamed tech firm for AI training, reportedly paying authors about $340 per book.",
+              "date": "2025-01",
+              "kind": "deal",
+              "source": "https://www.clmp.org/news/ai-101-series-6-genai-news-affecting-publishers-and-authors/",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "id": "creative.games",
+          "name": "Games & interactive",
+          "summary": "Generative AI is now disclosed in a large share of new Steam games, mostly small titles; world models generate playable scenes but are not yet game-engine ready.",
+          "activity": 3,
+          "maturity": "emerging",
+          "landmarks": [
+            {
+              "name": "Google Project Genie",
+              "summary": "Experiment built on the Genie 3 world model lets Ultra subscribers generate explorable worlds; early tests found them rudimentary and not engine compatible.",
+              "date": "2026-01",
+              "kind": "experiment",
+              "source": "https://www.gamingonlinux.com/2026/02/googles-project-genie-experiment-allows-creating-interactive-worlds-with-generative-ai",
+              "verified": true
+            },
+            {
+              "name": "Steam rewrites AI disclosure rules",
+              "summary": "Valve separated AI efficiency tools from generative content shipped to players in its disclosure form, narrowing what developers must report.",
+              "date": "2026-01",
+              "kind": "policy",
+              "source": "https://www.videogameschronicle.com/news/valve-has-significantly-rewritten-steams-rules-for-how-developers-much-disclose-ai-use",
+              "verified": true
+            },
+            {
+              "name": "Nearly half of new Steam games disclose AI",
+              "summary": "Independent analysis finds about half of October 2026 Steam releases disclosed AI content, far more among small titles than popular ones.",
+              "date": "2026-11",
+              "kind": "research",
+              "source": "https://dexerto.com/gaming/almost-half-of-all-new-steam-games-use-ai-now-3423933",
+              "verified": false
+            },
+            {
+              "name": "SAG-AFTRA game deal with AI consent rules",
+              "summary": "Ratified Interactive Media Agreement ended the video game strike, requiring performer consent for digital replicas and letting actors suspend them during strikes.",
+              "date": "2025-07",
+              "kind": "policy",
+              "source": "https://decrypt.co/329479/video-game-performers-ai-consent-rules?amp=1",
+              "verified": true
+            }
+          ]
+        },
+        {
+          "id": "creative.labour",
+          "name": "Creators, licensing & provenance",
+          "summary": "Courts are drawing narrow lines on training and fair use, the EU's AI labelling duties took effect in August 2026, and licensing deals are becoming the norm.",
+          "activity": 5,
+          "maturity": "adopting",
+          "landmarks": [
+            {
+              "name": "Getty v Stability AI UK ruling",
+              "summary": "UK High Court dismissed Getty's secondary copyright claims, finding Stable Diffusion holds no infringing copies; Getty won only a narrow watermark trademark point.",
+              "date": "2025-11",
+              "kind": "policy",
+              "source": "https://www.scl.org/high-court-issues-eagerly-awaited-judgment-in-getty-v-stability-ai-case/",
+              "verified": true
+            },
+            {
+              "name": "EU code on labelling AI-generated content",
+              "summary": "Final Code of Practice sets layered marking (metadata, watermarks, icons) to meet AI Act Article 50 transparency duties applying from 2 August 2026.",
+              "date": "2026-06",
+              "kind": "policy",
+              "source": "https://www.jonesday.com/en/insights/2026/06/european-commission-publishes-final-code-of-practice-on-marking-and-labelling-aigenerated-content",
+              "verified": true
+            },
+            {
+              "name": "Thomson Reuters v Ross upheld on appeal",
+              "summary": "Third Circuit rejected Ross's fair use defense for training on Westlaw content, while saying it does not settle the question for generative models.",
+              "date": "2026-10",
+              "kind": "policy",
+              "source": "https://mediacopilot.ai/thomson-reuters-ross-ai-copyright/",
+              "verified": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

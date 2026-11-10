@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--/shell-->
+<title>AI Atlas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Spectral:ital,wght@1,400;1,500&display=swap">
+<style>
+/* Layout: a full-bleed topographic map of invented continents (one per field); elevation and tint = activity.
+   UI floats above it: a title cartouche with search (top left), a key (bottom left), zoom (bottom right)
+   and a detail panel (right on desktop, bottom sheet on phones). */
+:root {
+  --sea: #d9e3e8; --sea-shallow: #e5ecef; --grat: #c8d5dc;
+  --ink: #1d2c34; --ink-soft: #51626c; --paper: #f7f9fa; --rule: #d2dbe0;
+  --coast: #2b4350; --contour: rgba(43, 67, 80, .26); --border: rgba(43, 67, 80, .5);
+  --lane: #23688a; --lane-soft: rgba(35, 104, 138, .45); --sel: #0f4e6b; --hl: rgba(15, 78, 107, .14);
+  --h0: #eef0e4; --h1: #e2e6c6; --h2: #ead69c; --h3: #e7b574; --h4: #dc8a55; --h5: #c65e3e; --h6: #9f3a31;
+  --halo: rgba(247, 249, 250, .92);
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --f-region: "Spectral", Georgia, "Times New Roman", serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --panel-w: 384px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sea: #0c171e; --sea-shallow: #12222b; --grat: #16262f;
+    --ink: #e2eaee; --ink-soft: #97a8b1; --paper: #101e26; --rule: #223540;
+    --coast: #8aa6b3; --contour: rgba(200, 222, 230, .15); --border: rgba(200, 222, 230, .38);
+    --lane: #6cb2d3; --lane-soft: rgba(108, 178, 211, .45); --sel: #9ad3ee; --hl: rgba(154, 211, 238, .16);
+    --h0: #1c2a2a; --h1: #26372e; --h2: #46472d; --h3: #6a522f; --h4: #8c5733; --h5: #ad5938; --h6: #cf6a49;
+    --halo: rgba(12, 23, 30, .88);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --sea: #0c171e; --sea-shallow: #12222b; --grat: #16262f;
+  --ink: #e2eaee; --ink-soft: #97a8b1; --paper: #101e26; --rule: #223540;
+  --coast: #8aa6b3; --contour: rgba(200, 222, 230, .15); --border: rgba(200, 222, 230, .38);
+  --lane: #6cb2d3; --lane-soft: rgba(108, 178, 211, .45); --sel: #9ad3ee; --hl: rgba(154, 211, 238, .16);
+  --h0: #1c2a2a; --h1: #26372e; --h2: #46472d; --h3: #6a522f; --h4: #8c5733; --h5: #ad5938; --h6: #cf6a49;
+  --halo: rgba(12, 23, 30, .88);
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { margin: 0; background: var(--sea); color: var(--ink); font: 14px/1.5 var(--f-body); overflow: hidden; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--sel); outline-offset: 2px; }
+
+#map { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+#map.dragging { cursor: grabbing; }
+#map.over-land { cursor: pointer; }
+.sea { fill: var(--sea); }
+.grat { stroke: var(--grat); stroke-width: 1; fill: none; }
+.shallow { fill: none; stroke: var(--sea-shallow); stroke-linejoin: round; }
+.lv { stroke: var(--contour); stroke-width: .8; }
+.lv0 { fill: var(--h0); stroke: var(--coast); stroke-width: 1.3; }
+.lv1 { fill: var(--h1); } .lv2 { fill: var(--h2); } .lv3 { fill: var(--h3); }
+.lv4 { fill: var(--h4); } .lv5 { fill: var(--h5); } .lv6 { fill: var(--h6); }
+.prov { fill: transparent; stroke: var(--border); stroke-width: .7; stroke-dasharray: 3 3; }
+.prov.hover { fill: var(--hl); }
+.prov.sel { fill: transparent; stroke: var(--sel); stroke-width: 2; stroke-dasharray: none; }
+.fog { fill: url(#hatch); pointer-events: none; }
+.hatch-line { stroke: var(--ink); stroke-opacity: .22; stroke-width: 1.2; }
+.lane { fill: none; stroke: var(--lane-soft); stroke-width: 1.2; stroke-dasharray: 2 5; stroke-linecap: round; }
+.lane.on { stroke: var(--lane); stroke-width: 2.2; stroke-dasharray: 6 5; }
+.lane.dim { opacity: .25; }
+
+#overlay text { paint-order: stroke; stroke: var(--halo); stroke-linejoin: round; pointer-events: none; }
+.lab-field { font: 600 15px var(--f-display); letter-spacing: .28em; text-transform: uppercase; fill: var(--ink); stroke-width: 5px; }
+.lab-field-sub { font: 400 10.5px var(--f-mono); fill: var(--ink-soft); stroke-width: 4px; letter-spacing: .04em; }
+.lab-region { font: italic 500 13px var(--f-region); fill: var(--ink); stroke-width: 4px; }
+.lab-lm { font: 400 11px var(--f-body); fill: var(--ink); stroke-width: 3.5px; }
+.dot { fill: var(--ink); stroke: var(--halo); stroke-width: 1.5px; }
+.dot.unv { fill: var(--halo); stroke: var(--ink); stroke-width: 1.4px; }
+.dot.sel { fill: var(--sel); stroke: var(--halo); }
+.dot.unv.sel { fill: var(--halo); stroke: var(--sel); stroke-width: 2.4px; }
+#overlay .hidden { display: none; }
+#overlay.z2 .lab-field { font-size: 12px; opacity: .55; }
+#overlay.z2 .lab-field-sub { display: none; }
+
+#ui { position: fixed; inset: 0; pointer-events: none;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-bottom, 0px)); }
+#ui > * { pointer-events: auto; }
+.card { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; box-shadow: 0 6px 24px rgba(10, 30, 40, .12); }
+
+#cartouche { position: absolute; top: max(16px, env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+  width: min(340px, calc(100% - 32px)); padding: 14px 16px 12px; display: grid; gap: 8px; }
+#cartouche h1 { margin: 0; font: 600 22px/1 var(--f-display); letter-spacing: .32em; text-transform: uppercase; }
+#cartouche .edition { margin: 0; font: 400 11px/1.4 var(--f-mono); color: var(--ink-soft); letter-spacing: .02em; }
+.search { position: relative; }
+.search input { width: 100%; box-sizing: border-box; padding: 8px 10px; font: inherit; color: var(--ink);
+  background: var(--sea-shallow); border: 1px solid var(--rule); border-radius: 4px; }
+.search input::placeholder { color: var(--ink-soft); }
+#results { list-style: none; margin: 4px 0 0; padding: 0; max-height: 280px; overflow-y: auto; }
+#results:empty { display: none; }
+#results button { width: 100%; text-align: left; background: none; border: 0; padding: 6px 8px; border-radius: 4px; cursor: pointer; display: grid; gap: 1px; }
+#results button:hover, #results button.active { background: var(--hl); }
+#results .t { font-weight: 500; }
+#results .s { font: 400 11px var(--f-mono); color: var(--ink-soft); }
+
+#key { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); padding: 12px 14px; width: 250px; font-size: 12px; }
+.key-title { font: 600 10.5px var(--f-display); letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 6px; }
+.ramp { display: grid; grid-template-columns: repeat(6, 1fr); height: 10px; border: 1px solid var(--coast); border-radius: 2px; overflow: hidden; }
+.ramp-labels { display: flex; justify-content: space-between; font: 400 10.5px var(--f-mono); color: var(--ink-soft); margin: 3px 0 8px; }
+.key-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; color: var(--ink); }
+.key-row svg { flex: none; }
+
+#zoom { position: absolute; bottom: max(16px, env(safe-area-inset-bottom, 0px)); right: calc(max(16px, env(safe-area-inset-right, 0px)) + var(--panel-w) + 12px); display: grid; overflow: hidden; }
+#zoom button { width: 38px; height: 36px; border: 0; background: none; cursor: pointer; font-size: 18px; line-height: 1; }
+#zoom button + button { border-top: 1px solid var(--rule); }
+#zoom button:hover { background: var(--hl); }
+#zoom .world { font: 600 10px var(--f-display); letter-spacing: .1em; text-transform: uppercase; }
+
+#panel { position: absolute; top: max(16px, env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  width: var(--panel-w); display: flex; flex-direction: column; min-height: 0; }
+#sheet-handle { display: none; }
+#panel-body { overflow-y: auto; padding: 18px 20px 22px; min-height: 0; flex: 1; }
+.crumbs { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font: 400 11px var(--f-mono); color: var(--ink-soft); margin-bottom: 10px; }
+.crumbs button { background: none; border: 0; padding: 0; cursor: pointer; color: var(--lane); text-decoration: underline; text-underline-offset: 2px; }
+#panel h2 { margin: 0 0 6px; font: 600 21px/1.2 var(--f-display); letter-spacing: .01em; text-wrap: balance; }
+#panel h3 { margin: 20px 0 8px; font: 600 11px var(--f-display); letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft); }
+#panel p { margin: 0 0 10px; max-width: 65ch; }
+.lede { color: var(--ink); }
+.fine { font-size: 12px; color: var(--ink-soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font: 500 11px var(--f-mono); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--rule); background: var(--sea-shallow); white-space: nowrap; }
+.chip.frontier { background: transparent; border-style: dashed; }
+.pips { display: inline-flex; gap: 2px; }
+.pips i { width: 7px; height: 7px; border-radius: 1px; background: var(--rule); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 4px; }
+.stats div { border-top: 1px solid var(--rule); padding-top: 6px; }
+.stats b { display: block; font: 500 18px var(--f-mono); font-variant-numeric: tabular-nums; }
+.stats span { font-size: 11.5px; color: var(--ink-soft); }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.list button { width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; text-align: left; background: none; border: 0; border-radius: 4px; padding: 7px 8px; cursor: pointer; }
+.list button:hover { background: var(--hl); }
+.list .n { font-weight: 500; min-width: 0; }
+.list .m { grid-column: 1 / -1; font-size: 12px; color: var(--ink-soft); }
+.lm { border-top: 1px solid var(--rule); padding: 10px 0 12px; display: grid; gap: 4px; scroll-margin-top: 12px; }
+.lm.sel { background: var(--hl); margin: 0 -10px; padding-inline: 10px; border-radius: 4px; }
+.lm-top { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font: 400 11px var(--f-mono); color: var(--ink-soft); }
+.lm-name { font-weight: 600; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
+.lm-name:hover { color: var(--lane); }
+.lm p { margin: 0 !important; font-size: 13px; }
+.lm a { font: 400 11.5px var(--f-mono); color: var(--lane); word-break: break-all; }
+.unv-tag { color: var(--h5); }
+#tip { position: fixed; pointer-events: none; padding: 5px 9px; font-size: 12px; background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; box-shadow: 0 4px 14px rgba(10, 30, 40, .14); max-width: 260px; }
+#tip b { display: block; font-weight: 600; }
+#tip span { color: var(--ink-soft); font: 400 11px var(--f-mono); }
+
+@media (max-width: 760px) {
+  :root { --panel-w: 0px; }
+  #key { display: none; }
+  .lab-field { font-size: 10.5px; letter-spacing: .12em; }
+  #overlay.z2 .lab-field { font-size: 10px; }
+  #cartouche { padding: 10px 12px; gap: 6px; }
+  #cartouche h1 { font-size: 17px; }
+  #cartouche .edition { display: none; }
+  #zoom { right: max(16px, env(safe-area-inset-right, 0px)); bottom: auto; top: calc(max(16px, env(safe-area-inset-top, 0px)) + 104px); }
+  #panel { top: auto; left: max(8px, env(safe-area-inset-left, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); bottom: max(8px, env(safe-area-inset-bottom, 0px)); width: auto; max-height: 52%; }
+  #panel:not(.open) #panel-body { display: none; }
+  #sheet-handle { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; border: 0; background: none; padding: 10px 16px; cursor: pointer; text-align: left; }
+  #sheet-handle .ttl { font: 600 13px var(--f-display); letter-spacing: .06em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  #sheet-handle .tog { font: 400 11px var(--f-mono); color: var(--lane); flex: none; }
+  #panel.open #sheet-handle { border-bottom: 1px solid var(--rule); }
+  #panel-body { padding: 12px 16px 16px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<svg id="map" aria-label="Map of AI activity by field. Use the panel and search to navigate by keyboard." role="img">
+  <defs>
+    <pattern id="hatch" patternUnits="userSpaceOnUse" width="9" height="9" patternTransform="rotate(40)">
+      <line class="hatch-line" x1="0" y1="0" x2="0" y2="9"></line>
+    </pattern>
+  </defs>
+  <g id="world"></g>
+  <g id="overlay"></g>
+</svg>
+
+<div id="ui">
+  <section id="cartouche" class="card" aria-label="Title and search">
+    <h1>AI Atlas</h1>
+    <p class="edition" id="edition"></p>
+    <div class="search">
+      <label for="q" class="key-title" style="display:block">Find a field, topic or landmark</label>
+      <input id="q" type="search" autocomplete="off" placeholder="e.g. code review, EU AI Act, tutors" aria-controls="results">
+      <ul id="results" role="listbox" aria-label="Search results"></ul>
+    </div>
+  </section>
+
+  <aside id="key" class="card" aria-label="Map key">
+    <p class="key-title">Elevation = activity</p>
+    <div class="ramp" aria-hidden="true"><i style="background:var(--h1)"></i><i style="background:var(--h2)"></i><i style="background:var(--h3)"></i><i style="background:var(--h4)"></i><i style="background:var(--h5)"></i><i style="background:var(--h6)"></i></div>
+    <div class="ramp-labels"><span>quiet</span><span>contour = 1 point</span><span>busiest</span></div>
+    <div class="key-row"><svg width="22" height="14" aria-hidden="true"><rect width="22" height="14" fill="url(#hatch)" stroke="var(--border)" stroke-dasharray="3 3"></rect></svg>Hatched: frontier research</div>
+    <div class="key-row"><svg width="22" height="14" aria-hidden="true"><path d="M1 10 Q11 0 21 10" fill="none" stroke="var(--lane)" stroke-width="1.6" stroke-dasharray="2 4" stroke-linecap="round"></path></svg>Lane: fields feeding each other</div>
+    <div class="key-row"><svg width="22" height="14" aria-hidden="true"><circle cx="6" cy="7" r="4" class="dot"></circle><circle cx="16" cy="7" r="4" class="dot unv"></circle></svg>Landmark: source checked / not confirmed</div>
+  </aside>
+
+  <div id="zoom" class="card" role="group" aria-label="Zoom">
+    <button id="zin" type="button" aria-label="Zoom in">+</button>
+    <button id="zout" type="button" aria-label="Zoom out">&minus;</button>
+    <button id="zworld" class="world" type="button" aria-label="Show the whole map">All</button>
+  </div>
+
+  <aside id="panel" class="card" aria-label="Details">
+    <button id="sheet-handle" type="button" aria-expanded="false"><span class="ttl" id="sheet-title">Overview</span><span class="tog" id="sheet-tog">Show details</span></button>
+    <div id="panel-body" aria-live="polite"></div>
+  </aside>
+</div>
+<div id="tip" hidden></div>
+
+<script src="atlas-data.js"></script>
+<script>
+(function () {
+'use strict';
+const D = window.ATLAS;
+const $ = s => document.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+if (!D) { $('#panel-body').textContent = 'The map data (atlas-data.js) did not load. Run node atlas/build.js and reload.'; return; }
+
+const W = D.world.width, H = D.world.height;
+const svg = $('#map'), worldG = $('#world'), overlay = $('#overlay');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MATURITY = { frontier: 'Frontier research', emerging: 'Emerging', adopting: 'Adopting', established: 'Established' };
+const KIND = { product: 'Product', research: 'Research', experiment: 'Experiment', policy: 'Policy', debate: 'Debate', deal: 'Deal', incident: 'Incident' };
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const fmtDate = d => { const m = /^(\d{4})-(\d{2})/.exec(d || ''); return m ? MONTHS[+m[2] - 1] + ' ' + m[1] : (d || 'Undated'); };
+const host = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } };
+
+/* ---------- seeded randomness and value noise ---------- */
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function hash(x, y, s) { let h = Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(s, 1442695041); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+function vnoise(x, y, s) { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+  const a = hash(xi, yi, s), b = hash(xi + 1, yi, s), c = hash(xi, yi + 1, s), d = hash(xi + 1, yi + 1, s); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; }
+function fbm(x, y, s) { return vnoise(x / 150, y / 150, s) * 0.55 + vnoise(x / 60, y / 60, s + 7) * 0.3 + vnoise(x / 24, y / 24, s + 13) * 0.15; }
+
+/* ---------- index ---------- */
+const fieldById = {}, regionById = {}, landmarks = [];
+D.fields.forEach(f => { fieldById[f.id] = f; f.regions.forEach(r => { r.field = f; regionById[r.id] = r; r.landmarks.forEach((l, i) => { l.region = r; l.id = r.id + '~' + i; landmarks.push(l); }); }); });
+D.fields.forEach(f => { f.heat = f.regions.reduce((s, r) => s + r.activity, 0) / f.regions.length; });
+const routes = D.routes.map(r => ({ a: regionById[r.from], b: regionById[r.to], label: r.label }));
+
+/* ---------- terrain ---------- */
+const LEVELS = [0.22, 0.42, 0.62, 0.82, 1.02, 1.22, 1.42];
+const STEP = 7;
+
+D.fields.forEach((f, fi) => {
+  const pos = D.layout[f.id], R = rng(fi * 977 + 13), rot = R() * Math.PI * 2;
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  const order = f.regions.slice().sort((a, b) => b.activity - a.activity);
+  order.forEach((r, i) => { const rad = i === 0 ? 0 : 104 * Math.sqrt(i + 0.25), th = rot + i * golden;
+    r.x = pos.x + rad * Math.cos(th) * 1.15; r.y = pos.y + rad * Math.sin(th) * 0.9; r.sigma = 72 + r.activity * 8; r.amp = 0.34 + r.activity * 0.2; });
+  const crad = 104 * Math.sqrt(f.regions.length) + 30;
+  f.hills = []; for (let k = 0; k < 8; k++) { const th = R() * Math.PI * 2, rr = crad * (0.65 + R() * 0.45);
+    f.hills.push({ x: pos.x + Math.cos(th) * rr * 1.15, y: pos.y + Math.sin(th) * rr * 0.9, sigma: 42 + R() * 42, amp: 0.26 + R() * 0.12 }); }
+  f.cx = pos.x; f.cy = pos.y;
+  buildGrid(f, fi);
+});
+
+function buildGrid(f, fi) {
+  const pts = f.regions.concat(f.hills);
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  pts.forEach(p => { const pad = p.sigma * 2.7 + 20; x0 = Math.min(x0, p.x - pad); y0 = Math.min(y0, p.y - pad); x1 = Math.max(x1, p.x + pad); y1 = Math.max(y1, p.y + pad); });
+  const nx = Math.ceil((x1 - x0) / STEP) + 1, ny = Math.ceil((y1 - y0) / STEP) + 1, N = nx * ny;
+  const land = new Float32Array(N), owner = new Int16Array(N), d1a = new Float32Array(N), d2a = new Float32Array(N);
+  const regs = f.regions;
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const x = x0 + i * STEP, y = y0 + j * STEP, k = j * nx + i;
+    let s = 0;
+    for (const p of pts) { const dx = x - p.x, dy = y - p.y, v = p.amp * Math.exp(-(dx * dx + dy * dy) / (2 * p.sigma * p.sigma)); const v2 = v * v, v4 = v2 * v2; s += v4 * v4; }
+    let h = Math.pow(s, 1 / 8);
+    h += (fbm(x, y, fi + 1) - 0.5) * 0.5 * Math.min(1, h * 2.4);
+    if (i === 0 || j === 0 || i === nx - 1 || j === ny - 1) h = -1;
+    land[k] = h;
+    let b1 = Infinity, b2 = Infinity, o = -1;
+    for (let r = 0; r < regs.length; r++) { const dx = x - regs[r].x, dy = y - regs[r].y, d = Math.sqrt(dx * dx + dy * dy) / regs[r].sigma;
+      if (d < b1) { b2 = b1; b1 = d; o = r; } else if (d < b2) b2 = d; }
+    owner[k] = o; d1a[k] = b1; d2a[k] = b2;
+  }
+  f.grid = { x0, y0, nx, ny, land, owner, d1a, d2a };
+}
+
+/* marching squares -> closed loops (grid coordinates) */
+const CASES = { 1: [['L', 'B']], 2: [['B', 'R']], 3: [['L', 'R']], 4: [['T', 'R']], 6: [['T', 'B']], 7: [['T', 'L']], 8: [['L', 'T']], 9: [['T', 'B']], 11: [['T', 'R']], 12: [['L', 'R']], 13: [['R', 'B']], 14: [['L', 'B']] };
+function contours(vals, nx, ny, L) {
+  const segs = [], byKey = new Map();
+  const add = (ka, pa, kb, pb) => { const id = segs.length; segs.push([ka, pa, kb, pb]); (byKey.get(ka) || byKey.set(ka, []).get(ka)).push(id); (byKey.get(kb) || byKey.set(kb, []).get(kb)).push(id); };
+  for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
+    const a = vals[j * nx + i], b = vals[j * nx + i + 1], c = vals[(j + 1) * nx + i + 1], d = vals[(j + 1) * nx + i];
+    const idx = (a >= L ? 8 : 0) | (b >= L ? 4 : 0) | (c >= L ? 2 : 0) | (d >= L ? 1 : 0);
+    if (idx === 0 || idx === 15) continue;
+    const E = {
+      T: () => ['h' + i + '_' + j, [i + (L - a) / (b - a), j]],
+      R: () => ['v' + (i + 1) + '_' + j, [i + 1, j + (L - b) / (c - b)]],
+      B: () => ['h' + i + '_' + (j + 1), [i + (L - d) / (c - d), j + 1]],
+      L: () => ['v' + i + '_' + j, [i, j + (L - a) / (d - a)]]
+    };
+    let pairs = CASES[idx];
+    if (idx === 5 || idx === 10) { const center = (a + b + c + d) / 4 >= L;
+      pairs = idx === 5 ? (center ? [['T', 'L'], ['B', 'R']] : [['T', 'R'], ['L', 'B']]) : (center ? [['T', 'R'], ['L', 'B']] : [['L', 'T'], ['B', 'R']]); }
+    for (const [e1, e2] of pairs) { const p = E[e1](), q = E[e2](); add(p[0], p[1], q[0], q[1]); }
+  }
+  const used = new Uint8Array(segs.length), loops = [];
+  for (let s = 0; s < segs.length; s++) {
+    if (used[s]) continue; used[s] = 1;
+    const loop = [segs[s][1], segs[s][3]]; const startKey = segs[s][0]; let key = segs[s][2];
+    for (let guard = 0; guard < 200000; guard++) {
+      if (key === startKey) break;
+      const next = (byKey.get(key) || []).find(id => !used[id]); if (next === undefined) break;
+      used[next] = 1; const sg = segs[next];
+      if (sg[0] === key) { loop.push(sg[3]); key = sg[2]; } else { loop.push(sg[1]); key = sg[0]; }
+    }
+    if (loop.length > 3) loops.push(loop);
+  }
+  return loops;
+}
+function chaikin(pts) { const out = []; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length];
+  out.push([p[0] * 0.75 + q[0] * 0.25, p[1] * 0.75 + q[1] * 0.25], [p[0] * 0.25 + q[0] * 0.75, p[1] * 0.25 + q[1] * 0.75]); } return out; }
+function loopsToPath(loops, g) {
+  let d = '';
+  for (const lp of loops) { const pts = chaikin(lp); d += 'M' + pts.map(p => (g.x0 + p[0] * STEP).toFixed(1) + ' ' + (g.y0 + p[1] * STEP).toFixed(1)).join('L') + 'Z'; }
+  return d;
+}
+
+/* ---------- draw the world ---------- */
+el('rect', { class: 'sea', x: -W, y: -H, width: W * 3, height: H * 3 }, worldG);
+const grat = el('g', {}, worldG);
+for (let x = 0; x <= W; x += 300) el('line', { class: 'grat', x1: x, y1: 0, x2: x, y2: H, 'vector-effect': 'non-scaling-stroke' }, grat);
+for (let y = 0; y <= H; y += 300) el('line', { class: 'grat', x1: 0, y1: y, x2: W, y2: y, 'vector-effect': 'non-scaling-stroke' }, grat);
+const lanesG = el('g', {}, worldG);
+const landG = el('g', {}, worldG);
+
+D.fields.forEach(f => {
+  const g = f.grid, cg = el('g', {}, landG);
+  const coast = loopsToPath(contours(g.land, g.nx, g.ny, LEVELS[0]), g);
+  el('path', { class: 'shallow', d: coast, 'stroke-width': 56, opacity: 0.5 }, cg);
+  el('path', { class: 'shallow', d: coast, 'stroke-width': 24 }, cg);
+  LEVELS.forEach((L, li) => {
+    const d = li === 0 ? coast : loopsToPath(contours(g.land, g.nx, g.ny, L), g);
+    if (d) el('path', { class: 'lv lv' + li, d, 'fill-rule': 'evenodd', 'vector-effect': 'non-scaling-stroke' }, cg);
+  });
+  // provinces: one closed shape per region, clipped to the coast
+  const N = g.nx * g.ny, vals = new Float32Array(N);
+  f.regions.forEach((r, ri) => {
+    for (let k = 0; k < N; k++) {
+      if (g.land[k] < LEVELS[0]) { vals[k] = -1; continue; }
+      if (g.owner[k] === ri) vals[k] = g.d2a[k] - g.d1a[k];
+      else { const i = k % g.nx, j = (k - i) / g.nx, dx = g.x0 + i * STEP - r.x, dy = g.y0 + j * STEP - r.y; vals[k] = g.d1a[k] - Math.sqrt(dx * dx + dy * dy) / r.sigma; }
+    }
+    const d = loopsToPath(contours(vals, g.nx, g.ny, 0), g);
+    if (r.maturity === 'frontier') el('path', { class: 'fog', d }, cg);
+    r.prov = el('path', { class: 'prov', d, 'vector-effect': 'non-scaling-stroke' }, cg);
+  });
+});
+
+routes.forEach(rt => {
+  const { a, b } = rt, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, dx = b.x - a.x, dy = b.y - a.y;
+  const cx = mx - dy * 0.18, cy = my + dx * 0.18;
+  rt.path = el('path', { class: 'lane', d: `M${a.x} ${a.y}Q${cx} ${cy} ${b.x} ${b.y}`, 'vector-effect': 'non-scaling-stroke' }, lanesG);
+});
+// lanes sit above land but below labels
+worldG.appendChild(lanesG);
+
+/* ---------- overlay labels (screen space) ---------- */
+const items = [];
+D.fields.forEach(f => {
+  const t = el('text', { class: 'lab-field', 'text-anchor': 'middle' }, overlay); t.textContent = f.name;
+  const s = el('text', { class: 'lab-field-sub', 'text-anchor': 'middle' }, overlay);
+  s.textContent = f.regions.length + ' topics · ' + f.regions.reduce((n, r) => n + r.landmarks.length, 0) + ' landmarks';
+  // place the field name on the continent's north side so it does not cover the peak
+  const top = Math.min.apply(null, f.regions.map(r => r.y));
+  items.push({ kind: 'field', f, name: f.name, el: t, sub: s, x: f.cx, y: (top + f.cy) / 2 - 10, w: f.name.length * 10.5 + 40, h: 34, pri: 1000 });
+});
+D.fields.forEach(f => f.regions.forEach(r => {
+  const t = el('text', { class: 'lab-region', 'text-anchor': 'middle' }, overlay); t.textContent = r.name;
+  items.push({ kind: 'region', el: t, x: r.x, y: r.y, w: r.name.length * 6.4 + 8, h: 17, pri: 100 + r.activity * 10, region: r });
+  r.landmarks.forEach((l, i) => {
+    const th = i * 2.4 + r.x * 0.01, rad = 30 + 11 * i;
+    l.x = r.x + Math.cos(th) * rad; l.y = r.y + 16 + Math.sin(th) * rad * 0.75;
+    const c = el('circle', { class: 'dot' + (l.verified ? '' : ' unv'), r: 4.2 }, overlay);
+    const t2 = el('text', { class: 'lab-lm' }, overlay); t2.textContent = l.name;
+    items.push({ kind: 'lm', el: t2, dot: c, x: l.x, y: l.y, w: l.name.length * 5.7 + 10, h: 14, pri: 10 + (l.verified ? 5 : 0) + (l.date || '').localeCompare('2025') * 0, lm: l });
+  });
+}));
+items.sort((a, b) => b.pri - a.pri);
+
+/* ---------- view transform ---------- */
+let view = { k: 1, x: 0, y: 0 }, k0 = 1;
+const isPhone = () => innerWidth <= 760;
+function mapArea() { // the part of the screen not covered by the panel
+  const w = innerWidth, h = innerHeight;
+  if (isPhone()) { const ph = $('#panel').getBoundingClientRect().height; return { x: 0, y: 0, w, h: Math.max(200, h - ph - 16) }; }
+  const pw = $('#panel').getBoundingClientRect().width + 32; return { x: 0, y: 0, w: Math.max(300, w - pw), h };
+}
+function fitK() { const a = mapArea(); return Math.min(a.w / W, (a.h - (isPhone() ? 150 : 40)) / H) * 0.96; }
+const toWorld = (sx, sy) => [(sx - view.x) / view.k, (sy - view.y) / view.k];
+const rel = () => view.k / k0;
+function zoomLevel() { const r = rel(); return r < 1.9 ? 1 : r < 4.2 ? 2 : 3; }
+function clampView(v) {
+  const k = Math.max(k0 * 0.6, Math.min(k0 * 16, v.k)), a = mapArea();
+  const cxw = (a.w / 2 - v.x) / k, cyw = (a.h / 2 - v.y) / k;
+  const cx = Math.max(0, Math.min(W, cxw)), cy = Math.max(0, Math.min(H, cyw));
+  return { k, x: a.w / 2 - cx * k, y: a.h / 2 - cy * k };
+}
+let raf = 0;
+function setView(v) { view = clampView(v); if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); }
+function render() {
+  worldG.setAttribute('transform', `translate(${view.x},${view.y}) scale(${view.k})`);
+  const z = zoomLevel(), vw = innerWidth, vh = innerHeight;
+  overlay.setAttribute('class', 'z' + z);
+  const placed = [];
+  const fits = (x, y, w, h) => { for (const p of placed) if (x < p[0] + p[2] && x + w > p[0] && y < p[1] + p[3] && y + h > p[1]) return false; placed.push([x, y, w, h]); return true; };
+  for (const it of items) {
+    const sx = it.x * view.k + view.x, sy = it.y * view.k + view.y;
+    const onScreen = sx > -200 && sx < vw + 200 && sy > -60 && sy < vh + 60;
+    if (it.kind === 'field') {
+      const phone = isPhone(), w = phone ? it.name.length * 7.4 + 8 : z === 1 ? it.w : it.w * 0.8;
+      let show = z <= 2 && onScreen, sub = show && z === 1 && !phone;
+      if (sub && !fits(sx - w / 2, sy - 16, w, it.h)) sub = false;
+      if (show && !sub) show = fits(sx - w / 2, sy - 14, w, 18) || it.f === selField;
+      it.el.classList.toggle('hidden', !show); it.sub.classList.toggle('hidden', !sub);
+      if (show) { it.el.setAttribute('x', sx); it.el.setAttribute('y', sy); it.sub.setAttribute('x', sx); it.sub.setAttribute('y', sy + 16); }
+    } else if (it.kind === 'region') {
+      let show = z >= 2 && onScreen;
+      if (show) show = fits(sx - it.w / 2, sy - 13, it.w, it.h) || it.region === selRegion;
+      it.el.classList.toggle('hidden', !show);
+      if (show) { it.el.setAttribute('x', sx); it.el.setAttribute('y', sy); }
+    } else {
+      const showDot = z >= 2 && onScreen;
+      it.dot.classList.toggle('hidden', !showDot);
+      if (showDot) { it.dot.setAttribute('cx', sx); it.dot.setAttribute('cy', sy); it.dot.classList.toggle('sel', it.lm === selLm); }
+      let show = z >= 3 && onScreen;
+      if (show) show = fits(sx + 7, sy - 10, it.w, it.h) || it.lm === selLm;
+      it.el.classList.toggle('hidden', !show);
+      if (show) { it.el.setAttribute('x', sx + 8); it.el.setAttribute('y', sy + 4); }
+    }
+  }
+}
+
+/* animated flight to a world point at a relative zoom */
+let anim = 0;
+function flyTo(wx, wy, relK) {
+  const a = mapArea(), k1 = clampView({ k: k0 * relK, x: 0, y: 0 }).k;
+  const target = clampView({ k: k1, x: a.w / 2 - wx * k1, y: a.h / 2 - wy * k1 });
+  cancelAnimationFrame(anim);
+  if (reduceMotion) { setView(target); return; }
+  const from = Object.assign({}, view), [fx, fy] = toWorld(a.w / 2, a.h / 2), t0 = performance.now(), dur = 650;
+  const tx = (a.w / 2 - target.x) / target.k, ty = (a.h / 2 - target.y) / target.k;
+  const step = now => {
+    const t = Math.min(1, (now - t0) / dur), e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    const k = Math.exp(Math.log(from.k) + (Math.log(target.k) - Math.log(from.k)) * e);
+    const cx = fx + (tx - fx) * e, cy = fy + (ty - fy) * e;
+    view = clampView({ k, x: a.w / 2 - cx * k, y: a.h / 2 - cy * k }); render();
+    if (t < 1) anim = requestAnimationFrame(step);
+  };
+  anim = requestAnimationFrame(step);
+}
+function zoomBy(f, sx, sy) { const a = mapArea(); if (sx == null) { sx = a.w / 2; sy = a.h / 2; } const [wx, wy] = toWorld(sx, sy), k = view.k * f; setView({ k, x: sx - wx * k, y: sy - wy * k }); }
+function fieldBox(f) { const xs = f.regions.map(r => r.x), ys = f.regions.map(r => r.y);
+  return { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2, w: Math.max(...xs) - Math.min(...xs) + 300, h: Math.max(...ys) - Math.min(...ys) + 300 }; }
+
+/* ---------- hit testing ---------- */
+function regionAt(wx, wy) {
+  for (const f of D.fields) {
+    const g = f.grid, i = Math.round((wx - g.x0) / STEP), j = Math.round((wy - g.y0) / STEP);
+    if (i < 0 || j < 0 || i >= g.nx || j >= g.ny) continue;
+    const k = j * g.nx + i; if (g.land[k] < LEVELS[0]) continue;
+    return f.regions[g.owner[k]];
+  }
+  return null;
+}
+function landmarkAt(sx, sy) {
+  if (zoomLevel() < 2) return null;
+  let best = null, bd = 12;
+  for (const l of landmarks) { const dx = l.x * view.k + view.x - sx, dy = l.y * view.k + view.y - sy, d = Math.hypot(dx, dy); if (d < bd) { bd = d; best = l; } }
+  return best;
+}
+
+/* ---------- selection and panel ---------- */
+let selField = null, selRegion = null, selLm = null, hoverRegion = null;
+const pips = a => '<span class="pips" aria-hidden="true">' + [1, 2, 3, 4, 5].map(i => `<i style="${i <= a ? 'background:var(--h' + (a + 1) + ')' : ''}"></i>`).join('') + '</span>';
+const activityChip = a => `<span class="chip">${pips(a)} Activity ${a}/5</span>`;
+const maturityChip = m => `<span class="chip ${m}">${esc(MATURITY[m] || m)}</span>`;
+
+function panelWorld() {
+  const all = landmarks.length, unv = landmarks.filter(l => !l.verified).length, nreg = Object.keys(regionById).length;
+  const ranked = D.fields.slice().sort((a, b) => b.heat - a.heat);
+  return `<p class="crumbs">World</p>
+  <h2>Where AI work is happening</h2>
+  <p class="lede">Each continent is a field. Each province is a topic inside it, and the higher the ground, the more is going on there right now. Zoom in to see the landmarks: products, papers, experiments, rulings and debates.</p>
+  <div class="stats"><div><b>${D.fields.length}</b><span>fields</span></div><div><b>${nreg}</b><span>topics</span></div><div><b>${all}</b><span>landmarks</span></div></div>
+  <h3>Fields by activity</h3>
+  <ul class="list">${ranked.map(f => `<li><button type="button" data-field="${f.id}"><span class="n">${esc(f.name)}</span>${pips(Math.round(f.heat))}<span class="m">${esc(f.summary)}</span></button></li>`).join('')}</ul>
+  <h3>About this edition</h3>
+  <p class="fine">Compiled ${esc(fmtDate(D.asOf))} from public web sources by research agents. ${unv} of ${all} landmarks could not be confirmed against a source and are drawn as hollow dots. Activity scores are judgement calls, relative across all fields. Review the sources before quoting anything from this map.</p>`;
+}
+function panelField(f) {
+  const regs = f.regions.slice().sort((a, b) => b.activity - a.activity);
+  const nl = f.regions.reduce((n, r) => n + r.landmarks.length, 0);
+  const links = routes.filter(rt => rt.a.field === f || rt.b.field === f);
+  return `<p class="crumbs"><button type="button" data-go="world">World</button> › ${esc(f.name)}</p>
+  <h2>${esc(f.name)}</h2>
+  <p class="lede">${esc(f.summary)}</p>
+  <div class="stats"><div><b>${f.regions.length}</b><span>topics</span></div><div><b>${nl}</b><span>landmarks</span></div><div><b>${f.heat.toFixed(1)}</b><span>avg activity</span></div></div>
+  <h3>Topics</h3>
+  <ul class="list">${regs.map(r => `<li><button type="button" data-region="${r.id}"><span class="n">${esc(r.name)}</span>${pips(r.activity)}<span class="m">${esc(MATURITY[r.maturity])} · ${esc(r.summary)}</span></button></li>`).join('')}</ul>
+  ${links.length ? `<h3>Lanes to other fields</h3><ul class="list">${links.map(rt => { const mine = rt.a.field === f ? rt.a : rt.b, other = mine === rt.a ? rt.b : rt.a;
+    return `<li><button type="button" data-region="${other.id}"><span class="n">${esc(other.field.name)}: ${esc(other.name)}</span><span class="m">From ${esc(mine.name)}. ${esc(rt.label)}</span></button></li>`; }).join('')}</ul>` : ''}`;
+}
+function panelRegion(r) {
+  const f = r.field, links = routes.filter(rt => rt.a === r || rt.b === r);
+  const lms = r.landmarks.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  return `<p class="crumbs"><button type="button" data-go="world">World</button> › <button type="button" data-field="${f.id}">${esc(f.name)}</button> › ${esc(r.name)}</p>
+  <h2>${esc(r.name)}</h2>
+  <div class="chips">${activityChip(r.activity)}${maturityChip(r.maturity)}</div>
+  <p class="lede">${esc(r.summary)}</p>
+  <h3>Landmarks, newest first</h3>
+  ${lms.map(l => `<article class="lm${l === selLm ? ' sel' : ''}" id="lm-${esc(l.id.replace(/[^\w-]/g, '_'))}">
+    <div class="lm-top"><span>${esc(fmtDate(l.date))}</span><span>${esc(KIND[l.kind] || l.kind)}</span>${l.verified ? '' : '<span class="unv-tag">Not confirmed</span>'}</div>
+    <button type="button" class="lm-name" data-lm="${esc(l.id)}">${esc(l.name)}</button>
+    <p>${esc(l.summary)}</p>
+    ${l.source ? `<a href="${esc(l.source)}" target="_blank" rel="noopener noreferrer">${esc(host(l.source))}</a>` : '<span class="fine">No source link</span>'}
+  </article>`).join('')}
+  ${links.length ? `<h3>Lanes to other fields</h3><ul class="list">${links.map(rt => { const o = rt.a === r ? rt.b : rt.a;
+    return `<li><button type="button" data-region="${o.id}"><span class="n">${esc(o.field.name)}: ${esc(o.name)}</span><span class="m">${esc(rt.label)}</span></button></li>`; }).join('')}</ul>` : ''}`;
+}
+function updatePanel() {
+  const body = $('#panel-body');
+  body.innerHTML = selRegion ? panelRegion(selRegion) : selField ? panelField(selField) : panelWorld();
+  body.scrollTop = 0;
+  $('#sheet-title').textContent = selRegion ? selRegion.name : selField ? selField.name : 'Where AI work is happening';
+  if (selLm) { const n = document.getElementById('lm-' + selLm.id.replace(/[^\w-]/g, '_')); if (n) n.scrollIntoView({ block: 'nearest' }); }
+}
+function highlight() {
+  D.fields.forEach(f => f.regions.forEach(r => { r.prov.classList.toggle('sel', r === selRegion); r.prov.classList.toggle('hover', r === hoverRegion && r !== selRegion); }));
+  routes.forEach(rt => { const on = selRegion ? (rt.a === selRegion || rt.b === selRegion) : selField ? (rt.a.field === selField || rt.b.field === selField) : false;
+    rt.path.classList.toggle('on', on); rt.path.classList.toggle('dim', !!(selRegion || selField) && !on); });
+  render();
+}
+function setHash(h) { try { const want = h ? '#' + h : ' '; if (location.hash !== (h ? '#' + h : '')) history.replaceState(null, '', h ? '#' + h : location.pathname + location.search); } catch (e) {} }
+function go(target, fly) {
+  if (!target) { selField = selRegion = selLm = null; setHash(''); if (fly) flyTo(W / 2, H / 2, 1); }
+  else if (target.regions) { selField = target; selRegion = selLm = null; setHash(target.id);
+    if (fly) { const b = fieldBox(target), a = mapArea(); flyTo(b.x, b.y, Math.min(a.w / (b.w * k0), a.h / (b.h * k0)) * 0.9); } }
+  else if (target.landmarks) { selRegion = target; selField = target.field; selLm = null; setHash(target.id.replace('.', '-')); if (fly) flyTo(target.x, target.y, 6); }
+  else { selLm = target; selRegion = target.region; selField = selRegion.field; setHash(selRegion.id.replace('.', '-')); if (fly) flyTo(target.x, target.y, Math.max(6, rel())); }
+  updatePanel(); highlight();
+  if (isPhone() && target) openSheet(true);
+}
+function fromHash() {
+  const h = decodeURIComponent(location.hash.slice(1)); if (!h) return null;
+  if (fieldById[h]) return fieldById[h];
+  const i = h.indexOf('-'); if (i > 0) return regionById[h.slice(0, i) + '.' + h.slice(i + 1)] || null;
+  return null;
+}
+function openSheet(open) { const p = $('#panel'); p.classList.toggle('open', open); $('#sheet-handle').setAttribute('aria-expanded', String(open)); $('#sheet-tog').textContent = open ? 'Hide' : 'Show details'; }
+
+$('#panel').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'sheet-handle') { openSheet(!$('#panel').classList.contains('open')); requestAnimationFrame(() => setView(view)); return; }
+  if (b.dataset.go === 'world') go(null, true);
+  else if (b.dataset.field) go(fieldById[b.dataset.field], true);
+  else if (b.dataset.region) go(regionById[b.dataset.region], true);
+  else if (b.dataset.lm) go(landmarks.find(l => l.id === b.dataset.lm), true);
+});
+
+/* ---------- pointer: pan, pinch, wheel, click, hover ---------- */
+const tip = $('#tip');
+const pointers = new Map(); let moved = 0, last = null, pinch = null;
+svg.addEventListener('pointerdown', e => {
+  svg.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  cancelAnimationFrame(anim); moved = pointers.size > 1 ? 99 : 0; last = { x: e.clientX, y: e.clientY }; tip.hidden = true;
+  if (pointers.size === 2) { const [p, q] = [...pointers.values()]; pinch = { d: Math.hypot(p.x - q.x, p.y - q.y), mx: (p.x + q.x) / 2, my: (p.y + q.y) / 2 }; }
+});
+svg.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) { hover(e); return; }
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 2 && pinch) {
+    const [p, q] = [...pointers.values()], d = Math.hypot(p.x - q.x, p.y - q.y), mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2;
+    const [wx, wy] = toWorld(pinch.mx, pinch.my), k = view.k * d / pinch.d;
+    setView({ k, x: mx - wx * k, y: my - wy * k }); pinch = { d, mx, my }; return;
+  }
+  const dx = e.clientX - last.x, dy = e.clientY - last.y; last = { x: e.clientX, y: e.clientY };
+  moved += Math.abs(dx) + Math.abs(dy);
+  if (moved > 4) { svg.classList.add('dragging'); setView({ k: view.k, x: view.x + dx, y: view.y + dy }); }
+});
+function endPointer(e) {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null;
+  if (pointers.size === 1) { last = [...pointers.values()][0]; return; }
+  svg.classList.remove('dragging');
+  if (moved <= 4 && e.type === 'pointerup') click(e.clientX, e.clientY);
+}
+svg.addEventListener('pointerup', endPointer); svg.addEventListener('pointercancel', endPointer);
+svg.addEventListener('pointerleave', () => { tip.hidden = true; if (hoverRegion) { hoverRegion = null; highlight(); } });
+svg.addEventListener('wheel', e => { e.preventDefault(); cancelAnimationFrame(anim); const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY; zoomBy(Math.exp(-dy * 0.0016), e.clientX, e.clientY); }, { passive: false });
+svg.addEventListener('dblclick', e => { e.preventDefault(); const [wx, wy] = toWorld(e.clientX, e.clientY); flyTo(wx, wy, rel() * 2.2); });
+
+function click(sx, sy) {
+  const l = landmarkAt(sx, sy); if (l) { go(l, false); return; }
+  const [wx, wy] = toWorld(sx, sy), r = regionAt(wx, wy);
+  if (!r) return;
+  if (zoomLevel() === 1 && selField !== r.field) go(r.field, true); else go(r, zoomLevel() < 3 || selRegion !== r);
+}
+function hover(e) {
+  if (e.pointerType === 'touch') return;
+  const l = landmarkAt(e.clientX, e.clientY), [wx, wy] = toWorld(e.clientX, e.clientY), r = l ? l.region : regionAt(wx, wy);
+  svg.classList.toggle('over-land', !!r);
+  if (r !== hoverRegion) { hoverRegion = r; highlight(); }
+  if (!r) { tip.hidden = true; return; }
+  tip.innerHTML = l ? `<b>${esc(l.name)}</b><span>${esc(fmtDate(l.date))} · ${esc(KIND[l.kind] || l.kind)}${l.verified ? '' : ' · not confirmed'}</span>`
+    : `<b>${esc(r.name)}</b><span>${esc(r.field.name)} · activity ${r.activity}/5 · ${esc(MATURITY[r.maturity])}</span>`;
+  tip.hidden = false;
+  const tw = tip.offsetWidth, x = e.clientX + 14 + tw > innerWidth ? e.clientX - tw - 10 : e.clientX + 14;
+  tip.style.left = x + 'px'; tip.style.top = (e.clientY + 14) + 'px';
+}
+
+$('#zin').addEventListener('click', () => zoomBy(1.6));
+$('#zout').addEventListener('click', () => zoomBy(1 / 1.6));
+$('#zworld').addEventListener('click', () => go(null, true));
+document.addEventListener('keydown', e => {
+  if (e.target.closest('input')) return;
+  if (e.key === '+' || e.key === '=') zoomBy(1.4); else if (e.key === '-') zoomBy(1 / 1.4);
+  else if (e.key === 'Escape') { if (selRegion) go(selRegion.field, true); else if (selField) go(null, true); }
+});
+
+/* ---------- search ---------- */
+const index = [].concat(
+  D.fields.map(f => ({ t: f.name, s: 'Field', target: f, hay: (f.name + ' ' + f.summary).toLowerCase() })),
+  Object.values(regionById).map(r => ({ t: r.name, s: r.field.name, target: r, hay: (r.name + ' ' + r.summary).toLowerCase() })),
+  landmarks.map(l => ({ t: l.name, s: l.region.field.name + ' › ' + l.region.name + ' · ' + fmtDate(l.date), target: l, hay: (l.name + ' ' + l.summary).toLowerCase() }))
+);
+const q = $('#q'), results = $('#results'); let hits = [], active = -1;
+function search() {
+  const terms = q.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  hits = terms.length ? index.map(it => ({ it, score: terms.every(t => it.hay.includes(t)) ? (it.t.toLowerCase().includes(terms[0]) ? 2 : 1) : 0 })).filter(h => h.score).sort((a, b) => b.score - a.score).slice(0, 10).map(h => h.it) : [];
+  active = -1;
+  results.innerHTML = hits.map((h, i) => `<li><button type="button" role="option" data-i="${i}"><span class="t">${esc(h.t)}</span><span class="s">${esc(h.s)}</span></button></li>`).join('');
+  if (terms.length && !hits.length) results.innerHTML = '<li class="fine" style="padding:6px 8px">No matches. Try a shorter word.</li>';
+}
+q.addEventListener('input', search);
+q.addEventListener('keydown', e => {
+  const btns = results.querySelectorAll('button');
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!btns.length) return; active = (active + (e.key === 'ArrowDown' ? 1 : -1) + btns.length) % btns.length; btns.forEach((b, i) => b.classList.toggle('active', i === active)); }
+  else if (e.key === 'Enter' && hits.length) { pick(hits[Math.max(0, active)]); }
+  else if (e.key === 'Escape') { q.value = ''; search(); }
+});
+results.addEventListener('click', e => { const b = e.target.closest('button'); if (b) pick(hits[+b.dataset.i]); });
+function pick(h) { if (!h) return; q.value = ''; search(); q.blur(); go(h.target, true); }
+
+/* ---------- start ---------- */
+$('#edition').textContent = 'Edition of ' + fmtDate(D.asOf) + ' · ' + landmarks.length + ' landmarks · drag, scroll or pinch to explore';
+function resetBase() { k0 = fitK(); }
+resetBase();
+const a0 = mapArea();
+view = clampView({ k: k0, x: a0.w / 2 - W / 2 * k0, y: a0.h / 2 - H / 2 * k0 + (isPhone() ? 30 : 20) });
+const initial = fromHash();
+selField = initial && initial.regions ? initial : initial ? initial.field : null;
+selRegion = initial && initial.landmarks ? initial : null;
+updatePanel(); highlight();
+if (initial) go(initial, true);
+addEventListener('resize', () => { const [cx, cy] = toWorld(mapArea().w / 2, mapArea().h / 2), r = rel(); resetBase(); const a = mapArea(), k = k0 * r; setView({ k, x: a.w / 2 - cx * k, y: a.h / 2 - cy * k }); });
+addEventListener('hashchange', () => { const t = fromHash(); if (t !== selField && t !== selRegion) go(t, true); });
+})();
+</script>
+</body>
+</html>
