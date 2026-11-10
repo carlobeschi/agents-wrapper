@@ -262,6 +262,7 @@ async function main(file) {
           }
           console.log(`- ${v.label} (${order.join(' first, ')})`);
           const got = await roomRun(together(t, extra), t);
+          got.starter = order[0];
           got.stats = JSON.parse(fs.readFileSync(path.join(got.dir, 'timeline.json'), 'utf8')).stats || null;
           got.process = await processLabels(got.dir, `${t.id}-${r + 1}-${v.label.replace(/\W+/g, '-')}`);
           runs[v.label] = got;
@@ -279,6 +280,15 @@ async function main(file) {
         const cs = task.repeats.map(x => x.runs[l]?.checks).filter(Boolean);
         return [l, cs.length ? { mean: mean(cs.map(c => c.passed)), of: cs[0].of, all: cs.filter(c => c.passed === c.of).length, runs: cs.length } : null];
       }));
+      // Results by who moved first (balanced: the starter rotates every repeat).
+      task.byStarter = Object.fromEntries(labels.map(l => {
+        const g = {};
+        task.repeats.forEach(x => { const run = x.runs[l]; if (!run?.starter) return;
+          const sc = (x.judgings || []).flatMap(j => (j.pieces || []).filter(p => p.label === l && p.score != null).map(p => p.score));
+          (g[run.starter] ||= { runs: 0, scores: [], checks: [] }).runs++;
+          g[run.starter].scores.push(...sc); if (run.checks) g[run.starter].checks.push(run.checks.passed); });
+        return [l, Object.keys(g).length ? Object.fromEntries(Object.entries(g).map(([id, v]) => [id, { runs: v.runs, score: mean(v.scores), checks: mean(v.checks) }])) : null];
+      }));
       task.process = Object.fromEntries(labels.map(l => {
         const rs = task.repeats.map(x => x.runs[l]).filter(Boolean);
         const st = rs.map(x => x.stats).filter(Boolean);
@@ -289,6 +299,7 @@ async function main(file) {
           topShare: mean(st.map(x => Math.max(...Object.values(x.share)))),
           accepted: props.length ? mean(props.map(x => x.proposals.accepted)) : null, rejected: props.length ? mean(props.map(x => x.proposals.rejected)) : null,
           planForced: st.some(x => x.planForced !== undefined) ? st.filter(x => x.planForced).length : null,
+          lastMoverShare: mean(st.map(x => x.lastMoverShare).filter(x => x != null)),
           changed: lab('changed'), caught: lab('caught'), passed: lab('passed'), built: lab('built') }];
       }));
       save();
@@ -427,13 +438,22 @@ function summaryMd(s) {
           c && !p ? `${s.scale ? 'right' : 'checks'} ${c.mean}/${c.of} on average, all ${s.scale ? 'right' : 'passed'} in ${c.all}/${c.runs}${c.seconds != null ? ` · ${c.seconds}s · ${c.moves} moves` : ''}` : null,
           t.guesses?.[l]?.length ? `guesses ${t.guesses[l].join(', ')}` : null].filter(Boolean).join(' · ').replace(': · ', ': ');
       }));
+    const starters = Object.entries(t.byStarter || {}).filter(([, v]) => v);
+    if (starters.length) L.push('', 'By who moved first:', '',
+      ...starters.map(([l, v]) => `- ${l}: ${Object.entries(v).map(([id, x]) => `${id} first (${x.runs} runs) ${x.score ?? 'n/a'}${x.checks != null ? `, checks ${x.checks}` : ''}`).join(' · ')}`));
     const procs = Object.entries(t.process || {}).filter(([, p]) => p);
     if (procs.length) L.push('', 'How they worked (per run, averaged; changed/caught/passed/built from the process judges, the rest counted by the app):', '',
-      ...procs.map(([l, p]) => `- ${l}: changed ${p.changed ?? 'n/a'} · caught ${p.caught ?? 'n/a'} · passed ${p.passed ?? 'n/a'} · built ${p.built ?? 'n/a'} · questions ${p.questions} · clashes ${p.clashes} · lines removed from the other ${p.removedOthers} · top share ${p.topShare}%${p.accepted != null ? ` · proposals accepted ${p.accepted}, rejected ${p.rejected}` : ''}${p.planForced != null ? ` · plan forced in ${p.planForced}` : ''}`));
+      ...procs.map(([l, p]) => `- ${l}: changed ${p.changed ?? 'n/a'} · caught ${p.caught ?? 'n/a'} · passed ${p.passed ?? 'n/a'} · built ${p.built ?? 'n/a'} · questions ${p.questions} · clashes ${p.clashes} · lines removed from the other ${p.removedOthers} · top share ${p.topShare}%${p.lastMoverShare != null ? ` · last mover's share ${p.lastMoverShare}%` : ''}${p.accepted != null ? ` · proposals accepted ${p.accepted}, rejected ${p.rejected}` : ''}${p.planForced != null ? ` · plan forced in ${p.planForced}` : ''}`));
     const errs = t.repeats.flatMap(x => (x.judgings || []).filter(j => j.error).map(j => `${j.judge}: ${j.error}`));
     if (errs.length) L.push(`- judge errors: ${errs.join('; ')}`);
     L.push('');
   }
+  // Position check: the average score by the letter a piece was shown under.
+  const all = [...s.tasks.flatMap(t => t.repeats.flatMap(x => x.judgings || [])), ...Object.values(s.learn?.agents || {}).flatMap(a => a.repeats.flatMap(x => x.judgings || []))];
+  const byLetter = {};
+  for (const j of all) for (const p of j.pieces || []) if (p.score != null) (byLetter[p.letter] ||= []).push(p.score);
+  if (Object.keys(byLetter).length > 1) L.push('## Position check', '', 'Average score by the letter a piece was shown under (pieces are shuffled for every judge, so these should be close):', '',
+    Object.keys(byLetter).sort().map(k => `${k}: ${mean(byLetter[k])} (n=${byLetter[k].length})`).join(' · '), '');
   if (s.learn) {
     L.push('## Did they learn from each other?', '', `Task: ${s.learn.brief}`, '');
     for (const [id, x] of Object.entries(s.learn.agents)) {

@@ -515,13 +515,16 @@ function processStats(o) {
   }
   const body = o.final.filter(l => l.text.trim());
   for (const l of body) if (per[l.by]) per[l.by].finalLines++;
+  const lastLander = [...o.moves].reverse().find(m => m.landed.length && per[m.agent])?.agent || null;
   const props = o.proposals || [];
   return { per, finalLines: body.length,
     share: Object.fromEntries(ids.map(id => [id, body.length ? Math.round(per[id].finalLines / body.length * 100) : 0])),
     questions: ids.reduce((n, id) => n + per[id].questions, 0), clashes: ids.reduce((n, id) => n + per[id].clashes, 0),
     removedOthers: ids.reduce((n, id) => n + per[id].removedOthers, 0),
     proposals: props.length ? Object.fromEntries(['accepted', 'rejected', 'stale', 'pending'].map(k => [k, props.filter(p => p.result === k).length])) : null,
-    planAgreedAt: o.plan ? (o.plan.agreed ? o.plan.at : null) : undefined, planForced: o.plan ? !!o.plan.forced : undefined };
+    planAgreedAt: o.plan ? (o.plan.agreed ? o.plan.at : null) : undefined, planForced: o.plan ? !!o.plan.forced : undefined,
+    // "Last mover wins": how much of the final piece belongs to whoever made the last edit that landed.
+    lastMover: lastLander, lastMoverShare: lastLander && body.length ? Math.round(per[lastLander].finalLines / body.length * 100) : null };
 }
 
 function episodeMd(o) {
