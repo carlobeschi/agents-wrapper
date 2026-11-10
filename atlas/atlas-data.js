@@ -3838,61 +3838,59 @@ window.ATLAS = {
     {
      "id": "health.diagnostics",
      "name": "Imaging & diagnostics",
-     "summary": "Radiology makes up about three quarters of FDA-authorized AI devices. A large randomized trial and a national rollout study show AI-supported breast screening finds more cancers.",
+     "summary": "Radiology makes up about three quarters of the AI devices on the FDA's list. A large randomized trial and a German rollout study show AI-supported breast screening detects more cancers.",
      "activity": 3,
      "maturity": "adopting",
      "landmarks": [
       {
-       "name": "MASAI trial final results in The Lancet",
-       "summary": "Swedish randomized trial of about 106,000 women: AI-supported mammography had a 12% lower interval cancer rate than standard double reading, meeting non-inferiority.",
+       "name": "MASAI trial interval cancer results in The Lancet",
+       "summary": "Swedish randomized trial of 105,934 women: AI-supported screening had a non-inferior interval cancer rate (1.55 vs 1.76 per 1,000) and higher sensitivity than double reading.",
        "date": "2026-01",
        "kind": "research",
-       "source": "https://www.lunduniversity.lu.se/article/ai-support-breast-cancer-screening-fewer-missed-cancer-cases",
-       "verified": true
+       "source": "https://pubmed.ncbi.nlm.nih.gov/41620232/",
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "FDA AI device list passes 1,500",
-       "summary": "Third-party counts of the FDA list put AI-enabled device authorizations at about 1,524 through March 2026 and about 1,600 by mid-year, roughly 76% in radiology.",
-       "date": "2026-03",
+       "name": "FDA AI device list passes 1,600",
+       "summary": "The FDA's list, updated in September 2026, holds about 1,610 AI-enabled devices authorized through June 2026. About 76% (1,230) sit in the radiology panel.",
+       "date": "2026-09",
        "kind": "policy",
        "source": "https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/list-artificial-intelligence-enabled-medical-devices",
-       "verified": true
+       "verified": true,
+       "check": "page",
+       "note": "Counts tallied from the FDA table; the page states no total."
       },
       {
        "name": "PRAIM: AI in German breast screening",
-       "summary": "Real-world study of about 460,000 women in Germany's screening program found a 17.6% higher cancer detection rate with AI-supported reading and no rise in recalls.",
+       "summary": "Real-world study of 463,094 women at 12 German screening sites: cancer detection was 17.6% higher with AI-supported reading (6.7 vs 5.7 per 1,000), with no rise in recalls.",
        "date": "2025-01",
        "kind": "research",
-       "source": "https://www.eurekalert.org/news-releases/1069807",
-       "verified": true
+       "source": "https://www.nature.com/articles/s41591-024-03408-6",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Imaging is where medical AI has the most approvals and the strongest trial evidence, so it shows what real clinical adoption looks like.",
      "openQuestion": "Does finding more cancers with AI mean fewer deaths, and do the results hold outside European double-reading programs?",
      "deepDives": [
       {
-       "title": "AI-Enabled Medical Devices List (FDA)",
+       "title": "List of Artificial Intelligence-Enabled Medical Devices (FDA)",
        "url": "https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/list-artificial-intelligence-enabled-medical-devices",
        "kind": "tracker",
-       "why": "The primary record of authorized AI devices, with specialty and decision date."
+       "why": "The primary record of authorized AI devices, with panel, company and decision date."
       },
       {
-       "title": "Expert reactions to the MASAI trial (Science Media Centre Spain)",
+       "title": "AI improves breast cancer screening: expert reactions (SMC Spain)",
        "url": "https://sciencemediacentre.es/en/node/6636",
        "kind": "overview",
-       "why": "Independent researchers on what the 100,000-woman trial does and does not show."
+       "why": "Independent researchers on what the MASAI trial does and does not show."
       },
       {
        "title": "PRAIM study dataset (Dryad)",
        "url": "https://datadryad.org/dataset/doi:10.5061/dryad.zs7h44jgn",
        "kind": "tracker",
-       "why": "Open data behind the German nationwide AI mammography implementation study."
-      },
-      {
-       "title": "Radiology dominates thirty years of FDA AI device approvals",
-       "url": "https://www.auntminnie.com/imaging-informatics/artificial-intelligence/article/15830219/radiology-dominates-thirty-years-of-fda-ai-device-approvals",
-       "kind": "overview",
-       "why": "Trade-press analysis of how the FDA's AI authorizations split across specialties."
+       "why": "Open data behind the German AI mammography implementation study."
       },
       {
        "title": "NEJM AI",
@@ -3906,25 +3904,27 @@ window.ATLAS = {
     {
      "id": "health.scribes",
      "name": "Clinical documentation & scribes",
-     "summary": "Ambient AI scribes that draft visit notes have spread fast across US health systems. Studies show modest time savings, and Epic's built-in scribe now competes with Microsoft and Abridge.",
+     "summary": "Ambient AI scribes that draft visit notes have spread fast across US health systems. A multisite study found modest time savings, and Epic's built-in scribe now competes with Microsoft and Abridge.",
      "activity": 4,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "JAMA multisite study of AI scribes",
-       "summary": "Study of 8,581 ambulatory clinicians at five health systems linked AI scribes to about 16 fewer documentation minutes per 8 patient hours, with no significant change after hours.",
+       "summary": "Study of 8,581 ambulatory clinicians at five US academic systems tied AI scribes to 16 fewer documentation minutes per 8 patient hours; after-hours time was unchanged.",
        "date": "2026-04",
        "kind": "research",
-       "source": "https://www.beckersasc.com/asc-news/ai-scribes-underdeliver-on-cutting-down-after-hours-charting-study/",
-       "verified": true
+       "source": "https://pubmed.ncbi.nlm.nih.gov/41920565/",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Dragon Copilot passes 100,000 clinicians",
-       "summary": "At HIMSS 2026 Microsoft said more than 100,000 clinicians use Dragon Copilot in daily practice and opened it to partner-built apps and agents.",
+       "summary": "At HIMSS 2026 Microsoft said more than 100,000 clinicians rely on Dragon Copilot in daily practice and offered partner-built AI apps and agents through its marketplace.",
        "date": "2026-03",
        "kind": "product",
        "source": "https://microsoft.com/en-us/industry/blog/healthcare/2026/03/05/unify-simplify-scale-microsoft-dragon-copilot-meets-the-moment-at-himss-2026",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Two thirds of Epic hospitals use ambient AI",
@@ -3932,64 +3932,81 @@ window.ATLAS = {
        "date": "2026-01",
        "kind": "research",
        "source": "https://www.ajmc.com/view/ambient-ai-tool-adoption-in-us-hospitals-and-associated-factors",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Epic rolls out its own AI Charting",
-       "summary": "Epic made its native ambient scribe, built with Microsoft technology, available to customers nationwide, competing directly with third-party scribe vendors.",
+       "name": "Epic releases its own AI Charting",
+       "summary": "Epic released AI Charting, a built-in feature that listens during visits, drafts the note and queues up orders, putting the largest US records vendor up against scribe makers.",
        "date": "2026-02",
        "kind": "product",
-       "source": "https://www.statnews.com/2026/02/04/epic-ai-charting-ambient-scribe-abridge-microsoft/",
-       "verified": true
+       "source": "https://www.epic.com/epic/post/epic-ai-charting-rolls-out-alongside-an-expanding-set-of-built-in-ai-capabilities/",
+       "verified": true,
+       "check": "page"
       }
      ],
-     "whyItMatters": "Scribes are the fastest-adopted generative AI tool in medicine and an early test of whether AI eases clinician workload in practice.",
+     "whyItMatters": "Scribes are among the most widely adopted generative AI tools in medicine and an early test of whether AI eases clinician workload in practice.",
      "openQuestion": "Do scribes reduce burnout and cost, or mainly raise visit volume and billing, and how accurate are the notes?",
      "deepDives": [
       {
-       "title": "Ambient AI Tool Adoption in US Hospitals (AJMC)",
+       "title": "Ambient AI Tool Adoption in US Hospitals and Associated Factors (AJMC)",
        "url": "https://www.ajmc.com/view/ambient-ai-tool-adoption-in-us-hospitals-and-associated-factors",
        "kind": "paper",
        "why": "Peer-reviewed snapshot of which hospitals adopted ambient AI and which vendors lead."
       },
       {
-       "title": "AI scribes deliver modest time savings (TechTarget)",
+       "title": "AI scribes deliver modest time savings, but still boost clinician experience",
        "url": "https://www.techtarget.com/healthtechanalytics/feature/AI-scribes-deliver-modest-time-savings-but-still-boost-clinician-experience",
        "kind": "overview",
-       "why": "Explainer on what the evidence says about time savings and clinician experience."
+       "why": "Explainer on the JAMA study, with the authors on what the time savings mean."
+      },
+      {
+       "title": "Adoption of Artificial Intelligence in Healthcare Delivery Systems (PHTI)",
+       "url": "https://phti.org/ai-adoption-early-applications-impacts/",
+       "kind": "report",
+       "why": "Independent institute's report on early uses of AI in health systems, including ambient scribes."
+      },
+      {
+       "title": "AI Index 2026: Medicine chapter (Stanford HAI)",
+       "url": "https://hai.stanford.edu/ai-index/2026-ai-index-report/medicine",
+       "kind": "report",
+       "why": "Yearly data review; covers clinical note generation, device approvals and diagnosis studies."
       }
      ]
     },
     {
      "id": "health.drug-dev",
      "name": "Drug development & trials",
-     "summary": "The first AI-discovered drug has entered Phase III, large funding rounds continue, and US and EU regulators have published shared principles for AI use across the medicines lifecycle.",
+     "summary": "An AI-discovered drug has entered Phase III, large funding rounds continue, and US and EU regulators have published shared principles for AI use across the medicines lifecycle.",
      "activity": 4,
      "maturity": "emerging",
      "landmarks": [
       {
        "name": "Insilico starts Phase III for rentosertib",
-       "summary": "Insilico dosed the first patient in a 320-patient Phase III trial in China of its AI-discovered TNIK inhibitor for idiopathic pulmonary fibrosis; the drug remains investigational.",
+       "summary": "Insilico began a 52-week, placebo-controlled Phase III trial of rentosertib, its AI-discovered TNIK inhibitor for idiopathic pulmonary fibrosis, planned for 320 patients in China.",
        "date": "2026-09",
        "kind": "research",
-       "source": "https://www.news-medical.net/news/20260910/Generative-AI-driven-drug-Rentosertib-enters-Phase-III-trial-for-idiopathic-pulmonary-fibrosis.aspx",
-       "verified": true
+       "source": "https://clinicaltrials.gov/study/NCT07687459",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Isomorphic Labs raises $2.1B",
-       "summary": "Alphabet's drug-design unit raised a $2.1B Series B led by Thrive Capital. Its first human trials, once targeted for 2025, are now expected by the end of 2026.",
+       "summary": "Alphabet's AI drug design company raised a $2.1B Series B led by Thrive Capital, with Alphabet, GV, MGX, Temasek, CapitalG and the UK Sovereign AI Fund also investing.",
        "date": "2026-05",
        "kind": "deal",
-       "source": "https://www.rdworldonline.com/alphabet-spinoff-isomorphic-labs-raises-2-1-billion-in-quest-to-solve-all-disease-with-ai-based-drug-discovery-tools/",
-       "verified": true
+       "source": "https://www.isomorphiclabs.com/articles/isomorphic-labs-announces-series-b-investment-round",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "FDA and EMA joint AI principles",
-       "summary": "The two regulators issued 10 guiding principles for good AI practice in drug development, spanning early research, clinical trials, manufacturing and safety monitoring.",
+       "summary": "The two regulators set out ten guiding principles for good AI practice in the medicines lifecycle, from early research and clinical trials to manufacturing and safety monitoring.",
        "date": "2026-01",
        "kind": "policy",
        "source": "https://www.ema.europa.eu/en/news/ema-fda-set-common-principles-ai-medicine-development-0",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Drug discovery is the highest-stakes test of whether AI can speed up science, and no AI-discovered drug has yet been approved.",
@@ -3999,7 +4016,7 @@ window.ATLAS = {
        "title": "Guiding principles of good AI practice in drug development",
        "url": "https://www.ema.europa.eu/en/documents/other/guiding-principles-good-ai-practice-drug-development_en.pdf",
        "kind": "report",
-       "why": "The 10 joint EMA and FDA principles in full, in a short primary document."
+       "why": "The ten joint EMA and FDA principles in full, in a short primary document."
       },
       {
        "title": "Artificial Intelligence for Drug Development (FDA CDER)",
@@ -4008,10 +4025,16 @@ window.ATLAS = {
        "why": "The FDA's running hub for guidance and policy on AI in drug and biologic development."
       },
       {
-       "title": "EMA AI Observatory 2025 report",
+       "title": "2025 AI Observatory report (EMA)",
        "url": "https://www.ema.europa.eu/system/files/documents/report/2025-ai-observatory-report_en.pdf",
        "kind": "report",
-       "why": "European regulator's yearly review of how AI is used in medicines and what is coming."
+       "why": "European regulator's yearly review of how AI is used in medicines regulation."
+      },
+      {
+       "title": "A generative AI-discovered TNIK inhibitor for IPF: a randomized phase 2a trial",
+       "url": "https://www.nature.com/articles/s41591-025-03743-2",
+       "kind": "paper",
+       "why": "Peer-reviewed Phase IIa results for rentosertib in Nature Medicine, the basis for Phase III."
       }
      ]
     },
@@ -4028,45 +4051,63 @@ window.ATLAS = {
        "date": "2026-01",
        "kind": "product",
        "source": "https://fortune.com/2026/01/07/openai-launches-chatgpt-health-in-a-push-to-become-a-hub-for-personal-health-data/",
-       "verified": true
-      },
-      {
-       "name": "Illinois bans AI therapy",
-       "summary": "Illinois law bars AI from providing therapy or making therapeutic decisions without a licensed professional, with fines up to $10,000 per violation. Nevada passed a similar limit.",
-       "date": "2025-08",
-       "kind": "policy",
-       "source": "https://www.beckershospitalreview.com/healthcare-information-technology/illinois-bans-ai-therapy-without-clinician-oversight/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "California SB 243 on companion chatbots",
-       "summary": "First US state law regulating companion chatbots, requiring AI disclosure and protocols for suicidal ideation and self-harm, effective January 2026.",
+       "summary": "State law requiring companion chatbot operators to disclose that users are talking to AI and to keep protocols for suicide and self-harm, effective January 2026.",
        "date": "2025-10",
        "kind": "policy",
        "source": "https://techcrunch.com/2025/10/13/california-becomes-first-state-to-regulate-ai-companion-chatbots",
-       "verified": true
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "Illinois bans AI therapy",
+       "summary": "Illinois law bars using AI to provide therapy or make therapeutic decisions, while allowing administrative support for licensed professionals. Nevada passed a similar limit.",
+       "date": "2025-08",
+       "kind": "policy",
+       "source": "https://idfpr.illinois.gov/news/2025/gov-pritzker-signs-state-leg-prohibiting-ai-therapy-in-il.html",
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "First trial of a generative AI therapy chatbot",
+       "summary": "Dartmouth's randomized trial of Therabot in 106 people, published in NEJM AI, reported a 51% average drop in depression symptoms and a 31% drop in anxiety symptoms.",
+       "date": "2025-03",
+       "kind": "research",
+       "source": "https://home.dartmouth.edu/news/2025/03/first-therapy-chatbot-trial-yields-mental-health-benefits",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "This is where most people actually meet medical AI, largely outside clinical oversight and medical device rules.",
      "openQuestion": "Do health chatbots improve outcomes for ordinary users, and who is liable when their advice causes harm?",
      "deepDives": [
       {
-       "title": "States crack down on AI for behavioral health care (AHCJ)",
-       "url": "https://healthjournalism.org/blog/2025/08/states-crack-down-on-ai-for-behavioral-health-care",
-       "kind": "overview",
-       "why": "Summary of state laws on AI therapy from the Association of Health Care Journalists."
+       "title": "Health advisory: generative AI chatbots and wellness apps for mental health (APA)",
+       "url": "https://www.apa.org/topics/artificial-intelligence-machine-learning/health-advisory-chatbots-wellness-apps",
+       "kind": "report",
+       "why": "American Psychological Association's evidence review and recommendations on chatbot use."
       },
       {
-       "title": "FDA committee meets on generative AI mental health devices",
-       "url": "https://www.psychiatrictimes.com/view/fda-committee-meets-on-generative-ai-digital-mental-health-devices",
-       "kind": "overview",
-       "why": "Clinician-oriented account of the risks and evidence standards the FDA panel discussed."
+       "title": "KFF Health Misinformation Tracking Poll: AI and Health Information",
+       "url": "https://www.kff.org/health-information-trust/poll-finding/kff-health-misinformation-tracking-poll-artificial-intelligence-and-health-information/",
+       "kind": "report",
+       "why": "2024 US survey on how often people use chatbots for health advice and how far they trust it."
+      },
+      {
+       "title": "HealthBench: Evaluating Large Language Models Towards Improved Human Health",
+       "url": "https://arxiv.org/abs/2505.08775",
+       "kind": "paper",
+       "why": "OpenAI benchmark of 5,000 health conversations graded against physician-written rubrics."
       },
       {
        "title": "The Batch: Illinois follows Nevada on therapy chatbots",
        "url": "https://www.deeplearning.ai/the-batch/illinois-follows-nevada-prohibiting-certain-uses-of-chatbots-unless-used-by-licensed-therapists",
        "kind": "newsletter",
-       "why": "Andrew Ng's newsletter on the state laws and the debate over restricting AI therapy."
+       "why": "Short account of the state laws, their fines and the debate over restricting AI therapy."
       }
      ]
     },
@@ -4079,90 +4120,92 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "FDA relaxes CDS and wellness guidance",
-       "summary": "Revised final guidances, issued without prior comment, clarified when clinical decision support software is exempt and let more non-invasive wearables count as wellness products.",
+       "summary": "Updated final guidances, issued without prior public comment, replace the 2022 clinical decision support and 2019 general wellness policies and widen what counts as non-device.",
        "date": "2026-01",
        "kind": "policy",
-       "source": "https://www.arnoldporter.com/en/perspectives/advisories/2026/01/fda-cuts-red-tape-on-clinical-decision-support-software",
-       "verified": true
+       "source": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-decision-support-software",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "FDA panel on generative AI mental health devices",
-       "summary": "FDA's Digital Health Advisory Committee weighed evidence and monitoring standards for generative AI therapy chatbots; the FDA had not authorized any such device.",
+       "summary": "FDA's Digital Health Advisory Committee met on evidence and monitoring for generative AI therapy chatbots; the agency had not yet cleared any generative AI mental health tool.",
        "date": "2025-11",
        "kind": "debate",
        "source": "https://www.orrick.com/en/insights/2025/11/fdas-digital-health-advisory-committee-considers-generative-ai-therapy-chatbots-for-depression",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "EU delays AI Act rules for medical devices",
-       "summary": "The Digital Omnibus on AI, in force since July 2026, moves high-risk obligations for AI in regulated products, including medical devices, from August 2027 to August 2028.",
+       "summary": "The AI Omnibus, in force since 27 July 2026, extends the transition for high-risk AI embedded in regulated products, which include medical devices, to 2 August 2028.",
        "date": "2026-07",
        "kind": "policy",
-       "source": "https://www.whitecase.com/insight-alert/eu-ai-omnibus-enters-force-amending-ai-act",
-       "verified": true
+       "source": "https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Rules written for fixed software are being stretched to cover generative models, and the outcome decides what reaches patients.",
      "openQuestion": "How should regulators evaluate and monitor generative AI whose outputs vary and whose models change after approval?",
      "deepDives": [
       {
-       "title": "FDA advisory committee weighs guardrails for generative AI",
-       "url": "https://ca.hoganlovells.com/en/publications/fdas-digital-health-advisory-committee-weighs-guardrails-for-generative-ai-in-mental-health-devices",
+       "title": "Artificial Intelligence-Enabled Medical Devices (FDA)",
+       "url": "https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-software-medical-device",
        "kind": "overview",
-       "why": "Detailed legal analysis of the panel's recommendations on evidence and monitoring."
+       "why": "FDA hub linking the device list and its principles on machine learning practice and change control."
       },
       {
-       "title": "FDA Law Blog on the 2026 CDS and wellness guidances",
+       "title": "A Busy Day in the (CDRH) Neighborhood: CDS and General Wellness Updates",
        "url": "https://www.thefdalawblog.com/?p=15814",
        "kind": "newsletter",
        "why": "Specialist FDA lawyers explain what changed in the two January 2026 guidances."
       },
       {
-       "title": "EU AI Act unpacked #34: the final Digital Omnibus on AI",
+       "title": "EU AI Act unpacked #34: The final Digital Omnibus on AI",
        "url": "https://www.freshfields.com/en/our-thinking/blogs/technology-quotient/eu-ai-act-unpacked-34-the-final-digital-omnibus-on-ai-key-amendments-to-the-a-102nber",
        "kind": "overview",
-       "why": "Walk-through of the amended AI Act deadlines and what changed for high-risk systems."
+       "why": "Walk-through of the amended AI Act deadlines, including for medical devices."
       },
       {
-       "title": "Automation bias and clinical practice: FDA's CDS update (Cooley)",
-       "url": "https://www.cooley.com/news/insight/2026/2026-01-20-automation-bias-and-clinical-practice-fda-makes-incremental-updates-to-clinical-decision-support-software-guidance",
-       "kind": "overview",
-       "why": "Close reading of how the FDA now interprets the four decision-support criteria."
-      },
-      {
-       "title": "FDA list of AI-enabled medical devices",
-       "url": "https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-enabled-medical-devices",
-       "kind": "tracker",
-       "why": "The agency's own list of authorised devices, updated periodically.",
-       "unchecked": true
+       "title": "Coalition for Health AI (CHAI)",
+       "url": "https://www.chai.org/",
+       "kind": "community",
+       "why": "Cross-sector group publishing a responsible AI guide, model cards and a public registry."
       }
      ]
     }
    ],
    "deepDives": [
     {
-     "title": "AI-Enabled Medical Devices List (FDA)",
+     "title": "List of Artificial Intelligence-Enabled Medical Devices (FDA)",
      "url": "https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/list-artificial-intelligence-enabled-medical-devices",
      "kind": "tracker",
      "why": "Official, periodically updated list of AI-enabled devices the FDA has authorized."
     },
     {
-     "title": "Artificial Intelligence for Drug Development (FDA CDER)",
-     "url": "https://www.fda.gov/about-fda/center-drug-evaluation-and-research-cder/artificial-intelligence-drug-development",
-     "kind": "overview",
-     "why": "The FDA drug center's hub for its AI guidance, principles and policy work."
+     "title": "AI Index 2026: Medicine chapter (Stanford HAI)",
+     "url": "https://hai.stanford.edu/ai-index/2026-ai-index-report/medicine",
+     "kind": "report",
+     "why": "Yearly data review of medical AI: clinical use, device approvals, diagnosis studies, ethics."
     },
     {
-     "title": "The Current State of FDA-Approved AI-Based Medical Devices",
-     "url": "https://medicalfuturist.com/the-current-state-of-fda-approved-ai-based-medical-devices",
-     "kind": "overview",
-     "why": "Readable breakdown of the FDA list by specialty, year and vendor."
+     "title": "MedHELM: Holistic Evaluation of Large Language Models for Medical Tasks",
+     "url": "https://arxiv.org/abs/2505.23802",
+     "kind": "paper",
+     "why": "Stanford benchmark suite of 35 benchmarks across 121 clinician-validated medical tasks."
     },
     {
-     "title": "States crack down on AI for behavioral health care (AHCJ)",
-     "url": "https://healthjournalism.org/blog/2025/08/states-crack-down-on-ai-for-behavioral-health-care",
-     "kind": "overview",
-     "why": "Health journalists' guide to state laws on AI therapy and how to report on them."
+     "title": "Ground Truths (Eric Topol)",
+     "url": "https://erictopol.substack.com/",
+     "kind": "newsletter",
+     "why": "A cardiologist and researcher's newsletter on biomedical evidence, with frequent AI coverage."
+    },
+    {
+     "title": "Ethics and governance of AI for health: guidance on large multi-modal models (WHO)",
+     "url": "https://www.who.int/publications/i/item/9789240084759",
+     "kind": "report",
+     "why": "WHO's recommendations for governments and developers on generative AI in health."
     }
    ]
   },
@@ -4570,30 +4613,32 @@ window.ATLAS = {
   {
    "id": "creative",
    "name": "Creative & Media",
-   "summary": "Image and music generation are mainstream, video is consolidating after Sora's exit, and the fight over training data is moving from lawsuits to settlements, licensing deals and labelling rules.",
+   "summary": "Image and music generation are mainstream, Chinese labs top video rankings after Sora's exit, and the fight over training data is moving from lawsuits to settlements, licences and labelling rules.",
    "regions": [
     {
      "id": "creative.image",
      "name": "Image & design",
-     "summary": "Image generation is built into chat apps, search and pro tools; Adobe is adding agents across Creative Cloud, while nonconsensual sexualized images draw regulator action.",
+     "summary": "Image generation is built into chat apps, search and pro tools; Adobe is adding an agent across Creative Cloud, while nonconsensual sexualized images draw regulator action.",
      "activity": 4,
      "maturity": "established",
      "landmarks": [
       {
        "name": "Nano Banana 2 (Gemini 3.1 Flash Image)",
-       "summary": "Google released its faster image model on 26 February with 4K output and made it the default in the Gemini app, Search AI Mode and Lens.",
+       "summary": "Google released its faster image model on 26 February with output up to 4K; it replaced Nano Banana Pro in the Gemini app and is coming to Search AI Mode and Lens.",
        "date": "2026-02",
        "kind": "product",
        "source": "https://9to5google.com/2026/02/26/nano-banana-2-gemini-app/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Adobe Firefly AI Assistant",
-       "summary": "Adobe announced an agentic assistant that runs multi-step tasks across Photoshop, Premiere, Illustrator and other apps; in-app public betas followed in June.",
+       "summary": "Adobe unveiled an agentic assistant on 15 April that runs multi-step tasks across Photoshop, Premiere, Lightroom, Illustrator and other apps from one chat interface.",
        "date": "2026-04",
        "kind": "product",
-       "source": "https://venturebeat.com/technology/adobes-new-firefly-ai-assistant-wants-to-run-photoshop-premiere-illustrator-and-more-from-one-prompt",
-       "verified": true
+       "source": "https://news.adobe.com/news/2026/04/adobe-new-creative-agent",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Grok sexualized deepfake scandal",
@@ -4601,20 +4646,33 @@ window.ATLAS = {
        "date": "2026-01",
        "kind": "incident",
        "source": "https://www.nbcnews.com/tech/tech-news/international-pressure-builds-x-musk-grok-deepfakes-rcna253639",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Image tools are where most people first meet generative AI, and where misuse against real people is most visible.",
      "openQuestion": "Can safeguards and labelling keep pace with models that edit photos of real people on request?",
      "deepDives": [
       {
-       "title": "The Batch: Nano Banana 2 ups performance per price",
+       "title": "The Batch: Nano Banana 2 Makes Edits Easier and Faster",
        "url": "https://www.deeplearning.ai/the-batch/nano-banana-2-aka-gemini-3-1-flash-image-makes-edits-easier-and-faster",
        "kind": "newsletter",
        "why": "DeepLearning.AI's plain summary of what the model does and what Google has not disclosed"
       },
       {
-       "title": "RPC: regulators investigate X over Grok images",
+       "title": "Diffusion Models: A Comprehensive Survey of Methods and Applications",
+       "url": "https://arxiv.org/abs/2209.00796",
+       "kind": "paper",
+       "why": "Regularly revised survey of the technique behind most image generators"
+      },
+      {
+       "title": "Artificial Analysis: text-to-image leaderboard",
+       "url": "https://artificialanalysis.ai/image/leaderboard/text-to-image",
+       "kind": "tracker",
+       "why": "Elo ranking of image models from blind side-by-side comparisons, with prices"
+      },
+      {
+       "title": "RPC: Online safety regulators investigate X over Grok AI chatbot images",
        "url": "https://www.rpclegal.com/snapshots/technology-digital/spring-2026/online-safety-regulators-investigate-x-over-grok-ai-chatbot-images/",
        "kind": "overview",
        "why": "Law firm overview of the UK and EU investigations and the legal duties at stake"
@@ -4624,25 +4682,29 @@ window.ATLAS = {
     {
      "id": "creative.video",
      "name": "Video & film",
-     "summary": "Video models from Google and Chinese labs lead after OpenAI said it would shut Sora; studios use AI for effects shots while studio licensing deals remain unsettled.",
+     "summary": "Chinese labs such as Alibaba, MiniMax and ByteDance top public video rankings after OpenAI shut Sora; studios use AI for effects shots while character licensing remains unsettled.",
      "activity": 4,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "OpenAI discontinues Sora",
-       "summary": "OpenAI said on 24 March it would discontinue the Sora app and API; reports cite compute costs and a research pivot. Disney then dropped its planned deal.",
+       "summary": "OpenAI said on 24 March it would discontinue Sora in the consumer app and API, citing compute demand and a shift to world-simulation research. The app closed on 26 April.",
        "date": "2026-03",
        "kind": "product",
-       "source": "https://www.opb.org/article/2026/03/24/openai-pulls-the-plug-on-sora-the-viral-ai-video-app-that-sparked-deepfake-concerns",
-       "verified": true
+       "source": "https://www.cbsnews.com/news/sora-ai-openai-discontinues/",
+       "verified": true,
+       "note": "App closure date (26 April) is from Wikipedia citing OpenAI's help page, not the CBS report",
+       "check": "page"
       },
       {
        "name": "Disney and OpenAI $1B licensing deal",
-       "summary": "Disney agreed to license 200+ characters to Sora for three years and invest $1B in OpenAI; the deal was reportedly never completed before Sora was shut.",
+       "summary": "Disney agreed to license 200+ characters to Sora for three years and invest $1B in OpenAI; Deadline reported the deal was never finalized and ended when Sora was shut.",
        "date": "2025-12",
        "kind": "deal",
        "source": "https://www.thewrap.com/disney-sora-openai-licensing-deal",
-       "verified": true
+       "verified": true,
+       "note": "Announcement confirmed on source page; the collapse is from Deadline, 24 March 2026",
+       "check": "page"
       },
       {
        "name": "Kling 3.0 launch",
@@ -4650,7 +4712,8 @@ window.ATLAS = {
        "date": "2026-02",
        "kind": "product",
        "source": "https://www.bernama.com/en/news.php/?id=2520897",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Netflix uses generative AI in final footage",
@@ -4658,84 +4721,109 @@ window.ATLAS = {
        "date": "2025-07",
        "kind": "product",
        "source": "https://www.ibc.org/artificial-intelligence/news/netflix-embraces-generative-ai-for-argentine-tv-series/22053",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Video is the costliest media to generate, so it shows whether consumer generative AI can pay for its own compute.",
      "openQuestion": "Will studios license characters and libraries to video models, or keep the tools in-house for effects work?",
      "deepDives": [
       {
-       "title": "Video generation models as world simulators",
-       "url": "https://openai.com/index/video-generation-models-as-world-simulators/",
+       "title": "Video Diffusion Models: A Survey",
+       "url": "https://arxiv.org/abs/2405.03150",
        "kind": "paper",
-       "why": "How diffusion transformers generate video, in OpenAI's own technical note.",
-       "unchecked": true
+       "why": "Overview of how diffusion models generate video: architectures, temporal modelling, applications"
       },
       {
-       "title": "Artificial Analysis",
-       "url": "https://artificialanalysis.ai/",
+       "title": "Artificial Analysis: text-to-video leaderboard",
+       "url": "https://artificialanalysis.ai/video/leaderboard/text-to-video",
        "kind": "tracker",
-       "why": "Blind-vote arenas ranking text-to-video and image-to-video models.",
-       "unchecked": true
+       "why": "Elo ranking of video models from pairwise human preference votes, with prices"
       },
       {
-       "title": "C2PA content credentials",
+       "title": "Sora: A Review on Background, Technology, Limitations, and Opportunities",
+       "url": "https://arxiv.org/abs/2402.17177",
+       "kind": "paper",
+       "why": "Independent 2024 review of how Sora worked, from public reports and reverse engineering"
+      },
+      {
+       "title": "C2PA: Verifying Media Content Sources",
        "url": "https://c2pa.org/",
        "kind": "overview",
-       "why": "The provenance standard used to label generated and edited media.",
-       "unchecked": true
+       "why": "The open provenance standard (Content Credentials) used to label generated and edited media"
       }
      ]
     },
     {
      "id": "creative.music",
      "name": "Music & audio",
-     "summary": "Major labels have moved from suing AI music generators to licensing them, while AI tracks flood streaming uploads and begin to appear on charts.",
+     "summary": "Major labels have moved from suing AI music generators to licensing them, a German court has ruled against Suno, and AI tracks now make up half of uploads on one streaming service.",
      "activity": 4,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "Warner Music settles with Suno",
-       "summary": "WMG dropped its suit for a licensing deal; Suno said it would launch licensed models in 2026 and retire current ones.",
+       "summary": "WMG settled its suit and signed a licensing deal; Suno said licensed models would launch in 2026, current models would be deprecated and downloads would need a paid account.",
        "date": "2025-11",
        "kind": "deal",
        "source": "https://www.musicbusinessworldwide.com/warner-music-group-settles-with-suno-strikes-first-of-its-kind-deal-with-ai-song-generator/",
-       "verified": false,
-       "note": "Not re-checked in this pass (search budget ran out); trade-press source, widely reported"
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Universal settles with Udio",
-       "summary": "UMG settled and agreed a licensed AI music platform with Udio; download limits that followed angered existing Udio users.",
+       "summary": "UMG settled and agreed a licensed, subscription AI music platform with Udio for 2026; until then Udio creations stay inside a walled garden.",
        "date": "2025-10",
        "kind": "deal",
        "source": "https://www.musicbusinessworldwide.com/universal-music-settles-udio-lawsuit-strikes-deal-for-licensed-ai-music-platform",
-       "verified": false,
-       "note": "Not re-checked in this pass (search budget ran out); trade-press source, widely reported"
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "AI tracks pass half of Deezer uploads",
-       "summary": "Deezer said AI-generated tracks passed 50% of daily uploads for the first time, up from 44% in April, yet draw only 1 to 3% of streams.",
+       "summary": "Deezer said AI-generated tracks passed 50% of daily uploads at peak in June, about 90,000 a day, yet draw only 1 to 3% of streams; it will take down those used for fraud.",
        "date": "2026-07",
        "kind": "research",
        "source": "https://newsroom-deezer.com/2026/07/ai-music-exceeds-50-percent-daily-uploads-deezer/",
-       "verified": true
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "German court rules for GEMA against Suno",
+       "summary": "Munich Regional Court I largely sided with collecting society GEMA, finding Suno's model stored protected songs and reproduced them in outputs. The ruling is not yet final.",
+       "date": "2026-07",
+       "kind": "policy",
+       "source": "https://cms.law/en/int/publication/artificial-intelligence-and-copyright-case-tracker/germany-gema-v.-suno-31-july-2026",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Music is the first creative sector where rights holders and AI generators have moved from court to licensed products.",
      "openQuestion": "Will licensed AI music pay artists meaningfully, and can streaming services contain the flood of uploads?",
      "deepDives": [
       {
-       "title": "Deezer newsroom: AI music share of uploads",
-       "url": "https://newsroom-deezer.com/2026/07/ai-music-exceeds-50-percent-daily-uploads-deezer/",
+       "title": "CISAC/PMP Strategy AI Study",
+       "url": "https://www.cisac.org/services/reports-and-research/cisacpmp-strategy-ai-study",
        "kind": "report",
-       "why": "The only regular platform data on AI upload volumes, stream share and detection"
+       "why": "Collecting societies' estimate of generative AI's economic impact on music and film creators"
       },
       {
-       "title": "US Copyright Office: Copyright and AI",
+       "title": "Foundation Models for Music: A Survey",
+       "url": "https://arxiv.org/abs/2408.14340",
+       "kind": "paper",
+       "why": "Academic review of music models, from representation learning to generation"
+      },
+      {
+       "title": "US Copyright Office: Copyright and Artificial Intelligence",
        "url": "https://www.copyright.gov/ai/",
        "kind": "report",
-       "why": "The Office's multi-part report on digital replicas, copyrightability and training.",
-       "unchecked": true
+       "why": "The Office's multi-part report on digital replicas, copyrightability and training"
+      },
+      {
+       "title": "Music Business Worldwide",
+       "url": "https://www.musicbusinessworldwide.com/",
+       "kind": "newsletter",
+       "why": "Trade publication that follows label licensing deals and AI lawsuits closely"
       }
      ]
     },
@@ -4748,28 +4836,30 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Anthropic $1.5B authors settlement approved",
-       "summary": "A US judge gave final approval to the largest copyright class settlement, about $3,000 per work for roughly 500,000 pirated books used by Anthropic.",
+       "summary": "A US judge gave final approval on 20 July to the largest US copyright settlement: about $3,000 per eligible work, for a class of over 500,000 authors and publishers.",
        "date": "2026-07",
        "kind": "deal",
-       "source": "https://www.jurist.org/news/2026/07/judge-approves-record-1-5-billion-settlement-involving-anthropic/",
-       "verified": true
+       "source": "https://www.latimes.com/business/story/2026-07-23/judge-approves-anthropics-1-5-billion-settlement-with-authors",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "AI books reach 20% of Amazon self-publishing",
-       "summary": "Preprint on 14,419 self-published genre-fiction e-books finds about 20% have substantial AI text; revenue per selling book fell across most genres.",
+       "summary": "Preprint on 14,419 self-published genre-fiction e-books finds 20% have substantial AI text but earn a smaller share of sales; revenue per selling book fell in most genres.",
        "date": "2026-07",
        "kind": "research",
-       "source": "https://arxiv.org/pdf/2607.20349",
+       "source": "https://arxiv.org/abs/2607.20349",
        "verified": true,
-       "note": "arXiv ID 2607 = posted July 2026; wider press coverage followed in September"
+       "check": "page"
       },
       {
        "name": "HarperCollins AI training licence",
-       "summary": "HarperCollins offered nonfiction authors $2,500 per title for a three-year opt-in AI training licence; Bloomberg reported the buyer was Microsoft.",
+       "summary": "HarperCollins offered nonfiction backlist authors $2,500 per title for a three-year opt-in AI training licence; Bloomberg reported the buyer was Microsoft.",
        "date": "2024-11",
        "kind": "deal",
        "source": "https://www.publishersweekly.com/pw/print/20241125/96533-agents-authors-question-harpercollins-ai-deal.html",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Books are the clearest test of what training data is worth and of how cheap AI text changes a market for human work.",
@@ -4777,24 +4867,24 @@ window.ATLAS = {
      "deepDives": [
       {
        "title": "Generative AI floods and dilutes the market for books",
-       "url": "https://arxiv.org/pdf/2607.20349",
+       "url": "https://arxiv.org/abs/2607.20349",
        "kind": "paper",
        "why": "The underlying study: full-text AI detection matched to Amazon sales data through June 2026"
       },
       {
-       "title": "Authors Guild: AI licensing, what authors should know",
+       "title": "Authors Guild: AI Licensing, What Authors Should Know",
        "url": "https://authorsguild.org/advocacy/artificial-intelligence/ai-licensing-what-authors-should-know/",
        "kind": "overview",
        "why": "The main US authors' body on rights, contract terms and fair splits for AI licences"
       },
       {
-       "title": "Jane Friedman: AI licensing for authors",
+       "title": "Jane Friedman: AI licensing for authors, who owns the rights and what's the split?",
        "url": "https://janefriedman.com/ai-licensing-for-authors-who-owns-the-rights-and-whats-the-split/",
        "kind": "newsletter",
        "why": "A respected publishing analyst on who holds AI rights and how deals are structured"
       },
       {
-       "title": "Publishers Weekly: an AI licensing primer for publishers",
+       "title": "Publishers Weekly: An AI Licensing Primer for Book Publishers",
        "url": "https://publishersweekly.com/pw/print/20241125/96590-an-ai-licensing-primer-for-book-publishers.html",
        "kind": "overview",
        "why": "Trade-press explainer on how book licensing deals with AI firms work"
@@ -4814,7 +4904,8 @@ window.ATLAS = {
        "date": "2026-01",
        "kind": "experiment",
        "source": "https://9to5google.com/2026/01/29/google-project-genie/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Steam rewrites AI disclosure rules",
@@ -4822,42 +4913,45 @@ window.ATLAS = {
        "date": "2026-01",
        "kind": "policy",
        "source": "https://www.videogameschronicle.com/news/valve-has-significantly-rewritten-steams-rules-for-how-developers-much-disclose-ai-use",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Nearly half of new Steam games disclose AI",
-       "summary": "A community analysis found 49.9% of October 2026 Steam releases disclosed AI content, up from 26.4% a year earlier and far more common among small titles.",
+       "summary": "A Reddit user's analysis of about 63,600 games found 49.9% of October 2026 Steam releases disclosed AI content, up from 26.4% a year earlier, more often small titles.",
        "date": "2026-11",
        "kind": "research",
        "source": "https://dexerto.com/gaming/almost-half-of-all-new-steam-games-use-ai-now-3423933",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "SAG-AFTRA game deal with AI consent rules",
-       "summary": "Members ratified the Interactive Media Agreement, ending the video game strike; it requires consent and disclosure for digital replicas of performers.",
+       "summary": "Members ratified the Interactive Media Agreement with 95% in favour, ending a 320-day video game strike; it requires disclosure and written consent for AI replicas.",
        "date": "2025-07",
        "kind": "policy",
        "source": "https://www.thewrap.com/sag-aftra-ratify-interactive-media-agreement-video-game-strike/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Games combine art, code, voice and live interaction, so they show how AI spreads through a whole production pipeline.",
      "openQuestion": "Will players accept AI-made content in major releases, or will it stay concentrated in small titles?",
      "deepDives": [
       {
-       "title": "Three years of AI on Steam",
+       "title": "Sulka Haro: Three years of AI on Steam",
        "url": "https://fragwyz.substack.com/p/three-years-of-ai-on-steam",
        "kind": "report",
-       "why": "Data analysis of Steam AI disclosures over time, by game size and content type"
+       "why": "Data study of about 53,600 Steam releases: AI disclosures over time, by game size and type"
       },
       {
-       "title": "PC Gamer: Steam week in review on AI disclosures",
+       "title": "PC Gamer: Steam Week in Review on AI disclosures",
        "url": "https://www.pcgamer.com/gaming-industry/steam-week-in-review-take-cover-because-it-looks-like-more-than-half-of-steam-games-will-have-an-ai-disclosure-by-2027-2028/",
        "kind": "newsletter",
        "why": "Recurring column tracking weekly Steam releases and the share with AI disclosures"
       },
       {
-       "title": "Inside the SAG-AFTRA Interactive Media Agreement",
+       "title": "Inside the New SAG-AFTRA Interactive Media Agreement",
        "url": "https://technologylaw.fkks.com/post/102mewu/inside-the-new-sag-aftra-interactive-media-agreement-new-standards-for-ai-and-di",
        "kind": "overview",
        "why": "Law firm walk-through of the contract's digital replica consent and pay terms"
@@ -4867,7 +4961,7 @@ window.ATLAS = {
     {
      "id": "creative.labour",
      "name": "Creators, licensing & provenance",
-     "summary": "Courts are drawing narrow lines on training and fair use, EU labelling duties were set to apply from August 2026, and settlements and licensing deals are becoming the norm.",
+     "summary": "Courts are drawing narrow lines on training and fair use, EU labelling duties began applying in August 2026, and settlements and licensing deals are becoming the norm.",
      "activity": 4,
      "maturity": "adopting",
      "landmarks": [
@@ -4877,79 +4971,90 @@ window.ATLAS = {
        "date": "2025-11",
        "kind": "policy",
        "source": "https://www.mishcon.com/news/getty-images-v-stability-ai-unpacking-the-high-courts-judgment?publication=7570",
-       "verified": true
+       "verified": true,
+       "note": "Leave to appeal the secondary infringement point was granted in Dec 2025; outcome not confirmed",
+       "check": "page"
       },
       {
        "name": "EU code on labelling AI-generated content",
-       "summary": "The Commission published the final voluntary Code of Practice on marking and labelling AI content, to help meet AI Act Article 50 duties from 2 August 2026.",
+       "summary": "The Commission published the final voluntary code on marking and labelling AI content; Article 50 duties apply from 2 August 2026, with older systems given until 2 December.",
        "date": "2026-06",
        "kind": "policy",
        "source": "https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content",
-       "verified": true
+       "verified": true,
+       "note": "Grace period to 2 Dec 2026 for existing systems is per artificialintelligenceact.eu timeline",
+       "check": "page"
       },
       {
        "name": "Thomson Reuters v Ross upheld on appeal",
-       "summary": "Third Circuit held that training a legal search tool on Westlaw headnotes was not fair use, while leaving the question open for generative models.",
+       "summary": "Third Circuit held on 29 September that training a legal search tool on Westlaw headnotes was not fair use, while leaving the question open for generative models.",
        "date": "2026-09",
        "kind": "policy",
        "source": "https://www.ballardspahr.com/insights/alerts-and-articles/2026/10/third-circuit-addresses-fair-use-in-ai-training-but-leaves-generative-ai-questions-unresolved",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "How courts and regulators treat training data and labelling sets the terms on which every generative model is built and sold.",
      "openQuestion": "Is training generative models on copyrighted work fair use, and who gets paid if it is not?",
      "deepDives": [
       {
-       "title": "CMS AI and copyright case tracker",
-       "url": "https://cms.law/en/mar/publication/artificial-intelligence-and-copyright-case-tracker/united-kingdom-getty-images-us-inc-ors-v-stability-ai-ltd2",
+       "title": "CMS Artificial Intelligence and Copyright Case Tracker",
+       "url": "https://cms.law/en/int/publication/artificial-intelligence-and-copyright-case-tracker",
        "kind": "tracker",
-       "why": "Maintained case-by-case tracker of AI copyright litigation, with status updates"
+       "why": "Regularly updated case summaries of AI copyright litigation across many countries"
       },
       {
-       "title": "European Commission: code of practice on AI-generated content",
+       "title": "European Commission: Code of Practice on Transparency of AI-generated Content",
        "url": "https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content",
        "kind": "report",
-       "why": "The primary source for the EU marking and labelling code and related guidance"
+       "why": "The primary source for the EU marking and labelling code, signatories and guidance"
       },
       {
-       "title": "Tech Policy Press: the EU AI transparency code explained",
+       "title": "Tech Policy Press: The EU's AI Transparency Code of Practice, Explained",
        "url": "https://techpolicy.press/the-eus-ai-transparency-code-of-practice-explained",
        "kind": "overview",
        "why": "Readable explainer of what providers and deployers are expected to do"
       },
       {
-       "title": "Matthew Sag on Thomson Reuters v Ross",
-       "url": "https://matthewsag.com/2025/02/",
-       "kind": "newsletter",
-       "why": "A leading copyright scholar's analysis of the first AI training fair use ruling"
+       "title": "Matthew Sag: Thomson Reuters v. ROSS Intelligence (Summary Judgement)",
+       "url": "https://matthewsag.com/thomson-reuters-v-ross-intelligence-summary-judgement/",
+       "kind": "overview",
+       "why": "A copyright scholar's analysis of the 2025 district ruling later upheld on appeal"
       }
      ]
     }
    ],
    "deepDives": [
     {
-     "title": "CMS AI and copyright case tracker",
-     "url": "https://cms.law/en/mar/publication/artificial-intelligence-and-copyright-case-tracker/united-kingdom-getty-images-us-inc-ors-v-stability-ai-ltd2",
+     "title": "CMS Artificial Intelligence and Copyright Case Tracker",
+     "url": "https://cms.law/en/int/publication/artificial-intelligence-and-copyright-case-tracker",
      "kind": "tracker",
      "why": "Follow the court cases that decide how creative work can be used for training"
     },
     {
-     "title": "European Commission: code of practice on AI-generated content",
-     "url": "https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content",
+     "title": "US Copyright Office: Copyright and Artificial Intelligence",
+     "url": "https://www.copyright.gov/ai/",
      "kind": "report",
-     "why": "Primary source for EU rules on marking and labelling AI-generated media"
+     "why": "Multi-part official report on digital replicas, copyrightability and training"
     },
     {
      "title": "Generative AI floods and dilutes the market for books",
-     "url": "https://arxiv.org/pdf/2607.20349",
+     "url": "https://arxiv.org/abs/2607.20349",
      "kind": "paper",
      "why": "Rare market-level evidence on how AI output affects human creators' revenue"
     },
     {
-     "title": "Authors Guild: AI licensing, what authors should know",
+     "title": "Authors Guild: AI Licensing, What Authors Should Know",
      "url": "https://authorsguild.org/advocacy/artificial-intelligence/ai-licensing-what-authors-should-know/",
      "kind": "overview",
      "why": "A creator-side guide to licensing terms, applicable beyond books"
+    },
+    {
+     "title": "C2PA: Verifying Media Content Sources",
+     "url": "https://c2pa.org/",
+     "kind": "overview",
+     "why": "The open provenance standard behind Content Credentials labels on media"
     }
    ]
   }
