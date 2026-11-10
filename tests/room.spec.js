@@ -139,3 +139,51 @@ test('acrostic and word-count checks', () => {
   expect(check({ type: 'acrostic', word: 'mad' }, doc.lines)).toBe(false);
   expect(check({ type: 'words', min: 5, max: 5 }, doc.lines)).toBe(true);
 });
+
+const runRoom = (agents, cfg) => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'room-home-'));
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents }));
+  const file = path.join(home, 'r.json');
+  fs.writeFileSync(file, JSON.stringify(cfg));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'room.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Run folder: (.+)/)[1].trim();
+  return { dir, t: JSON.parse(fs.readFileSync(path.join(dir, 'timeline.json'), 'utf8')) };
+};
+
+test('plan_first: edits are refused until a plan is agreed; questions and shares are counted', () => {
+  const a = ['sh', '-c', `case "$1" in *"just finished"*) echo A;;
+    *"move 1 of"*) printf 'SAY: shall we start with the sea?\\nPLAN: sea first, then the boat\\nINSERT AFTER 0\\ntoo-early\\nEND\\nSTATUS: working\\n';;
+    *) printf 'INSERT AFTER 0\\nline-a\\nEND\\nSTATUS: done\\n';; esac`, 'x', '{prompt}'];
+  const b = ['sh', '-c', `case "$1" in *"just finished"*) echo B;;
+    *"The plan on the table, from A: sea first"*) printf 'SAY: yes\\nAGREE: yes\\nINSERT AFTER 0\\nline-b\\nEND\\nSTATUS: done\\n';;
+    *) printf 'STATUS: done\\n';; esac`, 'x', '{prompt}'];
+  const { t } = runRoom([{ id: 'a', label: 'A', headless: a }, { id: 'b', label: 'B', headless: b }],
+    { title: 'T', kind: 'poem', brief: 'b', agents: ['a', 'b'], moves: 3, turns: true, plan_first: true });
+  expect(t.moves[0].plan).toBe('proposed');
+  expect(t.moves[0].dropped[0].why).toMatch(/no plan has been agreed/);
+  expect(t.moves[1].plan).toBe('agreed');
+  expect(t.moves[1].landed.length).toBe(1); // the agreeing move may already edit
+  expect(t.plan).toMatchObject({ agreed: true, text: 'sea first, then the boat', at: 2, forced: false });
+  expect(t.final.map(l => l.text)).toEqual(['line-a', 'line-b']);
+  expect(t.stats.questions).toBe(1);
+  expect(t.stats.share).toEqual({ a: 50, b: 50 });
+});
+
+test('versions: changing someone else\'s line makes a proposal the author accepts or rejects', () => {
+  const a = ['sh', '-c', `case "$1" in *"just finished"*) echo A;;
+    *"move 1 of"*) printf 'INSERT AFTER 0\\nline-a1\\nline-a2\\nEND\\nSTATUS: working\\n';;
+    *"V1 from B: replace line 1 with: better-1"*) printf 'ACCEPT V1\\nREJECT V2\\nSTATUS: done\\n';;
+    *) printf 'STATUS: done\\n';; esac`, 'x', '{prompt}'];
+  const b = ['sh', '-c', `case "$1" in *"just finished"*) echo B;;
+    *"move 1 of"*) printf 'REPLACE 1\\nbetter-1\\nEND\\nDELETE 2\\nINSERT AFTER 2\\nline-b\\nEND\\nSTATUS: working\\n';;
+    *) printf 'STATUS: done\\n';; esac`, 'x', '{prompt}'];
+  const { t, dir } = runRoom([{ id: 'a', label: 'A', headless: a }, { id: 'b', label: 'B', headless: b }],
+    { title: 'T', kind: 'poem', brief: 'b', agents: ['a', 'b'], moves: 3, turns: true, versions: true });
+  expect(t.moves[1].proposed).toEqual(['V1 (replace 1)', 'V2 (delete 2)']);
+  expect(t.moves[1].landed).toEqual(['insert after 2 (1 line)']);
+  expect(t.moves[2].decisions).toEqual(['accepted V1', 'rejected V2']);
+  expect(t.final.map(l => [l.text, l.by])).toEqual([['better-1', 'b'], ['line-a2', 'a'], ['line-b', 'b']]);
+  expect(t.stats.proposals).toEqual({ accepted: 1, rejected: 1, stale: 0, pending: 0 });
+  expect(fs.readFileSync(path.join(dir, 'steps', '04-b.prompt.md'), 'utf8')).toContain('A accepted your V1');
+});
