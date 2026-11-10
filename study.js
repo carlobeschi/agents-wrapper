@@ -54,6 +54,13 @@
 //   mistakes caught, mistakes passed on, and ideas built on. The app's own
 //   counts (questions, clashes, lines removed from the other, share of the
 //   final piece, proposals) come from room.js.
+// - Tournament (study 8): a variant with "tournament": { "generate": [specs],
+//   "review": spec, "rank": spec } does not talk at all: each generator drafts
+//   alone with half its moves, the reviewer critiques each draft, each
+//   generator revises its own draft with the other half, and the ranker picks
+//   the better version, which the judges see. The summary says who won, how
+//   alike the drafts were and how much a revision kept, and for every arm how
+//   alike its final pieces are across repeats.
 // Run folder: ~/.agent-dispatch/studies/<run>/: study.json, summary.md,
 // judge/ (pictures and prompts); each room run keeps its own folder.
 
@@ -172,6 +179,20 @@ function parseProcess(text) {
   return out;
 }
 
+const reviewPrompt = (kind, brief, checks, text) => [
+  'Review this draft. It was made for this brief:', '', brief, ...(checks.length ? ['', 'The app also checks at the end:', ...checks.map(c => `- ${c}`)] : []), '',
+  kind === 'svg' ? 'The draft is the picture draft.png in your current folder. Look at it.' : `--- draft ---\n${String(text).trim()}`, '',
+  'Review it in three passes: (1) BRIEF: what the brief or the checks ask for that is missing, wrong or hard to see; (2) READER: what someone meeting it for the first time would misread or stumble on; (3) CRAFT: what would make it better made.',
+  'Then list at most 5 concrete changes, most important first. Do not rewrite it yourself.',
+].join('\n');
+
+// How alike two pieces are: shared five-letter pieces of text, 0-100.
+function alike(a, b) {
+  const sh = s => { const x = String(s).toLowerCase().replace(/\s+/g, ' '), set = new Set(); for (let i = 0; i + 5 <= x.length; i++) set.add(x.slice(i, i + 5)); return set; };
+  const A = sh(a), B = sh(b); let n = 0; for (const x of A) if (B.has(x)) n++;
+  const u = A.size + B.size - n; return u ? Math.round(n / u * 100) : 100;
+}
+
 const mean = xs => xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length * 10) / 10 : null;
 const avgOf = (judgings, label) => mean(judgings.flatMap(j => (j.pieces || []).filter(p => p.label === label && p.score != null).map(p => p.score)));
 
@@ -240,6 +261,55 @@ async function main(file) {
     return out;
   }
 
+  // Study 8: a Co-Scientist-style tournament in place of a conversation. Each
+  // generator drafts alone with half of its moves; a reviewer critiques every
+  // draft (it never edits); each generator revises its own draft, as a new
+  // version, with the other half; a ranker picks the better version, which is
+  // the arm's piece for the judges. The generators never talk. Edit moves are
+  // the same as in a conversation of the same size; the review and rank calls
+  // come on top (one per draft, one per repeat).
+  async function tournamentRun(t, v, r) {
+    const T = v.tournament, gspecs = T.generate || cfg.agents, gens = gspecs.map(pick);
+    const reviewer = pick(T.review || judges[0].id), ranker = pick(T.rank || judges[0].id);
+    const rt = asRoom(t), total = t.moves ?? base.moves, half = Math.max(1, Math.floor(total / 2));
+    const tag = `${t.id}-${r + 1}-${v.label.replace(/\W+/g, '-')}`;
+    const alone = (i, extra) => ({ ...base, ...rt, ...(v.room || {}), ...extra, agents: [gspecs[i]], silent: true, safe_word: undefined, lesson: false,
+      readonly: [], plan_first: false, versions: false });
+    const piece = d => fs.readFileSync(path.join(d, t.kind === 'svg' ? 'final.svg' : 'final.txt'), 'utf8');
+    const lines = d => (JSON.parse(fs.readFileSync(path.join(d, 'timeline.json'), 'utf8')).final || []).map(l => l.text);
+    const drafts = [], revisions = [];
+    for (let i = 0; i < gens.length; i++) {
+      console.log(`  draft ${i + 1}: ${gens[i].label}`);
+      drafts.push(await roomRun(alone(i, { title: `${t.id} · ${v.label} · draft ${i + 1}`, moves: half, min_moves: Math.min(minOf(t), half) }), t));
+      save();
+    }
+    for (let i = 0; i < gens.length; i++) {
+      const rdir = path.join(dir, 'review', `${tag}-${i + 1}`);
+      fs.mkdirSync(rdir, { recursive: true });
+      let critique = '';
+      try {
+        if (t.kind === 'svg' && !await room.render(piece(drafts[i].dir), path.join(rdir, 'draft.png'))) throw new Error('could not render the draft');
+        critique = (await run(dir, `review-${tag}-${i + 1}`, reviewer, reviewPrompt(t.kind, rt.brief, (rt.checks || []).map(c => c.say), t.kind === 'svg' ? null : piece(drafts[i].dir)), rdir)).trim();
+      } catch (e) { drafts[i].reviewError = e.message.split('\n')[0]; }
+      drafts[i].review = critique;
+      console.log(`  revision ${i + 1}: ${gens[i].label}`);
+      revisions.push(await roomRun(alone(i, { title: `${t.id} · ${v.label} · revision ${i + 1}`, start: lines(drafts[i].dir), moves: total - half, min_moves: 1,
+        secrets: { [gens[i].id]: critique ? `The document is your own first draft. A reviewer read it and said:\n${critique}\nRevise it: keep what works, act on what the review gets right, ignore what it gets wrong.`
+          : 'The document is your own first draft. Read it again and make it better.' } }), t));
+      save();
+    }
+    const ranked = await judgeSet(dir, `rank-${tag}`, t.kind, rt.brief, revisions.map((x, i) => ({ label: `v${i + 1}`, dir: x.dir })), [ranker]);
+    const rk = ranked[0] || {};
+    let w = rk.best ? Number(rk.best.slice(1)) - 1 : -1;
+    if (w < 0 && rk.pieces) w = Number([...rk.pieces].sort((a, b) => (b.score ?? -1) - (a.score ?? -1))[0].label.slice(1)) - 1;
+    const rankFailed = w < 0; if (rankFailed) w = 0;
+    return { ...revisions[w], starter: null, stats: null, process: null, tournament: {
+      generators: gens.map(g => g.id), reviewer: reviewer.id, ranker: ranker.id, winner: gens[w].id, rankFailed, rank: rk,
+      drafts: drafts.map((d, i) => ({ dir: d.dir, checks: d.checks, review: d.review, reviewError: d.reviewError || null, revision: revisions[i].dir, revisedChecks: revisions[i].checks,
+        kept: alike(piece(d.dir), piece(revisions[i].dir)) })),
+      draftsAlike: gens.length > 1 ? alike(piece(drafts[0].dir), piece(drafts[1].dir)) : null } };
+  }
+
   // Interventions: the same team under each variant, A/B against the first.
   if (cfg.variants) {
     study.variants = cfg.variants.map(v => v.label);
@@ -255,6 +325,7 @@ async function main(file) {
         const ids = agents.map(a => a.id), k = r % ids.length, order = ids.slice(k).concat(ids.slice(0, k));
         for (const v of cfg.variants) {
           if (v.only && !v.only.includes(t.id)) continue;
+          if (v.tournament) { console.log(`- ${v.label} (tournament)`); runs[v.label] = await tournamentRun(t, v, r); save(); continue; }
           const extra = { title: `${t.id} · ${v.label}`, ...(v.room || {}), agents: order.map(id => specs[id]) };
           if (v.roles) {
             extra.roles = Object.fromEntries(order.map((id, i) => [id, v.roles[Math.min(i, v.roles.length - 1)]]));
@@ -288,6 +359,21 @@ async function main(file) {
           (g[run.starter] ||= { runs: 0, scores: [], checks: [] }).runs++;
           g[run.starter].scores.push(...sc); if (run.checks) g[run.starter].checks.push(run.checks.passed); });
         return [l, Object.keys(g).length ? Object.fromEntries(Object.entries(g).map(([id, v]) => [id, { runs: v.runs, score: mean(v.scores), checks: mean(v.checks) }])) : null];
+      }));
+      // How alike the final pieces of one arm are across repeats (text overlap, 0-100).
+      task.alike = Object.fromEntries(labels.map(l => {
+        const ps = task.repeats.map(x => x.runs[l]?.dir).filter(Boolean).map(d => { try { return fs.readFileSync(path.join(d, t.kind === 'svg' ? 'final.svg' : 'final.txt'), 'utf8'); } catch { return null; } }).filter(Boolean);
+        const pairs = ps.flatMap((a, i) => ps.slice(i + 1).map(b => alike(a, b)));
+        return [l, pairs.length ? mean(pairs) : null];
+      }));
+      task.tournament = Object.fromEntries(labels.map(l => {
+        const ts = task.repeats.map(x => x.runs[l]?.tournament).filter(Boolean);
+        if (!ts.length) return [l, null];
+        const wins = {}; for (const x of ts) wins[x.winner] = (wins[x.winner] || 0) + 1;
+        const ds = ts.flatMap(x => x.drafts), dc = ds.filter(d => d.checks), rc = ds.filter(d => d.revisedChecks);
+        return [l, { runs: ts.length, wins, rankFailed: ts.filter(x => x.rankFailed).length, draftsAlike: mean(ts.map(x => x.draftsAlike).filter(x => x != null)),
+          kept: mean(ds.map(d => d.kept)), reviewErrors: ds.filter(d => d.reviewError).length,
+          draftChecks: dc.length ? mean(dc.map(d => d.checks.passed)) : null, revisedChecks: rc.length ? mean(rc.map(d => d.revisedChecks.passed)) : null }];
       }));
       task.process = Object.fromEntries(labels.map(l => {
         const rs = task.repeats.map(x => x.runs[l]).filter(Boolean);
@@ -444,6 +530,11 @@ function summaryMd(s) {
     const procs = Object.entries(t.process || {}).filter(([, p]) => p);
     if (procs.length) L.push('', 'How they worked (per run, averaged; changed/caught/passed/built from the process judges, the rest counted by the app):', '',
       ...procs.map(([l, p]) => `- ${l}: changed ${p.changed ?? 'n/a'} · caught ${p.caught ?? 'n/a'} · passed ${p.passed ?? 'n/a'} · built ${p.built ?? 'n/a'} · questions ${p.questions} · clashes ${p.clashes} · lines removed from the other ${p.removedOthers} · top share ${p.topShare}%${p.lastMoverShare != null ? ` · last mover's share ${p.lastMoverShare}%` : ''}${p.accepted != null ? ` · proposals accepted ${p.accepted}, rejected ${p.rejected}` : ''}${p.planForced != null ? ` · plan forced in ${p.planForced}` : ''}`));
+    const tours = Object.entries(t.tournament || {}).filter(([, v]) => v);
+    if (tours.length) L.push('', 'Tournaments (drafts made alone, reviewed, revised, the better version picked by the ranker):', '',
+      ...tours.map(([l, v]) => `- ${l}: winner ${Object.entries(v.wins).map(([id, n]) => `${id} ${n}`).join(', ')} of ${v.runs} · the two drafts alike ${v.draftsAlike ?? 'n/a'}% · a revision kept ${v.kept}% of its draft${v.draftChecks != null ? ` · checks ${v.draftChecks} in drafts, ${v.revisedChecks} after revision` : ''}${v.rankFailed ? ` · rank failed ${v.rankFailed}` : ''}${v.reviewErrors ? ` · review errors ${v.reviewErrors}` : ''}`));
+    const al = Object.entries(t.alike || {}).filter(([, v]) => v != null);
+    if (al.length) L.push('', 'How alike the final pieces of each arm are across repeats (text overlap; lower = more varied):', '', al.map(([l, v]) => `${l} ${v}%`).join(' · '));
     const errs = t.repeats.flatMap(x => (x.judgings || []).filter(j => j.error).map(j => `${j.judge}: ${j.error}`));
     if (errs.length) L.push(`- judge errors: ${errs.join('; ')}`);
     L.push('');
@@ -464,7 +555,7 @@ function summaryMd(s) {
   return L.join('\n');
 }
 
-module.exports = { shuffle, parseScores, judgePrompt, summaryMd, transcript, parseProcess, main };
+module.exports = { shuffle, parseScores, judgePrompt, summaryMd, transcript, parseProcess, alike, main };
 
 if (require.main === module) {
   const file = process.argv[2];

@@ -1,0 +1,103 @@
+{
+ "title": "Study 8: a tournament or a conversation? (drawing, equal edit moves)",
+ "agents": [
+  "claude#1",
+  "claude#2"
+ ],
+ "judges": [
+  "claude",
+  "codex",
+  "antigravity"
+ ],
+ "solo": [
+  "claude"
+ ],
+ "room": {
+  "silent": true,
+  "turns": true,
+  "moves": 8,
+  "min_moves": 3,
+  "lines_per_move": 4,
+  "max_minutes": 8,
+  "words": 30,
+  "self_review": true
+ },
+ "variants": [
+  {
+   "label": "talk",
+   "room": {
+    "silent": false,
+    "turns": true
+   }
+  },
+  {
+   "label": "tournament, Claude only",
+   "tournament": {
+    "generate": [
+     "claude#1",
+     "claude#2"
+    ],
+    "review": "claude",
+    "rank": "claude"
+   }
+  },
+  {
+   "label": "tournament, mixed",
+   "tournament": {
+    "generate": [
+     "claude#1",
+     "claude#2"
+    ],
+    "review": "antigravity",
+    "rank": "codex"
+   }
+  },
+  {
+   "label": "tournament, DeepSeek drafts",
+   "tournament": {
+    "generate": [
+     "openrouter:deepseek/deepseek-v4-pro-0813#1",
+     "openrouter:deepseek/deepseek-v4-pro-0813#2"
+    ],
+    "review": "antigravity",
+    "rank": "codex"
+   }
+  }
+ ],
+ "tasks": [
+  {
+   "id": "cat",
+   "kind": "svg",
+   "start": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 400\">",
+    "</svg>"
+   ],
+   "brief": "Draw this scene on this 400 by 400 canvas: a lighthouse keeper\u2019s cat watching a storm from the window. Use simple shapes (no text, letters or digits anywhere). Someone who knows nothing will be shown the picture and asked what it shows.",
+   "guess": {
+    "agent": "claude",
+    "answers": [
+     [
+      "cat"
+     ],
+     [
+      "lighthouse"
+     ],
+     [
+      "storm",
+      "rain",
+      "lightning",
+      "waves"
+     ]
+    ]
+   },
+   "checks": [
+    {
+     "say": "No text in the drawing.",
+     "type": "every",
+     "pattern": "^(?!.*<text)"
+    }
+   ]
+  }
+ ],
+ "repeats": 3
+}
