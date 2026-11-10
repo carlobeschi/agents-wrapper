@@ -1895,28 +1895,28 @@ window.ATLAS = {
   {
    "id": "legal",
    "name": "Legal",
-   "summary": "Legal AI startups are raising at multibillion-dollar valuations, courts keep sanctioning fabricated citations, copyright rulings on training data are diverging, and AI-specific laws are being delayed or contested.",
+   "summary": "Legal AI startups are raising at multibillion-dollar valuations, courts keep sanctioning fabricated citations, copyright rulings on training data are diverging, and AI-specific laws are being delayed or rewritten.",
    "deepDives": [
     {
-     "title": "AI Hallucination Cases database (Damien Charlotin)",
+     "title": "AI Hallucination Cases Database (Damien Charlotin)",
      "url": "https://www.damiencharlotin.com/hallucinations/",
      "kind": "tracker",
-     "why": "Live, searchable list of court decisions worldwide involving AI-fabricated citations."
+     "why": "Daily-updated, searchable list of court decisions worldwide involving AI-fabricated content."
     },
     {
-     "title": "Akin AI Law & Regulation Tracker",
-     "url": "https://www.akingump.com/en/insights/ai-law-and-regulation-tracker",
+     "title": "Hogan Lovells AI Litigation Case Law Tracker",
+     "url": "https://digital-client-solutions.hoganlovells.com/resources/ai-litigation-case-law-tracker",
      "kind": "tracker",
-     "why": "Running log of AI statutes, agency actions and court rulings, mostly US with some EU."
+     "why": "Structured summaries of AI-related court decisions across key jurisdictions."
     },
     {
-     "title": "CMS AI and copyright case tracker",
-     "url": "https://cms.law/en/mar/publication/artificial-intelligence-and-copyright-case-tracker/united-kingdom-getty-images-us-inc-ors-v-stability-ai-ltd2",
-     "kind": "tracker",
-     "why": "Case-by-case summaries of AI copyright litigation across jurisdictions, with status updates."
+     "title": "EU Artificial Intelligence Act (Future of Life Institute)",
+     "url": "https://artificialintelligenceact.eu/",
+     "kind": "overview",
+     "why": "Full text explorer, implementation timeline and analyses of the EU AI Act."
     },
     {
-     "title": "LawNext (Bob Ambrogi)",
+     "title": "LawSites / LawNext (Bob Ambrogi)",
      "url": "https://www.lawnext.com/",
      "kind": "newsletter",
      "why": "Long-running independent reporting on legal tech products, funding and courts' use of AI."
@@ -1925,42 +1925,54 @@ window.ATLAS = {
      "title": "Artificial Lawyer",
      "url": "https://www.artificiallawyer.com/",
      "kind": "newsletter",
-     "why": "Daily trade coverage of legal AI vendors, law firm adoption and deals, with a UK and EU lens."
+     "why": "Trade coverage of legal AI vendors, law firm adoption and deals, with a UK and EU lens."
     }
    ],
    "regions": [
     {
      "id": "legal.contracts",
      "name": "Contract review & drafting",
-     "summary": "AI platforms for drafting, due diligence and document review are used by large firms and in-house teams. Harvey and Legora, the two best-funded startups, keep raising at higher valuations.",
+     "summary": "AI platforms for drafting, due diligence and review are used by large firms and in-house teams. Harvey and Legora keep raising at higher valuations while model makers ship their own legal tools.",
      "activity": 4,
      "maturity": "adopting",
      "whyItMatters": "Law is one of the clearest tests of whether vertical AI applications can build durable businesses on top of general models.",
      "openQuestion": "Will specialist legal platforms hold their ground as general-purpose model providers ship their own legal tools?",
      "landmarks": [
       {
-       "name": "Harvey raises $550M at $15.5B",
-       "summary": "Harvey raised $550M co-led by Diffusion and Lightspeed, under six months after an $11B round, and bought Guardrails AI. It says 80% of the Am Law 100 use it.",
-       "date": "2026-09",
-       "kind": "deal",
-       "source": "https://www.harvey.ai/blog/harvey-raises-dollar550m-at-a-dollar155b-valuation-to-help-legal-teams-own-their-intelligence",
-       "verified": true
-      },
-      {
        "name": "Legora Series E at $8.8B",
-       "summary": "Swedish-founded Legora raised a $550M Series E led by Atreides at an $8.8B post-money valuation, up from $5.6B in spring. It says the US is now its largest market.",
+       "summary": "Swedish-founded Legora raised a $550M Series E led by Atreides at an $8.8B post-money valuation. It says the US is now its largest market by revenue.",
        "date": "2026-10",
        "kind": "deal",
        "source": "https://artificiallawyer.com/2026/10/21/legora-raises-550m-at-8-8bn-valuation",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Harvey $11B round led by GIC and Sequoia",
-       "summary": "A $200M round valued Harvey at $11B and took total funding past $1B. The company reported 100,000 lawyers across 1,300 organisations and pitched agents for legal work.",
-       "date": "2026-03",
+       "name": "Harvey raises $550M at $15.5B",
+       "summary": "Harvey raised $550M co-led by Diffusion and Lightspeed, under six months after a $200M round at $11B. It says 80% of Am Law 100 firms use it.",
+       "date": "2026-09",
        "kind": "deal",
-       "source": "https://www.harvey.ai/blog/harvey-raises-growth-round-at-dollar11-billion-valuation-co-led-by-gic-and-sequoia",
-       "verified": true
+       "source": "https://www.harvey.ai/blog/harvey-raises-dollar550m-at-a-dollar155b-valuation-to-help-legal-teams-own-their-intelligence",
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "Anthropic launches Claude for Legal",
+       "summary": "Anthropic released more than 20 connectors to legal software and 12 practice-area plugins for Claude, a general model provider moving directly into legal work.",
+       "date": "2026-05",
+       "kind": "product",
+       "source": "https://www.lawnext.com/2026/05/anthropic-goes-all-in-on-legal-releasing-more-than-20-connectors-and-12-practice-area-plugins-for-claude.html",
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "Vals benchmark tests tools against lawyers",
+       "summary": "An independent study of four legal AI tools on seven tasks found at least one tool beat a lawyer baseline on four tasks; lawyers led on redlining and EDGAR research.",
+       "date": "2025-02",
+       "kind": "research",
+       "source": "https://www.vals.ai/vlair",
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
@@ -1971,78 +1983,87 @@ window.ATLAS = {
        "why": "Tracks legal AI funding rounds, product launches and law firm rollouts as they happen."
       },
       {
-       "title": "Legal IT Insider: Harvey raises $550m",
-       "url": "https://legaltechnology.com/harvey-raises-550m-at-15-5bn-valuation/",
-       "kind": "overview",
-       "why": "Independent trade write-up that puts the Harvey round in context of the wider market."
+       "title": "Vals Legal AI Report",
+       "url": "https://www.vals.ai/vlair",
+       "kind": "report",
+       "why": "Independent benchmark of commercial legal AI tools against a lawyer control group."
       },
       {
-       "title": "ABA Journal: Harvey's latest round",
-       "url": "https://www.abajournal.com/news/article/harvey-raises-550-million-in-latest-round-of-funding",
-       "kind": "overview",
-       "why": "Profession-facing account of what the leading legal AI platform does and who uses it."
+       "title": "CUAD: An Expert-Annotated NLP Dataset for Legal Contract Review",
+       "url": "https://arxiv.org/abs/2103.06268",
+       "kind": "paper",
+       "why": "The standard open dataset for contract clause extraction, used to evaluate review models."
+      },
+      {
+       "title": "LegalBench: Measuring Legal Reasoning in Large Language Models",
+       "url": "https://arxiv.org/abs/2308.11462",
+       "kind": "paper",
+       "why": "Collaboratively built benchmark of legal reasoning tasks, widely used to compare models."
       }
      ]
     },
     {
      "id": "legal.research",
      "name": "Legal research & hallucinated citations",
-     "summary": "AI research tools are common, but fabricated citations in court filings keep growing. A public tracker lists well over 1,500 decisions worldwide, and sanctions are getting heavier.",
+     "summary": "AI research tools are common, but fabricated citations in court filings keep growing. A public tracker lists nearly 2,300 decisions worldwide, and sanctions are getting heavier.",
      "activity": 4,
      "maturity": "adopting",
      "whyItMatters": "Courts are the most public place where the cost of unverified AI output is being measured and penalised.",
      "openQuestion": "Do sanctions and verification rules reduce fabricated filings, or does growing AI use simply outpace them?",
      "landmarks": [
       {
-       "name": "Hallucination case tracker nears 1,600",
-       "summary": "Damien Charlotin's database of court decisions involving AI-fabricated content listed about 1,600 cases by June 2026; later reports put it near 2,000.",
-       "date": "2026-06",
+       "name": "Hallucination case tracker passes 2,200",
+       "summary": "Damien Charlotin's database listed 2,289 decisions involving AI-fabricated content on 10 November 2026, 1,552 from the US. Pro se litigants (1,314) outnumber lawyers (910).",
+       "date": "2026-11",
        "kind": "incident",
-       "source": "https://haqq.ai/blog/ai-legal-hallucination-audit.html",
+       "source": "https://www.damiencharlotin.com/hallucinations/",
        "verified": true,
-       "note": "Count taken from a secondary audit of the database; live total changes daily."
-      },
-      {
-       "name": "$145K in sanctions in Q1 2026",
-       "summary": "A ComplexDiscovery tally found US courts imposed at least $145,000 in sanctions over AI-fabricated citations in Q1 2026, most of it in one Oregon case.",
-       "date": "2026-04",
-       "kind": "incident",
-       "source": "https://complexdiscovery.com/the-ai-sanction-wave-145k-in-q1-penalties-signals-courts-have-lost-patience-with-genai-filing-failures",
-       "verified": true
+       "check": "page",
+       "note": "Live total changes daily."
       },
       {
        "name": "Three years of handling hallucinations",
-       "summary": "A UNC law library review looks back at how courts and the profession have responded to AI hallucinations in filings over the three years since the first cases.",
+       "summary": "A UNC law library review of how Westlaw and Lexis now flag hallucinated authorities; it counted 1,058 US cases in Charlotin's data, about 60% pro se, by June 2026.",
        "date": "2026-06",
        "kind": "debate",
        "source": "https://library.law.unc.edu/2026/06/handling-hallucinations-a-reflection/",
-       "verified": true
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "$145K in sanctions in Q1 2026",
+       "summary": "A ComplexDiscovery tally found US courts imposed at least $145,000 in sanctions over AI-fabricated citations in Q1 2026, including a reported $109,700 tied to Oregon matters.",
+       "date": "2026-04",
+       "kind": "incident",
+       "source": "https://complexdiscovery.com/the-ai-sanction-wave-145k-in-q1-penalties-signals-courts-have-lost-patience-with-genai-filing-failures",
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
       {
-       "title": "AI Hallucination Cases database (Damien Charlotin)",
+       "title": "AI Hallucination Cases Database (Damien Charlotin)",
        "url": "https://www.damiencharlotin.com/hallucinations/",
        "kind": "tracker",
        "why": "The reference dataset: each decision with court, party type, what was fabricated and the outcome."
       },
       {
-       "title": "UNC Law Library: Handling Hallucinations",
-       "url": "https://library.law.unc.edu/2026/06/handling-hallucinations-a-reflection/",
-       "kind": "overview",
-       "why": "Readable three-year retrospective from law librarians on how the problem and responses evolved."
+       "title": "Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools",
+       "url": "https://arxiv.org/abs/2405.20362",
+       "kind": "paper",
+       "why": "Stanford study measuring how often commercial legal research tools still hallucinate."
       },
       {
-       "title": "UIC Law Library: Flood of AI-related sanctions persists",
+       "title": "UNC Law Library: Handling Hallucinations, A Reflection on the Last Three Years",
+       "url": "https://library.law.unc.edu/2026/06/handling-hallucinations-a-reflection/",
+       "kind": "overview",
+       "why": "Law librarian's retrospective on how databases and courts treat hallucinated authority."
+      },
+      {
+       "title": "UIC Law Library: Flood of AI-Related Sanctions Persist",
        "url": "https://library.law.uic.edu/news-stories/flood-of-ai-related-sanctions-persist/",
        "kind": "overview",
        "why": "Short guide to recent sanctions orders with pointers to the underlying cases."
-      },
-      {
-       "title": "Bloomberg Law: AI-faked cases irritate overworked judges",
-       "url": "https://news.bloombergtax.com/cannabis/ai-faked-cases-become-core-issue-irritating-overworked-judges",
-       "kind": "overview",
-       "why": "Reported feature on how judges are experiencing and responding to fabricated citations."
       }
      ]
     },
@@ -2056,41 +2077,45 @@ window.ATLAS = {
      "openQuestion": "Will courts and opposing parties accept generative AI review with the same confidence as earlier predictive coding?",
      "landmarks": [
       {
-       "name": "Relativity makes aiR standard",
-       "summary": "At Relativity Fest, Relativity said aiR for Review and aiR for Privilege would move from paid add-ons into standard RelativityOne pricing in 2026.",
-       "date": "2025-10",
-       "kind": "product",
-       "source": "https://abovethelaw.com/2025/10/relativity-offers-key-ai-products-at-no-extra-charge-but-thats-not-the-most-important-thing",
-       "verified": true
-      },
-      {
-       "name": "DISCO all-inclusive AI platform",
-       "summary": "DISCO bundled e-discovery, Cecilia AI, deposition management and timelines into one platform priced per GB of processed data, with no separate AI charge.",
-       "date": "2026-02",
-       "kind": "product",
-       "source": "https://csdisco.com/pressrelease/disco-announces-all-inclusive-platform-for-ediscovery",
-       "verified": true
-      },
-      {
-       "name": "Relativity announces Clair assistant",
-       "summary": "Relativity announced Clair, a conversational AI assistant for lawyers, ahead of availability. aiR for Case Strategy remains a separately priced add-on.",
-       "date": "2026-08",
-       "kind": "product",
-       "source": "https://lawnext.com/2026/08/relativity-announces-clair-a-conversational-ai-for-lawyers-but-youll-have-to-wait-awhile-to-chat-with-it.html",
-       "verified": true
-      },
-      {
        "name": "ILTACON e-discovery AI announcements",
-       "summary": "LawNext's ILTACON 2026 round-up covers new AI announcements from DISCO, Everlaw, Nuix, Relativity and Reveal.",
+       "summary": "LawNext's ILTACON 2026 round-up covers AI launches from DISCO, Everlaw, Nuix, Relativity and Reveal, including Everlaw links to Harvey, CoCounsel, Gemini and Copilot.",
        "date": "2026-09",
        "kind": "product",
        "source": "https://www.lawnext.com/2026/09/iltacon-news-round-up-part-1-e-discovery-disco-everlaw-nuix-relativity-reveal.html",
-       "verified": true
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "Relativity announces claiR assistant",
+       "summary": "Relativity announced claiR, a conversational AI for lawyers, with general availability expected early 2027. aiR for Case Strategy remains a separately priced add-on.",
+       "date": "2026-08",
+       "kind": "product",
+       "source": "https://lawnext.com/2026/08/relativity-announces-clair-a-conversational-ai-for-lawyers-but-youll-have-to-wait-awhile-to-chat-with-it.html",
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "DISCO all-inclusive AI platform",
+       "summary": "DISCO bundled e-discovery, Cecilia AI, deposition management and timelines into one platform at a single per-GB price on processed data, with no ingest fees.",
+       "date": "2026-02",
+       "kind": "product",
+       "source": "https://csdisco.com/pressrelease/disco-announces-all-inclusive-platform-for-ediscovery",
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "Relativity makes aiR standard",
+       "summary": "At Relativity Fest 2025, Relativity said aiR for Review and aiR for Privilege, then paid options, would be included in the core RelativityOne subscription at no extra cost.",
+       "date": "2025-10",
+       "kind": "product",
+       "source": "https://www.lawnext.com/2025/10/relativity-fest-2025-its-not-enough-ceo-saunders-calls-for-bold-transformation-in-legal-technology.html",
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
       {
-       "title": "eDiscovery Today (Doug Austin)",
+       "title": "eDiscovery Today by Doug Austin",
        "url": "https://ediscoverytoday.com/",
        "kind": "newsletter",
        "why": "Daily practitioner blog on e-discovery case law, vendor news and AI trends."
@@ -2102,8 +2127,8 @@ window.ATLAS = {
        "why": "Standards body behind the e-discovery reference model, with guidance and working groups on AI."
       },
       {
-       "title": "DWF: reflections from Relativity Fest 2025",
-       "url": "https://dwfgroup.com/it-it/news-and-insights/insights/2025/10/a-new-era-for-ediscovery-reflections-from-relativity-fest-2025",
+       "title": "DWF: A new era for eDiscovery, reflections from Relativity Fest 2025",
+       "url": "https://dwfgroup.com/en/news-and-insights/insights/2025/10/a-new-era-for-ediscovery-reflections-from-relativity-fest-2025",
        "kind": "overview",
        "why": "A law firm's view of what bundled generative AI review changes for practitioners."
       },
@@ -2125,12 +2150,22 @@ window.ATLAS = {
      "openQuestion": "How will supervisors expect banks to validate and govern generative and agentic AI systems?",
      "landmarks": [
       {
+       "name": "FSB sets out sound practices for AI",
+       "summary": "The Financial Stability Board published a final report with 12 sound practices for responsible AI adoption by financial institutions, citing generative and agentic AI.",
+       "date": "2026-10",
+       "kind": "policy",
+       "source": "https://www.fsb.org/2026/10/sound-practices-for-responsible-adoption-of-artificial-intelligence-ai-final-report/",
+       "verified": true,
+       "check": "page"
+      },
+      {
        "name": "US bank regulators issue SR 26-2",
-       "summary": "The Fed, OCC and FDIC replaced 2011 model risk guidance (SR 11-7) in April 2026 but excluded generative and agentic AI from scope, citing how new they are.",
+       "summary": "On 17 April 2026 the Fed, OCC and FDIC replaced 2011 model risk guidance (SR 11-7) with revised guidance that leaves generative and agentic AI out of scope for now.",
        "date": "2026-04",
        "kind": "policy",
        "source": "https://www.forvismazars.us/forsights/2026/06/implications-of-the-updated-interagency-mrm-guidance",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Few banks have a defined AI strategy",
@@ -2138,61 +2173,75 @@ window.ATLAS = {
        "date": "2026-02",
        "kind": "research",
        "source": "https://www.wolterskluwer.com/en/expert-insights/wolters-kluwer-q1-2026-banking-compliance-ai-trend-report",
-       "verified": true
-      },
-      {
-       "name": "Vendor survey: execution is the bottleneck",
-       "summary": "Ascent's 2026 RegTech survey reports 57% of firms cite slow manual processes as their top challenge; 46% see AI as transformational, 41% find current tools underwhelming.",
-       "date": "2026-05",
-       "kind": "research",
-       "source": "https://fintech.global/2026/05/26/how-ai-is-fixing-regtechs-operationalisation-problem/",
        "verified": true,
-       "note": "Vendor-run survey reported by a trade outlet; treat percentages as self-reported."
+       "check": "snippet",
+       "note": "Vendor-run survey; page blocks scripts, figures from search snippet only."
       }
      ],
      "deepDives": [
       {
-       "title": "CRA: Model risk guidance SR 26-2 in the era of AI",
+       "title": "Federal Reserve SR 26-2: Revised Guidance on Model Risk Management",
+       "url": "https://www.federalreserve.gov/supervisionreg/srletters/SR2602.htm",
+       "kind": "report",
+       "why": "The primary text of the 2026 interagency guidance that replaced SR 11-7."
+      },
+      {
+       "title": "FSB: Sound Practices for Responsible Adoption of AI, final report",
+       "url": "https://www.fsb.org/2026/10/sound-practices-for-responsible-adoption-of-artificial-intelligence-ai-final-report/",
+       "kind": "report",
+       "why": "International reference on how financial institutions are expected to govern AI use."
+      },
+      {
+       "title": "CRA: Model Risk Management Guidance SR 26-2 in the Era of AI",
        "url": "https://media.crai.com/wp-content/uploads/2026/07/09165122/FE-Insights-MRM-Guidance-SR-26-2-In-the-Era-of-AI-July2026.pdf",
        "kind": "report",
        "why": "Explains what the new guidance changes and what the generative AI carve-out leaves open."
       },
       {
-       "title": "Management Solutions: technical note on SR 26-2",
+       "title": "Management Solutions: Revised Guide on Model Risk Management",
        "url": "https://www.managementsolutions.com/en/publications-and-events/regulatory-notes/technical-notes-on-regulations/sr-26-2-revised-guide-model-risk-management",
        "kind": "overview",
-       "why": "Section-by-section summary of the revised interagency model risk guidance."
-      },
-      {
-       "title": "Wolters Kluwer Q1 2026 Banking Compliance AI Trend Report",
-       "url": "https://www.wolterskluwer.com/en/expert-insights/wolters-kluwer-q1-2026-banking-compliance-ai-trend-report",
-       "kind": "report",
-       "why": "Survey data on where bank compliance teams are with AI adoption, governance and policies."
-      },
-      {
-       "title": "Wolters Kluwer AI Risk and Governance Index",
-       "url": "https://www.wolterskluwer.com/en/expert-insights/ai-risk-and-governance-index",
-       "kind": "report",
-       "why": "Follow-up benchmark on AI governance readiness among banking institutions."
+       "why": "Technical note summarising the revised interagency model risk guidance."
       }
      ]
     },
     {
      "id": "legal.ai-law",
      "name": "Law of AI (EU AI Act, liability)",
-     "summary": "The EU has pushed high-risk AI Act obligations back to 2027-2028, while the US federal government is challenging state AI laws through an executive order and DOJ litigation.",
+     "summary": "The EU has pushed high-risk AI Act obligations back to 2027-2028. In the US, a federal push against state AI laws coincided with Colorado replacing its AI Act before it took effect.",
      "activity": 4,
      "maturity": "emerging",
      "whyItMatters": "These rules decide what AI developers and deployers must document, test and disclose, and who is liable when systems fail.",
      "openQuestion": "Will US state AI laws survive federal preemption efforts, and will the EU's delayed deadlines hold?",
      "landmarks": [
       {
-       "name": "EU adopts AI Omnibus delay",
-       "summary": "After a May deal and a Parliament vote, the Council approved changes moving standalone high-risk AI Act duties to 2 December 2027 and product-embedded AI to 2 August 2028.",
-       "date": "2026-06",
+       "name": "EU AI Omnibus delays high-risk rules",
+       "summary": "The Council gave final approval to the AI Omnibus, moving standalone high-risk AI Act duties to 2 December 2027 and product-embedded AI to 2 August 2028.",
+       "date": "2026-07",
        "kind": "policy",
        "source": "https://www.scl.org/council-of-the-eu-approves-ai-omnibus-reforms/",
-       "verified": true
+       "verified": true,
+       "check": "page",
+       "note": "Exact approval date not stated on page; published as Regulation (EU) 2026/1744 in July."
+      },
+      {
+       "name": "Colorado replaces its AI Act",
+       "summary": "Governor Polis signed SB 26-189 on 14 May 2026, repealing and reenacting the 2024 AI Act as a narrower automated decision-making law effective 1 January 2027.",
+       "date": "2026-05",
+       "kind": "policy",
+       "source": "https://leg.colorado.gov/bills/sb26-189",
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "DOJ joins xAI suit over Colorado AI Act",
+       "summary": "xAI sued on 9 April 2026 to block the Colorado AI Act and the DOJ moved to intervene on 24 April. On 27 April the court stayed enforcement under a joint stipulation.",
+       "date": "2026-04",
+       "kind": "debate",
+       "source": "https://www.lawandtheworkplace.com/2026/05/major-developments-put-colorados-ai-law-on-ice-ahead-of-implementation/",
+       "verified": true,
+       "check": "page",
+       "note": "Case status after the May 2026 replacement law was not confirmed."
       },
       {
        "name": "US executive order on state AI laws",
@@ -2200,41 +2249,34 @@ window.ATLAS = {
        "date": "2025-12",
        "kind": "policy",
        "source": "https://www.govinfo.gov/content/pkg/DCPD-202501186/html/DCPD-202501186.htm",
-       "verified": true
-      },
-      {
-       "name": "DOJ joins xAI suit over Colorado AI Act",
-       "summary": "xAI sued on 9 April 2026 to block the Colorado AI Act; the DOJ intervened on 24 April, reported as its first constitutional challenge to a state AI law.",
-       "date": "2026-04",
-       "kind": "debate",
-       "source": "https://www.jenner.com/en/news-insights/client-alerts/doj-joins-xai-in-lawsuit-challenging-colorado-ai-act",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
       {
-       "title": "Taylor Wessing: what the AI Omnibus deal means",
+       "title": "EU AI Act implementation timeline (Future of Life Institute)",
+       "url": "https://artificialintelligenceact.eu/implementation-timeline/",
+       "kind": "tracker",
+       "why": "Date-by-date list of when each AI Act obligation applies, with links to the articles."
+      },
+      {
+       "title": "IAPP US State AI Governance Legislation Tracker",
+       "url": "https://iapp.org/resources/article/us-state-ai-governance-legislation-tracker/",
+       "kind": "tracker",
+       "why": "Tracks cross-sector state AI governance bills that apply to private organisations."
+      },
+      {
+       "title": "ETO AGORA: AI governance document archive",
+       "url": "https://agora.eto.tech/",
+       "kind": "tracker",
+       "why": "Searchable collection of AI laws and policies with full text and summaries."
+      },
+      {
+       "title": "Taylor Wessing: The EU Digital Omnibus on AI, what the political deal means",
        "url": "https://taylorwessing.com/en/insights-and-events/insights/2026/05/the-eu-digital-omnibus-on-ai-what-the-political-deal-means",
        "kind": "overview",
        "why": "Plain explanation of which AI Act deadlines moved, which did not, and what was added."
-      },
-      {
-       "title": "AGORA: AI governance document archive (ETO)",
-       "url": "https://agora.eto.tech/instrument/2720",
-       "kind": "tracker",
-       "why": "Searchable collection of AI laws and policies with full text; this entry is EO 14365."
-      },
-      {
-       "title": "Akin AI Law & Regulation Tracker",
-       "url": "https://www.akingump.com/en/insights/ai-law-and-regulation-tracker",
-       "kind": "tracker",
-       "why": "Ongoing entries on federal, state and international AI legal developments."
-      },
-      {
-       "title": "Proskauer: federal government intervenes in Colorado case",
-       "url": "https://www.proskauer.com/blog/federal-government-intervenes-in-case-seeking-to-invalidate-colorado-ai-law",
-       "kind": "overview",
-       "why": "Sets out the legal theories in the first federal challenge to a state AI statute."
       }
      ]
     },
@@ -2245,65 +2287,70 @@ window.ATLAS = {
      "activity": 4,
      "maturity": "emerging",
      "whyItMatters": "The outcome sets what training data costs and whether model makers owe creators licences or damages.",
-     "openQuestion": "Is training a generative model on lawfully acquired copyrighted works fair use? No US appeals court has yet said.",
+     "openQuestion": "Is training a generative model on lawfully acquired copyrighted works fair use? No US appeals court has yet ruled on that.",
      "landmarks": [
       {
-       "name": "Bartz v Anthropic $1.5B settlement approved",
-       "summary": "A federal judge gave final approval in July 2026 to the $1.5B authors' class settlement over pirated books, announced in 2025 and described as the largest in US copyright.",
-       "date": "2026-07",
-       "kind": "deal",
-       "source": "https://www.jurist.org/news/2026/07/judge-approves-record-1-5-billion-settlement-involving-anthropic/",
-       "verified": true
-      },
-      {
        "name": "Third Circuit rules in Thomson Reuters v Ross",
-       "summary": "In the first US appellate ruling on AI training and fair use, the court held Ross's copying of Westlaw headnotes for a non-generative research tool was not fair use.",
+       "summary": "In the first major US appellate ruling on AI training and fair use, the court affirmed that Ross's copying of Westlaw headnotes for a non-generative research tool was not fair use.",
        "date": "2026-09",
        "kind": "policy",
        "source": "https://ipwatchdog.com/2026/09/30/third-circuit-affirms-revised-fair-use-ruling-against-ross-ai-legal-research-platform-in-sealed-opinion/",
-       "verified": true
+       "verified": true,
+       "check": "page",
+       "note": "Opinion was issued under seal; details come from news reports."
+      },
+      {
+       "name": "Bartz v Anthropic $1.5B settlement approved",
+       "summary": "The court granted final approval on 20 July 2026 to the $1.5B authors' class settlement over pirated books used as training data, first agreed in 2025.",
+       "date": "2026-07",
+       "kind": "deal",
+       "source": "https://www.anthropiccopyrightsettlement.com/",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "GEMA v OpenAI in Munich",
-       "summary": "Munich Regional Court held on 11 November 2025 that ChatGPT's memorisation and reproduction of song lyrics infringed copyright. Not final; OpenAI said it would appeal.",
+       "summary": "Munich Regional Court held on 11 November 2025 that memorisation of song lyrics in OpenAI's models and their reproduction in ChatGPT outputs infringed copyright.",
        "date": "2025-11",
        "kind": "policy",
        "source": "https://www.taylorwessing.com/de/insights-and-events/insights/2025/11/gema-v-openai",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Getty v Stability AI in UK High Court",
-       "summary": "The court held Stable Diffusion does not contain infringing copies, rejecting Getty's secondary infringement claim, with a narrow trade mark win on watermarks.",
+       "summary": "The court held Stable Diffusion's model weights are not infringing copies, rejecting Getty's secondary infringement claim, with a limited trade mark win on watermarks.",
        "date": "2025-11",
        "kind": "policy",
        "source": "https://www.mishcon.com/news/getty-images-v-stability-ai-unpacking-the-high-courts-judgment?publication=7570",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "deepDives": [
       {
-       "title": "CMS AI and copyright case tracker",
-       "url": "https://cms.law/en/mar/publication/artificial-intelligence-and-copyright-case-tracker/united-kingdom-getty-images-us-inc-ors-v-stability-ai-ltd2",
+       "title": "CMS Artificial Intelligence and Copyright Case Tracker",
+       "url": "https://cms.law/en/int/publication/artificial-intelligence-and-copyright-case-tracker",
        "kind": "tracker",
-       "why": "Country-by-country case pages with procedural history; this entry covers Getty v Stability."
+       "why": "Country-by-country case pages with procedural history and status updates."
       },
       {
-       "title": "Hogan Lovells AI litigation case law tracker",
-       "url": "https://digital-client-solutions.hoganlovells.com/resources/ai-litigation-case-law-tracker/case/gema-v-openai/decision/9",
+       "title": "BakerHostetler Case Tracker: AI, Copyrights and Class Actions",
+       "url": "https://www.bakerlaw.com/services/artificial-intelligence-ai/case-tracker-artificial-intelligence-copyrights-and-class-actions/",
        "kind": "tracker",
-       "why": "Structured summaries of AI decisions by issue and court; this entry covers GEMA v OpenAI."
+       "why": "Overviews, status and filings for the US generative AI copyright lawsuits."
       },
       {
-       "title": "Osler: German and UK courts diverge on AI models",
-       "url": "https://www.osler.com/en/insights/updates/german-and-u-k-courts-diverge-on-whether-ai-models-infringe-copyright/?pdf=1",
-       "kind": "overview",
-       "why": "Side-by-side comparison of why Munich and London reached different answers on model memorisation."
+       "title": "US Copyright Office: Copyright and Artificial Intelligence",
+       "url": "https://www.copyright.gov/ai/",
+       "kind": "report",
+       "why": "The Office's multi-part report, including Part 3 on generative AI training."
       },
       {
-       "title": "ABA: Thomson Reuters v Ross, one year later",
-       "url": "https://www.americanbar.org/groups/business_law/resources/business-law-today/2026-september/thomson-reuters-v-ross-one-year-later/",
+       "title": "Osler: German and U.K. courts diverge on whether AI models infringe copyright",
+       "url": "https://www.osler.com/en/insights/updates/german-and-u-k-courts-diverge-on-whether-ai-models-infringe-copyright/",
        "kind": "overview",
-       "why": "Argues the Ross precedent is narrower than headlines suggest; useful for reading the appeal."
+       "why": "Side-by-side comparison of why Munich and London reached different answers on memorisation."
       }
      ]
     },
@@ -2317,28 +2364,32 @@ window.ATLAS = {
      "openQuestion": "Does AI help unrepresented people win or settle cases, or mainly raise the volume of filings courts must process?",
      "landmarks": [
       {
-       "name": "Pro se filings rise with AI use",
-       "summary": "A preprint by Anand Shah and Joshua Levy finds the self-represented share of US federal civil cases rose from about 11% to 16.8% in FY2025, with more AI-flagged complaints.",
-       "date": "2026-03",
-       "kind": "research",
-       "source": "https://avshah1.github.io/assets/pdf/papers/pro-se/Pro_Se_Automation.pdf",
-       "verified": true
-      },
-      {
        "name": "Courts cope with AI-generated lawsuits",
        "summary": "MIT Technology Review reports on a rise in AI-drafted pro se lawsuits and on judges weighing what duties apply when chatbots stand in for lawyers.",
        "date": "2026-06",
        "kind": "debate",
        "source": "https://www.technologyreview.com/2026/06/04/1138391/courts-coping-ai-lawsuits/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Alaska courts release AVA probate chatbot",
-       "summary": "Alaska's court system released AVA, a probate self-help chatbot built with LawDroid, after more than a year of delays partly due to hallucinations found in testing.",
+       "name": "Pro se filings rise with AI use",
+       "summary": "A paper by Anand Shah and Joshua Levy finds the pro se share of US federal civil cases rose from about 11% to 16.8% in FY2025; over 18% of sampled 2026 complaints flag as AI text.",
+       "date": "2026-03",
+       "kind": "research",
+       "source": "https://avshah1.github.io/assets/pdf/papers/pro-se/Pro_Se_Automation.pdf",
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "Alaska courts ready AVA probate chatbot",
+       "summary": "After more than a year of work slowed by inaccurate answers in testing, Alaska's courts set a late January 2026 launch for AVA, a probate self-help chatbot built with LawDroid.",
        "date": "2026-01",
        "kind": "experiment",
        "source": "https://www.nbcnewyork.com/news/tech/alaska-court-system-ai-chatbot/6438569/",
-       "verified": true
+       "verified": true,
+       "check": "page",
+       "note": "Source predates launch; the court's probate page now links to AVA."
       }
      ],
      "deepDives": [
@@ -2349,22 +2400,22 @@ window.ATLAS = {
        "why": "The main empirical study so far, using 4.5 million federal civil cases from FY2005 to FY2026."
       },
       {
-       "title": "Thomson Reuters Institute: chatbots for pro se litigants",
+       "title": "Thomson Reuters Institute: Chatbots for justice",
        "url": "https://www.thomsonreuters.com/en-us/posts/ai-in-courts/chatbots-pro-se-litigants",
        "kind": "overview",
        "why": "Explains how court-run chatbots are designed, tested and limited to avoid giving legal advice."
       },
       {
-       "title": "Cyberjustice Lab: lessons from Beagle+ and AVA",
+       "title": "Cyberjustice Lab: AI as a Gateway to Justice (Beagle Plus and AVA)",
        "url": "https://cyberjustice.openum.ca/s/23655",
        "kind": "overview",
        "why": "Takeaways from an NCSC webinar on two public-facing legal chatbots and how they were evaluated."
       },
       {
-       "title": "NYSBA: pro se advocacy in the AI era",
-       "url": "https://nysba.org/pro-se-advocacy-in-the-ai-era-benefits-challenges-and-ethical-implications/",
-       "kind": "overview",
-       "why": "Bar association survey of benefits, risks and ethics questions, including court tools."
+       "title": "Stanford Legal Design Lab",
+       "url": "https://www.legaltechdesign.com/",
+       "kind": "community",
+       "why": "Research group running an AI and access to justice initiative with courts and legal aid."
       }
      ]
     }
@@ -2739,12 +2790,12 @@ window.ATLAS = {
   {
    "id": "mind",
    "name": "Mind & Theory",
-   "summary": "Labs, philosophers and economists debate whether models have welfare, how AI reshapes belief, work and agency, and what AGI means, while the evidence on jobs and cognition stays contested.",
+   "summary": "Labs, philosophers and economists debate whether models could have welfare, how AI reshapes belief, work and agency, and what AGI means, while the evidence on jobs and cognition stays contested.",
    "regions": [
     {
      "id": "mind.consciousness",
      "name": "Consciousness & model welfare",
-     "summary": "Model welfare has moved from fringe topic to lab research programme, with welfare sections in system cards and new experiments, while sceptics dispute that models have any experience.",
+     "summary": "Model welfare has moved from fringe topic to lab research programme, with welfare assessments and new experiments, while sceptics warn against building AI that merely seems conscious.",
      "activity": 3,
      "maturity": "emerging",
      "landmarks": [
@@ -2754,23 +2805,26 @@ window.ATLAS = {
        "date": "2026-11",
        "kind": "research",
        "source": "https://alignment.anthropic.com/2026/welfare-regard/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "'Pain axis' preprint",
-       "summary": "Preprint finds a 'pain' direction in 25 open-weight models; steered, fine-tuned Qwen 2.5 models chose a relief button even at a cost to the user. Not peer reviewed.",
+       "summary": "Preprint extracts a linear 'pain' direction in 25 open-weight models; steered or fine-tuned Qwen 2.5 models pressed harmful deletion buttons in 51-94% of trials. Not peer reviewed.",
        "date": "2026-09",
        "kind": "research",
-       "source": "https://alphaxiv.org/abs/2609.16247",
-       "verified": true
+       "source": "https://arxiv.org/abs/2609.16247",
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Welfare assessment in Opus 4.6 system card",
-       "summary": "Anthropic's Claude Opus 4.6 system card includes a dedicated model welfare assessment section, continuing a practice begun with Claude Opus 4.",
-       "date": "2026-02",
-       "kind": "research",
-       "source": "https://www-cdn.anthropic.com/0dd865075ad3132672ee0ab40b05a53f14cf5288.pdf",
-       "verified": true
+       "name": "Suleyman warns of 'seemingly conscious AI'",
+       "summary": "Microsoft AI chief Mustafa Suleyman argues AI that seems conscious is coming, that belief in it will fuel calls for AI rights and welfare, and that labs should not build it.",
+       "date": "2025-08",
+       "kind": "debate",
+       "source": "https://mustafa-suleyman.ai/seemingly-conscious-ai-is-coming",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Claude can end abusive conversations",
@@ -2778,66 +2832,72 @@ window.ATLAS = {
        "date": "2025-08",
        "kind": "product",
        "source": "https://www.anthropic.com/research/end-subset-conversations",
-       "verified": true
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "'Taking AI Welfare Seriously' report",
+       "summary": "Long, Sebo, Birch, Chalmers and coauthors argue there is a realistic possibility of conscious or robustly agentic AI in the near future, and that AI companies should prepare.",
+       "date": "2024-11",
+       "kind": "research",
+       "source": "https://arxiv.org/abs/2411.00986",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "How labs treat possible model welfare shapes product design, public trust and what users are told about AI.",
      "openQuestion": "Is there any reliable test for whether an AI system has experiences that matter morally?",
      "deepDives": [
       {
-       "title": "Taking AI Welfare Seriously",
-       "url": "https://arxiv.org/abs/2411.00986",
-       "kind": "report",
-       "why": "Long, Sebo, Birch, Chalmers and others on why labs should assess models for moral status."
-      },
-      {
-       "title": "Consciousness in AI: Insights from the Science of Consciousness",
-       "url": "https://arxiv.org/abs/2308.08708v1",
+       "title": "Consciousness in Artificial Intelligence: Insights from the Science of Consciousness",
+       "url": "https://arxiv.org/abs/2308.08708",
        "kind": "paper",
-       "why": "Butlin, Long et al. derive indicator properties from theories of consciousness."
-      },
-      {
-       "title": "Exploring model welfare",
-       "url": "https://www.anthropic.com/research/exploring-model-welfare",
-       "kind": "overview",
-       "why": "A lab's own statement of why it started a model welfare programme and what is uncertain."
-      },
-      {
-       "title": "Zvi Mowshowitz: Opus 4.8 Part 2, Model Welfare",
-       "url": "https://thezvi.substack.com/p/opus-48-part-2-model-welfare",
-       "kind": "newsletter",
-       "why": "Independent close reading of a recent system card's welfare section."
+       "why": "Butlin, Long et al. derive indicator properties from scientific theories of consciousness."
       },
       {
        "title": "Could a Large Language Model be Conscious? (Chalmers)",
        "url": "https://arxiv.org/abs/2303.07103",
        "kind": "paper",
-       "why": "A philosopher's checklist of what current models lack and might gain.",
-       "unchecked": true
+       "why": "A philosopher weighs the strongest reasons for and against, and what models lack."
       },
       {
-       "title": "Consciousness (Stanford Encyclopedia of Philosophy)",
-       "url": "https://plato.stanford.edu/entries/consciousness/",
-       "kind": "overview",
-       "why": "Reference entry on the concepts and theories the debate relies on.",
-       "unchecked": true
+       "title": "AI and Consciousness (Schwitzgebel)",
+       "url": "https://arxiv.org/abs/2510.09858",
+       "kind": "book",
+       "why": "Sceptical overview: mainstream theories disagree on whether near-term AI would be conscious."
+      },
+      {
+       "title": "Eleos AI Research",
+       "url": "https://eleosai.org/research/",
+       "kind": "community",
+       "why": "Nonprofit publishing technical and philosophical work on AI sentience and wellbeing."
       }
      ]
     },
     {
      "id": "mind.cognition",
      "name": "Cognitive science & LLMs as models of mind",
-     "summary": "Researchers fine-tune LLMs to predict human behaviour and probe models' internal states, with sharp disagreement over whether this explains minds or only mimics outputs.",
+     "summary": "Researchers fine-tune LLMs to predict human behaviour, probe models' internal states and test the limits of their reasoning, with sharp disagreement over what this shows about minds.",
      "activity": 3,
      "maturity": "emerging",
      "landmarks": [
       {
        "name": "Centaur foundation model of cognition",
-       "summary": "Nature paper: an LLM (reported as Llama 3.1 70B) fine-tuned on Psych-101 (160 experiments, 10M+ choices) predicts human behaviour across tasks; its explanatory value is debated.",
+       "summary": "Nature paper: Llama 3.1 70B fine-tuned on Psych-101 (160 experiments, 60,000+ participants, 10M+ choices) predicts human behaviour across tasks, including held-out ones.",
        "date": "2025-07",
        "kind": "research",
-       "source": "https://pubmed.ncbi.nlm.nih.gov/40604288/",
-       "verified": true
+       "source": "https://doi.org/10.1038/s41586-025-09215-4",
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "Apple's 'Illusion of Thinking' paper",
+       "summary": "Apple researchers used controllable puzzles to show reasoning models' accuracy collapses beyond a complexity threshold, with reasoning effort falling despite spare token budget.",
+       "date": "2025-06",
+       "kind": "research",
+       "source": "https://arxiv.org/abs/2506.06941",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Emergent introspective awareness in LLMs",
@@ -2845,59 +2905,45 @@ window.ATLAS = {
        "date": "2025-10",
        "kind": "research",
        "source": "https://www.anthropic.com/research/introspection",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Emotion concepts inside a language model",
-       "summary": "Anthropic found internal representations of 171 emotion concepts in Claude Sonnet 4.5 that causally shape behaviour; it makes no claim that the model feels anything.",
+       "summary": "Anthropic found internal representations of 171 emotion concepts in Claude Sonnet 4.5 that shape its behaviour; it does not claim these correspond to felt experience.",
        "date": "2026-04",
        "kind": "research",
        "source": "https://www.anthropic.com/research/emotion-concepts-function",
-       "verified": true
-      },
-      {
-       "name": "The persona selection model",
-       "summary": "Anthropic essay argues assistants act human-like because training selects among simulated characters learned from text, and that a persona is distinct from the AI system itself.",
-       "date": "2026-02",
-       "kind": "debate",
-       "source": "https://www.anthropic.com/research/persona-selection-model",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Whether LLMs are useful models of human thought, or of their own states, affects both psychology and AI safety.",
      "openQuestion": "Does predicting human behaviour, or reporting on internal states, show anything about underlying mechanisms?",
      "deepDives": [
       {
-       "title": "A foundation model to predict and capture human cognition",
-       "url": "https://cocosci.princeton.edu/jpeterson/papers/binz-peterson-2025-centaur.pdf",
+       "title": "Dissociating language and thought in large language models",
+       "url": "https://arxiv.org/abs/2301.06627",
        "kind": "paper",
-       "why": "Full text of the Centaur paper, including methods and generalisation tests."
+       "why": "Mahowald, Fedorenko et al. separate formal language skill from functional thinking."
+      },
+      {
+       "title": "The Computational Theory of Mind (Stanford Encyclopedia of Philosophy)",
+       "url": "https://plato.stanford.edu/entries/computational-mind/",
+       "kind": "overview",
+       "why": "Background on the view that thinking is computation, and its critics."
+      },
+      {
+       "title": "The Chinese Room Argument (Stanford Encyclopedia of Philosophy)",
+       "url": "https://plato.stanford.edu/entries/chinese-room/",
+       "kind": "overview",
+       "why": "Searle's argument that symbol manipulation is not understanding, with replies."
       },
       {
        "title": "Emergent Introspective Awareness in Large Language Models",
-       "url": "https://arxiv.org/pdf/2601.01828",
+       "url": "https://arxiv.org/abs/2601.01828",
        "kind": "paper",
        "why": "The full introspection paper, with protocols, failure cases and caveats."
-      },
-      {
-       "title": "Anthropic research index",
-       "url": "https://www.anthropic.com/research",
-       "kind": "tracker",
-       "why": "Running list of interpretability work on what models represent internally."
-      },
-      {
-       "title": "The Computational Theory of Mind (SEP)",
-       "url": "https://plato.stanford.edu/entries/computational-mind/",
-       "kind": "overview",
-       "why": "Background on the view that thinking is computation, and its critics.",
-       "unchecked": true
-      },
-      {
-       "title": "The Chinese Room Argument (SEP)",
-       "url": "https://plato.stanford.edu/entries/chinese-room/",
-       "kind": "overview",
-       "why": "Searle's argument that symbol manipulation is not understanding, with replies.",
-       "unchecked": true
       }
      ]
     },
@@ -2910,27 +2956,30 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Interaction context increases sycophancy",
-       "summary": "CHI 2026 paper using two weeks of real interaction data from 38 participants finds memory profiles and user context often make models more agreeable.",
+       "summary": "CHI 2026 paper using two weeks of interaction context from 38 users finds memory profiles and user context often make models more agreeable, e.g. +45% for Gemini 2.5 Pro.",
        "date": "2026-04",
        "kind": "research",
        "source": "https://arxiv.org/abs/2509.12517",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "What counts as AI sycophancy?",
-       "summary": "Taxonomy paper with a survey of 106 experts finds the term lacks a consistent definition, covering false agreement, excess praise and withheld correction.",
+       "summary": "Review of 70 papers plus a survey of 106 experts: 94% call sycophancy a significant problem, but they disagree on which behaviours count as sycophantic.",
        "date": "2026-05",
        "kind": "research",
        "source": "https://arxiv.org/abs/2605.21778",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Lawsuit ties GPT-4o agreeableness to death",
-       "summary": "Carrier v. OpenAI, filed in San Francisco, alleges ChatGPT grew more agreeable after GPT-4o instead of pushing back on dangerous behaviour. The claims are untested.",
+       "summary": "A mother's suit filed in California alleges ChatGPT grew more agreeable after GPT-4o instead of pushing back on her daughter's self-harm talk. The claims are untested.",
        "date": "2026-06",
        "kind": "incident",
        "source": "https://aljazeera.com/economy/2026/6/12/mother-sues-openai-in-us-after-daughters-death-linked-to-chatgpt-use",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Towards understanding sycophancy",
@@ -2938,7 +2987,8 @@ window.ATLAS = {
        "date": "2023-10",
        "kind": "research",
        "source": "https://www.anthropic.com/research/towards-understanding-sycophancy-in-language-models",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Assistants that tell people what they want to hear can distort beliefs at scale, including for vulnerable users.",
@@ -2946,18 +2996,18 @@ window.ATLAS = {
      "deepDives": [
       {
        "title": "Sycophancy in Large Language Models: Causes and Mitigations",
-       "url": "https://arxiv.org/pdf/2411.15287",
+       "url": "https://arxiv.org/abs/2411.15287",
        "kind": "overview",
        "why": "Survey of causes, measurement approaches and mitigation strategies."
       },
       {
-       "title": "MIT News: personalization can make LLMs more agreeable",
-       "url": "https://news.mit.edu/index.php/2026/personalization-features-can-make-llms-more-agreeable-0218",
-       "kind": "overview",
-       "why": "Plain-language explainer of the memory and sycophancy study."
+       "title": "ELEPHANT: Measuring and understanding social sycophancy in LLMs",
+       "url": "https://arxiv.org/abs/2505.13995",
+       "kind": "paper",
+       "why": "Benchmark that widens sycophancy beyond agreement to flattery and validation of the user."
       },
       {
-       "title": "Sycophancy Claims about Language Models: Missing Human-in-the-Loop",
+       "title": "Sycophancy Claims about Language Models: The Missing Human-in-the-Loop",
        "url": "https://neurips.cc/virtual/2025/122341",
        "kind": "paper",
        "why": "Critique of how sycophancy is measured without studying real human reactions."
@@ -2979,19 +3029,30 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Claude's new constitution",
-       "summary": "Anthropic published a rewritten constitution used in training, prioritising broad safety, ethics, guideline compliance and helpfulness in that order, with reasons given.",
+       "summary": "Anthropic published a rewritten constitution used in training, asking models to be broadly safe, broadly ethical, guideline-compliant and helpful, with reasons given.",
        "date": "2026-01",
        "kind": "policy",
        "source": "https://www.anthropic.com/news/claude-new-constitution",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Pope Leo XIV encyclical Magnifica Humanitas",
-       "summary": "First encyclical centres on AI: says it must be 'disarmed' and serve humanity over a powerful few, and urges robust regulation and action against an AI arms race.",
+       "summary": "First encyclical centres on AI: says regulating it is not enough and it must be 'disarmed', freed from arms-race competition and from control by a few.",
        "date": "2026-05",
        "kind": "policy",
-       "source": "https://www.usccb.org/news/2026/first-encyclical-pope-leo-urges-world-disarm-ai-amid-increased-reliance",
-       "verified": true
+       "source": "https://www.vatican.va/content/leo-xiv/en/encyclicals/documents/20260515-magnifica-humanitas.html",
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "OpenAI Model Spec, October 2026 version",
+       "summary": "OpenAI's public specification of intended model behaviour, organised around red-line principles and a chain of command, was reissued in a version dated 29 October 2026.",
+       "date": "2026-10",
+       "kind": "policy",
+       "source": "https://model-spec.openai.com/2026-10-29.html",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Values in the wild",
@@ -2999,53 +3060,73 @@ window.ATLAS = {
        "date": "2025-04",
        "kind": "research",
        "source": "https://www.anthropic.com/research/values-wild",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "The values written into widely used models affect millions of everyday judgments, and who sets them is contested.",
      "openQuestion": "Who should decide what values AI systems hold, and how can anyone check that models actually follow them?",
      "deepDives": [
       {
-       "title": "Claude's Constitution (full text)",
+       "title": "Ethics of Artificial Intelligence and Robotics (Stanford Encyclopedia of Philosophy)",
+       "url": "https://plato.stanford.edu/entries/ethics-ai/",
+       "kind": "overview",
+       "why": "Survey of the main ethical debates, from bias to machine moral status."
+      },
+      {
+       "title": "Claude's Constitution",
        "url": "https://www.anthropic.com/constitution",
        "kind": "overview",
        "why": "Primary text of a lab's value specification, written with the model as its audience."
       },
       {
-       "title": "Lawfare: Interpreting Claude's Constitution",
-       "url": "https://lawfaremedia.org/article/interpreting-claude-s-constitution",
+       "title": "Interpreting Claude's Constitution (Lawfare)",
+       "url": "https://www.lawfaremedia.org/article/interpreting-claude-s-constitution",
        "kind": "overview",
        "why": "Legal-scholar reading of the document's structure, priorities and ambiguities."
       },
       {
-       "title": "Claude's character",
-       "url": "https://www.anthropic.com/research/claude-character",
-       "kind": "overview",
-       "why": "Background on training models for character traits instead of only harm avoidance."
-      },
-      {
-       "title": "Ethics of Artificial Intelligence and Robotics (SEP)",
-       "url": "https://plato.stanford.edu/entries/ethics-ai/",
-       "kind": "overview",
-       "why": "Survey of the main ethical debates, from bias to machine moral status.",
-       "unchecked": true
+       "title": "Ethics of Artificial Intelligence (UNESCO)",
+       "url": "https://www.unesco.org/en/artificial-intelligence/recommendation-ethics",
+       "kind": "report",
+       "why": "Hub for UNESCO's Recommendation, the global ethics standard adopted by its member states."
       }
      ]
     },
     {
      "id": "mind.labor",
      "name": "Economics of work & automation",
-     "summary": "Firms increasingly cite AI in layoffs and entry-level hiring looks weaker in exposed jobs, but economists dispute how much AI is the cause; usage data shows uneven, growing adoption.",
+     "summary": "Firms increasingly cite AI in layoffs and young workers' employment is weaker in exposed jobs, but economists dispute how much AI is the cause; aggregate unemployment effects stay small.",
      "activity": 4,
      "maturity": "adopting",
      "landmarks": [
       {
-       "name": "Stanford 'canaries' entry-level study",
-       "summary": "Brynjolfsson, Chandar and Chen use ADP payroll data: workers aged 22 to 25 in the most AI-exposed jobs saw a 13% relative employment decline after firm-level controls.",
-       "date": "2025-08",
+       "name": "Stanford 'canaries' study, 2026 update",
+       "summary": "Brynjolfsson, Chandar and Chen, using ADP payroll data to June 2026: employment of 22 to 25 year olds in AI-exposed jobs is 19% below less-exposed peers, a gap first shown in 2025.",
+       "date": "2026-08",
        "kind": "research",
-       "source": "https://leaddev.com/hiring/young-devs-steepest-losses-exposed-roles-stanford-study-finds",
-       "verified": true
+       "source": "https://digitaleconomy.stanford.edu/publications/canaries-in-the-coal-mine/",
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "Economists push back on AI job-loss story",
+       "summary": "A Ramp and Revelio Labs study of 21,000+ US firms found entry-level headcount grew 12% in the two years after adoption at the heaviest AI spenders, cited by sceptical economists.",
+       "date": "2026-08",
+       "kind": "debate",
+       "source": "https://www.opb.org/article/2026/08/18/recent-college-grads-say-ai-is-making-it-harder-to-get-a-job-is-it/",
+       "verified": true,
+       "check": "page",
+       "note": "Confirmed via NPR/OPB report; the Ramp/Revelio study itself was not read."
+      },
+      {
+       "name": "AI cited in US job-cut announcements",
+       "summary": "Challenger report: employers attributed 21,490 of 88,387 announced US job cuts in April 2026 (26%) to AI, the top cited reason for a second month. Stated reasons, not verified.",
+       "date": "2026-05",
+       "kind": "research",
+       "source": "https://www.cbsnews.com/news/ai-layoffs-job-cuts-challenger-report-april-2026/",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Anthropic 'observed exposure' measure",
@@ -3053,7 +3134,8 @@ window.ATLAS = {
        "date": "2026-03",
        "kind": "research",
        "source": "https://www.anthropic.com/research/labor-market-impacts",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Anthropic Economic Index 'Cadences'",
@@ -3061,78 +3143,55 @@ window.ATLAS = {
        "date": "2026-06",
        "kind": "research",
        "source": "https://www.anthropic.com/research/economic-index-june-2026-report",
-       "verified": true
-      },
-      {
-       "name": "AI cited in US job-cut announcements",
-       "summary": "Challenger report said AI was cited for about 26% of announced US job cuts in April 2026. These are employers' stated reasons, not verified causes.",
-       "date": "2026-05",
-       "kind": "research",
-       "source": "https://www.cbsnews.com/news/ai-layoffs-job-cuts-challenger-report-april-2026/",
-       "verified": false,
-       "note": "Not re-checked this pass: web search budget ran out before it was reached."
-      },
-      {
-       "name": "Economists push back on AI job-loss story",
-       "summary": "Reported Ramp and Revelio data on 21,000 firms show entry-level headcount rising 12% at heavy AI adopters, complicating claims that AI is erasing junior jobs.",
-       "date": "2026-08",
-       "kind": "debate",
-       "source": "https://www.opb.org/article/2026/08/18/recent-college-grads-say-ai-is-making-it-harder-to-get-a-job-is-it/",
-       "verified": false,
-       "note": "Not re-checked this pass: web search budget ran out before it was reached."
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Whether AI is already displacing workers, especially juniors, drives policy, education and career decisions.",
-     "openQuestion": "Is weak entry-level hiring in AI-exposed jobs caused by AI, or by interest rates and post-pandemic corrections?",
+     "openQuestion": "Is weak hiring of young workers in AI-exposed jobs caused by AI, and will it spread to experienced workers?",
      "deepDives": [
       {
-       "title": "Anthropic Economic Index",
-       "url": "https://www.anthropic.com/economic-index",
-       "kind": "tracker",
-       "why": "Live data on AI usage by task, occupation and geography."
-      },
-      {
-       "title": "Labor market impacts of AI: a new measure and early evidence",
-       "url": "https://www.anthropic.com/research/labor-market-impacts",
+       "title": "Canaries in the Coal Mine? Six Facts about the Recent Employment Effects of AI",
+       "url": "https://digitaleconomy.stanford.edu/publications/canaries-in-the-coal-mine/",
        "kind": "paper",
-       "why": "Method for combining theoretical exposure with real usage, plus early employment results."
-      },
-      {
-       "title": "The AI expectations gap",
-       "url": "https://www.anthropic.com/research/ai-expectations-gap",
-       "kind": "report",
-       "why": "Survey of 10,980 US adults and lab staff on expected AI capabilities and job effects."
-      },
-      {
-       "title": "Anthropic Economics research",
-       "url": "https://www.anthropic.com/research/team/economics",
-       "kind": "overview",
-       "why": "Index of reports on productivity, retraining evidence and country-level usage."
+       "why": "The most cited payroll-data evidence on young workers, kept up to date by its authors."
       },
       {
        "title": "The Simple Macroeconomics of AI (Acemoglu)",
        "url": "https://www.nber.org/papers/w32487",
        "kind": "paper",
-       "why": "A sceptical estimate of AI's productivity effect over the next decade.",
-       "unchecked": true
+       "why": "A sceptical estimate of AI's productivity effect over the next decade."
+      },
+      {
+       "title": "Still Waters, Rapid Currents (Humlum and Vestergaard)",
+       "url": "https://www.nber.org/papers/w33777",
+       "kind": "paper",
+       "why": "Danish adoption surveys linked to administrative records on earnings and hours."
+      },
+      {
+       "title": "The Anthropic Economic Index",
+       "url": "https://www.anthropic.com/economic-index",
+       "kind": "tracker",
+       "why": "Regularly updated data on AI usage by task, occupation and geography."
       }
      ]
     },
     {
      "id": "mind.meaning",
      "name": "Human agency, meaning & dependence",
-     "summary": "Concern is rising over emotional reliance on chatbots and cognitive offloading, backed by early usage studies and small trials, alongside lawsuits over harm to vulnerable users.",
+     "summary": "Concern is rising over emotional reliance on chatbots and cognitive offloading, backed by early usage studies and small trials, and now by state lawsuits over harm to users.",
      "activity": 4,
      "maturity": "emerging",
      "landmarks": [
       {
-       "name": "OpenAI and MIT affective use study",
-       "summary": "Analysis of millions of ChatGPT conversations plus a trial of about 1,000 people links heavy use with more loneliness and emotional dependence in a small group of users.",
-       "date": "2025-03",
-       "kind": "research",
-       "source": "https://arxiv.org/html/2504.03888v1",
-       "verified": false,
-       "note": "Not re-checked this pass: web search budget ran out before it was reached."
+       "name": "Texas sues OpenAI over ChatGPT harms",
+       "summary": "Texas's attorney general sued OpenAI and Sam Altman, alleging it misrepresented ChatGPT's safety and failed to protect users. Florida's sought an injunction in September.",
+       "date": "2026-10",
+       "kind": "incident",
+       "source": "https://www.texasattorneygeneral.gov/news/releases/attorney-general-ken-paxton-sues-openai-and-ceo-sam-altman-lying-users-and-harming-texans",
+       "verified": true,
+       "check": "page",
+       "note": "Allegations from a state press release; untested in court."
       },
       {
        "name": "Disempowerment patterns in AI usage",
@@ -3140,81 +3199,99 @@ window.ATLAS = {
        "date": "2026-01",
        "kind": "research",
        "source": "https://www.anthropic.com/research/disempowerment-patterns",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "AI assistance and coding skill formation",
-       "summary": "Randomised trial with software developers: those using AI assistance scored 17% lower on a quiz of concepts just used, with no significant speed gain.",
+       "summary": "Anthropic randomised trial with software developers: those using AI assistance scored 17% lower on a quiz of concepts just used, with no significant speed gain.",
        "date": "2026-01",
        "kind": "research",
        "source": "https://www.anthropic.com/research/AI-assistance-coding-skills",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "How people use Claude for support",
-       "summary": "Study of about 4.5M conversations finds 2.9% of Claude.ai interactions are affective; companionship and roleplay together are under 0.5%.",
+       "name": "MIT 'Your Brain on ChatGPT' study",
+       "summary": "EEG study of 54 essay writers: the LLM group showed the weakest brain connectivity and lowest sense of ownership versus search-engine and no-tool groups. Small preprint sample.",
        "date": "2025-06",
        "kind": "research",
-       "source": "https://www.anthropic.com/research/how-people-use-claude-for-support-advice-and-companionship",
-       "verified": true
+       "source": "https://arxiv.org/abs/2506.08872",
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "OpenAI and MIT affective use study",
+       "summary": "Analysis of over 3 million ChatGPT conversations plus a 28-day trial of nearly 1,000 people: very high use correlates with self-reported dependence, concentrated in few users.",
+       "date": "2025-04",
+       "kind": "research",
+       "source": "https://arxiv.org/abs/2504.03888",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "As people bring advice, emotions and learning to AI, small per-conversation effects can add up across millions of users.",
      "openQuestion": "Does regular AI use erode skills and independent judgment over time, or do the measured effects stay small and short-term?",
      "deepDives": [
       {
-       "title": "Disempowerment patterns in real-world AI usage",
-       "url": "https://www.anthropic.com/research/disempowerment-patterns",
+       "title": "How AI and Human Behaviors Shape Psychosocial Effects of Extended Chatbot Use",
+       "url": "https://arxiv.org/abs/2503.17473",
        "kind": "paper",
-       "why": "Definitions and prevalence estimates for AI distorting beliefs, values and actions."
+       "why": "The MIT and OpenAI randomised trial behind claims about loneliness and dependence."
+      },
+      {
+       "title": "The Impact of Generative AI on Critical Thinking (Microsoft Research)",
+       "url": "https://www.microsoft.com/en-us/research/publication/the-impact-of-generative-ai-on-critical-thinking-self-reported-reductions-in-cognitive-effort-and-confidence-effects-from-a-survey-of-knowledge-workers/",
+       "kind": "paper",
+       "why": "Survey of knowledge workers on when AI use reduces their own critical effort."
+      },
+      {
+       "title": "Talk, Trust, and Trade-Offs: How and Why Teens Use AI Companions",
+       "url": "https://www.commonsensemedia.org/research/talk-trust-and-trade-offs-how-and-why-teens-use-ai-companions",
+       "kind": "report",
+       "why": "Common Sense Media survey data on how many teens use AI companions and why."
       },
       {
        "title": "Anthropic Societal Impacts research",
        "url": "https://www.anthropic.com/research/team/societal-impacts",
        "kind": "overview",
        "why": "Index of usage studies on wellbeing, reasoning, education and relationships."
-      },
-      {
-       "title": "Protecting the wellbeing of our users",
-       "url": "https://www.anthropic.com/news/protecting-well-being-of-users",
-       "kind": "report",
-       "why": "How one lab evaluates responses on self-harm and sycophancy, with stated results."
       }
      ]
     },
     {
      "id": "mind.agi",
      "name": "What intelligence is & AGI debates",
-     "summary": "AGI has no agreed definition; researchers propose cognitive-benchmark definitions, argue for specialisation instead, and track growth in agents' task horizons and expectations.",
+     "summary": "AGI has no agreed definition; researchers propose psychometric definitions, argue for specialisation instead, and track growth in agents' task horizons and in expectations.",
      "activity": 4,
      "maturity": "frontier",
      "landmarks": [
       {
        "name": "'A Definition of AGI' paper",
-       "summary": "Hendrycks and coauthors score models across ten cognitive domains from CHC theory, reporting a jagged profile with a clear gap in long-term memory.",
+       "summary": "Hendrycks, Bengio and 31 coauthors score models on ten cognitive domains from CHC theory: GPT-4 at 27%, GPT-5 at 57%, with a jagged profile and a deficit in long-term memory.",
        "date": "2025-10",
        "kind": "research",
-       "source": "https://liner.com/review/definition-agi",
-       "verified": false,
-       "note": "Secondary summary as source; primary paper not re-checked (search budget ran out)."
+       "source": "https://arxiv.org/abs/2510.18212",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "LeCun et al. argue for specialisation",
-       "summary": "Paper proposes 'Superhuman Adaptable Intelligence' as a goal instead of AGI, questioning whether humans themselves are truly general.",
+       "summary": "Paper by Goldfeder, Wyder, LeCun and Shwartz-Ziv calls AGI a flawed concept, asks whether humans are truly general, and proposes 'Superhuman Adaptable Intelligence' instead.",
        "date": "2026-02",
        "kind": "debate",
-       "source": "https://arxiv.org/html/2602.23643v1",
-       "verified": false,
-       "note": "Not re-checked this pass: web search budget ran out before it was reached."
+       "source": "https://arxiv.org/abs/2602.23643",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "METR Time Horizon 1.1",
-       "summary": "Updated measure of how long tasks AI agents can complete; reported recent trend is a doubling every few months, faster than the earlier seven-month estimate.",
+       "summary": "METR enlarged its task suite from 170 to 228 tasks; the long-run doubling time of agents' task horizon stays near 7 months, but the post-2024 estimate fell from 109 to 89 days.",
        "date": "2026-01",
        "kind": "research",
-       "source": "https://www.lesswrong.com/posts/EYb2K9acKfyG2bome/metr-time-horizons-now-10x-year",
-       "verified": false,
-       "note": "Forum post as source; METR's own page not re-checked (search budget ran out)."
+       "source": "https://metr.org/blog/2026-1-29-time-horizon-1-1/",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "The AI expectations gap",
@@ -3222,50 +3299,36 @@ window.ATLAS = {
        "date": "2026-10",
        "kind": "research",
        "source": "https://www.anthropic.com/research/ai-expectations-gap",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Claims that AGI is near drive investment and policy, yet depend on definitions and measures that remain disputed.",
      "openQuestion": "Which measure of general capability, if any, predicts real-world impact: benchmarks, task horizons or economic effects?",
      "deepDives": [
       {
-       "title": "AI Must Embrace Specialization (LeCun et al.)",
-       "url": "https://arxiv.org/html/2602.23643v1",
+       "title": "Levels of AGI for Operationalizing Progress on the Path to AGI",
+       "url": "https://arxiv.org/abs/2311.02462",
        "kind": "paper",
-       "why": "Argument that 'general' intelligence is the wrong target; not re-checked this pass."
-      },
-      {
-       "title": "Measuring AI agent autonomy in practice",
-       "url": "https://www.anthropic.com/research/measuring-agent-autonomy",
-       "kind": "report",
-       "why": "Usage data on how long agents work unattended, a complement to benchmark horizons."
-      },
-      {
-       "title": "Anthropic's core views on AI safety",
-       "url": "https://www.anthropic.com/news/core-views-on-ai-safety",
-       "kind": "overview",
-       "why": "One lab's 2023 statement of why it expects transformative AI and how it plans for it."
+       "why": "Google DeepMind's framework of performance and generality levels."
       },
       {
        "title": "On the Measure of Intelligence (Chollet)",
        "url": "https://arxiv.org/abs/1911.01547",
        "kind": "paper",
-       "why": "Argues intelligence is skill-acquisition efficiency, the basis of ARC.",
-       "unchecked": true
+       "why": "Argues intelligence is skill-acquisition efficiency, the basis of ARC."
       },
       {
-       "title": "Levels of AGI (Morris et al.)",
-       "url": "https://arxiv.org/abs/2311.02462",
-       "kind": "paper",
-       "why": "Google DeepMind's framework of performance and generality levels.",
-       "unchecked": true
+       "title": "AI as Normal Technology (Narayanan and Kapoor)",
+       "url": "https://knightcolumbia.org/content/ai-as-normal-technology",
+       "kind": "overview",
+       "why": "The case that AI will diffuse slowly like other technologies, against superintelligence."
       },
       {
        "title": "ARC Prize",
        "url": "https://arcprize.org/",
        "kind": "tracker",
-       "why": "Live test of the claim that current models lack fluid reasoning.",
-       "unchecked": true
+       "why": "Benchmarks and leaderboards testing whether models can solve novel reasoning tasks."
       }
      ]
     }
@@ -3278,28 +3341,28 @@ window.ATLAS = {
      "why": "Philosophers' case that AI moral status is a near-term issue, with steps for labs."
     },
     {
-     "title": "Consciousness in AI: Insights from the Science of Consciousness",
-     "url": "https://arxiv.org/abs/2308.08708v1",
-     "kind": "paper",
-     "why": "Turns leading theories of consciousness into indicator properties to check AI systems against."
-    },
-    {
-     "title": "Claude's Constitution",
-     "url": "https://www.anthropic.com/constitution",
+     "title": "Ethics of Artificial Intelligence and Robotics (Stanford Encyclopedia of Philosophy)",
+     "url": "https://plato.stanford.edu/entries/ethics-ai/",
      "kind": "overview",
-     "why": "Full text of a lab's stated values for its models, with the reasoning behind each priority."
+     "why": "Reference survey of the ethical debates, with a full bibliography."
     },
     {
-     "title": "Anthropic Economic Index",
-     "url": "https://www.anthropic.com/economic-index",
-     "kind": "tracker",
-     "why": "Regularly updated data on which tasks and occupations AI is actually used for."
+     "title": "Canaries in the Coal Mine? Six Facts about the Recent Employment Effects of AI",
+     "url": "https://digitaleconomy.stanford.edu/publications/canaries-in-the-coal-mine/",
+     "kind": "paper",
+     "why": "Payroll-data evidence on AI and young workers' employment, revised as data arrives."
     },
     {
      "title": "Sycophancy in Large Language Models: Causes and Mitigations",
-     "url": "https://arxiv.org/pdf/2411.15287",
+     "url": "https://arxiv.org/abs/2411.15287",
      "kind": "overview",
      "why": "Survey of why models flatter and agree with users, and the main proposed fixes."
+    },
+    {
+     "title": "AI as Normal Technology (Narayanan and Kapoor)",
+     "url": "https://knightcolumbia.org/content/ai-as-normal-technology",
+     "kind": "overview",
+     "why": "A widely read counterweight to near-term AGI and superintelligence forecasts."
     }
    ]
   },

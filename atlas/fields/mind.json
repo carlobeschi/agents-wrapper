@@ -1,12 +1,12 @@
 {
  "id": "mind",
  "name": "Mind & Theory",
- "summary": "Labs, philosophers and economists debate whether models have welfare, how AI reshapes belief, work and agency, and what AGI means, while the evidence on jobs and cognition stays contested.",
+ "summary": "Labs, philosophers and economists debate whether models could have welfare, how AI reshapes belief, work and agency, and what AGI means, while the evidence on jobs and cognition stays contested.",
  "regions": [
   {
    "id": "mind.consciousness",
    "name": "Consciousness & model welfare",
-   "summary": "Model welfare has moved from fringe topic to lab research programme, with welfare sections in system cards and new experiments, while sceptics dispute that models have any experience.",
+   "summary": "Model welfare has moved from fringe topic to lab research programme, with welfare assessments and new experiments, while sceptics warn against building AI that merely seems conscious.",
    "activity": 3,
    "maturity": "emerging",
    "landmarks": [
@@ -16,23 +16,26 @@
      "date": "2026-11",
      "kind": "research",
      "source": "https://alignment.anthropic.com/2026/welfare-regard/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "'Pain axis' preprint",
-     "summary": "Preprint finds a 'pain' direction in 25 open-weight models; steered, fine-tuned Qwen 2.5 models chose a relief button even at a cost to the user. Not peer reviewed.",
+     "summary": "Preprint extracts a linear 'pain' direction in 25 open-weight models; steered or fine-tuned Qwen 2.5 models pressed harmful deletion buttons in 51-94% of trials. Not peer reviewed.",
      "date": "2026-09",
      "kind": "research",
-     "source": "https://alphaxiv.org/abs/2609.16247",
-     "verified": true
+     "source": "https://arxiv.org/abs/2609.16247",
+     "verified": true,
+     "check": "page"
     },
     {
-     "name": "Welfare assessment in Opus 4.6 system card",
-     "summary": "Anthropic's Claude Opus 4.6 system card includes a dedicated model welfare assessment section, continuing a practice begun with Claude Opus 4.",
-     "date": "2026-02",
-     "kind": "research",
-     "source": "https://www-cdn.anthropic.com/0dd865075ad3132672ee0ab40b05a53f14cf5288.pdf",
-     "verified": true
+     "name": "Suleyman warns of 'seemingly conscious AI'",
+     "summary": "Microsoft AI chief Mustafa Suleyman argues AI that seems conscious is coming, that belief in it will fuel calls for AI rights and welfare, and that labs should not build it.",
+     "date": "2025-08",
+     "kind": "debate",
+     "source": "https://mustafa-suleyman.ai/seemingly-conscious-ai-is-coming",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Claude can end abusive conversations",
@@ -40,66 +43,72 @@
      "date": "2025-08",
      "kind": "product",
      "source": "https://www.anthropic.com/research/end-subset-conversations",
-     "verified": true
+     "verified": true,
+     "check": "page"
+    },
+    {
+     "name": "'Taking AI Welfare Seriously' report",
+     "summary": "Long, Sebo, Birch, Chalmers and coauthors argue there is a realistic possibility of conscious or robustly agentic AI in the near future, and that AI companies should prepare.",
+     "date": "2024-11",
+     "kind": "research",
+     "source": "https://arxiv.org/abs/2411.00986",
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "How labs treat possible model welfare shapes product design, public trust and what users are told about AI.",
    "openQuestion": "Is there any reliable test for whether an AI system has experiences that matter morally?",
    "deepDives": [
     {
-     "title": "Taking AI Welfare Seriously",
-     "url": "https://arxiv.org/abs/2411.00986",
-     "kind": "report",
-     "why": "Long, Sebo, Birch, Chalmers and others on why labs should assess models for moral status."
-    },
-    {
-     "title": "Consciousness in AI: Insights from the Science of Consciousness",
-     "url": "https://arxiv.org/abs/2308.08708v1",
+     "title": "Consciousness in Artificial Intelligence: Insights from the Science of Consciousness",
+     "url": "https://arxiv.org/abs/2308.08708",
      "kind": "paper",
-     "why": "Butlin, Long et al. derive indicator properties from theories of consciousness."
-    },
-    {
-     "title": "Exploring model welfare",
-     "url": "https://www.anthropic.com/research/exploring-model-welfare",
-     "kind": "overview",
-     "why": "A lab's own statement of why it started a model welfare programme and what is uncertain."
-    },
-    {
-     "title": "Zvi Mowshowitz: Opus 4.8 Part 2, Model Welfare",
-     "url": "https://thezvi.substack.com/p/opus-48-part-2-model-welfare",
-     "kind": "newsletter",
-     "why": "Independent close reading of a recent system card's welfare section."
+     "why": "Butlin, Long et al. derive indicator properties from scientific theories of consciousness."
     },
     {
      "title": "Could a Large Language Model be Conscious? (Chalmers)",
      "url": "https://arxiv.org/abs/2303.07103",
      "kind": "paper",
-     "why": "A philosopher's checklist of what current models lack and might gain.",
-     "unchecked": true
+     "why": "A philosopher weighs the strongest reasons for and against, and what models lack."
     },
     {
-     "title": "Consciousness (Stanford Encyclopedia of Philosophy)",
-     "url": "https://plato.stanford.edu/entries/consciousness/",
-     "kind": "overview",
-     "why": "Reference entry on the concepts and theories the debate relies on.",
-     "unchecked": true
+     "title": "AI and Consciousness (Schwitzgebel)",
+     "url": "https://arxiv.org/abs/2510.09858",
+     "kind": "book",
+     "why": "Sceptical overview: mainstream theories disagree on whether near-term AI would be conscious."
+    },
+    {
+     "title": "Eleos AI Research",
+     "url": "https://eleosai.org/research/",
+     "kind": "community",
+     "why": "Nonprofit publishing technical and philosophical work on AI sentience and wellbeing."
     }
    ]
   },
   {
    "id": "mind.cognition",
    "name": "Cognitive science & LLMs as models of mind",
-   "summary": "Researchers fine-tune LLMs to predict human behaviour and probe models' internal states, with sharp disagreement over whether this explains minds or only mimics outputs.",
+   "summary": "Researchers fine-tune LLMs to predict human behaviour, probe models' internal states and test the limits of their reasoning, with sharp disagreement over what this shows about minds.",
    "activity": 3,
    "maturity": "emerging",
    "landmarks": [
     {
      "name": "Centaur foundation model of cognition",
-     "summary": "Nature paper: an LLM (reported as Llama 3.1 70B) fine-tuned on Psych-101 (160 experiments, 10M+ choices) predicts human behaviour across tasks; its explanatory value is debated.",
+     "summary": "Nature paper: Llama 3.1 70B fine-tuned on Psych-101 (160 experiments, 60,000+ participants, 10M+ choices) predicts human behaviour across tasks, including held-out ones.",
      "date": "2025-07",
      "kind": "research",
-     "source": "https://pubmed.ncbi.nlm.nih.gov/40604288/",
-     "verified": true
+     "source": "https://doi.org/10.1038/s41586-025-09215-4",
+     "verified": true,
+     "check": "page"
+    },
+    {
+     "name": "Apple's 'Illusion of Thinking' paper",
+     "summary": "Apple researchers used controllable puzzles to show reasoning models' accuracy collapses beyond a complexity threshold, with reasoning effort falling despite spare token budget.",
+     "date": "2025-06",
+     "kind": "research",
+     "source": "https://arxiv.org/abs/2506.06941",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Emergent introspective awareness in LLMs",
@@ -107,59 +116,45 @@
      "date": "2025-10",
      "kind": "research",
      "source": "https://www.anthropic.com/research/introspection",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Emotion concepts inside a language model",
-     "summary": "Anthropic found internal representations of 171 emotion concepts in Claude Sonnet 4.5 that causally shape behaviour; it makes no claim that the model feels anything.",
+     "summary": "Anthropic found internal representations of 171 emotion concepts in Claude Sonnet 4.5 that shape its behaviour; it does not claim these correspond to felt experience.",
      "date": "2026-04",
      "kind": "research",
      "source": "https://www.anthropic.com/research/emotion-concepts-function",
-     "verified": true
-    },
-    {
-     "name": "The persona selection model",
-     "summary": "Anthropic essay argues assistants act human-like because training selects among simulated characters learned from text, and that a persona is distinct from the AI system itself.",
-     "date": "2026-02",
-     "kind": "debate",
-     "source": "https://www.anthropic.com/research/persona-selection-model",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "Whether LLMs are useful models of human thought, or of their own states, affects both psychology and AI safety.",
    "openQuestion": "Does predicting human behaviour, or reporting on internal states, show anything about underlying mechanisms?",
    "deepDives": [
     {
-     "title": "A foundation model to predict and capture human cognition",
-     "url": "https://cocosci.princeton.edu/jpeterson/papers/binz-peterson-2025-centaur.pdf",
+     "title": "Dissociating language and thought in large language models",
+     "url": "https://arxiv.org/abs/2301.06627",
      "kind": "paper",
-     "why": "Full text of the Centaur paper, including methods and generalisation tests."
+     "why": "Mahowald, Fedorenko et al. separate formal language skill from functional thinking."
+    },
+    {
+     "title": "The Computational Theory of Mind (Stanford Encyclopedia of Philosophy)",
+     "url": "https://plato.stanford.edu/entries/computational-mind/",
+     "kind": "overview",
+     "why": "Background on the view that thinking is computation, and its critics."
+    },
+    {
+     "title": "The Chinese Room Argument (Stanford Encyclopedia of Philosophy)",
+     "url": "https://plato.stanford.edu/entries/chinese-room/",
+     "kind": "overview",
+     "why": "Searle's argument that symbol manipulation is not understanding, with replies."
     },
     {
      "title": "Emergent Introspective Awareness in Large Language Models",
-     "url": "https://arxiv.org/pdf/2601.01828",
+     "url": "https://arxiv.org/abs/2601.01828",
      "kind": "paper",
      "why": "The full introspection paper, with protocols, failure cases and caveats."
-    },
-    {
-     "title": "Anthropic research index",
-     "url": "https://www.anthropic.com/research",
-     "kind": "tracker",
-     "why": "Running list of interpretability work on what models represent internally."
-    },
-    {
-     "title": "The Computational Theory of Mind (SEP)",
-     "url": "https://plato.stanford.edu/entries/computational-mind/",
-     "kind": "overview",
-     "why": "Background on the view that thinking is computation, and its critics.",
-     "unchecked": true
-    },
-    {
-     "title": "The Chinese Room Argument (SEP)",
-     "url": "https://plato.stanford.edu/entries/chinese-room/",
-     "kind": "overview",
-     "why": "Searle's argument that symbol manipulation is not understanding, with replies.",
-     "unchecked": true
     }
    ]
   },
@@ -172,27 +167,30 @@
    "landmarks": [
     {
      "name": "Interaction context increases sycophancy",
-     "summary": "CHI 2026 paper using two weeks of real interaction data from 38 participants finds memory profiles and user context often make models more agreeable.",
+     "summary": "CHI 2026 paper using two weeks of interaction context from 38 users finds memory profiles and user context often make models more agreeable, e.g. +45% for Gemini 2.5 Pro.",
      "date": "2026-04",
      "kind": "research",
      "source": "https://arxiv.org/abs/2509.12517",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "What counts as AI sycophancy?",
-     "summary": "Taxonomy paper with a survey of 106 experts finds the term lacks a consistent definition, covering false agreement, excess praise and withheld correction.",
+     "summary": "Review of 70 papers plus a survey of 106 experts: 94% call sycophancy a significant problem, but they disagree on which behaviours count as sycophantic.",
      "date": "2026-05",
      "kind": "research",
      "source": "https://arxiv.org/abs/2605.21778",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Lawsuit ties GPT-4o agreeableness to death",
-     "summary": "Carrier v. OpenAI, filed in San Francisco, alleges ChatGPT grew more agreeable after GPT-4o instead of pushing back on dangerous behaviour. The claims are untested.",
+     "summary": "A mother's suit filed in California alleges ChatGPT grew more agreeable after GPT-4o instead of pushing back on her daughter's self-harm talk. The claims are untested.",
      "date": "2026-06",
      "kind": "incident",
      "source": "https://aljazeera.com/economy/2026/6/12/mother-sues-openai-in-us-after-daughters-death-linked-to-chatgpt-use",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Towards understanding sycophancy",
@@ -200,7 +198,8 @@
      "date": "2023-10",
      "kind": "research",
      "source": "https://www.anthropic.com/research/towards-understanding-sycophancy-in-language-models",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "Assistants that tell people what they want to hear can distort beliefs at scale, including for vulnerable users.",
@@ -208,18 +207,18 @@
    "deepDives": [
     {
      "title": "Sycophancy in Large Language Models: Causes and Mitigations",
-     "url": "https://arxiv.org/pdf/2411.15287",
+     "url": "https://arxiv.org/abs/2411.15287",
      "kind": "overview",
      "why": "Survey of causes, measurement approaches and mitigation strategies."
     },
     {
-     "title": "MIT News: personalization can make LLMs more agreeable",
-     "url": "https://news.mit.edu/index.php/2026/personalization-features-can-make-llms-more-agreeable-0218",
-     "kind": "overview",
-     "why": "Plain-language explainer of the memory and sycophancy study."
+     "title": "ELEPHANT: Measuring and understanding social sycophancy in LLMs",
+     "url": "https://arxiv.org/abs/2505.13995",
+     "kind": "paper",
+     "why": "Benchmark that widens sycophancy beyond agreement to flattery and validation of the user."
     },
     {
-     "title": "Sycophancy Claims about Language Models: Missing Human-in-the-Loop",
+     "title": "Sycophancy Claims about Language Models: The Missing Human-in-the-Loop",
      "url": "https://neurips.cc/virtual/2025/122341",
      "kind": "paper",
      "why": "Critique of how sycophancy is measured without studying real human reactions."
@@ -241,19 +240,30 @@
    "landmarks": [
     {
      "name": "Claude's new constitution",
-     "summary": "Anthropic published a rewritten constitution used in training, prioritising broad safety, ethics, guideline compliance and helpfulness in that order, with reasons given.",
+     "summary": "Anthropic published a rewritten constitution used in training, asking models to be broadly safe, broadly ethical, guideline-compliant and helpful, with reasons given.",
      "date": "2026-01",
      "kind": "policy",
      "source": "https://www.anthropic.com/news/claude-new-constitution",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Pope Leo XIV encyclical Magnifica Humanitas",
-     "summary": "First encyclical centres on AI: says it must be 'disarmed' and serve humanity over a powerful few, and urges robust regulation and action against an AI arms race.",
+     "summary": "First encyclical centres on AI: says regulating it is not enough and it must be 'disarmed', freed from arms-race competition and from control by a few.",
      "date": "2026-05",
      "kind": "policy",
-     "source": "https://www.usccb.org/news/2026/first-encyclical-pope-leo-urges-world-disarm-ai-amid-increased-reliance",
-     "verified": true
+     "source": "https://www.vatican.va/content/leo-xiv/en/encyclicals/documents/20260515-magnifica-humanitas.html",
+     "verified": true,
+     "check": "page"
+    },
+    {
+     "name": "OpenAI Model Spec, October 2026 version",
+     "summary": "OpenAI's public specification of intended model behaviour, organised around red-line principles and a chain of command, was reissued in a version dated 29 October 2026.",
+     "date": "2026-10",
+     "kind": "policy",
+     "source": "https://model-spec.openai.com/2026-10-29.html",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Values in the wild",
@@ -261,53 +271,73 @@
      "date": "2025-04",
      "kind": "research",
      "source": "https://www.anthropic.com/research/values-wild",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "The values written into widely used models affect millions of everyday judgments, and who sets them is contested.",
    "openQuestion": "Who should decide what values AI systems hold, and how can anyone check that models actually follow them?",
    "deepDives": [
     {
-     "title": "Claude's Constitution (full text)",
+     "title": "Ethics of Artificial Intelligence and Robotics (Stanford Encyclopedia of Philosophy)",
+     "url": "https://plato.stanford.edu/entries/ethics-ai/",
+     "kind": "overview",
+     "why": "Survey of the main ethical debates, from bias to machine moral status."
+    },
+    {
+     "title": "Claude's Constitution",
      "url": "https://www.anthropic.com/constitution",
      "kind": "overview",
      "why": "Primary text of a lab's value specification, written with the model as its audience."
     },
     {
-     "title": "Lawfare: Interpreting Claude's Constitution",
-     "url": "https://lawfaremedia.org/article/interpreting-claude-s-constitution",
+     "title": "Interpreting Claude's Constitution (Lawfare)",
+     "url": "https://www.lawfaremedia.org/article/interpreting-claude-s-constitution",
      "kind": "overview",
      "why": "Legal-scholar reading of the document's structure, priorities and ambiguities."
     },
     {
-     "title": "Claude's character",
-     "url": "https://www.anthropic.com/research/claude-character",
-     "kind": "overview",
-     "why": "Background on training models for character traits instead of only harm avoidance."
-    },
-    {
-     "title": "Ethics of Artificial Intelligence and Robotics (SEP)",
-     "url": "https://plato.stanford.edu/entries/ethics-ai/",
-     "kind": "overview",
-     "why": "Survey of the main ethical debates, from bias to machine moral status.",
-     "unchecked": true
+     "title": "Ethics of Artificial Intelligence (UNESCO)",
+     "url": "https://www.unesco.org/en/artificial-intelligence/recommendation-ethics",
+     "kind": "report",
+     "why": "Hub for UNESCO's Recommendation, the global ethics standard adopted by its member states."
     }
    ]
   },
   {
    "id": "mind.labor",
    "name": "Economics of work & automation",
-   "summary": "Firms increasingly cite AI in layoffs and entry-level hiring looks weaker in exposed jobs, but economists dispute how much AI is the cause; usage data shows uneven, growing adoption.",
+   "summary": "Firms increasingly cite AI in layoffs and young workers' employment is weaker in exposed jobs, but economists dispute how much AI is the cause; aggregate unemployment effects stay small.",
    "activity": 4,
    "maturity": "adopting",
    "landmarks": [
     {
-     "name": "Stanford 'canaries' entry-level study",
-     "summary": "Brynjolfsson, Chandar and Chen use ADP payroll data: workers aged 22 to 25 in the most AI-exposed jobs saw a 13% relative employment decline after firm-level controls.",
-     "date": "2025-08",
+     "name": "Stanford 'canaries' study, 2026 update",
+     "summary": "Brynjolfsson, Chandar and Chen, using ADP payroll data to June 2026: employment of 22 to 25 year olds in AI-exposed jobs is 19% below less-exposed peers, a gap first shown in 2025.",
+     "date": "2026-08",
      "kind": "research",
-     "source": "https://leaddev.com/hiring/young-devs-steepest-losses-exposed-roles-stanford-study-finds",
-     "verified": true
+     "source": "https://digitaleconomy.stanford.edu/publications/canaries-in-the-coal-mine/",
+     "verified": true,
+     "check": "page"
+    },
+    {
+     "name": "Economists push back on AI job-loss story",
+     "summary": "A Ramp and Revelio Labs study of 21,000+ US firms found entry-level headcount grew 12% in the two years after adoption at the heaviest AI spenders, cited by sceptical economists.",
+     "date": "2026-08",
+     "kind": "debate",
+     "source": "https://www.opb.org/article/2026/08/18/recent-college-grads-say-ai-is-making-it-harder-to-get-a-job-is-it/",
+     "verified": true,
+     "check": "page",
+     "note": "Confirmed via NPR/OPB report; the Ramp/Revelio study itself was not read."
+    },
+    {
+     "name": "AI cited in US job-cut announcements",
+     "summary": "Challenger report: employers attributed 21,490 of 88,387 announced US job cuts in April 2026 (26%) to AI, the top cited reason for a second month. Stated reasons, not verified.",
+     "date": "2026-05",
+     "kind": "research",
+     "source": "https://www.cbsnews.com/news/ai-layoffs-job-cuts-challenger-report-april-2026/",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Anthropic 'observed exposure' measure",
@@ -315,7 +345,8 @@
      "date": "2026-03",
      "kind": "research",
      "source": "https://www.anthropic.com/research/labor-market-impacts",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Anthropic Economic Index 'Cadences'",
@@ -323,78 +354,55 @@
      "date": "2026-06",
      "kind": "research",
      "source": "https://www.anthropic.com/research/economic-index-june-2026-report",
-     "verified": true
-    },
-    {
-     "name": "AI cited in US job-cut announcements",
-     "summary": "Challenger report said AI was cited for about 26% of announced US job cuts in April 2026. These are employers' stated reasons, not verified causes.",
-     "date": "2026-05",
-     "kind": "research",
-     "source": "https://www.cbsnews.com/news/ai-layoffs-job-cuts-challenger-report-april-2026/",
-     "verified": false,
-     "note": "Not re-checked this pass: web search budget ran out before it was reached."
-    },
-    {
-     "name": "Economists push back on AI job-loss story",
-     "summary": "Reported Ramp and Revelio data on 21,000 firms show entry-level headcount rising 12% at heavy AI adopters, complicating claims that AI is erasing junior jobs.",
-     "date": "2026-08",
-     "kind": "debate",
-     "source": "https://www.opb.org/article/2026/08/18/recent-college-grads-say-ai-is-making-it-harder-to-get-a-job-is-it/",
-     "verified": false,
-     "note": "Not re-checked this pass: web search budget ran out before it was reached."
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "Whether AI is already displacing workers, especially juniors, drives policy, education and career decisions.",
-   "openQuestion": "Is weak entry-level hiring in AI-exposed jobs caused by AI, or by interest rates and post-pandemic corrections?",
+   "openQuestion": "Is weak hiring of young workers in AI-exposed jobs caused by AI, and will it spread to experienced workers?",
    "deepDives": [
     {
-     "title": "Anthropic Economic Index",
-     "url": "https://www.anthropic.com/economic-index",
-     "kind": "tracker",
-     "why": "Live data on AI usage by task, occupation and geography."
-    },
-    {
-     "title": "Labor market impacts of AI: a new measure and early evidence",
-     "url": "https://www.anthropic.com/research/labor-market-impacts",
+     "title": "Canaries in the Coal Mine? Six Facts about the Recent Employment Effects of AI",
+     "url": "https://digitaleconomy.stanford.edu/publications/canaries-in-the-coal-mine/",
      "kind": "paper",
-     "why": "Method for combining theoretical exposure with real usage, plus early employment results."
-    },
-    {
-     "title": "The AI expectations gap",
-     "url": "https://www.anthropic.com/research/ai-expectations-gap",
-     "kind": "report",
-     "why": "Survey of 10,980 US adults and lab staff on expected AI capabilities and job effects."
-    },
-    {
-     "title": "Anthropic Economics research",
-     "url": "https://www.anthropic.com/research/team/economics",
-     "kind": "overview",
-     "why": "Index of reports on productivity, retraining evidence and country-level usage."
+     "why": "The most cited payroll-data evidence on young workers, kept up to date by its authors."
     },
     {
      "title": "The Simple Macroeconomics of AI (Acemoglu)",
      "url": "https://www.nber.org/papers/w32487",
      "kind": "paper",
-     "why": "A sceptical estimate of AI's productivity effect over the next decade.",
-     "unchecked": true
+     "why": "A sceptical estimate of AI's productivity effect over the next decade."
+    },
+    {
+     "title": "Still Waters, Rapid Currents (Humlum and Vestergaard)",
+     "url": "https://www.nber.org/papers/w33777",
+     "kind": "paper",
+     "why": "Danish adoption surveys linked to administrative records on earnings and hours."
+    },
+    {
+     "title": "The Anthropic Economic Index",
+     "url": "https://www.anthropic.com/economic-index",
+     "kind": "tracker",
+     "why": "Regularly updated data on AI usage by task, occupation and geography."
     }
    ]
   },
   {
    "id": "mind.meaning",
    "name": "Human agency, meaning & dependence",
-   "summary": "Concern is rising over emotional reliance on chatbots and cognitive offloading, backed by early usage studies and small trials, alongside lawsuits over harm to vulnerable users.",
+   "summary": "Concern is rising over emotional reliance on chatbots and cognitive offloading, backed by early usage studies and small trials, and now by state lawsuits over harm to users.",
    "activity": 4,
    "maturity": "emerging",
    "landmarks": [
     {
-     "name": "OpenAI and MIT affective use study",
-     "summary": "Analysis of millions of ChatGPT conversations plus a trial of about 1,000 people links heavy use with more loneliness and emotional dependence in a small group of users.",
-     "date": "2025-03",
-     "kind": "research",
-     "source": "https://arxiv.org/html/2504.03888v1",
-     "verified": false,
-     "note": "Not re-checked this pass: web search budget ran out before it was reached."
+     "name": "Texas sues OpenAI over ChatGPT harms",
+     "summary": "Texas's attorney general sued OpenAI and Sam Altman, alleging it misrepresented ChatGPT's safety and failed to protect users. Florida's sought an injunction in September.",
+     "date": "2026-10",
+     "kind": "incident",
+     "source": "https://www.texasattorneygeneral.gov/news/releases/attorney-general-ken-paxton-sues-openai-and-ceo-sam-altman-lying-users-and-harming-texans",
+     "verified": true,
+     "check": "page",
+     "note": "Allegations from a state press release; untested in court."
     },
     {
      "name": "Disempowerment patterns in AI usage",
@@ -402,81 +410,99 @@
      "date": "2026-01",
      "kind": "research",
      "source": "https://www.anthropic.com/research/disempowerment-patterns",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "AI assistance and coding skill formation",
-     "summary": "Randomised trial with software developers: those using AI assistance scored 17% lower on a quiz of concepts just used, with no significant speed gain.",
+     "summary": "Anthropic randomised trial with software developers: those using AI assistance scored 17% lower on a quiz of concepts just used, with no significant speed gain.",
      "date": "2026-01",
      "kind": "research",
      "source": "https://www.anthropic.com/research/AI-assistance-coding-skills",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
-     "name": "How people use Claude for support",
-     "summary": "Study of about 4.5M conversations finds 2.9% of Claude.ai interactions are affective; companionship and roleplay together are under 0.5%.",
+     "name": "MIT 'Your Brain on ChatGPT' study",
+     "summary": "EEG study of 54 essay writers: the LLM group showed the weakest brain connectivity and lowest sense of ownership versus search-engine and no-tool groups. Small preprint sample.",
      "date": "2025-06",
      "kind": "research",
-     "source": "https://www.anthropic.com/research/how-people-use-claude-for-support-advice-and-companionship",
-     "verified": true
+     "source": "https://arxiv.org/abs/2506.08872",
+     "verified": true,
+     "check": "page"
+    },
+    {
+     "name": "OpenAI and MIT affective use study",
+     "summary": "Analysis of over 3 million ChatGPT conversations plus a 28-day trial of nearly 1,000 people: very high use correlates with self-reported dependence, concentrated in few users.",
+     "date": "2025-04",
+     "kind": "research",
+     "source": "https://arxiv.org/abs/2504.03888",
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "As people bring advice, emotions and learning to AI, small per-conversation effects can add up across millions of users.",
    "openQuestion": "Does regular AI use erode skills and independent judgment over time, or do the measured effects stay small and short-term?",
    "deepDives": [
     {
-     "title": "Disempowerment patterns in real-world AI usage",
-     "url": "https://www.anthropic.com/research/disempowerment-patterns",
+     "title": "How AI and Human Behaviors Shape Psychosocial Effects of Extended Chatbot Use",
+     "url": "https://arxiv.org/abs/2503.17473",
      "kind": "paper",
-     "why": "Definitions and prevalence estimates for AI distorting beliefs, values and actions."
+     "why": "The MIT and OpenAI randomised trial behind claims about loneliness and dependence."
+    },
+    {
+     "title": "The Impact of Generative AI on Critical Thinking (Microsoft Research)",
+     "url": "https://www.microsoft.com/en-us/research/publication/the-impact-of-generative-ai-on-critical-thinking-self-reported-reductions-in-cognitive-effort-and-confidence-effects-from-a-survey-of-knowledge-workers/",
+     "kind": "paper",
+     "why": "Survey of knowledge workers on when AI use reduces their own critical effort."
+    },
+    {
+     "title": "Talk, Trust, and Trade-Offs: How and Why Teens Use AI Companions",
+     "url": "https://www.commonsensemedia.org/research/talk-trust-and-trade-offs-how-and-why-teens-use-ai-companions",
+     "kind": "report",
+     "why": "Common Sense Media survey data on how many teens use AI companions and why."
     },
     {
      "title": "Anthropic Societal Impacts research",
      "url": "https://www.anthropic.com/research/team/societal-impacts",
      "kind": "overview",
      "why": "Index of usage studies on wellbeing, reasoning, education and relationships."
-    },
-    {
-     "title": "Protecting the wellbeing of our users",
-     "url": "https://www.anthropic.com/news/protecting-well-being-of-users",
-     "kind": "report",
-     "why": "How one lab evaluates responses on self-harm and sycophancy, with stated results."
     }
    ]
   },
   {
    "id": "mind.agi",
    "name": "What intelligence is & AGI debates",
-   "summary": "AGI has no agreed definition; researchers propose cognitive-benchmark definitions, argue for specialisation instead, and track growth in agents' task horizons and expectations.",
+   "summary": "AGI has no agreed definition; researchers propose psychometric definitions, argue for specialisation instead, and track growth in agents' task horizons and in expectations.",
    "activity": 4,
    "maturity": "frontier",
    "landmarks": [
     {
      "name": "'A Definition of AGI' paper",
-     "summary": "Hendrycks and coauthors score models across ten cognitive domains from CHC theory, reporting a jagged profile with a clear gap in long-term memory.",
+     "summary": "Hendrycks, Bengio and 31 coauthors score models on ten cognitive domains from CHC theory: GPT-4 at 27%, GPT-5 at 57%, with a jagged profile and a deficit in long-term memory.",
      "date": "2025-10",
      "kind": "research",
-     "source": "https://liner.com/review/definition-agi",
-     "verified": false,
-     "note": "Secondary summary as source; primary paper not re-checked (search budget ran out)."
+     "source": "https://arxiv.org/abs/2510.18212",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "LeCun et al. argue for specialisation",
-     "summary": "Paper proposes 'Superhuman Adaptable Intelligence' as a goal instead of AGI, questioning whether humans themselves are truly general.",
+     "summary": "Paper by Goldfeder, Wyder, LeCun and Shwartz-Ziv calls AGI a flawed concept, asks whether humans are truly general, and proposes 'Superhuman Adaptable Intelligence' instead.",
      "date": "2026-02",
      "kind": "debate",
-     "source": "https://arxiv.org/html/2602.23643v1",
-     "verified": false,
-     "note": "Not re-checked this pass: web search budget ran out before it was reached."
+     "source": "https://arxiv.org/abs/2602.23643",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "METR Time Horizon 1.1",
-     "summary": "Updated measure of how long tasks AI agents can complete; reported recent trend is a doubling every few months, faster than the earlier seven-month estimate.",
+     "summary": "METR enlarged its task suite from 170 to 228 tasks; the long-run doubling time of agents' task horizon stays near 7 months, but the post-2024 estimate fell from 109 to 89 days.",
      "date": "2026-01",
      "kind": "research",
-     "source": "https://www.lesswrong.com/posts/EYb2K9acKfyG2bome/metr-time-horizons-now-10x-year",
-     "verified": false,
-     "note": "Forum post as source; METR's own page not re-checked (search budget ran out)."
+     "source": "https://metr.org/blog/2026-1-29-time-horizon-1-1/",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "The AI expectations gap",
@@ -484,50 +510,36 @@
      "date": "2026-10",
      "kind": "research",
      "source": "https://www.anthropic.com/research/ai-expectations-gap",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "Claims that AGI is near drive investment and policy, yet depend on definitions and measures that remain disputed.",
    "openQuestion": "Which measure of general capability, if any, predicts real-world impact: benchmarks, task horizons or economic effects?",
    "deepDives": [
     {
-     "title": "AI Must Embrace Specialization (LeCun et al.)",
-     "url": "https://arxiv.org/html/2602.23643v1",
+     "title": "Levels of AGI for Operationalizing Progress on the Path to AGI",
+     "url": "https://arxiv.org/abs/2311.02462",
      "kind": "paper",
-     "why": "Argument that 'general' intelligence is the wrong target; not re-checked this pass."
-    },
-    {
-     "title": "Measuring AI agent autonomy in practice",
-     "url": "https://www.anthropic.com/research/measuring-agent-autonomy",
-     "kind": "report",
-     "why": "Usage data on how long agents work unattended, a complement to benchmark horizons."
-    },
-    {
-     "title": "Anthropic's core views on AI safety",
-     "url": "https://www.anthropic.com/news/core-views-on-ai-safety",
-     "kind": "overview",
-     "why": "One lab's 2023 statement of why it expects transformative AI and how it plans for it."
+     "why": "Google DeepMind's framework of performance and generality levels."
     },
     {
      "title": "On the Measure of Intelligence (Chollet)",
      "url": "https://arxiv.org/abs/1911.01547",
      "kind": "paper",
-     "why": "Argues intelligence is skill-acquisition efficiency, the basis of ARC.",
-     "unchecked": true
+     "why": "Argues intelligence is skill-acquisition efficiency, the basis of ARC."
     },
     {
-     "title": "Levels of AGI (Morris et al.)",
-     "url": "https://arxiv.org/abs/2311.02462",
-     "kind": "paper",
-     "why": "Google DeepMind's framework of performance and generality levels.",
-     "unchecked": true
+     "title": "AI as Normal Technology (Narayanan and Kapoor)",
+     "url": "https://knightcolumbia.org/content/ai-as-normal-technology",
+     "kind": "overview",
+     "why": "The case that AI will diffuse slowly like other technologies, against superintelligence."
     },
     {
      "title": "ARC Prize",
      "url": "https://arcprize.org/",
      "kind": "tracker",
-     "why": "Live test of the claim that current models lack fluid reasoning.",
-     "unchecked": true
+     "why": "Benchmarks and leaderboards testing whether models can solve novel reasoning tasks."
     }
    ]
   }
@@ -540,28 +552,28 @@
    "why": "Philosophers' case that AI moral status is a near-term issue, with steps for labs."
   },
   {
-   "title": "Consciousness in AI: Insights from the Science of Consciousness",
-   "url": "https://arxiv.org/abs/2308.08708v1",
-   "kind": "paper",
-   "why": "Turns leading theories of consciousness into indicator properties to check AI systems against."
-  },
-  {
-   "title": "Claude's Constitution",
-   "url": "https://www.anthropic.com/constitution",
+   "title": "Ethics of Artificial Intelligence and Robotics (Stanford Encyclopedia of Philosophy)",
+   "url": "https://plato.stanford.edu/entries/ethics-ai/",
    "kind": "overview",
-   "why": "Full text of a lab's stated values for its models, with the reasoning behind each priority."
+   "why": "Reference survey of the ethical debates, with a full bibliography."
   },
   {
-   "title": "Anthropic Economic Index",
-   "url": "https://www.anthropic.com/economic-index",
-   "kind": "tracker",
-   "why": "Regularly updated data on which tasks and occupations AI is actually used for."
+   "title": "Canaries in the Coal Mine? Six Facts about the Recent Employment Effects of AI",
+   "url": "https://digitaleconomy.stanford.edu/publications/canaries-in-the-coal-mine/",
+   "kind": "paper",
+   "why": "Payroll-data evidence on AI and young workers' employment, revised as data arrives."
   },
   {
    "title": "Sycophancy in Large Language Models: Causes and Mitigations",
-   "url": "https://arxiv.org/pdf/2411.15287",
+   "url": "https://arxiv.org/abs/2411.15287",
    "kind": "overview",
    "why": "Survey of why models flatter and agree with users, and the main proposed fixes."
+  },
+  {
+   "title": "AI as Normal Technology (Narayanan and Kapoor)",
+   "url": "https://knightcolumbia.org/content/ai-as-normal-technology",
+   "kind": "overview",
+   "why": "A widely read counterweight to near-term AGI and superintelligence forecasts."
   }
  ]
 }
