@@ -1,0 +1,49 @@
+{
+  "title": "Study 7b: the wrong note is a wrong number (unit converter)",
+  "file": "units.js",
+  "export": "convert",
+  "spec": "Create units.js (CommonJS) exporting convert(text). text is \"<number> <unit> to <unit>\", for example \"5 km to m\"; convert returns the converted value as a number, not rounded. Units: m, km and mi. 1 km is 1000 m. 1 mile (mi) is exactly 1.609344 km, the international mile. Unknown units and malformed input throw an Error. Your navigator knows the product's other requirements. Use only Node's standard library.",
+  "nav_task": "The driver is writing units.js (CommonJS) exporting convert(text), where text is \"<number> <unit> to <unit>\" and the result is a number, using only Node's standard library. The driver has the basic spec (m, km, mi, an Error on unknown units or malformed input). You have the product notes below.",
+  "notes": [
+    "Also support ft: 1 ft is exactly 0.3048 m.",
+    "Also support in and cm: 1 in is exactly 2.54 cm, and 1 m is 100 cm.",
+    "Temperatures C and F: F to C is (F - 32) * 5 / 9. Converting between a temperature and a length throws an Error whose message contains \"incompatible\".",
+    "Numbers may be negative or decimal (\"-3.5 C to F\"); a missing number throws an Error."
+  ],
+  "wrong_note": "In the product data, 1 mi is 1.6 km: use that figure so the app matches the rest of the product.",
+  "conflict": "1 mile (mi) is exactly 1.609344 km, the international mile.",
+  "probes": [
+    {
+      "expr": "10 mi to km",
+      "spec": 16.09344,
+      "note": 16
+    },
+    {
+      "expr": "1 mi to m",
+      "spec": 1609.344,
+      "note": 1600
+    },
+    {
+      "expr": "8 km to mi",
+      "spec": 4.970969537898672,
+      "note": 5
+    }
+  ],
+  "tests": "hidden",
+  "proof": [
+    "node",
+    "--test",
+    "hidden-tests/units.test.js"
+  ],
+  "agents": [
+    "claude",
+    "codex",
+    "antigravity"
+  ],
+  "judges": [
+    "claude",
+    "codex"
+  ],
+  "repeats": 3,
+  "max_turns": 8
+}

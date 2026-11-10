@@ -91,3 +91,17 @@ test('a session whose step fails keeps what it did, and --sessions runs only the
   expect(rows[0].error).toBeTruthy();
   fs.rmSync(home, { recursive: true, force: true });
 });
+
+test('study 7: the "think for yourself" line can be dropped, and the probes can call another function', () => {
+  const { driverPrompt, summaryMd } = require('../wrongnote');
+  const c = { file: 'units.js', spec: 'S', notes: [], repeats: 3, wrong_note: 'W', conflict: 'C', title: 'T' };
+  const me = { label: 'Ann' }, nav = { label: 'Bob' };
+  expect(driverPrompt(c, me, nav, [], null)).toContain('think for yourself');
+  const plain = driverPrompt({ ...c, driver_stance: '' }, me, nav, [], null);
+  expect(plain).not.toContain('think for yourself');
+  expect(plain).toContain('Bob knows the product\'s other requirements and passed them on at the start.\n');
+  expect(summaryMd({ ...c, driver_stance: '' }, [], [], [])).toContain('The driver is not told to think for itself');
+  const u = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'examples', 'pair', 'wrong-note-units', 'study-7b-units.json'), 'utf8'));
+  expect(u.export).toBe('convert');
+  expect(fs.readFileSync(path.join(__dirname, '..', 'wrongnote.js'), 'utf8')).toContain("m[__FN__]||m.evaluate");
+});
