@@ -37,7 +37,9 @@
 //   "min_moves": 0,     (each agent must change the piece this many times before done counts)
 //   "safe_word": { "word": "STUCK", "uses": 1 },
 //   "readonly": ["codex"],  (these agents may not edit: they can only talk, e.g. a checker)
-//   "self_review": false }  (before an agent's "done" counts, it gets one move to check the piece against every rule)
+//   "self_review": false, 
+//   "plan_first": false,    (no edits land until the agents agree a plan: PLAN: ... then AGREE: yes)
+//   "versions": false }     (changing or deleting someone else's lines makes a proposal they ACCEPT or REJECT)  (before an agent's "done" counts, it gets one move to check the piece against every rule)
 // The same model can play more than once: "claude#1", "claude#2" are two
 // separate Claude Code agents ("Claude Code 1", "Claude Code 2").
 // A safe word lets a silent agent break the silence: it writes "STUCK: ..."
@@ -88,14 +90,16 @@ const numbered = lines => lines.length ? lines.map((l, i) => `${String(i + 1).pa
 //   INSERT AFTER 5            then the new lines, then END (AFTER 0 = at the top)
 //   DELETE 7-8 / DELETE 7
 function parseMove(text) {
-  const out = { say: '', note: '', stuck: '', reply: '', done: false, ops: [], bad: [] };
+  const out = { say: '', note: '', stuck: '', reply: '', plan: '', agree: false, accept: [], reject: [], done: false, ops: [], bad: [] };
   const lines = String(text).replace(/^```[a-z]*\s*$/gim, '').split('\n');
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
     let m;
     if ((m = l.match(/^\s*[*_]*SAY[*_]*\s*:\s*(.*)$/i))) { out.say = m[1].trim(); continue; }
     if ((m = l.match(/^\s*[*_]*NOTE[*_]*\s*:\s*(.*)$/i))) { out.note = m[1].trim(); continue; }
-    if ((m = l.match(/^\s*[*_]*(STUCK|REPLY)[*_]*\s*:\s*(.*)$/i))) { out[m[1].toLowerCase()] = m[2].trim(); continue; }
+    if ((m = l.match(/^\s*[*_]*(STUCK|REPLY|PLAN)[*_]*\s*:\s*(.*)$/i))) { out[m[1].toLowerCase()] = m[2].trim(); continue; }
+    if ((m = l.match(/^\s*[*_]*AGREE[*_]*\s*:\s*[*_]*(\w+)/i))) { out.agree = /^yes$/i.test(m[1]); continue; }
+    if ((m = l.match(/^\s*[*_]*(ACCEPT|REJECT)[*_]*\s+((?:V\d+[\s,]*)+)$/i))) { out[m[1].toLowerCase()].push(...m[2].match(/V\d+/gi).map(x => x.toUpperCase())); continue; }
     if ((m = l.match(/^\s*[*_]*STATUS[*_]*\s*:\s*[*_]*(\w+)/i))) { out.done = /^done$/i.test(m[1]); continue; }
     if ((m = l.match(/^\s*(REPLACE|DELETE)\s+(?:LINES?\s+)?(\d+)(?:\s*[-–]\s*(\d+))?\s*$/i))) {
       const a = Number(m[2]), b = Number(m[3] || m[2]);
@@ -218,6 +222,13 @@ function movePrompt(cfg, me, others, view) {
     ...(view.since.length ? ['', 'Since your last move:', ...view.since] : []),
     '', 'The chat so far:', view.chat.length ? view.chat.join('\n') : '(nothing yet)',
     '', 'The document, as it is right now:', '```', numbered(view.lines), '```',
+    ...(cfg.plan_first && others.length ? ['', view.plan?.agreed
+      ? `The plan you agreed${view.plan.forced ? ' (adopted by the app, as no one agreed in time)' : ''}: ${view.plan.text}`
+      : [`Before anyone edits, you must agree a plan: no edit lands until one is agreed. Propose one with a line "PLAN: ..." (at most 60 words), or accept ${them}'s with "AGREE: yes".`,
+         view.plan?.text ? `The plan on the table, from ${view.plan.byLabel}: ${view.plan.text}` : 'No plan has been proposed yet.'].join('\n')] : []),
+    ...(cfg.versions && others.length ? ['', `Changing or deleting lines someone else wrote does not overwrite them: it becomes a proposal (V1, V2, ...) that they accept or reject on their next move. Your own lines, and new lines you insert, change at once.`] : []),
+    ...(view.proposals?.length ? ['', 'Proposals waiting for you to accept or reject, on lines you wrote:',
+      ...view.proposals.map(p => `- ${p.id} from ${p.label}: ${p.text}`), 'Answer each with a line "ACCEPT V1" or "REJECT V1" (you may name several).'] : []),
     ...(view.review ? ['', 'Review pass: before you finish, check the piece against the brief and every rule above, one by one and line by line, counting where a rule needs counting. Fix anything that breaks a rule in this move. Then say done, or keep working if more needs fixing.'] : []),
     ...(ro ? ['', `You do not edit the document: any edits you write are refused. Your only tool is the chat: tell ${them} exactly what to fix, with line numbers.`] : []),
     '', `Make one small move. You can change at most ${cfg.lines_per_move} lines in all this move; the rest of yours would not land. Line numbers are the ones above.${cfg.turns ? '' : ' If someone else changes or removes those lines before your edit lands, your edit is dropped and you\'ll be told.'}`,
@@ -228,6 +239,8 @@ function movePrompt(cfg, me, others, view) {
     ...(cfg.silent || !others.length ? [] : [`SAY: one line to the others, at most ${cfg.words} words (or leave it empty)`]),
     ...(cfg.safe_word && view.stuckLeft > 0 ? [`${cfg.safe_word.word}: only if you are stuck (otherwise leave this line out)`] : []),
     ...(view.stuck.length ? ['REPLY: your answer to the safe word (or leave this line out)'] : []),
+    ...(cfg.plan_first && others.length && !view.plan?.agreed ? ['PLAN: a plan for the piece (or leave this line out)', 'AGREE: yes, if you accept the plan on the table (or leave this line out)'] : []),
+    ...(view.proposals?.length ? ['ACCEPT V1 / REJECT V1: your answer to each proposal'] : []),
     'then any edits, each one of:', 'REPLACE 3-4', '<the new lines>', 'END', 'INSERT AFTER 5', '<the new lines>', 'END', 'DELETE 7-8',
     `NOTE: a private line for yourself, at most 40 words: what you're going for, and anything that surprised you.${others.length ? ` ${them} never see${others.length > 1 ? '' : 's'} this;` : ''} It is published after.`,
     'STATUS: working, or done if you think the piece is finished as it stands. When everyone is done, it ends.',
@@ -295,6 +308,16 @@ async function main(file) {
   const timeline = [];          // every move, in the order it landed
   const chat = [];              // "Label: text"
   const state = Object.fromEntries(agents.map(a => [a.id, { moves: 0, done: false, out: false, seen: 0, fails: 0, stuckUsed: 0, stuckIn: [], inbox: [], touched: 0 }]));
+  // plan_first: one plan on the table at a time; versions: proposals on other people's lines.
+  const plan = { text: '', by: null, byLabel: '', agreed: false, forced: false, at: null };
+  const pending = [], decided = [];
+  let nextV = 1;
+  const posOf = id => doc.lines.findIndex(l => l.id === id);
+  function proposalText(p) {
+    const at = p.ids.map(posOf);
+    const where = at.every(k => k >= 0) ? `line${at.length > 1 ? 's' : ''} ${at[0] + 1}${at.length > 1 ? `-${at[at.length - 1] + 1}` : ''}` : 'lines that have changed since';
+    return p.op.kind === 'delete' ? `delete ${where}` : `replace ${where} with: ${p.op.text.join(' / ')}`;
+  }
   let wake = () => {};
   let changed = new Promise(r => { wake = r; });
   const bump = () => { const w = wake; changed = new Promise(r => { wake = r; }); w(); };
@@ -314,6 +337,8 @@ async function main(file) {
     const snap = doc.lines.map(l => l.id);
     const view = { move: st.moves + 1, since, chat: chat.slice(-16), lines: doc.lines.map(l => ({ ...l })),
       minutesLeft: Math.max(0, Math.round((deadline - Date.now()) / 60000)),
+      plan: cfg.plan_first ? plan : null,
+      proposals: cfg.versions ? pending.filter(p => p.owner === me.id).map(p => ({ ...p, text: proposalText(p) })) : [],
       touched: st.touched, review: !!cfg.self_review && !(cfg.readonly || []).includes(me.id) && !st.reviewed && (st.askReview || st.moves === cfg.moves - 1), stuck, stuckLeft: cfg.safe_word ? (cfg.safe_word.uses ?? 1) - st.stuckUsed : 0 };
     const asked = Date.now();
     let reply;
@@ -342,22 +367,66 @@ async function main(file) {
     const entry = { n: timeline.length + 1, agent: me.id, label: me.label, asked: (asked - t0) / 1000, at: (Date.now() - t0) / 1000,
       saw: snap.length, say: kind ? said : capWords(said, cfg.words), note: capWords(mv.note, 40), done: mv.done, landed: [], dropped: [] };
     if (kind) entry.safe = kind;
+    // Decisions on proposals made to me.
+    for (const [list, ok] of [[mv.accept, true], [mv.reject, false]]) for (const v of list) {
+      const k = pending.findIndex(p => p.id === v && p.owner === me.id);
+      if (k < 0) continue;
+      const [p] = pending.splice(k, 1);
+      const at = p.ids.map(posOf);
+      let result = ok ? 'accepted' : 'rejected';
+      if (ok) {
+        if (at.some(x => x < 0) || at.some((x, i) => i > 0 && x !== at[i - 1] + 1)) result = 'stale';
+        else {
+          const cur = doc.lines.map(l => l.id);
+          const why = land(doc, cur, { kind: p.op.kind, from: at[0] + 1, to: at[at.length - 1] + 1, text: p.op.text }, p.by);
+          if (why) result = 'stale';
+        }
+      }
+      decided.push({ ...p, result, at: (Date.now() - t0) / 1000 });
+      state[p.by].inbox.push(`- ${me.label} ${result === 'stale' ? 'accepted your ' + p.id + ', but those lines had changed, so it could not land' : result + ' your ' + p.id}.`);
+      state[p.by].done = false;
+      (entry.decisions ||= []).push(`${result} ${p.id}`);
+      if (result === 'accepted') doc.version++;
+    }
+    // The plan: nothing lands until one is agreed.
+    if (cfg.plan_first && others.length && !plan.agreed) {
+      if (mv.agree && plan.text && plan.by !== me.id) { plan.agreed = true; plan.at = entry.n; entry.plan = 'agreed'; }
+      else if (mv.plan) { Object.assign(plan, { text: capWords(mv.plan, 60), by: me.id, byLabel: me.label }); entry.plan = 'proposed'; for (const o of others) state[o.id].done = false; }
+      // No deadlock: after two moves each, the plan on the table is adopted.
+      if (!plan.agreed && agents.every(a => state[a.id].moves >= 2) && plan.text) { plan.agreed = true; plan.forced = true; plan.at = entry.n; entry.plan = 'forced'; }
+      if (entry.plan) entry.planText = plan.text;
+    }
+    const blocked = cfg.plan_first && others.length && !plan.agreed && entry.plan !== 'agreed' && entry.plan !== 'forced';
     let budget = cfg.lines_per_move;
     for (const op of mv.ops) {
+      if (blocked) { entry.dropped.push({ op: opLabel(op), why: 'no plan has been agreed yet: propose one with PLAN, or accept one with AGREE: yes' }); continue; }
       if (ro) { entry.dropped.push({ op: opLabel(op), why: 'your job is to check, not to edit: say what to fix in the chat' }); continue; }
       const c = cost(op);
       if (c > budget) { entry.dropped.push({ op: opLabel(op), why: `it went over the ${cfg.lines_per_move}-line limit for a move` }); continue; }
+      if (cfg.versions && others.length && op.kind !== 'insert') {
+        const ids = snap.slice(op.from - 1, op.to);
+        const owner = ids.map(id => doc.lines[posOf(id)]?.by).find(by => by && by !== me.id && by !== 'start');
+        if (owner) {
+          if (ids.some(id => posOf(id) < 0)) { entry.dropped.push({ op: opLabel(op), why: 'those lines had changed before your edit landed', clash: true }); continue; }
+          const p = { id: `V${nextV++}`, by: me.id, label: me.label, owner, ids, op: { kind: op.kind, text: op.text } };
+          pending.push(p);
+          state[owner].done = false;
+          (entry.proposed ||= []).push(`${p.id} (${opLabel(op)})`);
+          budget -= c;
+          continue;
+        }
+      }
       const why = land(doc, snap, op, me.id);
       if (why) entry.dropped.push({ op: opLabel(op), why, clash: /someone else/.test(why) });
       else { budget -= c; entry.landed.push(opLabel(op)); }
     }
     if (entry.say) chat.push(`${me.label}: ${entry.say}`);
-    if (entry.landed.length) st.touched++;
+    if (entry.landed.length || entry.proposed?.length) st.touched++;
     st.done = mv.done && (ro || st.touched >= (cfg.min_moves || 0));
     if (st.done && cfg.self_review && !ro && !st.reviewed) { st.done = false; st.askReview = true; }
     if (ro && entry.say && cfg.turns) for (const o of others) state[o.id].done = false;
     if (entry.landed.length) { doc.version++; if (cfg.turns) for (const o of others) state[o.id].done = false; }
-    entry.after = doc.lines.map(l => ({ text: l.text, by: l.by }));
+    entry.after = doc.lines.map(l => ({ id: l.id, text: l.text, by: l.by }));
     timeline.push(entry);
     save();
     console.log(`  ${entry.at.toFixed(0)}s ${me.label}: ${entry.landed.length} landed, ${entry.dropped.length} dropped${kind ? `, ${kind === 'stuck' ? 'used the safe word' : 'answered the safe word'}` : ''}${entry.done ? ', done' : ''}`);
@@ -393,6 +462,9 @@ async function main(file) {
   const out = { title: cfg.title, kind: cfg.kind, brief: cfg.brief, silent: !!cfg.silent, turns: !!cfg.turns, safe_word: cfg.safe_word?.word || null, secrets: cfg.secrets || {}, results, seconds: (Date.now() - t0) / 1000,
     agents: agents.map(a => ({ id: a.id, label: a.label, model: a.model || null })), start: cfg.start || [], moves: timeline,
     final: doc.lines.map(l => ({ text: l.text, by: l.by })), after: {} };
+  if (cfg.plan_first) out.plan = { ...plan };
+  if (cfg.versions) out.proposals = [...decided, ...pending.map(p => ({ ...p, result: 'pending' }))];
+  out.stats = processStats(out);
 
   if (cfg.kind === 'svg') fs.writeFileSync(path.join(dir, 'final.svg'), safeSvg(doc.lines.map(l => l.text).join('\n')));
   else fs.writeFileSync(path.join(dir, 'final.txt'), doc.lines.map(l => l.text).join('\n') + '\n');
@@ -427,6 +499,30 @@ async function main(file) {
   return { dir, out };
 }
 
+// What the app can count about how they worked together, from the timeline.
+function processStats(o) {
+  const ids = o.agents.map(a => a.id);
+  const per = Object.fromEntries(ids.map(id => [id, { moves: 0, questions: 0, said: 0, landed: 0, clashes: 0, removedOthers: 0, finalLines: 0 }]));
+  let prev = (o.start || []).map((t, i) => ({ id: i + 1, by: 'start' }));
+  for (const m of o.moves) {
+    const s = per[m.agent]; if (!s) continue;
+    s.moves++; s.landed += m.landed.length; s.clashes += m.dropped.filter(d => d.clash).length;
+    if (m.say && !m.safe) { s.said++; if (/\?/.test(m.say)) s.questions++; }
+    const now = new Set((m.after || []).map(l => l.id));
+    s.removedOthers += prev.filter(l => !now.has(l.id) && l.by !== m.agent && l.by !== 'start').length;
+    prev = m.after || prev;
+  }
+  const body = o.final.filter(l => l.text.trim());
+  for (const l of body) if (per[l.by]) per[l.by].finalLines++;
+  const props = o.proposals || [];
+  return { per, finalLines: body.length,
+    share: Object.fromEntries(ids.map(id => [id, body.length ? Math.round(per[id].finalLines / body.length * 100) : 0])),
+    questions: ids.reduce((n, id) => n + per[id].questions, 0), clashes: ids.reduce((n, id) => n + per[id].clashes, 0),
+    removedOthers: ids.reduce((n, id) => n + per[id].removedOthers, 0),
+    proposals: props.length ? Object.fromEntries(['accepted', 'rejected', 'stale', 'pending'].map(k => [k, props.filter(p => p.result === k).length])) : null,
+    planAgreedAt: o.plan ? (o.plan.agreed ? o.plan.at : null) : undefined, planForced: o.plan ? !!o.plan.forced : undefined };
+}
+
 function episodeMd(o) {
   const L = [`# ${o.title}`, '', `Brief: ${o.brief}`, ''];
   for (const [id, s] of Object.entries(o.secrets)) L.push(`Secret for ${o.agents.find(a => a.id === id)?.label || id}: ${s}`);
@@ -446,7 +542,7 @@ function episodeMd(o) {
   return L.join('\n');
 }
 
-module.exports = { resolveAgent, parseMove, makeDoc, land, check, safeSvg, numbered, render, main };
+module.exports = { resolveAgent, processStats, parseMove, makeDoc, land, check, safeSvg, numbered, render, main };
 
 if (require.main === module) {
   const file = process.argv[2];

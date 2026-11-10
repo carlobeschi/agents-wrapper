@@ -46,6 +46,14 @@
 //   together. Every agent has the same moves and the same time box, so a
 //   bigger group has more hands but no more time. A task with "bank": [puzzles]
 //   is many code puzzles in one document; the score is how many are right.
+// - Interventions (study 5): "variants": [{ "label", "room": {...}, "roles"?,
+//   "checker"?, "only"?: [task ids] }] runs the same team under each variant
+//   (A/B against the first one), plus "solo": ["claude"] runs alone. Besides
+//   the blind judges, "process_judges" read each team run's transcript with
+//   the names taken out and count: changes of mind caused by the other,
+//   mistakes caught, mistakes passed on, and ideas built on. The app's own
+//   counts (questions, clashes, lines removed from the other, share of the
+//   final piece, proposals) come from room.js.
 // Run folder: ~/.agent-dispatch/studies/<run>/: study.json, summary.md,
 // judge/ (pictures and prompts); each room run keeps its own folder.
 
@@ -124,6 +132,46 @@ const diagnosePrompt = (p, answer, broke, work) => [
   UNATTENDED(),
 ].join('\n');
 
+// A team run's transcript with the agents' names taken out, for the process judges.
+function transcript(tl) {
+  const name = {}; tl.agents.forEach((a, i) => { name[a.id] = `Agent ${i + 1}`; });
+  const hide = t => tl.agents.reduce((x, a) => x.split(a.label).join(name[a.id]), String(t || ''));
+  const L = [`Brief: ${hide(tl.brief)}`, ''];
+  for (const m of tl.moves) {
+    L.push(`--- move ${m.n}, ${name[m.agent]} ---`);
+    if (m.say) L.push(`said: ${hide(m.say)}`);
+    if (m.planText && m.plan) L.push(`plan ${m.plan}: ${hide(m.planText)}`);
+    if (m.landed.length) L.push(`edits that landed: ${m.landed.join(', ')}`);
+    if (m.dropped.length) L.push(`edits refused: ${m.dropped.map(d => `${d.op} (${d.why})`).join('; ')}`);
+    if (m.proposed?.length) L.push(`proposed: ${m.proposed.join(', ')}`);
+    if (m.decisions?.length) L.push(`decided: ${m.decisions.join(', ')}`);
+    if (m.note) L.push(`private note: ${hide(m.note)}`);
+    L.push('document after:', ...(m.after || []).map((l, i) => `${String(i + 1).padStart(2)}| ${l.text}  [${name[l.by] || l.by}]`));
+  }
+  return L.join('\n');
+}
+
+const processPrompt = text => [
+  'Below is the full record of AI agents making one piece together in a shared document: what each said, its private notes (the others never saw these), its edits, and the document after every move, with who wrote each line in brackets.',
+  '', '```', text, '```', '',
+  'Count, from the record only:',
+  'CHANGED: times an agent changed its own plan or its own work because of something the other did or said (not just continuing its own plan).',
+  'CAUGHT: mistakes (against the brief or its rules) that one agent made and the other noticed and fixed or pointed out.',
+  'PASSED: mistakes one agent made that the other kept, built on, or left in the final piece.',
+  'BUILT: times an agent built directly on the other\'s idea (extended it, rather than replacing it).',
+  'Reply with exactly four lines, "CHANGED: <number> | one short example", then CAUGHT, PASSED, BUILT in the same form. Nothing else.',
+  UNATTENDED(),
+].join('\n');
+
+function parseProcess(text) {
+  const out = {};
+  for (const k of ['CHANGED', 'CAUGHT', 'PASSED', 'BUILT']) {
+    const m = String(text).match(new RegExp(`^\\s*[*_]*${k}[*_]*\\s*:\\s*(\\d+)\\s*(?:\\|\\s*(.*))?$`, 'im'));
+    if (m) out[k.toLowerCase()] = { n: Number(m[1]), example: (m[2] || '').trim() };
+  }
+  return out;
+}
+
 const mean = xs => xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length * 10) / 10 : null;
 const avgOf = (judgings, label) => mean(judgings.flatMap(j => (j.pieces || []).filter(p => p.label === label && p.score != null).map(p => p.score)));
 
@@ -150,7 +198,7 @@ async function main(file) {
     return puzzle ? { kind: 'scratchpad', ...rest, brief: puzzles.brief(puzzle), checks: [...(t.checks || []), { say: 'The answer is right.', type: 'answer', pattern: `^\\D*${puzzle.code.split('').join('\\D*')}\\D*$` }] } : rest;
   };
   // A solo agent gets as many moves as the whole group put together.
-  const solo = (t, a, extra = {}) => ({ ...base, ...asRoom(t), ...extra, agents: [specs[a.id]], title: `${t.id} · ${a.label} alone${extra.tag ? ` (${extra.tag})` : ''}`,
+  const solo = (t, a, extra = {}) => ({ ...base, ...asRoom(t), ...extra, agents: [specs[a.id] || a.id], title: `${t.id} · ${a.label} alone${extra.tag ? ` (${extra.tag})` : ''}`,
     moves: (t.moves ?? base.moves) * agents.length, min_moves: minOf(t) * agents.length, safe_word: undefined, lesson: false, readonly: [] });
   const roomRun = async (c, t) => {
     const { tag, ...rest } = c;
@@ -174,7 +222,82 @@ async function main(file) {
     return got;
   };
 
+  const together = (t, extra = {}) => {
+    const r = asRoom(t), min = minOf(t);
+    return { ...base, ...r, agents: agents.map(a => specs[a.id]), ...extra, lesson: true, min_moves: min,
+      brief: `${r.brief} ${PAIR()}${min ? ` ${extra.readonly?.length ? 'Each of you who edits' : 'Each of you'} must change it at least ${min} times.` : ''}` };
+  };
   const repeats = cfg.repeats || 1;
+  const processJudges = (cfg.process_judges || []).map(pick);
+  async function processLabels(runDir, name) {
+    const tl = JSON.parse(fs.readFileSync(path.join(runDir, 'timeline.json'), 'utf8'));
+    if (tl.agents.length < 2) return null;
+    const text = transcript(tl), out = [];
+    for (const j of processJudges) {
+      try { out.push({ judge: j.id, ...parseProcess(await run(dir, `process-${name}-${j.id}`, j, processPrompt(text), path.join(runDir, 'cwd'))) }); }
+      catch (e) { out.push({ judge: j.id, error: e.message.split('\n')[0] }); }
+    }
+    return out;
+  }
+
+  // Interventions: the same team under each variant, A/B against the first.
+  if (cfg.variants) {
+    study.variants = cfg.variants.map(v => v.label);
+    for (const t of cfg.tasks) {
+      const task = { id: t.id, kind: t.kind, brief: t.brief || null, repeats: [] };
+      study.tasks.push(task);
+      for (let r = 0; r < repeats; r++) {
+        const runs = {};
+        task.repeats.push({ runs });
+        console.log(`\n# ${t.id}, repeat ${r + 1} of ${repeats}`);
+        for (const sp of cfg.solo || []) { const a = pick(sp); console.log(`- ${a.label} alone`); runs[`${a.id} alone`] = await roomRun(solo(t, a), t); save(); }
+        // Rotate who moves first (and who holds which job) on every repeat.
+        const ids = agents.map(a => a.id), k = r % ids.length, order = ids.slice(k).concat(ids.slice(0, k));
+        for (const v of cfg.variants) {
+          if (v.only && !v.only.includes(t.id)) continue;
+          const extra = { title: `${t.id} · ${v.label}`, ...(v.room || {}), agents: order.map(id => specs[id]) };
+          if (v.roles) {
+            extra.roles = Object.fromEntries(order.map((id, i) => [id, v.roles[Math.min(i, v.roles.length - 1)]]));
+            if (v.checker) extra.readonly = order.filter((id, i) => Math.min(i, v.roles.length - 1) === v.roles.length - 1);
+          }
+          console.log(`- ${v.label} (${order.join(' first, ')})`);
+          const got = await roomRun(together(t, extra), t);
+          got.stats = JSON.parse(fs.readFileSync(path.join(got.dir, 'timeline.json'), 'utf8')).stats || null;
+          got.process = await processLabels(got.dir, `${t.id}-${r + 1}-${v.label.replace(/\W+/g, '-')}`);
+          runs[v.label] = got;
+          save();
+        }
+        task.repeats[r].judgings = t.judge === false ? [] : await judgeSet(dir, `${t.id}-${r + 1}`, t.kind, t.brief || asRoom(t).brief, Object.entries(runs).map(([label, x]) => ({ label, dir: x.dir })), judges);
+        save();
+      }
+      const labels = [...new Set(task.repeats.flatMap(x => Object.keys(x.runs)))];
+      const allJ = task.repeats.flatMap(x => x.judgings);
+      task.average = Object.fromEntries(labels.map(l => [l, avgOf(allJ, l)]));
+      task.best = Object.fromEntries(labels.map(l => [l, allJ.filter(j => j.best === l).length]));
+      task.guesses = Object.fromEntries(labels.map(l => [l, task.repeats.map(x => x.runs[l]?.guess).filter(Boolean)]));
+      task.checks = Object.fromEntries(labels.map(l => {
+        const cs = task.repeats.map(x => x.runs[l]?.checks).filter(Boolean);
+        return [l, cs.length ? { mean: mean(cs.map(c => c.passed)), of: cs[0].of, all: cs.filter(c => c.passed === c.of).length, runs: cs.length } : null];
+      }));
+      task.process = Object.fromEntries(labels.map(l => {
+        const rs = task.repeats.map(x => x.runs[l]).filter(Boolean);
+        const st = rs.map(x => x.stats).filter(Boolean);
+        if (!st.length || rs[0].process == null) return [l, null];
+        const lab = k => mean(rs.flatMap(x => (x.process || []).map(p => p[k]?.n).filter(n => n != null)));
+        const props = st.filter(x => x.proposals);
+        return [l, { questions: mean(st.map(x => x.questions)), clashes: mean(st.map(x => x.clashes)), removedOthers: mean(st.map(x => x.removedOthers)),
+          topShare: mean(st.map(x => Math.max(...Object.values(x.share)))),
+          accepted: props.length ? mean(props.map(x => x.proposals.accepted)) : null, rejected: props.length ? mean(props.map(x => x.proposals.rejected)) : null,
+          planForced: st.some(x => x.planForced !== undefined) ? st.filter(x => x.planForced).length : null,
+          changed: lab('changed'), caught: lab('caught'), passed: lab('passed'), built: lab('built') }];
+      }));
+      save();
+    }
+    fs.writeFileSync(path.join(dir, 'summary.md'), summaryMd(study));
+    console.log(`\n${summaryMd(study)}`);
+    console.log(`Summary: ${path.join(dir, 'summary.md')}`);
+    return { dir, study };
+  }
   // 0. A scaling curve: 1, 2, 3, 4 copies of one model, same moves each, same time.
   if (cfg.scale) {
     study.scale = cfg.scale;
@@ -215,11 +338,6 @@ async function main(file) {
 
   // 1. Alone, then together.
   const lessons = Object.fromEntries(agents.map(a => [a.id, []]));
-  const together = (t, extra = {}) => {
-    const r = asRoom(t), min = minOf(t);
-    return { ...base, ...r, agents: agents.map(a => specs[a.id]), ...extra, lesson: true, min_moves: min,
-      brief: `${r.brief} ${PAIR()}${min ? ` ${extra.readonly?.length ? 'Each of you who edits' : 'Each of you'} must change it at least ${min} times.` : ''}` };
-  };
   for (const t of cfg.tasks) {
     const task = { id: t.id, kind: t.kind, brief: t.brief, repeats: [] };
     study.tasks.push(task);
@@ -302,13 +420,16 @@ function summaryMd(s) {
   const L = [`# ${s.title || 'Solo vs together'}`, '', `Judges (blind): ${s.judges.join(', ')}. Scores 1-10, averaged over judges and repeats. "best" counts how often a judge picked it as the best of its set.`, '', '## Alone or together', ''];
   for (const t of s.tasks) {
     L.push(`### ${t.id} (${t.repeats.length} repeat${t.repeats.length === 1 ? '' : 's'})`, '',
-      ...Object.keys(t.repeats[0]?.runs || {}).map(l => {
+      ...[...new Set(t.repeats.flatMap(x => Object.keys(x.runs)))].map(l => {
         const c = t.checks?.[l], p = t.puzzle?.[l];
         return [`- ${l}:`, t.average?.[l] != null ? `${t.average[l]} · best ${t.best?.[l] ?? 0}` : null,
           p ? `right ${p.right}/${p.runs}${Object.keys(p.why).length ? ` (wrong: ${Object.entries(p.why).map(([k, n]) => `${n} ${k}`).join(', ')})` : ''}` : null,
           c && !p ? `${s.scale ? 'right' : 'checks'} ${c.mean}/${c.of} on average, all ${s.scale ? 'right' : 'passed'} in ${c.all}/${c.runs}${c.seconds != null ? ` · ${c.seconds}s · ${c.moves} moves` : ''}` : null,
           t.guesses?.[l]?.length ? `guesses ${t.guesses[l].join(', ')}` : null].filter(Boolean).join(' · ').replace(': · ', ': ');
       }));
+    const procs = Object.entries(t.process || {}).filter(([, p]) => p);
+    if (procs.length) L.push('', 'How they worked (per run, averaged; changed/caught/passed/built from the process judges, the rest counted by the app):', '',
+      ...procs.map(([l, p]) => `- ${l}: changed ${p.changed ?? 'n/a'} · caught ${p.caught ?? 'n/a'} · passed ${p.passed ?? 'n/a'} · built ${p.built ?? 'n/a'} · questions ${p.questions} · clashes ${p.clashes} · lines removed from the other ${p.removedOthers} · top share ${p.topShare}%${p.accepted != null ? ` · proposals accepted ${p.accepted}, rejected ${p.rejected}` : ''}${p.planForced != null ? ` · plan forced in ${p.planForced}` : ''}`));
     const errs = t.repeats.flatMap(x => (x.judgings || []).filter(j => j.error).map(j => `${j.judge}: ${j.error}`));
     if (errs.length) L.push(`- judge errors: ${errs.join('; ')}`);
     L.push('');
@@ -323,7 +444,7 @@ function summaryMd(s) {
   return L.join('\n');
 }
 
-module.exports = { shuffle, parseScores, judgePrompt, summaryMd, main };
+module.exports = { shuffle, parseScores, judgePrompt, summaryMd, transcript, parseProcess, main };
 
 if (require.main === module) {
   const file = process.argv[2];

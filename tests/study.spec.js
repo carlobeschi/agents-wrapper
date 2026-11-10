@@ -143,3 +143,41 @@ test('scaling curve: 1 to 3 copies of one model on a bank of puzzles, scored by 
   expect(t.checks['1 a alone']).toMatchObject({ mean: 1, of: 2, all: 0, runs: 2 });
   expect(fs.readFileSync(path.join(dir, 'summary.md'), 'utf8')).toContain('- 3 a copies: right 1/2 on average, all right in 0/2');
 });
+
+test('interventions: one team under each variant, with process labels from judges who never see the names', () => {
+  const { parseProcess } = require('../study');
+  expect(parseProcess('**CHANGED**: 2 | b cut its line\nCAUGHT: 1\nPASSED: 0 | none\nBUILT: 3')).toEqual({
+    changed: { n: 2, example: 'b cut its line' }, caught: { n: 1, example: '' }, passed: { n: 0, example: 'none' }, built: { n: 3, example: '' } });
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'study5-home-'));
+  const fk = ['sh', '-c', `case "$1" in
+  *"Score each from 1 to 10"*) printf 'A: 5\\nB: 6\\nC: 7\\nBEST: C\\n';;
+  *"Count, from the record only"*) printf 'CHANGED: 1 | x\\nCAUGHT: 2\\nPASSED: 0\\nBUILT: 4\\n';;
+  *"just finished"*) printf 'ok\\n';;
+  *) printf 'SAY: ok?\\nPLAN: do it\\nAGREE: yes\\nINSERT AFTER 0\\nflour flour\\nEND\\nSTATUS: done\\n';;
+esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'Agent Model', headless: fk }] }));
+  const file = path.join(home, 's.json');
+  fs.writeFileSync(file, JSON.stringify({ title: 'T5', agents: ['a#1', 'a#2'], judges: ['a'], process_judges: ['a'], solo: ['a'],
+    room: { moves: 2, min_moves: 0, turns: true }, repeats: 2,
+    variants: [{ label: 'silent', room: { silent: true } }, { label: 'plan first', room: { plan_first: true, silent: false } },
+      { label: 'checker', roles: ['WRITE', 'CHECK'], checker: true, only: ['other'] }],
+    tasks: [{ id: 'bake', kind: 'poem', brief: 'a poem', checks: [{ say: 'Says flour twice.', type: 'contains', word: 'flour', min: 2 }] }] }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'study.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Study folder: (.+)/)[1].trim();
+  const s = JSON.parse(fs.readFileSync(path.join(dir, 'study.json'), 'utf8'));
+  const t = s.tasks[0];
+  expect(Object.keys(t.repeats[0].runs)).toEqual(['a alone', 'silent', 'plan first']); // "checker" is only for task "other"
+  expect(t.repeats[0].runs['plan first'].stats.planAgreedAt).toBe(2);
+  // Who moves first rotates.
+  const tl2 = JSON.parse(fs.readFileSync(path.join(t.repeats[1].runs.silent.dir, 'timeline.json'), 'utf8'));
+  expect(tl2.moves[0].agent).toBe('a-2');
+  // The process judge saw no names.
+  const pp = fs.readFileSync(path.join(dir, 'steps', 'process-bake-1-plan-first-a.prompt.md'), 'utf8');
+  expect(pp).toContain('--- move 1, Agent 1 ---');
+  expect(pp).not.toMatch(/Agent Model|a-1|a-2/);
+  expect(t.process['plan first']).toMatchObject({ changed: 1, caught: 2, passed: 0, built: 4, questions: 4 });
+  expect(t.process['a alone']).toBeNull();
+  const md = fs.readFileSync(path.join(dir, 'summary.md'), 'utf8');
+  expect(md).toContain('- plan first: changed 1 · caught 2 · passed 0 · built 4 · questions 4');
+});
