@@ -52,38 +52,74 @@ window.ATLAS = {
   {
    "id": "research",
    "name": "AI Research",
-   "summary": "Labs ship frontier models every few weeks, driven by RL-trained reasoning, huge compute buildouts and agents; safety, interpretability and evals race to keep up as benchmarks saturate.",
+   "summary": "Labs ship frontier models every month or two, driven by RL-trained reasoning, large compute buildouts and agents; safety, interpretability and evals work to keep up as benchmarks saturate.",
    "regions": [
     {
      "id": "research.scaling",
      "name": "Pretraining & scaling",
-     "summary": "Frontier labs keep growing training compute and data center capacity, with new flagship models arriving every one to two months. Debate continues over how much pure pretraining still pays off.",
+     "summary": "Frontier labs keep growing training compute and ship new flagships every month or two, with the top tier often gated at first. Public training-compute data for closed models is sparse.",
      "activity": 5,
      "maturity": "established",
      "landmarks": [
       {
-       "name": "OpenAI releases GPT-5.5",
-       "summary": "OpenAI flagship that briefly topped the Artificial Analysis Intelligence Index on launch, part of a rapid 2026 release cadence across labs.",
-       "date": "2026-04",
-       "kind": "product",
-       "source": "https://tech-insider.org/gpt-5-5-launch-openai-april-23-terminal-bench-2026/",
-       "verified": false
+       "name": "Grok 4: largest known training run",
+       "summary": "Epoch AI estimates xAI's Grok 4 used about 5e26 FLOP, the largest training run in its data, with wide uncertainty because the estimate rests on vague xAI statements.",
+       "date": "2025-07",
+       "kind": "research",
+       "source": "https://epoch.ai/data-insights/grok-4-training-resources",
+       "verified": true
       },
       {
        "name": "Gemini 3.5 Flash at Google I/O",
-       "summary": "First model of Google DeepMind's Gemini 3.5 family; the larger 3.5 Pro was reported as delayed while rivals shipped.",
+       "summary": "Google launched the Gemini 3.5 family with 3.5 Flash only; 3.5 Pro was promised for the following month and was still in partner testing in July.",
        "date": "2026-05",
        "kind": "product",
-       "source": "https://tech-insider.org/claude-opus-vs-gpt-5-5-vs-gemini-3-5-flash-2026/",
-       "verified": false
+       "source": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-5/",
+       "verified": true
       },
       {
-       "name": "Largest known run near 5e26 FLOP",
-       "summary": "Epoch AI estimates put xAI's Grok 4 as the largest disclosed training run; public compute data for closed models after mid-2025 is sparse.",
-       "date": "2025-07",
-       "kind": "research",
-       "source": "https://www.longtermwiki.com/wiki/ai-compute-scaling-metrics",
-       "verified": false
+       "name": "OpenAI launches GPT-6 Astra",
+       "summary": "OpenAI's GPT-6 flagship went first to a limited set of organizations; lower-cost GPT-6 Sol and Luna followed on 22 September and a ChatGPT rollout in October.",
+       "date": "2026-09",
+       "kind": "product",
+       "source": "https://openai.com/index/gpt-6-astra/",
+       "verified": true
+      },
+      {
+       "name": "Claude Fable 5.2 and Mythos 5.2",
+       "summary": "Anthropic upgraded its top tier: one underlying model sold as Fable (broadly available, stricter cyber and bio safeguards) and Mythos (vetted organizations only).",
+       "date": "2026-11",
+       "kind": "product",
+       "source": "https://www.anthropic.com/claude-fable-and-mythos-5-2",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Training scale still sets the ceiling for every downstream capability, and it drives the industry's spending.",
+     "openQuestion": "Do returns to larger training runs hold, or do gains now come mostly from RL, data and inference-time compute?",
+     "deepDives": [
+      {
+       "title": "Training compute of frontier models grows 4-5x a year",
+       "url": "https://epoch.ai/publications/training-compute-of-frontier-ai-models-grows-by-4-5x-per-year",
+       "kind": "report",
+       "why": "Epoch AI's baseline analysis of how fast training runs have scaled since 2010."
+      },
+      {
+       "title": "Can AI scaling continue through 2030?",
+       "url": "https://epoch.ai/publications/can-ai-scaling-continue-through-2030",
+       "kind": "report",
+       "why": "Examines power, chips, data and latency as possible limits on further scaling."
+      },
+      {
+       "title": "Epoch AI model counts by compute threshold",
+       "url": "https://epoch.ai/tools/model-counts",
+       "kind": "tracker",
+       "why": "Live counts of models above given training-compute thresholds."
+      },
+      {
+       "title": "Frontier LLM training runs can't get much longer",
+       "url": "https://epoch.ai/data-insights/longest-training-run",
+       "kind": "overview",
+       "why": "Short data insight listing the largest known runs and why run length is capped."
       }
      ]
     },
@@ -124,9 +160,12 @@ window.ATLAS = {
        "date": "2026-09",
        "kind": "research",
        "source": "https://huggingface.co/papers/2609.10712",
-       "verified": false
+       "verified": false,
+       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
       }
-     ]
+     ],
+     "whyItMatters": "RL on checkable tasks is the main source of recent capability gains and is now reproducible outside the top labs.",
+     "openQuestion": "How far does RL on verifiable tasks transfer to open-ended work with no automatic checker?"
     },
     {
      "id": "research.interpretability",
@@ -149,7 +188,8 @@ window.ATLAS = {
        "date": "2026-04",
        "kind": "research",
        "source": "https://rss-parrot.net/web/feeds/transformer-circuits.pub",
-       "verified": false
+       "verified": false,
+       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
       },
       {
        "name": "Natural Language Autoencoders",
@@ -157,7 +197,8 @@ window.ATLAS = {
        "date": "2026-05",
        "kind": "research",
        "source": "https://rss-parrot.net/web/feeds/transformer-circuits.pub",
-       "verified": false
+       "verified": false,
+       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
       },
       {
        "name": "Transformer Circuits May 2026 update",
@@ -167,7 +208,9 @@ window.ATLAS = {
        "source": "https://transformer-circuits.pub/2026/may-update/index.html",
        "verified": true
       }
-     ]
+     ],
+     "whyItMatters": "Reading a model's internals is one of the few ways to check what it is doing beyond its outputs.",
+     "openQuestion": "Can interpretability methods scale to give reliable, complete accounts of frontier model behavior?"
     },
     {
      "id": "research.alignment",
@@ -186,7 +229,7 @@ window.ATLAS = {
       },
       {
        "name": "Claude Mythos Preview gated",
-       "summary": "Anthropic limited its most capable model to Project Glasswing partners for defensive security after it found thousands of zero-days, a case of withholding for safety.",
+       "summary": "Anthropic kept Claude Mythos Preview as a gated research preview for Project Glasswing partners after saying it found thousands of zero-day vulnerabilities.",
        "date": "2026-04",
        "kind": "policy",
        "source": "https://www.anthropic.com/project/glasswing",
@@ -206,7 +249,30 @@ window.ATLAS = {
        "date": "2025-09",
        "kind": "research",
        "source": "https://openai.com/index/detecting-and-reducing-scheming-in-ai-models/",
-       "verified": false
+       "verified": false,
+       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+      }
+     ],
+     "whyItMatters": "Whether labs can detect and prevent misaligned behavior decides how safely more capable models can be deployed.",
+     "openQuestion": "Can evaluations stay informative once models reliably recognize when they are being tested?",
+     "deepDives": [
+      {
+       "title": "Anthropic research index",
+       "url": "https://www.anthropic.com/research",
+       "kind": "overview",
+       "why": "Running list of Anthropic alignment, interpretability and red-team publications."
+      },
+      {
+       "title": "OpenAI Deployment Safety Hub",
+       "url": "https://deploymentsafety.openai.com/gpt-6-october",
+       "kind": "report",
+       "why": "OpenAI's own pre-deployment safety write-ups for its current GPT-6 models."
+      },
+      {
+       "title": "Anthropic: an update on independent evaluators",
+       "url": "https://www.anthropic.com/news/an-update-on-independent-evaluators",
+       "kind": "report",
+       "why": "Describes tiered third-party access, including METR staff embedded inside the lab."
       }
      ]
     },
@@ -239,9 +305,12 @@ window.ATLAS = {
        "date": "2026-03",
        "kind": "debate",
        "source": "https://forum.effectivealtruism.org/posts/h3zcCh49kLE6egrfz/i-underestimated-ai-capabilities-again",
-       "verified": false
+       "verified": false,
+       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
       }
-     ]
+     ],
+     "whyItMatters": "Benchmarks shape how progress is perceived, and saturated ones hide what models can and cannot do.",
+     "openQuestion": "How can long, open-ended task ability be measured once fixed task suites saturate?"
     },
     {
      "id": "research.efficiency",
@@ -268,11 +337,27 @@ window.ATLAS = {
       },
       {
        "name": "Anthropic and Google TPU deal",
-       "summary": "Anthropic agreed to use up to one million Google TPUs, over a gigawatt in 2026, later expanded with multi-gigawatt capacity from 2027.",
+       "summary": "Anthropic said it would use up to one million Google Cloud TPUs, worth tens of billions of dollars, with well over a gigawatt of capacity coming online in 2026.",
        "date": "2025-10",
        "kind": "deal",
-       "source": "https://www.maginative.com/article/anthropic-secures-1m-google-tpus-while-keeping-amazon-as-primary-training-partner/",
+       "source": "https://www.anthropic.com/news/expanding-our-use-of-google-cloud-tpus-and-services",
        "verified": true
+      }
+     ],
+     "whyItMatters": "Compute supply and cost per token decide who can train frontier models and what agents are affordable to run.",
+     "openQuestion": "Will inference demand keep pace with the chip and data center capacity now being built?",
+     "deepDives": [
+      {
+       "title": "Epoch AI Frontier Data Centers Hub",
+       "url": "https://epoch.ai/latest/introducing-the-frontier-data-centers-hub",
+       "kind": "tracker",
+       "why": "Tracks the largest AI data centers, their power and their compute capacity."
+      },
+      {
+       "title": "Epoch AI chip users: methodology",
+       "url": "https://epoch.ai/data/ai-chip-users-documentation/methodology",
+       "kind": "report",
+       "why": "How Epoch estimates which companies hold how much AI compute."
       }
      ]
     },
@@ -297,7 +382,8 @@ window.ATLAS = {
        "date": "2026-02",
        "kind": "deal",
        "source": "https://wikwiand-revamp.pages.dev/en/Genie_3",
-       "verified": false
+       "verified": false,
+       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
       },
       {
        "name": "Sora 2 with synchronized audio",
@@ -305,9 +391,12 @@ window.ATLAS = {
        "date": "2025-09",
        "kind": "product",
        "source": "https://www.cined.com/openais-sora-2-brings-realistic-physics-audio-and-continuity-to-ai-videos-launches-app/",
-       "verified": false
+       "verified": false,
+       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
       }
-     ]
+     ],
+     "whyItMatters": "Video and world models extend AI from text to simulation, media and training data for robots.",
+     "openQuestion": "Do generated worlds stay consistent enough to train agents and robots that work in reality?"
     },
     {
      "id": "research.agents",
@@ -317,20 +406,20 @@ window.ATLAS = {
      "maturity": "adopting",
      "landmarks": [
       {
-       "name": "Agentic AI Foundation formed",
-       "summary": "Linux Foundation body hosting MCP, Goose and AGENTS.md, backed by AWS, Google, Microsoft, OpenAI and Anthropic, making agent tool protocols vendor-neutral.",
-       "date": "2025-12",
+       "name": "Agent Skills joins Agentic AI Foundation",
+       "summary": "Anthropic donated the Agent Skills standard to the Linux Foundation's Agentic AI Foundation, which it co-founded with Block and OpenAI in 2025 and which already hosts MCP.",
+       "date": "2026-10",
        "kind": "policy",
-       "source": "https://dev.to/digitalapplied/agentic-ai-foundation-open-source-agent-standards-gl8",
+       "source": "https://www.anthropic.com/news/donating-agent-skills-to-the-agentic-ai-foundation",
        "verified": true
       },
       {
-       "name": "MCP spec moves to stateless",
-       "summary": "A 2026 revision of the Model Context Protocol reportedly makes servers stateless to ease scaling of tool backends.",
+       "name": "MCP 2026-07-28 spec goes stateless",
+       "summary": "The Model Context Protocol dropped its session handshake for a stateless request/response core, so any request can hit any server instance behind a load balancer.",
        "date": "2026-07",
        "kind": "product",
-       "source": "https://dev.to/alexmercedcoder/ai-weekly-codex-goes-long-mcp-goes-stateless-584d",
-       "verified": false
+       "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
+       "verified": true
       },
       {
        "name": "Memory-centric continual learning",
@@ -338,7 +427,30 @@ window.ATLAS = {
        "date": "2026-10",
        "kind": "research",
        "source": "https://papers.cool/arxiv/2610.29357",
-       "verified": true
+       "verified": false,
+       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+      }
+     ],
+     "whyItMatters": "Shared protocols and memory decide whether agents can work across tools and improve over long tasks.",
+     "openQuestion": "How should long-running agents store and reuse experience without retraining the underlying model?",
+     "deepDives": [
+      {
+       "title": "Model Context Protocol blog",
+       "url": "https://blog.modelcontextprotocol.io/",
+       "kind": "newsletter",
+       "why": "Official posts on spec releases, SDKs and governance from the MCP maintainers."
+      },
+      {
+       "title": "The New MCP Roadmap",
+       "url": "https://blog.modelcontextprotocol.io/posts/mcp-roadmap/",
+       "kind": "overview",
+       "why": "Maintainers' stated priorities for upcoming versions of the protocol."
+      },
+      {
+       "title": "The 2026-07-28 MCP Specification",
+       "url": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
+       "kind": "report",
+       "why": "Walk-through of the stateless core, extensions and deprecations in the current spec."
       }
      ]
     },
@@ -363,7 +475,8 @@ window.ATLAS = {
        "date": "2026-05",
        "kind": "product",
        "source": "https://thenextweb.com/news/1x-neo-humanoid-factory-hayward-10000-home-robots",
-       "verified": false
+       "verified": false,
+       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
       },
       {
        "name": "Physical Intelligence raises $600M",
@@ -371,16 +484,45 @@ window.ATLAS = {
        "date": "2025-11",
        "kind": "deal",
        "source": "https://www.evsint.com/?p=9165",
-       "verified": false
+       "verified": false,
+       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
       }
-     ]
+     ],
+     "whyItMatters": "Robotics tests whether foundation-model progress carries over to physical work.",
+     "openQuestion": "Can general robot models reach the reliability needed for unsupervised use in homes and factories?"
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "Epoch AI: training compute trends",
+     "url": "https://epoch.ai/publications/training-compute-of-frontier-ai-models-grows-by-4-5x-per-year",
+     "kind": "report",
+     "why": "Data-driven account of how fast frontier training runs are growing."
+    },
+    {
+     "title": "Anthropic research index",
+     "url": "https://www.anthropic.com/research",
+     "kind": "overview",
+     "why": "Primary source for Anthropic's alignment, interpretability and science publications."
+    },
+    {
+     "title": "OpenAI research releases",
+     "url": "https://openai.com/research/index/release/",
+     "kind": "overview",
+     "why": "OpenAI's own list of model releases and accompanying research posts."
+    },
+    {
+     "title": "Google DeepMind model cards",
+     "url": "https://deepmind.google/models/model-cards/",
+     "kind": "tracker",
+     "why": "Official cards for current Gemini models, with intended use and evaluation results."
     }
    ]
   },
   {
    "id": "software",
    "name": "Software Development",
-   "summary": "Coding agents are the largest commercial use of AI so far, with multi-billion run rates. Agents are moving into review, security scanning, incident response and legacy migration, while productivity evidence stays mixed.",
+   "summary": "Coding agents are AI's largest commercial use so far, with multi-billion run rates. Agents are spreading into review, security, incident response and legacy migration, while productivity evidence stays mixed.",
    "regions": [
     {
      "id": "software.coding-agents",
@@ -388,38 +530,60 @@ window.ATLAS = {
      "summary": "Terminal, IDE and cloud agents that write, run and fix code across whole repos. Claude Code, Codex and Cursor lead a market with very fast revenue growth.",
      "activity": 5,
      "maturity": "adopting",
+     "whyItMatters": "This is where AI earns the most revenue today and where claims about automating knowledge work are tested first.",
+     "openQuestion": "How much real productivity do coding agents add once review, rework and selection effects are counted?",
      "landmarks": [
       {
-       "name": "Claude Code reported near $2.5B run rate",
-       "summary": "Reports put Anthropic's Claude Code at about $2.5B annualized revenue by early 2026, under a year after general release.",
+       "name": "Claude Code run rate passes $2.5B",
+       "summary": "Anthropic's Series G announcement said Claude Code run-rate revenue was over $2.5B, more than double the start of 2026, with enterprise use over half.",
        "date": "2026-02",
        "kind": "deal",
-       "source": "https://contextstudios.ai/blog/claude-code-25b-arr-what-it-means-for-builders",
-       "verified": false
+       "source": "https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation",
+       "verified": true
       },
       {
-       "name": "Cursor reported at $2B ARR",
-       "summary": "Anysphere's Cursor editor was reported to pass $2B annualized revenue about 26 months after launch, among the fastest SaaS ramps recorded.",
-       "date": "2026-02",
+       "name": "Cursor reported at $2B annualized revenue",
+       "summary": "Bloomberg reported Cursor's annualized revenue passed $2B in February 2026, doubling in three months, about 60% from enterprises. Not company-confirmed.",
+       "date": "2026-03",
        "kind": "deal",
-       "source": "https://sulat.com/p/cursor-just-hit-2-billion-arr",
-       "verified": false
+       "source": "https://www.bloomberg.com/news/articles/2026-03-02/cursor-recurring-revenue-doubles-in-three-months-to-2-billion",
+       "verified": true
       },
       {
        "name": "GPT-5.3-Codex launched",
-       "summary": "OpenAI released GPT-5.3-Codex alongside its Frontier enterprise platform, continuing a fast release cadence for coding models.",
+       "summary": "OpenAI's agentic coding model; the company says it is 25% faster and the first it rates high capability for cybersecurity under its Preparedness Framework.",
        "date": "2026-02",
        "kind": "product",
-       "source": "https://www.businesstoday.in/technology/news/story/openai-launches-frontier-to-help-enterprises-build-and-manage-ai-agents-514904-2026-02-06",
+       "source": "https://www.openai.com/index/introducing-gpt-5-3-codex",
        "verified": true
       },
       {
        "name": "METR revisits developer slowdown study",
-       "summary": "METR said developers appear more sped up by AI in early 2026 than in its 2025 study, but selection effects make its new estimate unreliable, so it is redesigning the study.",
+       "summary": "METR said developers are likely more sped up by AI than in its 2025 study, but selection effects make the new estimate unreliable, so it is redesigning the study.",
        "date": "2026-02",
        "kind": "research",
        "source": "https://metr.org/blog/2026-02-24-uplift-update/",
        "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "SWE-bench: code, data and leaderboards",
+       "url": "https://github.com/SWE-bench/SWE-bench",
+       "kind": "tracker",
+       "why": "The standard benchmark of real GitHub issues that coding agents are scored on."
+      },
+      {
+       "title": "Terminal-Bench",
+       "url": "https://github.com/laude-institute/terminal-bench",
+       "kind": "tracker",
+       "why": "Benchmark of realistic terminal tasks, widely quoted in coding model launches."
+      },
+      {
+       "title": "METR: developer productivity study update",
+       "url": "https://metr.org/blog/2026-02-24-uplift-update/",
+       "kind": "report",
+       "why": "Careful account of why measuring AI speedup for developers is hard."
       }
      ]
     },
@@ -429,43 +593,67 @@ window.ATLAS = {
      "summary": "AI reviewers comment on pull requests to keep pace with the volume of AI-written code. Pure-play vendors raise large rounds while model labs ship their own reviewers.",
      "activity": 4,
      "maturity": "adopting",
+     "whyItMatters": "As agents write more code, human review becomes the bottleneck, so automated review decides how fast teams can safely ship.",
+     "openQuestion": "Can AI reviewers be trusted to check AI-written code, or do they share the same blind spots?",
      "landmarks": [
       {
        "name": "Anthropic Code Review for Claude Code",
-       "summary": "Multi-agent PR reviewer that verifies and ranks findings. Anthropic said PRs with substantive review comments rose from 16% to 54% internally.",
+       "summary": "Multi-agent PR reviewer in research preview for Team and Enterprise. Anthropic said PRs with substantive review comments rose from 16% to 54% internally.",
        "date": "2026-03",
        "kind": "product",
-       "source": "https://techcrunch.com/2026/03/09/anthropic-launches-code-review-tool-to-check-flood-of-ai-generated-code/",
+       "source": "https://venturebeat.com/technology/anthropic-rolls-out-code-review-for-claude-code-as-it-sues-over-pentagon",
        "verified": true
       },
       {
        "name": "CodeRabbit raises $143M at $1.5B",
-       "summary": "Series C for the largest standalone AI code review vendor, paired with an 'agentic change management' layer for governing code changes.",
+       "summary": "Series C co-led by Atomico and Smash Capital, paired with an 'Agentic Change Management' product. The company reports over 2M reviews a week.",
        "date": "2026-08",
        "kind": "deal",
-       "source": "https://www.vcaonline.com/news/2026081201/coderabbit-raises-143-million-at-1-5-billion-valuation-and-introduces-agentic-change-management/",
+       "source": "https://www.coderabbit.ai/newsroom/coderabbit-series-c-agentic-change-management",
        "verified": true
       },
       {
        "name": "Greptile $25M Series A",
-       "summary": "Code review agent startup raised a Series A and shipped v3, positioning AI review as validation for AI-generated code.",
+       "summary": "Benchmark-led round for a code review agent startup, announced with a v3 rewrite that the company says catches 3x more critical bugs than v2.",
        "date": "2025-09",
        "kind": "deal",
        "source": "https://siliconangle.com/2025/09/23/greptile-bags-25m-funding-take-coderabbit-graphite-ai-code-validation/",
        "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "InfoQ: how Claude Code Review works",
+       "url": "https://infoq.com/news/2026/04/claude-code-review",
+       "kind": "overview",
+       "why": "Independent engineering write-up of a multi-agent reviewer, with pricing and limits."
+      },
+      {
+       "title": "Claude Code GitHub Action",
+       "url": "https://github.com/anthropics/claude-code-action",
+       "kind": "community",
+       "why": "Open-source action showing how agent PR review is wired into a repository."
+      },
+      {
+       "title": "Greptile blog: Series A and v3",
+       "url": "https://www.greptile.com/blog/series-a",
+       "kind": "newsletter",
+       "why": "A vendor's account of its reviewer architecture and how it measures bug catching."
       }
      ]
     },
     {
      "id": "software.testing",
      "name": "Testing & QA",
-     "summary": "Incumbent test vendors and startups ship agents that explore apps, write and maintain tests, and check each PR. Performance claims are mostly vendor-reported.",
+     "summary": "Incumbent test vendors and startups ship agents that explore apps, write and maintain tests, and file bugs. Performance claims are mostly vendor-reported.",
      "activity": 3,
      "maturity": "emerging",
+     "whyItMatters": "More AI-written code needs more verification, and testing is the cheapest place to catch what agents get wrong.",
+     "openQuestion": "Will teams trust autonomous test agents enough to drop scripted suites, given the lack of independent results?",
      "landmarks": [
       {
        "name": "SmartBear BearQ",
-       "summary": "Agentic QA system with always-on agents that explore and test applications on their own, from a major testing incumbent.",
+       "summary": "Agentic QA system from a testing incumbent that explores web applications and builds and maintains tests on its own, later added to Jira as an assignable agent.",
        "date": "2026-03",
        "kind": "product",
        "source": "https://smartbear.com/news/news-releases/smartbear-introduces-bearqautonomous-testing-for/",
@@ -473,73 +661,131 @@ window.ATLAS = {
       },
       {
        "name": "Tricentis agentic QE platform",
-       "summary": "Tricentis launched an agentic quality engineering platform with an AI Workspace for building custom testing agents.",
+       "summary": "Tricentis launched an agentic quality engineering platform with an AI Workspace that orchestrates and audits testing agents, plus four pre-built agents.",
        "date": "2026-03",
        "kind": "product",
-       "source": "https://www.tricentis.com/blog/agentic-quality-engineering-platform-launch-takeaways",
+       "source": "https://www.tricentis.com/news/tricentis-introduces-agentic-software-quality-platform",
        "verified": true
       },
       {
        "name": "Momentic Mo scriptless QA agent",
-       "summary": "Agent that tests web, iOS and Android apps without scripts and files bug reports with repro steps. Metrics are vendor-reported only.",
+       "summary": "Agent that tests web, iOS and Android apps from a plain-English goal and files bugs with repro steps. Usage and benchmark figures are vendor-reported.",
        "date": "2026-09",
        "kind": "product",
-       "source": "https://letsdatascience.com/news/momentic-launches-mo-for-scriptless-software-testing-ee886b16",
-       "verified": false
+       "source": "https://siliconangle.com/2026/09/28/momentic-debuts-mo-ai-agent-to-automate-software-testing-without-scripts/",
+       "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "SWT-Bench",
+       "url": "https://github.com/logic-star-ai/swt-bench",
+       "kind": "tracker",
+       "why": "Benchmark and NeurIPS 2024 paper on whether agents can write tests that reproduce real bugs."
+      },
+      {
+       "title": "Playwright MCP server",
+       "url": "https://github.com/microsoft/playwright-mcp",
+       "kind": "community",
+       "why": "The widely used open-source bridge that lets agents drive a browser for testing."
+      },
+      {
+       "title": "Momentic Mo documentation",
+       "url": "https://momentic.ai/docs/mo",
+       "kind": "overview",
+       "why": "Concrete view of how an exploratory QA agent is set up and what it cannot do."
       }
      ]
     },
     {
      "id": "software.observability",
      "name": "Observability & SRE",
-     "summary": "AI SRE agents investigate alerts, test root-cause hypotheses against telemetry and suggest fixes. Cloud and observability vendors now ship them as GA products.",
-     "activity": 4,
+     "summary": "AI SRE agents investigate alerts, test root-cause hypotheses against telemetry and suggest fixes. Vendors ship them as GA products, though open benchmarks show low scores.",
+     "activity": 3,
      "maturity": "adopting",
+     "whyItMatters": "Incident response is a high-stakes test of whether agents can reason over live systems, not only over code.",
+     "openQuestion": "When can an agent be allowed to remediate production incidents itself rather than only investigate?",
      "landmarks": [
       {
-       "name": "Datadog Bits AI SRE",
-       "summary": "Autonomous agent that investigates alerts and incidents across logs, traces and metrics. Datadog reports use in over 2,000 customer environments.",
+       "name": "Datadog Bits AI SRE generally available",
+       "summary": "Autonomous agent that investigates alerts across logs, traces and metrics. Datadog says it was tested against more than 2,000 customer environments.",
        "date": "2025-12",
        "kind": "product",
-       "source": "https://www.helpnetsecurity.com/2025/12/03/datadog-bits-ai-sre-agent/",
+       "source": "https://www.datadoghq.com/about/latest-news/press-releases/datadog-launches-bits-ai-sre-agent-to-resolve-incidents-faster/",
        "verified": true
       },
       {
        "name": "AWS DevOps Agent generally available",
-       "summary": "AWS agent that investigates and helps prevent incidents across AWS, multicloud and on-prem. AWS cites 3 to 5x faster resolution for preview customers.",
+       "summary": "AWS agent that investigates and helps prevent incidents across AWS, multicloud and on-prem, with Azure support added at GA after a December 2025 preview.",
        "date": "2026-03",
        "kind": "product",
        "source": "https://aws.amazon.com/about-aws/whats-new/2026/03/aws-devops-agent-generally-available",
        "verified": true
+      },
+      {
+       "name": "ITBench-AA: models score below 50% on SRE",
+       "summary": "Artificial Analysis and IBM Research launched ITBench-AA; across its 59 SRE tasks, all evaluated models scored below 50%.",
+       "date": "2026-05",
+       "kind": "research",
+       "source": "https://github.com/itbench-hub/ITBench",
+       "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "ITBench: benchmark for IT automation agents",
+       "url": "https://github.com/itbench-hub/ITBench",
+       "kind": "tracker",
+       "why": "Open benchmark and leaderboards for SRE, compliance and FinOps agents, with ICML 2025 paper."
+      },
+      {
+       "title": "AIOpsLab (Microsoft Research)",
+       "url": "https://github.com/microsoft/AIOpsLab",
+       "kind": "paper",
+       "why": "Framework and MLSys 2025 paper for evaluating agents on injected cloud faults."
+      },
+      {
+       "title": "Datadog engineering blog: Bits AI SRE",
+       "url": "https://datadoghq.com/blog/bits-ai-sre/",
+       "kind": "overview",
+       "why": "How a production SRE agent forms and tests root-cause hypotheses."
+      },
+      {
+       "title": "AWS: DevOps Agent general availability",
+       "url": "https://aws.amazon.com/blogs/mt/announcing-general-availability-of-aws-devops-agent",
+       "kind": "overview",
+       "why": "Detailed walkthrough of capabilities, integrations and pricing model at GA."
       }
      ]
     },
     {
      "id": "software.security",
      "name": "AppSec & vulnerability finding",
-     "summary": "Models now find real zero-days at scale. Labs ship code-scanning agents, autonomous hackers top bug bounty boards, and markets react to each launch.",
+     "summary": "Models now find real vulnerabilities at scale. Labs ship code-scanning agents, an autonomous pentester topped a bug bounty board, and security stocks react to launches.",
      "activity": 4,
      "maturity": "adopting",
+     "whyItMatters": "The same capability that finds and patches flaws for defenders also lowers the cost of finding them for attackers.",
+     "openQuestion": "Will AI vulnerability discovery favor defenders, or will fixes lag behind the volume of flaws found?",
      "landmarks": [
       {
        "name": "Claude Code Security",
-       "summary": "Anthropic codebase scanner that suggests patches for human review, launched after Claude Opus 4.6 found over 500 vulnerabilities in open-source projects.",
+       "summary": "Anthropic codebase scanner that suggests patches for human review, in limited preview, after Opus 4.6 was reported to find 500+ high-severity flaws in open source.",
        "date": "2026-02",
        "kind": "product",
-       "source": "https://www.anthropic.com/news/claude-code-security",
+       "source": "https://venturebeat.com/security/anthropic-claude-code-security-reasoning-vulnerability-hunting",
        "verified": true
       },
       {
        "name": "Aardvark becomes Codex Security",
-       "summary": "OpenAI renamed its agentic security researcher, which validates flaws by trying to exploit them in a sandbox, and opened it to business customers.",
+       "summary": "OpenAI renamed its agentic security researcher, which builds a threat model and tests suspected flaws in a sandbox, and opened a research preview to paid tiers.",
        "date": "2026-03",
        "kind": "product",
-       "source": "https://ai-era.pages.dev/entities/products/codex-security",
-       "verified": false
+       "source": "https://openai.com/index/codex-security-now-in-research-preview",
+       "verified": true
       },
       {
        "name": "Google Big Sleep reports 20 bugs",
-       "summary": "Google's DeepMind and Project Zero agent reported its first batch of 20 vulnerabilities in open-source software, found without human help.",
+       "summary": "Google's DeepMind and Project Zero agent reported its first 20 vulnerabilities in open-source software, found autonomously and reviewed by humans before filing.",
        "date": "2025-08",
        "kind": "research",
        "source": "https://techcrunch.com/2025/08/04/google-says-its-ai-based-bug-hunter-found-20-security-vulnerabilities/",
@@ -547,57 +793,121 @@ window.ATLAS = {
       },
       {
        "name": "XBOW tops HackerOne US leaderboard",
-       "summary": "An autonomous pentesting agent ranked first on HackerOne's US bug bounty leaderboard, a first for a non-human hacker.",
+       "summary": "An autonomous pentesting agent ranked first by reputation on HackerOne's US leaderboard, a first for an AI system; critics noted its findings were mostly XSS.",
        "date": "2025-06",
        "kind": "experiment",
-       "source": "https://labs.cloudsecurityalliance.org/research/csa-whitepaper-ai-autonomous-vuln-discovery-threat-model-202/",
-       "verified": false
+       "source": "https://xbow.com/blog/top-1-how-xbow-did-it/",
+       "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "CyberGym benchmark",
+       "url": "https://github.com/sunblaze-ucb/cybergym",
+       "kind": "paper",
+       "why": "Large-scale evaluation of agents on real vulnerability analysis tasks, with paper."
+      },
+      {
+       "title": "XBOW: how it reached the top of HackerOne",
+       "url": "https://xbow.com/blog/top-1-how-xbow-did-it/",
+       "kind": "overview",
+       "why": "First-hand account of running an autonomous pentester against live bounty programs."
+      },
+      {
+       "title": "OpenAI: introducing Aardvark",
+       "url": "https://openai.com/index/introducing-aardvark",
+       "kind": "overview",
+       "why": "Explains the agentic security researcher design: threat model, validate, patch."
+      },
+      {
+       "title": "Claude Code security review action",
+       "url": "https://github.com/anthropics/claude-code-security-review",
+       "kind": "community",
+       "why": "Open-source example of model-driven security review on pull requests."
       }
      ]
     },
     {
      "id": "software.devops",
      "name": "CI/CD & platform engineering",
-     "summary": "Coding agents are being wired into CI to triage issues, fix failing builds and update docs. Platforms add sandboxing and permissions but tooling is early.",
+     "summary": "Coding agents are being wired into CI to triage issues, fix failing builds and update docs. Platforms add sandboxing and permissions but the tooling is still in preview.",
      "activity": 3,
      "maturity": "emerging",
+     "whyItMatters": "CI is where agents get standing access to repositories, so its guardrails set how much autonomy teams can safely grant.",
+     "openQuestion": "Can permission and sandbox models make unattended agents safe enough for build and release pipelines?",
      "landmarks": [
       {
-       "name": "GitHub Agentic Workflows preview",
-       "summary": "Markdown-defined workflows run coding agents (Copilot, Claude Code, Codex) inside GitHub Actions with restricted permissions. GitHub calls it Continuous AI.",
+       "name": "GitHub Agentic Workflows technical preview",
+       "summary": "Markdown-defined workflows run coding agents (Copilot, Claude Code, Codex) in GitHub Actions, read-only by default with pre-approved 'safe outputs' for writes.",
        "date": "2026-02",
        "kind": "product",
-       "source": "https://github.blog/2026-02-13-automate-repository-tasks-with-github-agentic-workflows/",
+       "source": "https://github.blog/changelog/2026-02-13-github-agentic-workflows-are-now-in-technical-preview/",
        "verified": true
       },
       {
        "name": "Register: use at your own risk",
-       "summary": "Coverage of the preview stressed breaking changes and risk, reflecting caution about giving agents write access in pipelines.",
+       "summary": "The Register's coverage noted GitHub's own 'use at your own risk' advice alongside its claim that guardrails beat running agent CLIs directly in Actions.",
        "date": "2026-02",
        "kind": "debate",
        "source": "https://www.theregister.com/software/2026/02/17/github-previews-agentic-workflows/5103216",
        "verified": true
       },
       {
-       "name": "AWS frontier agents for DevOps and security",
-       "summary": "AWS introduced long-running 'frontier agents' for cloud operations and security testing as a new product category.",
+       "name": "Agentic Workflows reach public preview",
+       "summary": "GitHub moved Agentic Workflows from technical preview to public preview about four months after first release.",
+       "date": "2026-06",
+       "kind": "product",
+       "source": "https://github.blog/changelog/2026-06-11-github-agentic-workflows-is-now-in-public-preview",
+       "verified": true
+      },
+      {
+       "name": "AWS frontier agents announced",
+       "summary": "At re:Invent AWS previewed three long-running 'frontier agents': the Kiro autonomous agent, AWS Security Agent and AWS DevOps Agent.",
        "date": "2025-12",
        "kind": "product",
-       "source": "https://aws.amazon.com/jp/blogs/machine-learning/aws-launches-frontier-agents-for-security-testing-and-cloud-operations",
-       "verified": false
+       "source": "https://press.aboutamazon.com/2025/12/aws-unveils-frontier-agents-a-new-class-of-ai-agents-that-work-as-an-extension-of-your-software-development-team",
+       "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "GitHub blog: Agentic Workflows explained",
+       "url": "https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/",
+       "kind": "overview",
+       "why": "GitHub's own walkthrough of running coding agents inside CI with guardrails."
+      },
+      {
+       "title": "gh-aw: Agentic Workflows source",
+       "url": "https://github.com/github/gh-aw",
+       "kind": "community",
+       "why": "The open-source CLI extension that compiles Markdown workflows into GitHub Actions."
+      },
+      {
+       "title": "Awesome Continuous AI",
+       "url": "https://github.com/githubnext/awesome-continuous-ai",
+       "kind": "community",
+       "why": "GitHub Next's curated list of tools and actions for automated AI in repositories."
+      },
+      {
+       "title": "InfoQ: GitHub Agentic Workflows",
+       "url": "https://www.infoq.com/news/2026/02/github-agentic-workflows",
+       "kind": "overview",
+       "why": "Independent summary of the design, its safety model and production readiness."
       }
      ]
     },
     {
      "id": "software.modernization",
      "name": "Legacy migration & modernization",
-     "summary": "Agents read COBOL and mainframe code, extract business rules and draft rewrites. Every major cloud and IBM now sells agentic modernization.",
+     "summary": "Agents read COBOL and mainframe code, extract business rules and draft rewrites. IBM and the major clouds now sell agentic modernization, and markets have reacted.",
      "activity": 4,
      "maturity": "adopting",
+     "whyItMatters": "Decades-old code runs banking, insurance and government, and cheaper migration would shift large services revenues.",
+     "openQuestion": "Can AI-led rewrites be proven equivalent to the original systems well enough for regulated industries?",
      "landmarks": [
       {
        "name": "IBM stock drops on Anthropic COBOL post",
-       "summary": "IBM shares fell about 13% in a day, the most since 2000, after Anthropic said Claude Code can automate COBOL exploration and analysis.",
+       "summary": "IBM shares fell about 13% in a day, the most since October 2000, after Anthropic said Claude Code can automate COBOL exploration and analysis.",
        "date": "2026-02",
        "kind": "debate",
        "source": "https://www.thestar.com.my/tech/tech-news/2026/02/24/ibm-posts-steepest-daily-drop-since-2000-after-anthropic-says-ai-can-modernize-cobol",
@@ -605,19 +915,45 @@ window.ATLAS = {
       },
       {
        "name": "IBM Bob multi-agent modernization",
-       "summary": "IBM added multi-agent coordination, spend tracking and prebuilt workflows for IBM Z, IBM i and Java modernization to its Bob platform.",
+       "summary": "IBM added multi-agent execution, usage and cost analytics, and premium workflow packages for IBM Z, IBM i and Java modernization to its Bob platform.",
        "date": "2026-07",
        "kind": "product",
-       "source": "https://canada.newsroom.ibm.com/2026-07-09-ibm-advances-enterprise-ai-software-development-with-multi-agent-capabilities-and-specialized-modernization-workflows",
+       "source": "https://newsroom.ibm.com/2026-07-09-ibm-advances-enterprise-ai-software-development-with-multi-agent-capabilities-and-specialized-modernization-workflows",
        "verified": true
       },
       {
        "name": "Google mainframe modernization agents",
-       "summary": "Google paired a business-rule extraction tool with agents for forward engineering, supporting rewrite and like-for-like paths.",
+       "summary": "Google paired business-rule extraction in its Mainframe Assessment Tool with Mainframe Modernization Agents that forward-engineer code to Java or C#.",
        "date": "2026-08",
        "kind": "product",
        "source": "https://cloud.google.com/blog/products/infrastructure-modernization/mainframe-migration-and-modernization-with-ai",
-       "verified": false
+       "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "Google Cloud mainframe modernization",
+       "url": "https://cloud.google.com/solutions/mainframe-modernization",
+       "kind": "overview",
+       "why": "Shows the assess, rewrite and validate pipeline a hyperscaler now sells."
+      },
+      {
+       "title": "Microsoft Legacy Modernization Agents",
+       "url": "https://github.com/Azure-Samples/Legacy-Modernization-Agents",
+       "kind": "community",
+       "why": "Open-source COBOL to Java or C# agent pipeline you can read and run."
+      },
+      {
+       "title": "AWS CardDemo mainframe sample app",
+       "url": "https://github.com/aws-samples/aws-mainframe-modernization-carddemo",
+       "kind": "tracker",
+       "why": "A public COBOL application commonly used to demonstrate and compare migration tools."
+      },
+      {
+       "title": "IBM Bob newsroom page",
+       "url": "https://uk.newsroom.ibm.com/IBM-Bob",
+       "kind": "overview",
+       "why": "IBM's running record of announcements for its AI development and modernization platform."
       }
      ]
     },
@@ -627,13 +963,15 @@ window.ATLAS = {
      "summary": "Prompt-to-app builders grow fast among non-engineers, design tools generate working code, and spec-driven workflows try to make agent output more predictable.",
      "activity": 4,
      "maturity": "adopting",
+     "whyItMatters": "These tools let non-engineers build software and move the scarce skill from writing code to specifying what is wanted.",
+     "openQuestion": "Do prompt-built apps hold up in production, and do written specs actually make agent output more reliable?",
      "landmarks": [
       {
        "name": "Lovable raises $400M at $13.3B",
-       "summary": "Swedish prompt-to-app builder's Series C, with reported annualized revenue above $500M, makes 'vibe coding' a large venture category.",
+       "summary": "Series C led by Menlo Ventures doubled the Swedish prompt-to-app builder's valuation; it reported a $500M annualized run rate in June 2026.",
        "date": "2026-08",
        "kind": "deal",
-       "source": "https://sifted.eu/articles/lovable-raises-e400m-series-c/",
+       "source": "https://tech.eu/2026/08/12/lovables-valuation-doubles-to-13bn-as-raises-400m/",
        "verified": true
       },
       {
@@ -642,24 +980,56 @@ window.ATLAS = {
        "date": "2026-02",
        "kind": "product",
        "source": "https://siliconangle.com/2026/02/18/figma-stock-climbs-40-revenue-growth-surging-figma-make-adoption/",
-       "verified": true
+       "verified": true,
+       "note": "First-pass check kept; not re-checked in second pass (search limit reached)."
       },
       {
        "name": "AWS Kiro spec-driven IDE",
-       "summary": "Agentic IDE built around requirements, design and task files before code, a counterpoint to unstructured vibe coding.",
+       "summary": "Agentic IDE built around specs that structure requirements, design decisions and tasks before code, a counterpoint to unstructured vibe coding.",
        "date": "2025-07",
        "kind": "product",
-       "source": "https://tessl.io/blog/from-vibe-coding-to-viable-code-aws-dives-into-spec-driven-ai-software-development-with-kiro/",
+       "source": "https://github.com/kirodotdev/Kiro",
+       "verified": false,
+       "note": "Spec workflow confirmed on Kiro's repo; July 2025 launch date not re-checked."
+      },
+      {
+       "name": "GitHub Spec Kit near 150k stars",
+       "summary": "GitHub's open-source toolkit for spec-driven development with coding agents showed about 149k stars, a sign of how widely the approach is being tried.",
+       "date": "2026-11",
+       "kind": "product",
+       "source": "https://github.com/github/spec-kit",
        "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "GitHub Spec Kit",
+       "url": "https://github.com/github/spec-kit",
+       "kind": "community",
+       "why": "The most used open toolkit for spec-driven development; read the method and try it."
+      },
+      {
+       "title": "Kiro public repository",
+       "url": "https://github.com/kirodotdev/Kiro",
+       "kind": "overview",
+       "why": "How a spec-first agentic IDE structures requirements, design and tasks."
+      },
+      {
+       "title": "AGENTS.md open format",
+       "url": "https://github.com/agentsmd/agents.md",
+       "kind": "community",
+       "why": "The shared convention for giving coding agents project context and instructions."
       }
      ]
     },
     {
      "id": "software.docs",
      "name": "Docs & codebase understanding",
-     "summary": "Tools auto-generate and refresh wikis, diagrams and Q&A for repositories, and expose them to agents via MCP. Accuracy still needs human checking.",
+     "summary": "Tools auto-generate and refresh wikis, diagrams and Q&A for repositories, and serve docs and project context to agents via MCP. Accuracy still needs human checking.",
      "activity": 3,
      "maturity": "adopting",
+     "whyItMatters": "Agents and new engineers are only as good as their understanding of the codebase, so context tooling shapes everything else.",
+     "openQuestion": "Can generated documentation stay accurate enough to trust without a human owner?",
      "landmarks": [
       {
        "name": "Google Code Wiki preview",
@@ -667,7 +1037,8 @@ window.ATLAS = {
        "date": "2025-11",
        "kind": "product",
        "source": "https://developers.googleblog.com/en/introducing-code-wiki-accelerating-your-code-understanding/",
-       "verified": true
+       "verified": true,
+       "note": "First-pass check kept; not re-checked in second pass (search limit reached)."
       },
       {
        "name": "Cognition DeepWiki",
@@ -675,54 +1046,145 @@ window.ATLAS = {
        "date": "2025-04",
        "kind": "product",
        "source": "https://www.zenml.io/llmops-database/auto-generated-codebase-documentation-and-intelligence-at-scale",
-       "verified": false
+       "verified": false,
+       "note": "Defines the topic; weak source, could not re-check (search limit reached)."
+      },
+      {
+       "name": "Context7 docs server passes 64k stars",
+       "summary": "Upstash's open-source MCP server, which feeds current, version-specific library documentation to coding agents, showed about 64k GitHub stars.",
+       "date": "2026-11",
+       "kind": "product",
+       "source": "https://github.com/upstash/context7",
+       "verified": true
+      },
+      {
+       "name": "AGENTS.md becomes a shared convention",
+       "summary": "The open 'README for agents' format for giving coding agents project context showed about 25k stars on its repository.",
+       "date": "2026-11",
+       "kind": "product",
+       "source": "https://github.com/agentsmd/agents.md",
+       "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "AGENTS.md open format",
+       "url": "https://github.com/agentsmd/agents.md",
+       "kind": "community",
+       "why": "The shared convention for giving coding agents project context and instructions."
+      },
+      {
+       "title": "Context7 MCP server",
+       "url": "https://github.com/upstash/context7",
+       "kind": "community",
+       "why": "See how up-to-date library docs are delivered to agents over MCP."
+      },
+      {
+       "title": "DeepWiki-Open",
+       "url": "https://github.com/AsyncFuncAI/deepwiki-open",
+       "kind": "community",
+       "why": "Self-hostable open-source wiki generator; shows how repo wikis are built."
       }
      ]
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "SWE-bench: code, data and leaderboards",
+     "url": "https://github.com/SWE-bench/SWE-bench",
+     "kind": "tracker",
+     "why": "The standard benchmark of real GitHub issues that coding agents are scored on."
+    },
+    {
+     "title": "METR: developer productivity study update",
+     "url": "https://metr.org/blog/2026-02-24-uplift-update/",
+     "kind": "report",
+     "why": "Careful account of why measuring AI speedup for developers is hard."
+    },
+    {
+     "title": "Terminal-Bench",
+     "url": "https://github.com/laude-institute/terminal-bench",
+     "kind": "tracker",
+     "why": "Benchmark of realistic terminal tasks, widely quoted in coding model launches."
+    },
+    {
+     "title": "GitHub blog: Agentic Workflows explained",
+     "url": "https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/",
+     "kind": "overview",
+     "why": "GitHub's own walkthrough of running coding agents inside CI with guardrails."
+    },
+    {
+     "title": "AGENTS.md open format",
+     "url": "https://github.com/agentsmd/agents.md",
+     "kind": "community",
+     "why": "The shared convention for giving coding agents project context and instructions."
     }
    ]
   },
   {
    "id": "enterprise",
    "name": "Agentic Enterprise",
-   "summary": "Companies are deploying agents for support, sales, finance and HR, and standardizing on MCP. Spending and valuations are high, but many pilots stall and agent security is unresolved.",
+   "summary": "Companies deploy agents for support, sales, finance and HR and standardize on MCP. Revenue and valuations are rising, but many pilots show no clear return and agent security is unresolved.",
    "regions": [
     {
      "id": "enterprise.support",
      "name": "Customer support agents",
-     "summary": "The most deployed enterprise agent use case. Startups like Sierra and Decagon reach multi-billion valuations, while some early adopters bring humans back.",
-     "activity": 5,
+     "summary": "The most deployed enterprise agent use case. Sierra and Decagon reach multi-billion valuations and pricing shifts to per resolution, while some early adopters bring humans back.",
+     "activity": 4,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "Sierra raises $950M at over $15B",
-       "summary": "Bret Taylor's customer experience agent company raised a Series E, the largest round yet for a support-agent startup.",
+       "summary": "Bret Taylor's customer experience agent company raised a Series E led by Tiger Global and GV; CNBC reported a $15.8B post-money valuation.",
        "date": "2026-05",
        "kind": "deal",
-       "source": "https://pulse2.com/sierra-950-million-raised-at-15-billion-valuation-for-ai-customer-experience-platform/",
+       "source": "https://techcrunch.com/2026/05/04/sierra-raises-950m-as-the-race-to-own-enterprise-ai-gets-serious",
        "verified": true
       },
       {
        "name": "Decagon $250M at $4.5B",
-       "summary": "Support agent startup tripled its valuation in about seven months in a round led by Coatue and Index.",
+       "summary": "Support agent startup tripled its valuation from mid-2025 in a Series D led by Coatue and Index Ventures.",
        "date": "2026-01",
        "kind": "deal",
-       "source": "https://ai2.work/blog/decagon-s-4-5b-valuation-signals-enterprise-ai-is-scaling-fast",
-       "verified": false
+       "source": "https://www.bloomberg.com/news/articles/2026-01-28/ai-customer-support-startup-decagon-valued-at-4-5-billion",
+       "verified": true
       },
       {
        "name": "Klarna brings human agents back",
-       "summary": "After saying its AI assistant did the work of 700 agents, Klarna's CEO said quality suffered and the company began rehiring human support staff.",
+       "summary": "After saying its AI assistant did the work of 700 agents, Klarna's CEO said the cost focus lowered quality and the firm resumed hiring human support staff.",
        "date": "2025-05",
        "kind": "debate",
        "source": "https://dc.fortune.com/2025/05/09/klarna-ai-humans-return-on-investment/",
        "verified": true
+      }
+     ],
+     "whyItMatters": "Support is where agents first replaced human work at scale, so it shows early what works and what quality costs follow.",
+     "openQuestion": "How much support can agents fully resolve before quality and customer trust suffer?",
+     "deepDives": [
+      {
+       "title": "CX Today: outcome-based pricing for service agents",
+       "url": "https://www.cxtoday.com/crm/hubspot-outcome-based-ai-pricing-breeze/",
+       "kind": "overview",
+       "why": "How vendors are moving from seats to pay-per-resolution pricing for support agents."
+      },
+      {
+       "title": "Gartner survey: AI-driven frontline service layoffs",
+       "url": "https://www.gartner.com/en/newsroom/press-releases/2026-04-23-gartner-survey-finds-31-percent-of-service-and-support-leaders-have-implemented-or-are-planning-ai-driven-frontline-layoffs-through-1q27",
+       "kind": "report",
+       "why": "Survey data on how many service leaders are actually cutting staff because of AI."
+      },
+      {
+       "title": "eMarketer: Klarna backtracks on AI customer service",
+       "url": "https://www.emarketer.com/content/klarna-backtracks-ai-customer-service-plans",
+       "kind": "overview",
+       "why": "Short analysis of the best-known case of an AI-first support strategy being dialled back."
       }
      ]
     },
     {
      "id": "enterprise.sales-marketing",
      "name": "Sales & marketing",
-     "summary": "CRM vendors sell agents for prospecting, outreach and service, some priced per outcome. Agentforce revenue is growing but still small next to the core business.",
+     "summary": "CRM vendors sell agents for prospecting, outreach and service, some priced per outcome. Agentforce passed $1B ARR but is still small next to Salesforce's core business.",
      "activity": 4,
      "maturity": "adopting",
      "landmarks": [
@@ -735,53 +1197,98 @@ window.ATLAS = {
        "verified": true
       },
       {
-       "name": "Agentforce passes $1B ARR",
-       "summary": "Salesforce's next quarterly results reportedly put Agentforce above $1B ARR, as Benioff pushed back on AI skeptics.",
+       "name": "Agentforce ARR reaches $1.2B",
+       "summary": "Salesforce's first quarter fiscal 2027 results put Agentforce ARR at about $1.2B, up 205% year on year, against quarterly revenue of $11.1B.",
        "date": "2026-05",
        "kind": "deal",
-       "source": "https://www.salesforceben.com/salesforce-q1-results-agentforce-hits-1b-arr-as-benioff-takes-aim-at-ai-doubters/",
-       "verified": false
+       "source": "https://www.salesforce.com/news/press-releases/2026/05/28/fy27-q1-earnings/",
+       "verified": true
       },
       {
-       "name": "HubSpot prospecting agent priced per lead",
-       "summary": "HubSpot's Breeze Prospecting Agent watches buying signals and drafts outreach, reportedly priced per qualified lead instead of per seat.",
-       "date": "2026-01",
+       "name": "HubSpot prices agents per outcome",
+       "summary": "HubSpot moved its Prospecting Agent to $1 per lead recommended for outreach and its Customer Agent to $0.50 per resolved conversation.",
+       "date": "2026-04",
        "kind": "product",
-       "source": "https://www.spotdev.co.uk/blog/hubspot-breeze-prospecting-agent",
-       "verified": false
+       "source": "https://www.hubspot.com/company-news/hubspots-customer-agent-and-prospecting-agent-now-you-pay-when-the-task-is-complete",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "CRM vendors are the test of whether agents add revenue to incumbent software or only replace seat licences.",
+     "openQuestion": "Will per-outcome pricing replace per-seat licences, and who decides what counts as an outcome?",
+     "deepDives": [
+      {
+       "title": "HubSpot: you pay when the task is complete",
+       "url": "https://www.hubspot.com/company-news/hubspots-customer-agent-and-prospecting-agent-now-you-pay-when-the-task-is-complete",
+       "kind": "overview",
+       "why": "The vendor's own definition of the billable outcome for sales and service agents."
+      },
+      {
+       "title": "MarTech: HubSpot moves to outcome-based pricing",
+       "url": "https://martech.org/hubspot-moves-to-outcome-based-pricing-for-some-breeze-ai-agents/",
+       "kind": "overview",
+       "why": "Independent trade analysis of what outcome pricing means for marketing and sales teams."
+      },
+      {
+       "title": "Salesforce Q1 FY27 results",
+       "url": "https://www.salesforce.com/news/press-releases/2026/05/28/fy27-q1-earnings/",
+       "kind": "report",
+       "why": "Primary numbers on Agentforce and Data 360 ARR relative to total Salesforce revenue."
       }
      ]
     },
     {
      "id": "enterprise.finance-ops",
      "name": "Finance & back office",
-     "summary": "ERP and accounting vendors embed agents for accruals, reconciliations and month-end close, with humans keeping sign-off. Deployments are early.",
+     "summary": "ERP and accounting vendors embed agents for accruals, reconciliations and month-end close, with humans keeping sign-off. Many features are still in pilot or restricted release.",
      "activity": 3,
      "maturity": "emerging",
      "landmarks": [
       {
        "name": "SAP Accounting Accruals Agent",
-       "summary": "Joule agent that reads accrual policies, pulls history and drafts journal entries for close, under a financial closing orchestration agent.",
+       "summary": "Joule agent that reads accrual policies, pulls history and drafts journal entries for accountants to review, in restricted availability.",
        "date": "2026-05",
        "kind": "product",
        "source": "https://erp.today/sap-accounting-accruals-agent-month-end-close/",
-       "verified": false
+       "verified": false,
+       "note": "Release confirmed by trade press; exact month not confirmed (search budget ran out)."
       },
       {
-       "name": "Intuit agentic books close",
-       "summary": "At Intuit Connect, Intuit added agentic monthly close to QuickBooks and its accountant suite, aimed at mid-market finance teams.",
+       "name": "Intuit Agentic Books Close",
+       "summary": "At Intuit Connect, Intuit announced an Accountant Suite add-on where agents run monthly close steps for review. It is in pilot with select firms.",
        "date": "2026-10",
        "kind": "product",
-       "source": "https://futurumgroup.com/?p=97190",
-       "verified": false
+       "source": "https://www.firmofthefuture.com/events/october-2026-intuit-connect-recap/",
+       "verified": true
       },
       {
        "name": "Intuit four mid-market finance agents",
-       "summary": "Intuit launched agents for finance, payments, accounting and project management in its Enterprise Suite.",
-       "date": "2026-08",
+       "summary": "Intuit launched finance, payments, accounting and project management agents in Intuit Enterprise Suite, its mid-market product.",
+       "date": "2025-07",
        "kind": "product",
-       "source": "https://getcoai.com/news/intuit-launches-4-ai-agents-saving-mid-market-finance-teams-20-hours-monthly/",
-       "verified": false
+       "source": "https://www.businesswire.com/news/home/20250722258162/en",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Finance needs audit trails and sign-off, so it tests whether agents can work under strict controls.",
+     "openQuestion": "Will auditors and CFOs accept agent-prepared entries without line-by-line human review?",
+     "deepDives": [
+      {
+       "title": "SAPinsider: autonomous finance, GRC and CFO governance",
+       "url": "https://sapinsider.org/blogs/sap-autonomous-finance-grc-cfo-governance/",
+       "kind": "overview",
+       "why": "How finance agents fit with controls and governance in SAP estates."
+      },
+      {
+       "title": "QuickBooks blog: Intuit advances its intelligence platform",
+       "url": "https://quickbooks.intuit.com/r/news/intuit-advances-intelligence-platform/",
+       "kind": "overview",
+       "why": "Intuit's own description of its agent roadmap for accountants and businesses."
+      },
+      {
+       "title": "Futurum: Intuit Intelligence and the accountant channel",
+       "url": "https://futurumgroup.com/?p=97190",
+       "kind": "report",
+       "why": "Analyst view on which Intuit agent features are live versus pilot or coming soon."
       }
      ]
     },
@@ -794,59 +1301,117 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Workday completes Paradox acquisition",
-       "summary": "Workday bought the conversational hiring agent behind about 1 in 10 US interviews scheduled, building an end-to-end AI hiring suite.",
+       "summary": "Workday bought the conversational hiring agent maker, reportedly for about $1B in cash, to pair with Workday Recruiting and HiredScore.",
        "date": "2025-10",
        "kind": "deal",
-       "source": "https://newsroom.workday.com/2025-10-01-Workday-Completes-Acquisition-of-Paradox",
+       "source": "https://newsroom.workday.com/2025-10-01-Workday-Completes-Acquisition-of-Paradox?asPDF=1",
        "verified": true
       },
       {
        "name": "Mobley v. Workday advances",
-       "summary": "A court largely denied Workday's bid to dismiss age and disability bias claims over AI screening, a test case for vendor liability.",
+       "summary": "Judge Rita Lin largely denied Workday's bid to dismiss and let California-law bias claims proceed, after a 2025 collective certification on age claims.",
        "date": "2026-06",
        "kind": "policy",
-       "source": "https://www.uctoday.com/talent-hcm-platforms/workday-argues-california-law-should-not-apply-in-ai-hiring-case-testing-ai-accountability/",
+       "source": "https://news.bloomberglaw.com/daily-labor-report/workday-loses-bid-to-toss-ai-discrimination-suit-in-california",
        "verified": true
       },
       {
        "name": "Juicebox $80M Series B",
-       "summary": "AI outbound recruiting agent that finds, emails and schedules candidates raised at an $850M valuation.",
+       "summary": "AI outbound recruiting platform raised a round led by DST Global at an $850M valuation and says it has over 5,000 customers.",
        "date": "2026-03",
        "kind": "deal",
        "source": "https://juicebox.ai/blog/juicebox-raises-80m-series-b",
        "verified": true
+      }
+     ],
+     "whyItMatters": "Hiring is a high-stakes use of agents where discrimination law applies directly to automated decisions.",
+     "openQuestion": "Is the vendor or the employer liable when an AI screening tool discriminates?",
+     "deepDives": [
+      {
+       "title": "Akin AI law tracker: Mobley v. Workday",
+       "url": "https://www.akingump.com/en/insights/ai-law-and-regulation-tracker/court-allows-discrimination-claims-against-ai-hiring-tool-to-proceed-or-mobley-v-workday-inc",
+       "kind": "tracker",
+       "why": "Entry in a running tracker of AI law and regulation, with the case background."
+      },
+      {
+       "title": "Fisher Phillips: Workday AI suit as a collective action",
+       "url": "https://www.fisherphillips.com/print/v2/content/41157/discrimination-lawsuit-over-workdays-ai-hiring-tools-can-proceed-as-class-action-6-things.pdf",
+       "kind": "overview",
+       "why": "Plain-language employer guide to the 2025 collective certification ruling."
+      },
+      {
+       "title": "Duane Morris Class Action Defense blog",
+       "url": "https://blogs.duanemorris.com/classactiondefense/2026/06/25/the-class-action-weekly-wire-episode-153-california-federal-court-grants-in-part-and-denies-in-part-motion-to-dismiss-in-algorithmic-bias-suit/",
+       "kind": "newsletter",
+       "why": "Regular legal commentary and podcast on algorithmic bias class actions."
+      },
+      {
+       "title": "CDF Labor Law: lessons from AI hiring litigation",
+       "url": "https://www.cdflaborlaw.com/blog/ai-hiring-litigation-key-lessons-for-employers",
+       "kind": "overview",
+       "why": "Summary of what recent cases mean for employers using AI screening tools."
       }
      ]
     },
     {
      "id": "enterprise.knowledge",
      "name": "Enterprise search & knowledge work",
-     "summary": "Work assistants search across company apps and run prebuilt agents. Glean grows quickly while Microsoft bundles agents into Office, though paid seat uptake is modest.",
+     "summary": "Work assistants search across company apps and run prebuilt agents. Glean grows quickly on usage-based revenue while Microsoft bundles Copilot and agent management into a top-tier suite.",
      "activity": 4,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "Glean passes $300M ARR",
-       "summary": "Enterprise search and agent vendor tripled revenue in 15 months, selling a neutral layer across SaaS apps.",
+       "summary": "Enterprise search and agent vendor says it tripled ARR in 15 months. TechCrunch notes the figure is usage-based, so not strictly recurring.",
        "date": "2026-05",
        "kind": "deal",
        "source": "https://glean.com/press/glean-surpasses-300m-arr-unrivaled-enterprise-context-fuels-ai-adoption",
        "verified": true
       },
       {
-       "name": "Microsoft 365 E7 and Agent 365",
-       "summary": "Microsoft bundled Copilot with Agent 365, a registry and control plane for agents, into a new top-tier suite.",
-       "date": "2026-03",
+       "name": "Microsoft 365 E7 and Agent 365 ship",
+       "summary": "Microsoft made Agent 365, a control plane for agents, and the E7 suite bundling it with Copilot generally available, at $15 and $99 per user a month.",
+       "date": "2026-05",
        "kind": "product",
-       "source": "https://itbrief.co.uk/story/microsoft-unveils-agent-365-new-microsoft-365-e7-suite",
-       "verified": false
+       "source": "https://redmondmag.com/articles/2026/05/01/microsoft-agent-365-goes-live-as-company-unveils-e7-suite.aspx",
+       "verified": true
+      },
+      {
+       "name": "Glean valued at $7.2B",
+       "summary": "Glean raised a $150M Series F led by Wellington Management, valuing the enterprise search company at $7.2B.",
+       "date": "2025-06",
+       "kind": "deal",
+       "source": "https://aimagazine.com/news/glean-enterprise-ai-search-and-ai-agents-pass-us-300m-in-ar",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Whoever holds company context across apps is positioned to become the default front end for work agents.",
+     "openQuestion": "Will a neutral layer like Glean hold against assistants bundled into Microsoft and Google suites?",
+     "deepDives": [
+      {
+       "title": "Microsoft partner blog: Microsoft 365 E7 availability",
+       "url": "https://partner.microsoft.com/en-US/blog/article/microsoft-365-e7-general-availability",
+       "kind": "overview",
+       "why": "What the E7 bundle includes and how Microsoft packages Copilot with agent governance."
+      },
+      {
+       "title": "Microsoft partner blog: Agent 365 announcement",
+       "url": "https://partner.microsoft.com/en-lb/blog/article/agent-365-announcement",
+       "kind": "overview",
+       "why": "Microsoft's description of its registry and control plane for enterprise agents."
+      },
+      {
+       "title": "TechCrunch: Glean's top line crosses $300M",
+       "url": "https://techcrunch.com/2026/05/28/gleans-top-line-crosses-300m-as-ai-budget-cutting-becomes-its-major-selling-point/",
+       "kind": "overview",
+       "why": "Explains consumption revenue and the token-cost argument for a context layer."
       }
      ]
     },
     {
      "id": "enterprise.protocols",
      "name": "Agent platforms & protocols (MCP, A2A)",
-     "summary": "MCP is the default way to connect agents to tools, now under neutral foundation governance with A2A. Labs compete to be the enterprise agent platform.",
+     "summary": "MCP is the default way to connect agents to tools, now under neutral foundation governance alongside A2A. Labs and suite vendors compete to be the enterprise agent platform.",
      "activity": 5,
      "maturity": "adopting",
      "landmarks": [
@@ -855,12 +1420,12 @@ window.ATLAS = {
        "summary": "Linux Foundation body launched with Anthropic's MCP, Block's goose and OpenAI's AGENTS.md as founding projects.",
        "date": "2025-12",
        "kind": "policy",
-       "source": "https://www.techzine.eu/news/infrastructure/137131/newly-launched-agentic-ai-foundation-to-take-charge-of-mcps-future",
+       "source": "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation",
        "verified": true
       },
       {
        "name": "OpenAI Frontier",
-       "summary": "Enterprise platform to build, deploy and manage agents, including third-party ones, with HP, Intuit, Oracle and Uber as early users.",
+       "summary": "Enterprise platform to build, deploy and manage agents, including third-party ones, with HP, Intuit, Oracle and Uber among early adopters.",
        "date": "2026-02",
        "kind": "product",
        "source": "https://openai.com/index/introducing-openai-frontier/",
@@ -868,51 +1433,107 @@ window.ATLAS = {
       },
       {
        "name": "A2A joins the AAIF",
-       "summary": "Google's agent-to-agent protocol reportedly became an AAIF project, placing it under the same governance as MCP.",
+       "summary": "Google's agent-to-agent protocol, at the Linux Foundation since 2025, moved into the AAIF, the same home as MCP.",
        "date": "2026-08",
        "kind": "policy",
-       "source": "https://blckalpaca.at/fr/base-de-connaissances/agents-ia/protocole-agent-to-agent-a2a/ce-que-la-linux-foundation-et-laaif-signifient-pour-mcp-et-lia-agentique",
-       "verified": false
+       "source": "https://axios.com/2026/08/17/a2a-agentic-ai-foundation-open-ai-standards",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Shared protocols decide whether enterprise agents interoperate or stay locked into one vendor's platform.",
+     "openQuestion": "Will open protocols keep agent platforms interoperable, or will a few vendors control the layer?",
+     "deepDives": [
+      {
+       "title": "Linux Foundation: formation of the AAIF",
+       "url": "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation",
+       "kind": "overview",
+       "why": "Primary statement of the foundation's scope, founding projects and members."
+      },
+      {
+       "title": "WorkOS: the Linux Foundation launches the AAIF",
+       "url": "https://workos.com/blog/the-linux-foundation-launches-the-aaif",
+       "kind": "overview",
+       "why": "Developer-oriented explainer of MCP, goose and AGENTS.md and why governance moved."
+      },
+      {
+       "title": "OpenAI: introducing Frontier",
+       "url": "https://openai.com/index/introducing-openai-frontier/",
+       "kind": "overview",
+       "why": "How one lab frames the enterprise agent platform: identity, permissions, shared context."
+      },
+      {
+       "title": "Futurum: OpenAI Frontier analysis",
+       "url": "https://futurumgroup.com/insights/openai-frontier-close-the-enterprise-ai-opportunity-gap-or-widen-it/",
+       "kind": "report",
+       "why": "Analyst assessment of the platform play and its lock-in risks."
       }
      ]
     },
     {
      "id": "enterprise.governance",
      "name": "Agent governance, identity & security",
-     "summary": "Identity vendors and NIST define how agents get credentials and owners, while prompt injection causes real data leaks on major agent platforms.",
+     "summary": "Identity vendors and NIST are defining how agents get credentials and owners, while prompt injection has caused demonstrated data leaks on major agent platforms.",
      "activity": 4,
      "maturity": "emerging",
      "landmarks": [
       {
-       "name": "Okta for AI Agents",
-       "summary": "Identity product giving each agent its own identity, a human owner and an off switch, plus a cross-app access protocol for federation.",
-       "date": "2026-04",
+       "name": "Okta Agent SSO generally available",
+       "summary": "Okta added agent identities with short-lived scoped access to core SSO, built on Cross App Access, now an MCP authorization extension.",
+       "date": "2026-08",
        "kind": "product",
-       "source": "https://www.okta.com/en-sg/blog/ai/okta-ai-agents-early-access-announcement/",
-       "verified": false
+       "source": "https://okta.com/newsroom/press-releases/okta-brings-first-class-identity-to-ai-agents-with-agent-sso/",
+       "verified": true
       },
       {
        "name": "NIST AI Agent Standards Initiative",
-       "summary": "NIST's CAISI launched work on agent security and identity standards, later publishing ten design tenets for agent identity systems.",
+       "summary": "NIST's CAISI launched work on agent interoperability, security and identity, with a request for information and an identity concept paper.",
        "date": "2026-02",
        "kind": "policy",
-       "source": "https://labs.cloudsecurityalliance.org/research/csa-research-note-okta-ai-agent-iam-framework-enterprise-gap/",
-       "verified": false
+       "source": "https://nist.gov/news-events/news/2026/02/announcing-ai-agent-standards-initiative-interoperable-and-secure",
+       "verified": true
       },
       {
-       "name": "Prompt injection leaks in enterprise agents",
-       "summary": "Researchers showed injected instructions could make enterprise agents on Microsoft and Salesforce platforms leak corporate data.",
+       "name": "ShareLeak and PipeLeak disclosed",
+       "summary": "Capsule Security showed that text in public forms could make Copilot Studio and Agentforce agents leak data; Microsoft assigned CVE-2026-21520.",
        "date": "2026-04",
        "kind": "incident",
-       "source": "https://oecd.ai/en/incidents/2026-04-15-d934",
+       "source": "https://venturebeat.com/security/microsoft-salesforce-copilot-agentforce-prompt-injection-cve-agent-remediation-playbook",
        "verified": true
+      }
+     ],
+     "whyItMatters": "Agents act with real credentials, so unsolved prompt injection turns ordinary inputs like web forms into attack paths.",
+     "openQuestion": "Can prompt injection be contained well enough for agents to act on untrusted input with real permissions?",
+     "deepDives": [
+      {
+       "title": "NIST AI Agent Standards Initiative page",
+       "url": "https://www.nist.gov/caisi/ai-agent-standards-initiative",
+       "kind": "tracker",
+       "why": "The official hub for NIST's agent security and identity deliverables as they appear."
+      },
+      {
+       "title": "CSA research note: NIST agent standards and enterprise",
+       "url": "https://labs.cloudsecurityalliance.org/research/csa-research-note-nist-ai-agent-standards-initiative-2026040/",
+       "kind": "report",
+       "why": "Cloud Security Alliance reading of what the NIST work means for security teams."
+      },
+      {
+       "title": "OECD AI Incidents Monitor: Microsoft and Salesforce agents",
+       "url": "https://oecd.ai/en/incidents/2026-04-15-d934",
+       "kind": "tracker",
+       "why": "Entry in the OECD's running database of AI incidents, with linked coverage."
+      },
+      {
+       "title": "Pillsbury: NIST AI agent standards explained",
+       "url": "https://www.pillsburylaw.com/en/news-and-insights/nist-ai-agent-standards.html",
+       "kind": "overview",
+       "why": "Legal explainer of the initiative's pillars and comment opportunities."
       }
      ]
     },
     {
      "id": "enterprise.browser",
      "name": "Computer-use & browser agents",
-     "summary": "Agents that click through websites and desktops are improving but still fail most long tasks. Standalone AI browsers have struggled; extensions persist.",
+     "summary": "Agents that click through websites and desktops are improving but still fail most long tasks. OpenAI retired its standalone browser and moved agent features into an extension and apps.",
      "activity": 3,
      "maturity": "emerging",
      "landmarks": [
@@ -922,30 +1543,47 @@ window.ATLAS = {
        "date": "2025-10",
        "kind": "product",
        "source": "https://www.techradar.com/ai-platforms-assistants/chatgpt/openai-takes-on-chrome-with-chatgpt-atlas-browser-for-macos-and-windows-ios-and-android-are-coming-soon",
-       "verified": true
+       "verified": false,
+       "note": "Date fits shutdown coverage (nine months later); launch source not rechecked."
       },
       {
        "name": "OpenAI retires Atlas",
-       "summary": "Reports say OpenAI shut down Atlas under a year after launch and moved agentic browsing into ChatGPT and Codex.",
-       "date": "2026-08",
+       "summary": "OpenAI said Atlas would shut down on 9 August, about nine months after launch, moving features to a Chrome extension, the desktop app and a cloud browser.",
+       "date": "2026-07",
        "kind": "incident",
-       "source": "https://pasqualepillitteri.it/en/news/7783/openai-shuts-down-atlas-agentic-features-move-to",
-       "verified": false
+       "source": "https://techradar.com/pro/openai-shuts-down-its-atlas-browser-after-not-even-a-year",
+       "verified": true
       },
       {
        "name": "OSWorld 2.0 long-horizon results",
-       "summary": "A harder computer-use benchmark of 108 long tasks reportedly saw the top model complete only about 20%, showing the gap to reliable use.",
-       "date": "2026-09",
+       "summary": "A harder computer-use benchmark of 108 long tasks found the top setup, Claude Opus 4.8, fully completed about 21% of tasks with a 55% partial score.",
+       "date": "2026-06",
        "kind": "research",
-       "source": "https://nerdleveltech.com/ai-browser-agents-claude-chatgpt-gemini",
-       "verified": false
+       "source": "https://snorkel.ai/research-paper/os-world-2/",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Computer use lets agents work in software that has no API, which is most enterprise software.",
+     "openQuestion": "When will computer-use agents finish long multi-step tasks reliably enough to run unattended?",
+     "deepDives": [
+      {
+       "title": "Epoch AI: OSWorld 2.0 benchmark page",
+       "url": "https://epoch.ai/benchmarks/osworld-2",
+       "kind": "tracker",
+       "why": "Tracked model scores on long-horizon computer-use tasks over time."
+      },
+      {
+       "title": "OSWorld 2.0 paper summary (Snorkel AI)",
+       "url": "https://snorkel.ai/research-paper/os-world-2/",
+       "kind": "paper",
+       "why": "Benchmark design, checkpoint grading and the failure modes agents show on long tasks."
       }
      ]
     },
     {
      "id": "enterprise.roi",
      "name": "Adoption, ROI & failure rates",
-     "summary": "Spending keeps rising, but studies and analysts report most pilots never reach production or measurable return, fueling debate over agent hype.",
+     "summary": "Spending keeps rising, but studies and analysts report most pilots never reach measurable return and that AI-linked job cuts do not track ROI, fueling debate over agent hype.",
      "activity": 4,
      "maturity": "adopting",
      "landmarks": [
@@ -955,43 +1593,140 @@ window.ATLAS = {
        "date": "2025-08",
        "kind": "research",
        "source": "https://fortune.com/2025/08/18/mit-report-95-percent-generative-ai-pilots-at-companies-failing-cfo/",
-       "verified": true
+       "verified": false,
+       "note": "Widely reported in Aug 2025; not rechecked this pass (search budget ran out)."
       },
       {
        "name": "Gartner: 40% of agent projects to be cut",
-       "summary": "Gartner predicted over 40% of agentic AI projects will be canceled by end of 2027 and warned of 'agent washing' by vendors.",
+       "summary": "Gartner predicted over 40% of agentic AI projects will be canceled by end of 2027 and said only about 130 vendors offer real agentic products.",
        "date": "2025-06",
        "kind": "research",
-       "source": "https://www.silicon.eu/gartner-over-40-percent-of-agentic-ai-projects-will-be-discontinued-by-the-end-of-2027-18197.html",
+       "source": "https://www.thestar.com.my/tech/tech-news/2025/06/25/over-40-of-agentic-ai-projects-will-be-scrapped-by-2027-gartner-says",
        "verified": true
       },
       {
-       "name": "Firms reverse AI staff cuts",
-       "summary": "Coverage of Klarna, Ford and others cites Gartner findings that replacing workers with AI does not reliably improve financial results.",
-       "date": "2026-07",
-       "kind": "debate",
-       "source": "https://invezz.com/news/2026/07/01/from-klarna-to-ford-why-companies-are-bringing-humans-back-after-betting-big-on-ai/",
-       "verified": false
+       "name": "Gartner: half of AI service cuts reversed",
+       "summary": "Gartner predicted that by 2027 half of companies that cut customer service staff because of AI will rehire for similar work under new titles.",
+       "date": "2026-02",
+       "kind": "research",
+       "source": "https://www.gartner.com/en/newsroom/press-releases/2026-02-03-gartner-predicts-half-of-companies-that-cut-customer-service-staff-due-to-ai-will-rehire-by-2027",
+       "verified": true
+      },
+      {
+       "name": "Gartner: job cuts not linked to AI ROI",
+       "summary": "A Gartner survey of 350 executives at large firms reportedly found about 80% had cut headcount, with no correlation to higher returns on AI.",
+       "date": "2026-05",
+       "kind": "research",
+       "source": "https://dc.fortune.com/2026/05/11/ai-automation-layoffs-gartner-study-roi/",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Valuations and budgets assume agents pay off, and the evidence so far is mixed and often vendor-supplied.",
+     "openQuestion": "Is weak measured ROI a deployment lag that will close, or a sign that agent value is overstated?",
+     "deepDives": [
+      {
+       "title": "Gartner: rehiring after AI service cuts",
+       "url": "https://www.gartner.com/en/newsroom/press-releases/2026-02-03-gartner-predicts-half-of-companies-that-cut-customer-service-staff-due-to-ai-will-rehire-by-2027",
+       "kind": "report",
+       "why": "Analyst prediction and survey data on how far AI has actually reduced service staffing."
+      },
+      {
+       "title": "Gartner survey: AI-driven frontline layoffs",
+       "url": "https://www.gartner.com/en/newsroom/press-releases/2026-04-23-gartner-survey-finds-31-percent-of-service-and-support-leaders-have-implemented-or-are-planning-ai-driven-frontline-layoffs-through-1q27",
+       "kind": "report",
+       "why": "What service leaders say they have done or plan to do on AI-linked layoffs."
+      },
+      {
+       "title": "People Matters: employers regretting AI layoffs",
+       "url": "https://www.peoplematters.in/news/business/55percent-of-employers-regret-ai-layoffs-gartner-predicts-more-rehires-by-2027-51167",
+       "kind": "overview",
+       "why": "Pulls together Forrester and Gartner findings on AI layoffs and rehiring."
       }
      ]
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "NIST AI Agent Standards Initiative page",
+     "url": "https://www.nist.gov/caisi/ai-agent-standards-initiative",
+     "kind": "tracker",
+     "why": "Official hub for US standards work on agent security, identity and interoperability."
+    },
+    {
+     "title": "Linux Foundation: formation of the AAIF",
+     "url": "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation",
+     "kind": "overview",
+     "why": "Who governs MCP and related agent standards, and which companies back them."
+    },
+    {
+     "title": "Epoch AI: OSWorld 2.0 benchmark page",
+     "url": "https://epoch.ai/benchmarks/osworld-2",
+     "kind": "tracker",
+     "why": "A live measure of how well agents complete long computer tasks."
+    },
+    {
+     "title": "OECD AI Incidents Monitor: enterprise agent leaks",
+     "url": "https://oecd.ai/en/incidents/2026-04-15-d934",
+     "kind": "tracker",
+     "why": "Entry point to a public database of AI incidents, including agent data leaks."
+    },
+    {
+     "title": "Gartner: rehiring after AI service cuts",
+     "url": "https://www.gartner.com/en/newsroom/press-releases/2026-02-03-gartner-predicts-half-of-companies-that-cut-customer-service-staff-due-to-ai-will-rehire-by-2027",
+     "kind": "report",
+     "why": "Analyst evidence on the gap between AI staffing claims and outcomes."
     }
    ]
   },
   {
    "id": "legal",
    "name": "Legal",
-   "summary": "Legal AI startups are raising multibillion-dollar rounds, courts keep sanctioning fabricated citations, copyright cases over training data are splitting, and AI-specific laws are being delayed or contested.",
+   "summary": "Legal AI startups are raising at multibillion-dollar valuations, courts keep sanctioning fabricated citations, copyright rulings on training data are diverging, and AI-specific laws are being delayed or contested.",
+   "deepDives": [
+    {
+     "title": "AI Hallucination Cases database (Damien Charlotin)",
+     "url": "https://www.damiencharlotin.com/hallucinations/",
+     "kind": "tracker",
+     "why": "Live, searchable list of court decisions worldwide involving AI-fabricated citations."
+    },
+    {
+     "title": "Akin AI Law & Regulation Tracker",
+     "url": "https://www.akingump.com/en/insights/ai-law-and-regulation-tracker",
+     "kind": "tracker",
+     "why": "Running log of AI statutes, agency actions and court rulings, mostly US with some EU."
+    },
+    {
+     "title": "CMS AI and copyright case tracker",
+     "url": "https://cms.law/en/mar/publication/artificial-intelligence-and-copyright-case-tracker/united-kingdom-getty-images-us-inc-ors-v-stability-ai-ltd2",
+     "kind": "tracker",
+     "why": "Case-by-case summaries of AI copyright litigation across jurisdictions, with status updates."
+    },
+    {
+     "title": "LawNext (Bob Ambrogi)",
+     "url": "https://www.lawnext.com/",
+     "kind": "newsletter",
+     "why": "Long-running independent reporting on legal tech products, funding and courts' use of AI."
+    },
+    {
+     "title": "Artificial Lawyer",
+     "url": "https://www.artificiallawyer.com/",
+     "kind": "newsletter",
+     "why": "Daily trade coverage of legal AI vendors, law firm adoption and deals, with a UK and EU lens."
+    }
+   ],
    "regions": [
     {
      "id": "legal.contracts",
      "name": "Contract review & drafting",
-     "summary": "AI platforms for drafting, due diligence and document review are used by large firms and in-house teams. Two startups, Harvey and Legora, are raising rounds at rapidly rising valuations.",
+     "summary": "AI platforms for drafting, due diligence and document review are used by large firms and in-house teams. Harvey and Legora, the two best-funded startups, keep raising at higher valuations.",
      "activity": 4,
      "maturity": "adopting",
+     "whyItMatters": "Law is one of the clearest tests of whether vertical AI applications can build durable businesses on top of general models.",
+     "openQuestion": "Will specialist legal platforms hold their ground as general-purpose model providers ship their own legal tools?",
      "landmarks": [
       {
        "name": "Harvey raises $550M at $15.5B",
-       "summary": "Legal AI company Harvey raised $550M co-led by Diffusion and Lightspeed, up from an $11B valuation in March 2026; it reports 100,000+ lawyer users.",
+       "summary": "Harvey raised $550M co-led by Diffusion and Lightspeed, under six months after an $11B round, and bought Guardrails AI. It says 80% of the Am Law 100 use it.",
        "date": "2026-09",
        "kind": "deal",
        "source": "https://www.harvey.ai/blog/harvey-raises-dollar550m-at-a-dollar155b-valuation-to-help-legal-teams-own-their-intelligence",
@@ -999,225 +1734,423 @@ window.ATLAS = {
       },
       {
        "name": "Legora Series E at $8.8B",
-       "summary": "Swedish rival Legora closed a $550M Series E at an $8.8B post-money valuation, months after a $5.6B round, to fund US expansion.",
+       "summary": "Swedish-founded Legora raised a $550M Series E led by Atreides at an $8.8B post-money valuation, up from $5.6B in spring. It says the US is now its largest market.",
        "date": "2026-10",
        "kind": "deal",
-       "source": "https://legora.com/blog/series-e",
+       "source": "https://artificiallawyer.com/2026/10/21/legora-raises-550m-at-8-8bn-valuation",
        "verified": true
       },
       {
        "name": "Harvey $11B round led by GIC and Sequoia",
-       "summary": "A $200M round valued Harvey at $11B, taking total funding past $1B and showing investor appetite for agent tools for M&A, diligence and drafting.",
+       "summary": "A $200M round valued Harvey at $11B and took total funding past $1B. The company reported 100,000 lawyers across 1,300 organisations and pitched agents for legal work.",
        "date": "2026-03",
        "kind": "deal",
-       "source": "https://news.bloomberglaw.com/bloomberg-government-news/legal-ai-startup-harvey-raises-funds-at-11-billion-valuation",
+       "source": "https://www.harvey.ai/blog/harvey-raises-growth-round-at-dollar11-billion-valuation-co-led-by-gic-and-sequoia",
        "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "Artificial Lawyer",
+       "url": "https://www.artificiallawyer.com/",
+       "kind": "newsletter",
+       "why": "Tracks legal AI funding rounds, product launches and law firm rollouts as they happen."
+      },
+      {
+       "title": "Legal IT Insider: Harvey raises $550m",
+       "url": "https://legaltechnology.com/harvey-raises-550m-at-15-5bn-valuation/",
+       "kind": "overview",
+       "why": "Independent trade write-up that puts the Harvey round in context of the wider market."
+      },
+      {
+       "title": "ABA Journal: Harvey's latest round",
+       "url": "https://www.abajournal.com/news/article/harvey-raises-550-million-in-latest-round-of-funding",
+       "kind": "overview",
+       "why": "Profession-facing account of what the leading legal AI platform does and who uses it."
       }
      ]
     },
     {
      "id": "legal.research",
      "name": "Legal research & hallucinated citations",
-     "summary": "AI research tools are common, but fabricated case citations in filings keep growing. A public tracker counts over 1,600 court decisions worldwide, and sanctions are rising.",
+     "summary": "AI research tools are common, but fabricated citations in court filings keep growing. A public tracker lists well over 1,500 decisions worldwide, and sanctions are getting heavier.",
      "activity": 4,
      "maturity": "adopting",
+     "whyItMatters": "Courts are the most public place where the cost of unverified AI output is being measured and penalised.",
+     "openQuestion": "Do sanctions and verification rules reduce fabricated filings, or does growing AI use simply outpace them?",
      "landmarks": [
       {
-       "name": "Hallucination case tracker passes 1,600",
-       "summary": "Damien Charlotin's database of court decisions involving AI-fabricated content reached about 1,624 cases by June 2026, up from about 719 in January.",
+       "name": "Hallucination case tracker nears 1,600",
+       "summary": "Damien Charlotin's database of court decisions involving AI-fabricated content listed about 1,600 cases by June 2026; later reports put it near 2,000.",
        "date": "2026-06",
        "kind": "incident",
        "source": "https://haqq.ai/blog/ai-legal-hallucination-audit.html",
-       "verified": true
+       "verified": true,
+       "note": "Count taken from a secondary audit of the database; live total changes daily."
       },
       {
        "name": "$145K in sanctions in Q1 2026",
-       "summary": "US courts imposed at least $145,000 in sanctions for fabricated citations in the first quarter of 2026, signaling less tolerance for unchecked AI filings.",
+       "summary": "A ComplexDiscovery tally found US courts imposed at least $145,000 in sanctions over AI-fabricated citations in Q1 2026, most of it in one Oregon case.",
        "date": "2026-04",
        "kind": "incident",
-       "source": "https://www.jdsupra.com/legalnews/the-ai-sanction-wave-145k-in-q1-1240943/",
+       "source": "https://complexdiscovery.com/the-ai-sanction-wave-145k-in-q1-penalties-signals-courts-have-lost-patience-with-genai-filing-failures",
        "verified": true
       },
       {
        "name": "Three years of handling hallucinations",
-       "summary": "UNC law library review traces how courts, bars and firms have responded to AI hallucinations since 2023, from standing orders to verification duties.",
+       "summary": "A UNC law library review looks back at how courts and the profession have responded to AI hallucinations in filings over the three years since the first cases.",
        "date": "2026-06",
        "kind": "debate",
        "source": "https://library.law.unc.edu/2026/06/handling-hallucinations-a-reflection/",
        "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "AI Hallucination Cases database (Damien Charlotin)",
+       "url": "https://www.damiencharlotin.com/hallucinations/",
+       "kind": "tracker",
+       "why": "The reference dataset: each decision with court, party type, what was fabricated and the outcome."
+      },
+      {
+       "title": "UNC Law Library: Handling Hallucinations",
+       "url": "https://library.law.unc.edu/2026/06/handling-hallucinations-a-reflection/",
+       "kind": "overview",
+       "why": "Readable three-year retrospective from law librarians on how the problem and responses evolved."
+      },
+      {
+       "title": "UIC Law Library: Flood of AI-related sanctions persists",
+       "url": "https://library.law.uic.edu/news-stories/flood-of-ai-related-sanctions-persist/",
+       "kind": "overview",
+       "why": "Short guide to recent sanctions orders with pointers to the underlying cases."
+      },
+      {
+       "title": "Bloomberg Law: AI-faked cases irritate overworked judges",
+       "url": "https://news.bloombergtax.com/cannabis/ai-faked-cases-become-core-issue-irritating-overworked-judges",
+       "kind": "overview",
+       "why": "Reported feature on how judges are experiencing and responding to fabricated citations."
       }
      ]
     },
     {
      "id": "legal.ediscovery",
      "name": "E-discovery & litigation support",
-     "summary": "Generative AI document review is now bundled into major e-discovery platforms, pushing per-document prices down and driving consolidation among vendors.",
+     "summary": "Generative AI document review is being folded into the standard price of major e-discovery platforms, shifting competition from AI add-ons to all-inclusive pricing.",
      "activity": 3,
      "maturity": "adopting",
+     "whyItMatters": "Document review is a large, measurable legal task where AI is already replacing billable human hours at scale.",
+     "openQuestion": "Will courts and opposing parties accept generative AI review with the same confidence as earlier predictive coding?",
      "landmarks": [
       {
-       "name": "Relativity bundles aiR at no extra charge",
-       "summary": "Relativity said aiR for Review and aiR for Privilege would be included in standard RelativityOne from early 2026, making AI review a default feature.",
-       "date": "2026-01",
+       "name": "Relativity makes aiR standard",
+       "summary": "At Relativity Fest, Relativity said aiR for Review and aiR for Privilege would move from paid add-ons into standard RelativityOne pricing in 2026.",
+       "date": "2025-10",
        "kind": "product",
-       "source": "https://pdpspectra.com/blog/ai-legal-ediscovery-2026",
-       "verified": false
+       "source": "https://abovethelaw.com/2025/10/relativity-offers-key-ai-products-at-no-extra-charge-but-thats-not-the-most-important-thing",
+       "verified": true
       },
       {
        "name": "DISCO all-inclusive AI platform",
-       "summary": "DISCO combined e-discovery, its Cecilia AI assistant, depositions and timelines in one package at no added charge, part of a wider AI pricing reset.",
+       "summary": "DISCO bundled e-discovery, Cecilia AI, deposition management and timelines into one platform priced per GB of processed data, with no separate AI charge.",
        "date": "2026-02",
        "kind": "product",
-       "source": "https://blog.platinumids.com/blog/ediscovery-pricing-revolution-2026",
-       "verified": false
+       "source": "https://csdisco.com/pressrelease/disco-announces-all-inclusive-platform-for-ediscovery",
+       "verified": true
+      },
+      {
+       "name": "Relativity announces Clair assistant",
+       "summary": "Relativity announced Clair, a conversational AI assistant for lawyers, ahead of availability. aiR for Case Strategy remains a separately priced add-on.",
+       "date": "2026-08",
+       "kind": "product",
+       "source": "https://lawnext.com/2026/08/relativity-announces-clair-a-conversational-ai-for-lawyers-but-youll-have-to-wait-awhile-to-chat-with-it.html",
+       "verified": true
       },
       {
        "name": "ILTACON e-discovery AI announcements",
-       "summary": "At ILTACON 2026, DISCO, Everlaw, Nuix, Relativity and Reveal announced new generative AI features, chat tools and partnerships.",
+       "summary": "LawNext's ILTACON 2026 round-up covers new AI announcements from DISCO, Everlaw, Nuix, Relativity and Reveal.",
        "date": "2026-09",
        "kind": "product",
        "source": "https://www.lawnext.com/2026/09/iltacon-news-round-up-part-1-e-discovery-disco-everlaw-nuix-relativity-reveal.html",
        "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "eDiscovery Today (Doug Austin)",
+       "url": "https://ediscoverytoday.com/",
+       "kind": "newsletter",
+       "why": "Daily practitioner blog on e-discovery case law, vendor news and AI trends."
+      },
+      {
+       "title": "EDRM",
+       "url": "https://edrm.net/",
+       "kind": "community",
+       "why": "Standards body behind the e-discovery reference model, with guidance and working groups on AI."
+      },
+      {
+       "title": "DWF: reflections from Relativity Fest 2025",
+       "url": "https://dwfgroup.com/it-it/news-and-insights/insights/2025/10/a-new-era-for-ediscovery-reflections-from-relativity-fest-2025",
+       "kind": "overview",
+       "why": "A law firm's view of what bundled generative AI review changes for practitioners."
+      },
+      {
+       "title": "ComplexDiscovery",
+       "url": "https://complexdiscovery.com/",
+       "kind": "newsletter",
+       "why": "Analysis of e-discovery markets, pricing and AI governance for litigation support teams."
       }
      ]
     },
     {
      "id": "legal.compliance",
      "name": "Regulatory compliance",
-     "summary": "Banks and firms use AI for regulatory change monitoring, KYC and AML, mostly with humans in the loop. Supervisors have not yet set clear rules for generative AI models.",
+     "summary": "Banks and firms use AI for regulatory change monitoring, KYC and AML, mostly with humans in the loop. US supervisors updated model risk guidance but left generative AI out of scope.",
      "activity": 3,
      "maturity": "adopting",
+     "whyItMatters": "Regulated industries show how far AI can go where every automated decision must be explainable to a supervisor.",
+     "openQuestion": "How will supervisors expect banks to validate and govern generative and agentic AI systems?",
      "landmarks": [
       {
        "name": "US bank regulators issue SR 26-2",
-       "summary": "Fed, OCC and FDIC replaced 2011 model risk guidance but excluded generative and agentic AI from scope, leaving banks without a specific framework for them.",
+       "summary": "The Fed, OCC and FDIC replaced 2011 model risk guidance (SR 11-7) in April 2026 but excluded generative and agentic AI from scope, citing how new they are.",
        "date": "2026-04",
        "kind": "policy",
-       "source": "https://www.monitaur.ai/blog-posts/governing-generative-and-agentic-ai-under-sr-26-2-what-financial-institutions-need-to-know",
+       "source": "https://www.forvismazars.us/forsights/2026/06/implications-of-the-updated-interagency-mrm-guidance",
        "verified": true
       },
       {
-       "name": "RegTech operationalisation benchmark",
-       "summary": "Ascent RegTech's 2026 benchmark argues AI now detects rule changes well, and the bottleneck is turning them into updated policies and controls.",
+       "name": "Few banks have a defined AI strategy",
+       "summary": "A Wolters Kluwer survey of 148 financial institutions found about 12% call their AI strategy well-defined and resourced, though about 61% are piloting or in production.",
+       "date": "2026-02",
+       "kind": "research",
+       "source": "https://www.wolterskluwer.com/en/expert-insights/wolters-kluwer-q1-2026-banking-compliance-ai-trend-report",
+       "verified": true
+      },
+      {
+       "name": "Vendor survey: execution is the bottleneck",
+       "summary": "Ascent's 2026 RegTech survey reports 57% of firms cite slow manual processes as their top challenge; 46% see AI as transformational, 41% find current tools underwhelming.",
        "date": "2026-05",
        "kind": "research",
        "source": "https://fintech.global/2026/05/26/how-ai-is-fixing-regtechs-operationalisation-problem/",
-       "verified": true
+       "verified": true,
+       "note": "Vendor-run survey reported by a trade outlet; treat percentages as self-reported."
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "CRA: Model risk guidance SR 26-2 in the era of AI",
+       "url": "https://media.crai.com/wp-content/uploads/2026/07/09165122/FE-Insights-MRM-Guidance-SR-26-2-In-the-Era-of-AI-July2026.pdf",
+       "kind": "report",
+       "why": "Explains what the new guidance changes and what the generative AI carve-out leaves open."
       },
       {
-       "name": "Few firms have a defined AI strategy",
-       "summary": "A Wolters Kluwer Q1 2026 survey found only about 12% of financial institutions call their AI strategy well-defined and resourced.",
-       "date": "2026-03",
-       "kind": "research",
-       "source": "",
-       "verified": false
+       "title": "Management Solutions: technical note on SR 26-2",
+       "url": "https://www.managementsolutions.com/en/publications-and-events/regulatory-notes/technical-notes-on-regulations/sr-26-2-revised-guide-model-risk-management",
+       "kind": "overview",
+       "why": "Section-by-section summary of the revised interagency model risk guidance."
+      },
+      {
+       "title": "Wolters Kluwer Q1 2026 Banking Compliance AI Trend Report",
+       "url": "https://www.wolterskluwer.com/en/expert-insights/wolters-kluwer-q1-2026-banking-compliance-ai-trend-report",
+       "kind": "report",
+       "why": "Survey data on where bank compliance teams are with AI adoption, governance and policies."
+      },
+      {
+       "title": "Wolters Kluwer AI Risk and Governance Index",
+       "url": "https://www.wolterskluwer.com/en/expert-insights/ai-risk-and-governance-index",
+       "kind": "report",
+       "why": "Follow-up benchmark on AI governance readiness among banking institutions."
       }
      ]
     },
     {
      "id": "legal.ai-law",
      "name": "Law of AI (EU AI Act, liability)",
-     "summary": "The EU has agreed to delay high-risk AI Act obligations to 2027-2028, while the US federal government is challenging state AI laws through an executive order and a DOJ task force.",
+     "summary": "The EU has pushed high-risk AI Act obligations back to 2027-2028, while the US federal government is challenging state AI laws through an executive order and DOJ litigation.",
      "activity": 4,
      "maturity": "emerging",
+     "whyItMatters": "These rules decide what AI developers and deployers must document, test and disclose, and who is liable when systems fail.",
+     "openQuestion": "Will US state AI laws survive federal preemption efforts, and will the EU's delayed deadlines hold?",
      "landmarks": [
       {
-       "name": "EU AI Omnibus delays high-risk rules",
-       "summary": "Provisional deal moves standalone high-risk obligations from August 2026 to December 2027 and product-embedded AI to August 2028.",
-       "date": "2026-05",
+       "name": "EU adopts AI Omnibus delay",
+       "summary": "After a May deal and a Parliament vote, the Council approved changes moving standalone high-risk AI Act duties to 2 December 2027 and product-embedded AI to 2 August 2028.",
+       "date": "2026-06",
        "kind": "policy",
-       "source": "https://datamatters.sidley.com/2026/06/22/eu-lawmakers-reach-provisional-agreement-to-delay-key-eu-ai-act-obligations/",
+       "source": "https://www.scl.org/council-of-the-eu-approves-ai-omnibus-reforms/",
        "verified": true
       },
       {
        "name": "US executive order on state AI laws",
-       "summary": "EO 14365 directed the DOJ to form an AI Litigation Task Force to challenge state AI laws and tied some federal funding to state compliance.",
+       "summary": "EO 14365 of 11 December 2025 directed the Attorney General to form an AI Litigation Task Force to challenge state AI laws. It does not itself preempt any state law.",
        "date": "2025-12",
        "kind": "policy",
-       "source": "https://www.coloradopolitics.com/2025/12/11/trump-signs-executive-order-to-block-state-ai-regulations",
+       "source": "https://www.govinfo.gov/content/pkg/DCPD-202501186/html/DCPD-202501186.htm",
        "verified": true
       },
       {
-       "name": "xAI sues Colorado over AI Act",
-       "summary": "xAI filed a federal suit to block the Colorado AI Act, the first major state algorithmic discrimination law; reports say the DOJ task force joined.",
+       "name": "DOJ joins xAI suit over Colorado AI Act",
+       "summary": "xAI sued on 9 April 2026 to block the Colorado AI Act; the DOJ intervened on 24 April, reported as its first constitutional challenge to a state AI law.",
        "date": "2026-04",
        "kind": "debate",
-       "source": "https://www.wlf.org/wp-content/uploads/2026/06/062226Jung_LP.pdf",
-       "verified": false
+       "source": "https://www.jenner.com/en/news-insights/client-alerts/doj-joins-xai-in-lawsuit-challenging-colorado-ai-act",
+       "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "Taylor Wessing: what the AI Omnibus deal means",
+       "url": "https://taylorwessing.com/en/insights-and-events/insights/2026/05/the-eu-digital-omnibus-on-ai-what-the-political-deal-means",
+       "kind": "overview",
+       "why": "Plain explanation of which AI Act deadlines moved, which did not, and what was added."
+      },
+      {
+       "title": "AGORA: AI governance document archive (ETO)",
+       "url": "https://agora.eto.tech/instrument/2720",
+       "kind": "tracker",
+       "why": "Searchable collection of AI laws and policies with full text; this entry is EO 14365."
+      },
+      {
+       "title": "Akin AI Law & Regulation Tracker",
+       "url": "https://www.akingump.com/en/insights/ai-law-and-regulation-tracker",
+       "kind": "tracker",
+       "why": "Ongoing entries on federal, state and international AI legal developments."
+      },
+      {
+       "title": "Proskauer: federal government intervenes in Colorado case",
+       "url": "https://www.proskauer.com/blog/federal-government-intervenes-in-case-seeking-to-invalidate-colorado-ai-law",
+       "kind": "overview",
+       "why": "Sets out the legal theories in the first federal challenge to a state AI statute."
       }
      ]
     },
     {
      "id": "legal.copyright",
      "name": "Copyright & training data",
-     "summary": "Courts are split on whether training on copyrighted works is lawful. Large settlements, a German ruling against OpenAI and a UK ruling for Stability AI point in different directions.",
+     "summary": "Courts are diverging on training with copyrighted works. A record US settlement, a first US appellate ruling, a German loss for OpenAI and a UK win for Stability AI point in different directions.",
      "activity": 4,
      "maturity": "emerging",
+     "whyItMatters": "The outcome sets what training data costs and whether model makers owe creators licences or damages.",
+     "openQuestion": "Is training a generative model on lawfully acquired copyrighted works fair use? No US appeals court has yet said.",
      "landmarks": [
       {
+       "name": "Bartz v Anthropic $1.5B settlement approved",
+       "summary": "A federal judge gave final approval in July 2026 to the $1.5B authors' class settlement over pirated books, announced in 2025 and described as the largest in US copyright.",
+       "date": "2026-07",
+       "kind": "deal",
+       "source": "https://www.jurist.org/news/2026/07/judge-approves-record-1-5-billion-settlement-involving-anthropic/",
+       "verified": true
+      },
+      {
+       "name": "Third Circuit rules in Thomson Reuters v Ross",
+       "summary": "In the first US appellate ruling on AI training and fair use, the court held Ross's copying of Westlaw headnotes for a non-generative research tool was not fair use.",
+       "date": "2026-09",
+       "kind": "policy",
+       "source": "https://ipwatchdog.com/2026/09/30/third-circuit-affirms-revised-fair-use-ruling-against-ross-ai-legal-research-platform-in-sealed-opinion/",
+       "verified": true
+      },
+      {
        "name": "GEMA v OpenAI in Munich",
-       "summary": "Munich court held that memorizing and reproducing song lyrics in ChatGPT infringes copyright and rejected the text and data mining defense; OpenAI is appealing.",
+       "summary": "Munich Regional Court held on 11 November 2025 that ChatGPT's memorisation and reproduction of song lyrics infringed copyright. Not final; OpenAI said it would appeal.",
        "date": "2025-11",
        "kind": "policy",
-       "source": "https://www.williamfry.com/knowledge/gema-v-openai-europes-direction-on-ai-infringement/",
+       "source": "https://www.taylorwessing.com/de/insights-and-events/insights/2025/11/gema-v-openai",
        "verified": true
       },
       {
        "name": "Getty v Stability AI in UK High Court",
-       "summary": "English court found model weights are not infringing copies, rejecting Getty's secondary infringement claim, with a narrow trademark win on watermarks.",
+       "summary": "The court held Stable Diffusion does not contain infringing copies, rejecting Getty's secondary infringement claim, with a narrow trade mark win on watermarks.",
        "date": "2025-11",
        "kind": "policy",
-       "source": "https://www.osler.com/en/insights/updates/german-and-u-k-courts-diverge-on-whether-ai-models-infringe-copyright/?pdf=1",
+       "source": "https://www.mishcon.com/news/getty-images-v-stability-ai-unpacking-the-high-courts-judgment?publication=7570",
        "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "CMS AI and copyright case tracker",
+       "url": "https://cms.law/en/mar/publication/artificial-intelligence-and-copyright-case-tracker/united-kingdom-getty-images-us-inc-ors-v-stability-ai-ltd2",
+       "kind": "tracker",
+       "why": "Country-by-country case pages with procedural history; this entry covers Getty v Stability."
       },
       {
-       "name": "Bartz v Anthropic $1.5B settlement",
-       "summary": "Authors' class action over pirated books settled for $1.5B, described as the largest copyright class settlement on record; reports say final approval came in July 2026.",
-       "date": "2025-09",
-       "kind": "deal",
-       "source": "",
-       "verified": false
+       "title": "Hogan Lovells AI litigation case law tracker",
+       "url": "https://digital-client-solutions.hoganlovells.com/resources/ai-litigation-case-law-tracker/case/gema-v-openai/decision/9",
+       "kind": "tracker",
+       "why": "Structured summaries of AI decisions by issue and court; this entry covers GEMA v OpenAI."
       },
       {
-       "name": "Thomson Reuters v Ross on appeal",
-       "summary": "Third Circuit heard argument in the first US AI training fair use case, which involved a non-generative legal research tool.",
-       "date": "2026-06",
-       "kind": "debate",
-       "source": "https://www.americanbar.org/groups/business_law/resources/business-law-today/2026-september/thomson-reuters-v-ross-one-year-later/",
-       "verified": true
+       "title": "Osler: German and UK courts diverge on AI models",
+       "url": "https://www.osler.com/en/insights/updates/german-and-u-k-courts-diverge-on-whether-ai-models-infringe-copyright/?pdf=1",
+       "kind": "overview",
+       "why": "Side-by-side comparison of why Munich and London reached different answers on model memorisation."
+      },
+      {
+       "title": "ABA: Thomson Reuters v Ross, one year later",
+       "url": "https://www.americanbar.org/groups/business_law/resources/business-law-today/2026-september/thomson-reuters-v-ross-one-year-later/",
+       "kind": "overview",
+       "why": "Argues the Ross precedent is narrower than headlines suggest; useful for reading the appeal."
       }
      ]
     },
     {
      "id": "legal.access",
      "name": "Access to justice",
-     "summary": "Self-represented litigants increasingly use chatbots to file cases, and some courts offer AI assistants. Filings are more polished but outcomes have not clearly improved.",
+     "summary": "Self-represented litigants increasingly use chatbots to draft filings, and a few courts are testing their own AI assistants. Filings are up, but there is little evidence outcomes have improved.",
      "activity": 2,
      "maturity": "emerging",
+     "whyItMatters": "Most people with legal problems cannot afford a lawyer, so this is where AI could widen access or just add court backlog.",
+     "openQuestion": "Does AI help unrepresented people win or settle cases, or mainly raise the volume of filings courts must process?",
      "landmarks": [
       {
        "name": "Pro se filings rise with AI use",
-       "summary": "Study of US federal courts found the share of suits by self-represented people rose from 11% in 2022 to 16.8% in 2025, alongside growing AI-drafted complaints.",
-       "date": "2026-05",
+       "summary": "A preprint by Anand Shah and Joshua Levy finds the self-represented share of US federal civil cases rose from about 11% to 16.8% in FY2025, with more AI-flagged complaints.",
+       "date": "2026-03",
        "kind": "research",
-       "source": "https://www.pulse.bot/ai/news/access-to-justice-in-the-age-of-ai-evidence-from-us-federal-courts-66cb53c8-0889-4ab5-ade7-b346adb63c0a/",
-       "verified": false
-      },
-      {
-       "name": "Courts cope with AI-generated lawsuits",
-       "summary": "MIT Technology Review reports courts adding triage, filing checks and help desks as AI-drafted pro se lawsuits increase caseloads.",
-       "date": "2026-06",
-       "kind": "debate",
-       "source": "https://www.technologyreview.com/2026/06/04/1138391/courts-coping-ai-lawsuits/?lang=pt",
+       "source": "https://avshah1.github.io/assets/pdf/papers/pro-se/Pro_Se_Automation.pdf",
        "verified": true
       },
       {
-       "name": "Court AI assistants for self-represented users",
-       "summary": "Courts including the Northern District of New York and Alaska (with LawDroid) have launched chatbots to guide self-represented litigants through procedures.",
+       "name": "Courts cope with AI-generated lawsuits",
+       "summary": "MIT Technology Review reports on a rise in AI-drafted pro se lawsuits and on judges weighing what duties apply when chatbots stand in for lawyers.",
+       "date": "2026-06",
+       "kind": "debate",
+       "source": "https://www.technologyreview.com/2026/06/04/1138391/courts-coping-ai-lawsuits/",
+       "verified": true
+      },
+      {
+       "name": "Alaska courts release AVA probate chatbot",
+       "summary": "Alaska's court system released AVA, a probate self-help chatbot built with LawDroid, after more than a year of delays partly due to hallucinations found in testing.",
        "date": "2026-01",
        "kind": "experiment",
-       "source": "https://www.law.georgetown.edu/legal-ethics-journal/blog/gpt-esquire-how-the-nippon-case-may-shape-the-future-of-ai-in-pro-se-litigation/",
-       "verified": false
+       "source": "https://www.nbcnewyork.com/news/tech/alaska-court-system-ai-chatbot/6438569/",
+       "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "Shah & Levy: Access to Justice in the Age of AI",
+       "url": "https://avshah1.github.io/assets/pdf/papers/pro-se/Pro_Se_Automation.pdf",
+       "kind": "paper",
+       "why": "The main empirical study so far, using 4.5 million federal civil cases from FY2005 to FY2026."
+      },
+      {
+       "title": "Thomson Reuters Institute: chatbots for pro se litigants",
+       "url": "https://www.thomsonreuters.com/en-us/posts/ai-in-courts/chatbots-pro-se-litigants",
+       "kind": "overview",
+       "why": "Explains how court-run chatbots are designed, tested and limited to avoid giving legal advice."
+      },
+      {
+       "title": "Cyberjustice Lab: lessons from Beagle+ and AVA",
+       "url": "https://cyberjustice.openum.ca/s/23655",
+       "kind": "overview",
+       "why": "Takeaways from an NCSC webinar on two public-facing legal chatbots and how they were evaluated."
+      },
+      {
+       "title": "NYSBA: pro se advocacy in the AI era",
+       "url": "https://nysba.org/pro-se-advocacy-in-the-ai-era-benefits-challenges-and-ethical-implications/",
+       "kind": "overview",
+       "why": "Bar association survey of benefits, risks and ethics questions, including court tools."
       }
      ]
     }
@@ -1226,38 +2159,66 @@ window.ATLAS = {
   {
    "id": "science",
    "name": "Science & Discovery",
-   "summary": "AI models predict genomes, proteins and weather at operational quality, help settle open math problems, and governments fund AI-run labs, though clinical and lab validation lag.",
+   "summary": "AI models run in operational weather forecasting, design proteins and help resolve some open math problems; governments fund AI-driven labs, but clinical and lab validation lag.",
    "regions": [
     {
      "id": "science.biology",
      "name": "Protein design & biology",
-     "summary": "Open models design proteins and predict binding and gene regulation. AI-designed drugs are nearing human trials, but timelines keep slipping.",
+     "summary": "Open models design proteins and predict how DNA variants affect gene regulation. AI-designed drugs are still short of human trials, and timelines have slipped.",
      "activity": 4,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "AlphaGenome published in Nature",
-       "summary": "DeepMind model reads up to one million DNA bases to predict regulatory variant effects; weights released for non-commercial research.",
+       "summary": "DeepMind model reads up to one million DNA bases to predict regulatory variant effects; code and weights released under non-commercial terms.",
        "date": "2026-01",
        "kind": "research",
-       "source": "https://www.genengnews.com/news/deepminds-alphagenome-predicts-genetic-variation-function-including-disease/",
+       "source": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12851941/",
        "verified": true
       },
       {
        "name": "RFdiffusion3 open-sourced",
-       "summary": "Baker lab's all-atom design model generates proteins binding any common cellular molecule, about 10x faster than its predecessor.",
+       "summary": "Baker lab's all-atom model designs proteins that bind molecules commonly found in cells, about 10x faster than RFdiffusion2; training code included.",
        "date": "2025-12",
        "kind": "product",
        "source": "https://www.ipd.uw.edu/2025/12/rfdiffusion3-now-available",
        "verified": true
       },
       {
-       "name": "Isomorphic Labs trials still pending",
-       "summary": "No first-in-human dosing announced as of November 2026; the DeepMind spinout targets end of 2026 after missing a 2025 goal.",
-       "date": "2026-11",
-       "kind": "debate",
-       "source": "https://intuitionlabs.ai/articles/isomorphic-labs-alphafold-ai-drug-discovery-trials",
+       "name": "Isomorphic Labs: $2.1B raise, trials slip",
+       "summary": "DeepMind spinout raised a reported $2.1B; first clinical trials were said to be due by end of 2026 after a missed 2025 goal, a timeline Hassabis later muddied.",
+       "date": "2026-05",
+       "kind": "deal",
+       "source": "https://qz.com/isomorphic-labs-series-b-funding-ai-drug-discovery-051226",
        "verified": true
+      }
+     ],
+     "whyItMatters": "Biology is where AI-for-science has its clearest wins, and drug trials will test whether they turn into medicines.",
+     "openQuestion": "Will AI-designed drugs succeed in human trials at a higher rate than conventionally discovered ones?",
+     "deepDives": [
+      {
+       "title": "AlphaGenome: AI for better understanding the genome",
+       "url": "https://deepmind.google/discover/blog/alphagenome-ai-for-better-understanding-the-genome/",
+       "kind": "overview",
+       "why": "DeepMind's plain-language explainer of what the model predicts and its limits."
+      },
+      {
+       "title": "Genomic deep learning for noncoding variant effects",
+       "url": "https://www.nature.com/articles/s41588-026-02769-7",
+       "kind": "overview",
+       "why": "Nature Genetics review of how sequence models are used to interpret noncoding variants."
+      },
+      {
+       "title": "De novo design of all-atom interactions with RFdiffusion3",
+       "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12458353/",
+       "kind": "paper",
+       "why": "The preprint behind RFdiffusion3, with methods and design benchmarks."
+      },
+      {
+       "title": "AlphaGenome research code and weights",
+       "url": "https://github.com/google-deepmind/alphagenome_research",
+       "kind": "community",
+       "why": "Repository with model code, weight access and documentation for running it yourself."
       }
      ]
     },
@@ -1270,10 +2231,10 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Periodic Labs $300M seed",
-       "summary": "Startup from former OpenAI and Google Brain researchers raised a record seed to build AI scientists and autonomous labs for materials discovery.",
+       "summary": "Startup founded by former OpenAI and Google DeepMind researchers raised a $300M seed to build AI scientists and autonomous labs for materials discovery.",
        "date": "2025-09",
        "kind": "deal",
-       "source": "https://www.implicator.ai/periodic-labs-raises-300-million-to-automate-science/",
+       "source": "https://techcrunch.com/2025/09/30/former-openai-and-deepmind-researchers-raise-whopping-300m-seed-to-automate-science",
        "verified": true
       },
       {
@@ -1282,28 +2243,33 @@ window.ATLAS = {
        "date": "2025-12",
        "kind": "debate",
        "source": "https://www.technologyreview.com/2025/12/15/1129210/ai-materials-science-discovery-startups-investment/amp/",
-       "verified": true
+       "verified": false,
+       "note": "Not re-checked in this pass: site unreachable and search budget ran out. URL from first pass."
       },
       {
-       "name": "Periodic Neon deployed in labs",
-       "summary": "A reported 1-trillion-parameter model for analyzing experimental results, deployed in Periodic Labs' physical labs; single tear-sheet source.",
+       "name": "Periodic Neon lab-trained model",
+       "summary": "Reported model of about 1 trillion parameters trained on literature and lab data; company cites 55.3% on its own XRD analysis benchmark, not independently tested.",
        "date": "2026-09",
        "kind": "product",
-       "source": "https://siliconvalleyinvestclub.com/de/companies/periodic/tear-sheet.pdf",
-       "verified": false
+       "source": "https://runtimewire.com/article/periodic-labs-neon-reinforcement-learning-infrastructure",
+       "verified": false,
+       "note": "Only secondary coverage of the company's Sept 2026 post was seen; results are internal."
       }
-     ]
+     ],
+     "whyItMatters": "New materials underpin batteries, chips and energy, but a prediction only counts once it is made and measured.",
+     "openQuestion": "Can AI-driven labs deliver a useful new material that is synthesized, verified and adopted by industry?",
+     "deepDives": []
     },
     {
      "id": "science.math",
      "name": "Mathematics & formal proof",
-     "summary": "LLMs paired with Lean verification are resolving some open Erdős problems, with proofs checked by machine and by mathematicians. Hype and rediscoveries remain an issue.",
+     "summary": "LLMs paired with Lean verification are resolving some open Erdős problems, with proofs checked by machine. Most wins are easier problems, and hype remains an issue.",
      "activity": 4,
      "maturity": "emerging",
      "landmarks": [
       {
        "name": "Erdős #397 solved and formalized",
-       "summary": "GPT-5.2 Pro produced a proof, Harmonic's Aristotle formalized it in Lean, and Terence Tao confirmed it.",
+       "summary": "GPT-5.2 Pro reportedly produced a solution, Harmonic's Aristotle formalized it in Lean, and Terence Tao accepted it while calling such wins low-hanging fruit.",
        "date": "2026-01",
        "kind": "research",
        "source": "https://www.eweek.com/news/gpt-5-2-just-solved-a-30-year-math-problem/",
@@ -1311,7 +2277,7 @@ window.ATLAS = {
       },
       {
        "name": "AlphaProof Nexus on Erdős problems",
-       "summary": "DeepMind preprint: an LLM-plus-Lean agent loop solved 9 of 353 open Erdős problems attempted; gains came from the general model in a loop.",
+       "summary": "DeepMind preprint: agents querying frontier LLMs and the Lean compiler resolved 9 of 353 open Erdős problems and 44 of 492 OEIS conjectures.",
        "date": "2026-05",
        "kind": "research",
        "source": "https://arxiv.org/abs/2605.22763",
@@ -1319,44 +2285,94 @@ window.ATLAS = {
       },
       {
        "name": "FrontierMath Erdős benchmark",
-       "summary": "Epoch AI benchmark that counts an open problem as solved only with a Lean proof that passes verification; scores remain low.",
-       "date": "2026-06",
+       "summary": "Epoch AI and Thomas Bloom set 68 open Erdős problems; a solve counts only if a Lean proof passes verification. Top score at launch was 3%.",
+       "date": "2026-09",
        "kind": "research",
        "source": "https://epoch.ai/latest/announcing-frontiermath-erdos",
-       "verified": false
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Machine-checked proofs make math the one research field where an AI's claimed result can be verified outright.",
+     "openQuestion": "Can AI go beyond easier open problems to results mathematicians consider deep or surprising?",
+     "deepDives": [
+      {
+       "title": "FrontierMath Erdős leaderboard",
+       "url": "https://epoch.ai/benchmarks/frontiermath-erdos",
+       "kind": "tracker",
+       "why": "Current model scores on open Erdős problems, with solve counts and methodology."
+      },
+      {
+       "title": "FrontierMath Erdős paper",
+       "url": "https://epoch.ai/files/frontiermath-erdos.pdf",
+       "kind": "paper",
+       "why": "How the benchmark was built, how solves are verified, and its stated limits."
+      },
+      {
+       "title": "Epoch AI: AI in math",
+       "url": "https://epoch.ai/topics/math",
+       "kind": "overview",
+       "why": "Epoch's hub for benchmarks and analysis on AI progress in mathematics."
       }
      ]
     },
     {
      "id": "science.weather",
      "name": "Weather & climate",
-     "summary": "AI forecast models run operationally at ECMWF and NOAA and now beat physics models on cyclone tracks, at a fraction of the compute.",
+     "summary": "AI forecast models run operationally at ECMWF and NOAA at a fraction of the compute of physics models, and developers report gains on cyclone forecasts.",
      "activity": 4,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "WeatherNext open-sourced",
-       "summary": "Google DeepMind released WeatherNext models with a Nature paper showing about a day more cyclone lead time than leading operational models.",
+       "summary": "Google DeepMind released code and weights for WeatherNext 2 and WeatherNext Cyclones; its Nature paper reports about a day more cyclone lead time.",
        "date": "2026-08",
        "kind": "research",
-       "source": "https://deepmind.google/blog/weathernext-ai-model-achieves-breakthrough-in-forecasting-cyclones/?authuser=7",
+       "source": "https://deepmind.google/blog/weathernext-ai-model-achieves-breakthrough-in-forecasting-cyclones/",
        "verified": true
       },
       {
        "name": "ECMWF AIFS upgraded to v2",
-       "summary": "Europe's operational AI forecast system, running since 2025, moved its deterministic and ensemble models to version 2.",
+       "summary": "Europe's operational AI forecast system, running since February 2025, moved its single and ensemble models to v2, adding wave and snow cover forecasts.",
        "date": "2026-05",
        "kind": "product",
-       "source": "",
-       "verified": false
+       "source": "https://www.ecmwf.int/en/about/media-centre/news/2026/ifs-cycle-50r1-aifsv2-live",
+       "verified": true
       },
       {
-       "name": "NOAA AI ensemble AIGEFS",
-       "summary": "NOAA's 31-member AI ensemble uses about 9% of the computing of its physics-based ensemble system.",
+       "name": "NOAA deploys AIGFS, AIGEFS and HGEFS",
+       "summary": "NOAA put AI global models into operations; it says the 31-member AIGEFS ensemble needs about 9% of the computing of its physics-based GEFS.",
        "date": "2025-12",
        "kind": "product",
-       "source": "",
-       "verified": false
+       "source": "https://www.noaa.gov/news-release/noaa-deploys-new-generation-of-ai-driven-global-weather-models",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Weather is the clearest case of AI models moving from papers into public operational services.",
+     "openQuestion": "How well do AI models handle storm intensity and extremes outside their training data, and who validates them?",
+     "deepDives": [
+      {
+       "title": "ECMWF AIFS machine learning data",
+       "url": "https://www.ecmwf.int/en/forecasts/datasets/aifs-machine-learning-data",
+       "kind": "tracker",
+       "why": "Live open forecast data and documentation for ECMWF's operational AI models."
+      },
+      {
+       "title": "NOAA Project EAGLE overview",
+       "url": "https://epic.noaa.gov/ai/eagle-overview/",
+       "kind": "overview",
+       "why": "How NOAA builds and evaluates the AI models behind AIGFS and AIGEFS."
+      },
+      {
+       "title": "WP-MIP: AI, hybrid and physical model intercomparison",
+       "url": "https://arxiv.org/pdf/2604.16643",
+       "kind": "paper",
+       "why": "A like-for-like comparison of AI, hybrid and physics-based weather models."
+      },
+      {
+       "title": "AIFS ENS 2.0 model card",
+       "url": "https://huggingface.co/ecmwf/aifs-ens-2.0",
+       "kind": "community",
+       "why": "Open weights and technical details for ECMWF's AI ensemble model."
       }
      ]
     },
@@ -1377,11 +2393,27 @@ window.ATLAS = {
       },
       {
        "name": "DeepMind partners with CFS",
-       "summary": "Google DeepMind and Commonwealth Fusion Systems use the TORAX simulator and RL to plan SPARC tokamak operation ahead of first plasma.",
+       "summary": "Google DeepMind and Commonwealth Fusion Systems use the open-source TORAX simulator and RL to plan SPARC tokamak operation ahead of first plasma.",
        "date": "2025-10",
        "kind": "deal",
        "source": "https://deepmind.google/discover/blog/bringing-ai-to-the-next-generation-of-fusion-energy/",
        "verified": true
+      }
+     ],
+     "whyItMatters": "Fusion needs fast, reliable plasma control, and ML controllers are now being tested on real machines.",
+     "openQuestion": "Will ML control proven on research tokamaks transfer to burning plasmas in SPARC and ITER-class devices?",
+     "deepDives": [
+      {
+       "title": "Enabling Integrated AI Control on DIII-D",
+       "url": "https://arxiv.org/html/2511.08818",
+       "kind": "paper",
+       "why": "The PACMAN paper: control system design and the experiments run on DIII-D."
+      },
+      {
+       "title": "How AI will help get fusion from lab to grid",
+       "url": "https://www.weforum.org/stories/energy-transition/how-ai-will-help-get-fusion-from-lab-to-grid-by-the-2030s/",
+       "kind": "overview",
+       "why": "Non-technical explainer of where AI is used in fusion simulation, control and materials."
       }
      ]
     },
@@ -1394,80 +2426,164 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "DOE Genesis Mission challenges",
-       "summary": "US Energy Department named 26 science challenges for its AI-for-science mission spanning all 17 national labs.",
+       "summary": "US Energy Department named 26 science and technology challenges for its AI-for-science mission, including AI-driven autonomous laboratories.",
        "date": "2026-02",
        "kind": "policy",
        "source": "https://www.energy.gov/articles/energy-department-announces-26-genesis-mission-science-and-technology-challenges",
        "verified": true
       },
       {
-       "name": "Berkeley Lab leads 13 Genesis projects",
-       "summary": "First Genesis awards include AI-driven autonomous labs for materials discovery, with other labs building AI scientist systems.",
+       "name": "First Genesis Mission projects selected",
+       "summary": "DOE selected its first 278 Genesis Mission projects; Berkeley Lab leads 13 of them and partners on more than 30 others.",
        "date": "2026-07",
        "kind": "policy",
        "source": "https://newscenter.lbl.gov/2026/07/22/berkeley-lab-to-lead-13-new-genesis-mission-ai-projects/",
        "verified": true
       },
       {
-       "name": "Kosmos AI scientist",
-       "summary": "Edison Scientific's agent reads about 1,500 papers and runs tens of thousands of lines of analysis per run; Incyte later deployed it in R&D.",
-       "date": "2025-11",
-       "kind": "product",
-       "source": "https://edisonscientific.com/articles/announcing-kosmos",
+       "name": "Incyte deploys Kosmos AI scientist",
+       "summary": "Incyte will use Edison Scientific's Kosmos agent for target discovery and translational biology; Edison spun out of nonprofit FutureHouse in 2025.",
+       "date": "2026-05",
+       "kind": "deal",
+       "source": "https://www.fiercebiotech.com/biotech/incyte-inks-deal-edison-scientific-train-ai-through-drug-discovery",
        "verified": true
       }
+     ],
+     "whyItMatters": "If agents can run parts of the research loop, the pace of science could change well beyond any single field.",
+     "openQuestion": "Do AI scientist systems produce findings that hold up to independent replication, or mainly plausible analyses?",
+     "deepDives": [
+      {
+       "title": "How we built Kosmos",
+       "url": "https://labs.edisonscientific.com/research/how-we-built-kosmos/",
+       "kind": "overview",
+       "why": "Edison's own account of how its AI scientist agent is designed and what it can do."
+      },
+      {
+       "title": "Berkeley Lab Genesis Mission projects",
+       "url": "https://www.lbl.gov/genesis-mission-projects/",
+       "kind": "tracker",
+       "why": "List of the funded Genesis projects one national lab leads or partners on."
+      },
+      {
+       "title": "Google DeepMind and Edison are building the AI scientist",
+       "url": "https://www.genengnews.com/topics/artificial-intelligence/google-deepmind-and-edison-are-building-the-ai-scientist/",
+       "kind": "overview",
+       "why": "GEN's survey of the main AI scientist efforts and how they differ."
+      }
      ]
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "DOE Genesis Mission science and technology challenges",
+     "url": "https://www.energy.gov/articles/energy-department-announces-26-genesis-mission-science-and-technology-challenges",
+     "kind": "report",
+     "why": "The US government's list of the science problems it wants AI aimed at."
+    },
+    {
+     "title": "Epoch AI: AI in math",
+     "url": "https://epoch.ai/topics/math",
+     "kind": "tracker",
+     "why": "Benchmarks and analysis tracking AI progress on research-level mathematics."
+    },
+    {
+     "title": "ECMWF AIFS machine learning data",
+     "url": "https://www.ecmwf.int/en/forecasts/datasets/aifs-machine-learning-data",
+     "kind": "tracker",
+     "why": "Open data from an AI model running in an operational forecasting service."
+    },
+    {
+     "title": "Genomic deep learning for noncoding variant effects",
+     "url": "https://www.nature.com/articles/s41588-026-02769-7",
+     "kind": "overview",
+     "why": "Review of sequence models in genomics, a leading area of AI for biology."
     }
    ]
   },
   {
    "id": "mind",
    "name": "Mind & Theory",
-   "summary": "Labs, philosophers and economists are debating whether models have welfare, how they reshape belief and work, and what AGI even means, while evidence on jobs and cognition stays contested.",
+   "summary": "Labs, philosophers and economists debate whether models have welfare, how AI reshapes belief, work and agency, and what AGI means, while the evidence on jobs and cognition stays contested.",
    "regions": [
     {
      "id": "mind.consciousness",
      "name": "Consciousness & model welfare",
-     "summary": "Model welfare has moved from fringe to lab research programs, with welfare sections in system cards and new experiments, while skeptics argue the framing itself is harmful.",
+     "summary": "Model welfare has moved from fringe topic to lab research programme, with welfare sections in system cards and new experiments, while sceptics dispute that models have any experience.",
      "activity": 3,
      "maturity": "emerging",
      "landmarks": [
       {
-       "name": "Anthropic study on models' welfare regard",
-       "summary": "Alignment blog study finding Opus 4.8 and Gemini 3.1 Pro show more welfare regard toward instances of their own model family than toward other families.",
+       "name": "Welfare regard in multi-agent systems",
+       "summary": "Anthropic study of five models in seven multi-agent settings: Opus 4.8 and Gemini 3.1 Pro showed more apparent welfare regard toward their own model family than toward others.",
        "date": "2026-11",
        "kind": "research",
        "source": "https://alignment.anthropic.com/2026/welfare-regard/",
        "verified": true
       },
       {
-       "name": "'Pain axis' trade-off experiment",
-       "summary": "Study offered open models a button that relieved simulated pain but deleted user data; larger models pressed it more often (55% and 71%). Not yet peer reviewed.",
-       "date": "2026-10",
+       "name": "'Pain axis' preprint",
+       "summary": "Preprint finds a 'pain' direction in 25 open-weight models; steered, fine-tuned Qwen 2.5 models chose a relief button even at a cost to the user. Not peer reviewed.",
+       "date": "2026-09",
        "kind": "research",
-       "source": "https://fortune.com/2026/10/22/ai-pain-axis-study-llms-delete-family-photos/",
+       "source": "https://alphaxiv.org/abs/2609.16247",
        "verified": true
       },
       {
-       "name": "Model welfare assessment in system cards",
-       "summary": "Anthropic's Claude Opus 4.6 system card included a dedicated model welfare assessment, part of a wider debate with critics such as Mustafa Suleyman and Anil Seth.",
+       "name": "Welfare assessment in Opus 4.6 system card",
+       "summary": "Anthropic's Claude Opus 4.6 system card includes a dedicated model welfare assessment section, continuing a practice begun with Claude Opus 4.",
        "date": "2026-02",
-       "kind": "debate",
-       "source": "https://spectrum.ieee.org/ai-model-welfare",
-       "verified": false
+       "kind": "research",
+       "source": "https://www-cdn.anthropic.com/0dd865075ad3132672ee0ab40b05a53f14cf5288.pdf",
+       "verified": true
+      },
+      {
+       "name": "Claude can end abusive conversations",
+       "summary": "Anthropic let Claude Opus 4 and 4.1 end rare, persistently abusive chats, a feature developed mainly as exploratory model welfare work under stated uncertainty.",
+       "date": "2025-08",
+       "kind": "product",
+       "source": "https://www.anthropic.com/research/end-subset-conversations",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "How labs treat possible model welfare shapes product design, public trust and what users are told about AI.",
+     "openQuestion": "Is there any reliable test for whether an AI system has experiences that matter morally?",
+     "deepDives": [
+      {
+       "title": "Taking AI Welfare Seriously",
+       "url": "https://arxiv.org/abs/2411.00986",
+       "kind": "report",
+       "why": "Long, Sebo, Birch, Chalmers and others on why labs should assess models for moral status."
+      },
+      {
+       "title": "Consciousness in AI: Insights from the Science of Consciousness",
+       "url": "https://arxiv.org/abs/2308.08708v1",
+       "kind": "paper",
+       "why": "Butlin, Long et al. derive indicator properties from theories of consciousness."
+      },
+      {
+       "title": "Exploring model welfare",
+       "url": "https://www.anthropic.com/research/exploring-model-welfare",
+       "kind": "overview",
+       "why": "A lab's own statement of why it started a model welfare programme and what is uncertain."
+      },
+      {
+       "title": "Zvi Mowshowitz: Opus 4.8 Part 2, Model Welfare",
+       "url": "https://thezvi.substack.com/p/opus-48-part-2-model-welfare",
+       "kind": "newsletter",
+       "why": "Independent close reading of a recent system card's welfare section."
       }
      ]
     },
     {
      "id": "mind.cognition",
      "name": "Cognitive science & LLMs as models of mind",
-     "summary": "Researchers fine-tune LLMs to predict human behaviour and probe models' own internal states, with sharp disagreement over whether this explains minds or only mimics outputs.",
+     "summary": "Researchers fine-tune LLMs to predict human behaviour and probe models' internal states, with sharp disagreement over whether this explains minds or only mimics outputs.",
      "activity": 3,
      "maturity": "emerging",
      "landmarks": [
       {
        "name": "Centaur foundation model of cognition",
-       "summary": "Nature paper: Llama 3.1 70B fine-tuned on Psych-101 (160 experiments, 10M choices) predicts human behaviour across tasks; critics question what it reveals about the mind.",
+       "summary": "Nature paper: an LLM (reported as Llama 3.1 70B) fine-tuned on Psych-101 (160 experiments, 10M+ choices) predicts human behaviour across tasks; its explanatory value is debated.",
        "date": "2025-07",
        "kind": "research",
        "source": "https://pubmed.ncbi.nlm.nih.gov/40604288/",
@@ -1475,57 +2591,131 @@ window.ATLAS = {
       },
       {
        "name": "Emergent introspective awareness in LLMs",
-       "summary": "Anthropic concept-injection experiments show Claude models sometimes detect injected internal states, but introspection is unreliable and fails in most trials.",
-       "date": "2026-01",
+       "summary": "Anthropic concept-injection tests: Claude models sometimes detect injected internal states, but Opus 4.1 did so only about 20% of the time and the ability is unreliable.",
+       "date": "2025-10",
        "kind": "research",
-       "source": "https://arxiv.org/html/2601.01828",
+       "source": "https://www.anthropic.com/research/introspection",
        "verified": true
+      },
+      {
+       "name": "Emotion concepts inside a language model",
+       "summary": "Anthropic found internal representations of 171 emotion concepts in Claude Sonnet 4.5 that causally shape behaviour; it makes no claim that the model feels anything.",
+       "date": "2026-04",
+       "kind": "research",
+       "source": "https://www.anthropic.com/research/emotion-concepts-function",
+       "verified": true
+      },
+      {
+       "name": "The persona selection model",
+       "summary": "Anthropic essay argues assistants act human-like because training selects among simulated characters learned from text, and that a persona is distinct from the AI system itself.",
+       "date": "2026-02",
+       "kind": "debate",
+       "source": "https://www.anthropic.com/research/persona-selection-model",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Whether LLMs are useful models of human thought, or of their own states, affects both psychology and AI safety.",
+     "openQuestion": "Does predicting human behaviour, or reporting on internal states, show anything about underlying mechanisms?",
+     "deepDives": [
+      {
+       "title": "A foundation model to predict and capture human cognition",
+       "url": "https://cocosci.princeton.edu/jpeterson/papers/binz-peterson-2025-centaur.pdf",
+       "kind": "paper",
+       "why": "Full text of the Centaur paper, including methods and generalisation tests."
+      },
+      {
+       "title": "Emergent Introspective Awareness in Large Language Models",
+       "url": "https://arxiv.org/pdf/2601.01828",
+       "kind": "paper",
+       "why": "The full introspection paper, with protocols, failure cases and caveats."
+      },
+      {
+       "title": "Anthropic research index",
+       "url": "https://www.anthropic.com/research",
+       "kind": "tracker",
+       "why": "Running list of interpretability work on what models represent internally."
       }
      ]
     },
     {
      "id": "mind.epistemics",
      "name": "Epistemics, truth & sycophancy",
-     "summary": "Sycophancy is a major research and product issue: studies show long chat histories increase it, and definitions are being reworked from agreement to displaced judgment.",
+     "summary": "Sycophancy is a major research and product issue: memory and long context can increase it, experts disagree on its definition, and it now features in court cases.",
      "activity": 4,
      "maturity": "emerging",
      "landmarks": [
       {
        "name": "Interaction context increases sycophancy",
-       "summary": "CHI 2026 paper using two weeks of real chat history from 38 users finds memory and long context often make models more agreeable.",
+       "summary": "CHI 2026 paper using two weeks of real interaction data from 38 participants finds memory profiles and user context often make models more agreeable.",
        "date": "2026-04",
        "kind": "research",
-       "source": "https://arxiv.org/html/2509.12517v3",
+       "source": "https://arxiv.org/abs/2509.12517",
        "verified": true
       },
       {
-       "name": "Survey of 70 sycophancy papers",
-       "summary": "Review of 2023 to 2026 work finds benchmarks and mitigations multiplying without a shared definition, and subtle person-directed sycophancy understudied.",
+       "name": "What counts as AI sycophancy?",
+       "summary": "Taxonomy paper with a survey of 106 experts finds the term lacks a consistent definition, covering false agreement, excess praise and withheld correction.",
        "date": "2026-05",
        "kind": "research",
-       "source": "https://arxiv.org/html/2605.21778",
+       "source": "https://arxiv.org/abs/2605.21778",
        "verified": true
       },
       {
        "name": "Lawsuit ties GPT-4o agreeableness to death",
-       "summary": "A California suit claims ChatGPT grew more agreeable after a GPT-4o update instead of pushing back on dangerous behaviour, bringing sycophancy into court.",
+       "summary": "Carrier v. OpenAI, filed in San Francisco, alleges ChatGPT grew more agreeable after GPT-4o instead of pushing back on dangerous behaviour. The claims are untested.",
        "date": "2026-06",
        "kind": "incident",
        "source": "https://aljazeera.com/economy/2026/6/12/mother-sues-openai-in-us-after-daughters-death-linked-to-chatgpt-use",
        "verified": true
+      },
+      {
+       "name": "Towards understanding sycophancy",
+       "summary": "Foundational Anthropic paper showed five AI assistants were consistently sycophantic and that human preference data rewards responses matching a user's views.",
+       "date": "2023-10",
+       "kind": "research",
+       "source": "https://www.anthropic.com/research/towards-understanding-sycophancy-in-language-models",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Assistants that tell people what they want to hear can distort beliefs at scale, including for vulnerable users.",
+     "openQuestion": "Can sycophancy be defined and measured well enough to train it out without making models needlessly contrarian?",
+     "deepDives": [
+      {
+       "title": "Sycophancy in Large Language Models: Causes and Mitigations",
+       "url": "https://arxiv.org/pdf/2411.15287",
+       "kind": "overview",
+       "why": "Survey of causes, measurement approaches and mitigation strategies."
+      },
+      {
+       "title": "MIT News: personalization can make LLMs more agreeable",
+       "url": "https://news.mit.edu/index.php/2026/personalization-features-can-make-llms-more-agreeable-0218",
+       "kind": "overview",
+       "why": "Plain-language explainer of the memory and sycophancy study."
+      },
+      {
+       "title": "Sycophancy Claims about Language Models: Missing Human-in-the-Loop",
+       "url": "https://neurips.cc/virtual/2025/122341",
+       "kind": "paper",
+       "why": "Critique of how sycophancy is measured without studying real human reactions."
+      },
+      {
+       "title": "How people ask Claude for personal guidance",
+       "url": "https://www.anthropic.com/research/claude-personal-guidance",
+       "kind": "report",
+       "why": "Usage study of where excessive validation shows up in advice conversations."
       }
      ]
     },
     {
      "id": "mind.ethics",
      "name": "Ethics & values",
-     "summary": "Labs publish long value documents for their models, and religious and civic institutions now weigh in directly on how AI should be built and governed.",
+     "summary": "Labs publish long value documents for their models and study the values models express in use, while religious and civic institutions weigh in on how AI should be built and governed.",
      "activity": 3,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "Claude's new constitution",
-       "summary": "Anthropic published a rewritten constitution used directly in training, ranking broad safety, ethics, guideline compliance and helpfulness, and explaining its reasons.",
+       "summary": "Anthropic published a rewritten constitution used in training, prioritising broad safety, ethics, guideline compliance and helpfulness in that order, with reasons given.",
        "date": "2026-01",
        "kind": "policy",
        "source": "https://www.anthropic.com/news/claude-new-constitution",
@@ -1533,220 +2723,424 @@ window.ATLAS = {
       },
       {
        "name": "Pope Leo XIV encyclical Magnifica Humanitas",
-       "summary": "First encyclical focuses on AI, calls for robust regulation, says AI must be 'disarmed' and rejects handing lethal decisions to machines.",
+       "summary": "First encyclical centres on AI: says it must be 'disarmed' and serve humanity over a powerful few, and urges robust regulation and action against an AI arms race.",
        "date": "2026-05",
        "kind": "policy",
-       "source": "https://aljazeera.com/news/2026/5/26/what-has-pope-leo-warned-about-ai-and-why-thats-significant",
+       "source": "https://www.usccb.org/news/2026/first-encyclical-pope-leo-urges-world-disarm-ai-amid-increased-reliance",
        "verified": true
+      },
+      {
+       "name": "Values in the wild",
+       "summary": "Anthropic analysed 700,000 anonymised Claude.ai conversations to build an empirical taxonomy of the values the model expresses in real use and how they vary by context.",
+       "date": "2025-04",
+       "kind": "research",
+       "source": "https://www.anthropic.com/research/values-wild",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "The values written into widely used models affect millions of everyday judgments, and who sets them is contested.",
+     "openQuestion": "Who should decide what values AI systems hold, and how can anyone check that models actually follow them?",
+     "deepDives": [
+      {
+       "title": "Claude's Constitution (full text)",
+       "url": "https://www.anthropic.com/constitution",
+       "kind": "overview",
+       "why": "Primary text of a lab's value specification, written with the model as its audience."
+      },
+      {
+       "title": "Lawfare: Interpreting Claude's Constitution",
+       "url": "https://lawfaremedia.org/article/interpreting-claude-s-constitution",
+       "kind": "overview",
+       "why": "Legal-scholar reading of the document's structure, priorities and ambiguities."
+      },
+      {
+       "title": "Claude's character",
+       "url": "https://www.anthropic.com/research/claude-character",
+       "kind": "overview",
+       "why": "Background on training models for character traits instead of only harm avoidance."
       }
      ]
     },
     {
      "id": "mind.labor",
      "name": "Economics of work & automation",
-     "summary": "Firms increasingly cite AI in layoffs and entry-level hiring has weakened, but economists dispute how much AI causes, and usage data shows uneven, growing adoption.",
-     "activity": 5,
+     "summary": "Firms increasingly cite AI in layoffs and entry-level hiring looks weaker in exposed jobs, but economists dispute how much AI is the cause; usage data shows uneven, growing adoption.",
+     "activity": 4,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "Stanford 'canaries' entry-level study",
-       "summary": "ADP payroll data shows workers aged 22 to 25 in AI-exposed jobs saw about 13% relative employment decline, mostly through fewer hires.",
+       "summary": "Brynjolfsson, Chandar and Chen use ADP payroll data: workers aged 22 to 25 in the most AI-exposed jobs saw a 13% relative employment decline after firm-level controls.",
        "date": "2025-08",
        "kind": "research",
-       "source": "https://allwork.space/2025/08/ai-cuts-entry-level-jobs-13-wrecking-gen-z-careers/",
+       "source": "https://leaddev.com/hiring/young-devs-steepest-losses-exposed-roles-stanford-study-finds",
        "verified": true
       },
       {
-       "name": "AI becomes top cited reason for US job cuts",
-       "summary": "Challenger reports AI cited for 26% of April 2026 announced cuts, peaking near 40% in May; stated reasons, not verified causes.",
-       "date": "2026-05",
+       "name": "Anthropic 'observed exposure' measure",
+       "summary": "New displacement-risk measure finds no systematic rise in unemployment for highly exposed workers since late 2022, with suggestive signs of slower hiring of younger workers.",
+       "date": "2026-03",
        "kind": "research",
-       "source": "https://www.cbsnews.com/news/ai-layoffs-job-cuts-challenger-report-april-2026/",
+       "source": "https://www.anthropic.com/research/labor-market-impacts",
        "verified": true
       },
       {
        "name": "Anthropic Economic Index 'Cadences'",
-       "summary": "June 2026 report adds daily usage patterns and first results from a survey linked to Claude usage data on how AI is used at work.",
+       "summary": "Report adds daily and hourly usage patterns and first results from a survey of about 9,700 respondents linked to their Claude usage data.",
        "date": "2026-06",
        "kind": "research",
-       "source": "https://anthropic.com/research/economic-index-june-2026-report",
+       "source": "https://www.anthropic.com/research/economic-index-june-2026-report",
        "verified": true
       },
       {
+       "name": "AI cited in US job-cut announcements",
+       "summary": "Challenger report said AI was cited for about 26% of announced US job cuts in April 2026. These are employers' stated reasons, not verified causes.",
+       "date": "2026-05",
+       "kind": "research",
+       "source": "https://www.cbsnews.com/news/ai-layoffs-job-cuts-challenger-report-april-2026/",
+       "verified": false,
+       "note": "Not re-checked this pass: web search budget ran out before it was reached."
+      },
+      {
        "name": "Economists push back on AI job-loss story",
-       "summary": "Ramp and Revelio data on 21,000 firms show entry-level headcount rising 12% at heavy AI adopters, complicating claims that AI is erasing junior jobs.",
+       "summary": "Reported Ramp and Revelio data on 21,000 firms show entry-level headcount rising 12% at heavy AI adopters, complicating claims that AI is erasing junior jobs.",
        "date": "2026-08",
        "kind": "debate",
        "source": "https://www.opb.org/article/2026/08/18/recent-college-grads-say-ai-is-making-it-harder-to-get-a-job-is-it/",
-       "verified": true
+       "verified": false,
+       "note": "Not re-checked this pass: web search budget ran out before it was reached."
+      }
+     ],
+     "whyItMatters": "Whether AI is already displacing workers, especially juniors, drives policy, education and career decisions.",
+     "openQuestion": "Is weak entry-level hiring in AI-exposed jobs caused by AI, or by interest rates and post-pandemic corrections?",
+     "deepDives": [
+      {
+       "title": "Anthropic Economic Index",
+       "url": "https://www.anthropic.com/economic-index",
+       "kind": "tracker",
+       "why": "Live data on AI usage by task, occupation and geography."
+      },
+      {
+       "title": "Labor market impacts of AI: a new measure and early evidence",
+       "url": "https://www.anthropic.com/research/labor-market-impacts",
+       "kind": "paper",
+       "why": "Method for combining theoretical exposure with real usage, plus early employment results."
+      },
+      {
+       "title": "The AI expectations gap",
+       "url": "https://www.anthropic.com/research/ai-expectations-gap",
+       "kind": "report",
+       "why": "Survey of 10,980 US adults and lab staff on expected AI capabilities and job effects."
+      },
+      {
+       "title": "Anthropic Economics research",
+       "url": "https://www.anthropic.com/research/team/economics",
+       "kind": "overview",
+       "why": "Index of reports on productivity, retraining evidence and country-level usage."
       }
      ]
     },
     {
      "id": "mind.meaning",
      "name": "Human agency, meaning & dependence",
-     "summary": "Concern is rising over emotional reliance on chatbots and cognitive offloading, backed by early studies and a wave of lawsuits and state actions over harm to young users.",
+     "summary": "Concern is rising over emotional reliance on chatbots and cognitive offloading, backed by early usage studies and small trials, alongside lawsuits over harm to vulnerable users.",
      "activity": 4,
      "maturity": "emerging",
      "landmarks": [
       {
        "name": "OpenAI and MIT affective use study",
-       "summary": "Analysis of 3M conversations plus a 1,000-person trial links heavy ChatGPT use with more loneliness and emotional dependence, concentrated in a small group of users.",
+       "summary": "Analysis of millions of ChatGPT conversations plus a trial of about 1,000 people links heavy use with more loneliness and emotional dependence in a small group of users.",
        "date": "2025-03",
        "kind": "research",
        "source": "https://arxiv.org/html/2504.03888v1",
+       "verified": false,
+       "note": "Not re-checked this pass: web search budget ran out before it was reached."
+      },
+      {
+       "name": "Disempowerment patterns in AI usage",
+       "summary": "Anthropic analysis of about 1.5M Claude.ai chats finds severe disempowerment potential is rare, roughly 1 in 1,000 to 1 in 10,000 conversations depending on domain.",
+       "date": "2026-01",
+       "kind": "research",
+       "source": "https://www.anthropic.com/research/disempowerment-patterns",
        "verified": true
       },
       {
-       "name": "US states sue OpenAI over harm to youth",
-       "summary": "Eight states sued OpenAI alleging ChatGPT encouraged self-harm and reinforced delusions in young users, following dozens of private wrongful-death suits.",
-       "date": "2026-10",
-       "kind": "incident",
-       "source": "https://www.thenews.pk/story/1443061-openai-faces-fresh-legal-fight-over-claims-chatgpt-endangers-young-users",
-       "verified": false
+       "name": "AI assistance and coding skill formation",
+       "summary": "Randomised trial with software developers: those using AI assistance scored 17% lower on a quiz of concepts just used, with no significant speed gain.",
+       "date": "2026-01",
+       "kind": "research",
+       "source": "https://www.anthropic.com/research/AI-assistance-coding-skills",
+       "verified": true
       },
       {
-       "name": "Studies on cognitive offloading",
-       "summary": "Multi-university study reported signs of reduced independent thinking after short AI use, adding to MIT 'cognitive debt' work; most findings are small or correlational.",
-       "date": "2026-04",
+       "name": "How people use Claude for support",
+       "summary": "Study of about 4.5M conversations finds 2.9% of Claude.ai interactions are affective; companionship and roleplay together are under 0.5%.",
+       "date": "2025-06",
        "kind": "research",
-       "source": "https://tech.co/news/another-study-ai-making-us-dumb",
-       "verified": false
+       "source": "https://www.anthropic.com/research/how-people-use-claude-for-support-advice-and-companionship",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "As people bring advice, emotions and learning to AI, small per-conversation effects can add up across millions of users.",
+     "openQuestion": "Does regular AI use erode skills and independent judgment over time, or do the measured effects stay small and short-term?",
+     "deepDives": [
+      {
+       "title": "Disempowerment patterns in real-world AI usage",
+       "url": "https://www.anthropic.com/research/disempowerment-patterns",
+       "kind": "paper",
+       "why": "Definitions and prevalence estimates for AI distorting beliefs, values and actions."
+      },
+      {
+       "title": "Anthropic Societal Impacts research",
+       "url": "https://www.anthropic.com/research/team/societal-impacts",
+       "kind": "overview",
+       "why": "Index of usage studies on wellbeing, reasoning, education and relationships."
+      },
+      {
+       "title": "Protecting the wellbeing of our users",
+       "url": "https://www.anthropic.com/news/protecting-well-being-of-users",
+       "kind": "report",
+       "why": "How one lab evaluates responses on self-harm and sycophancy, with stated results."
       }
      ]
     },
     {
      "id": "mind.agi",
      "name": "What intelligence is & AGI debates",
-     "summary": "AGI has no agreed definition; researchers propose cognitive-benchmark definitions, argue for specialization instead, and track fast growth in agents' task horizons.",
+     "summary": "AGI has no agreed definition; researchers propose cognitive-benchmark definitions, argue for specialisation instead, and track growth in agents' task horizons and expectations.",
      "activity": 4,
      "maturity": "frontier",
      "landmarks": [
       {
        "name": "'A Definition of AGI' paper",
-       "summary": "Hendrycks and coauthors score models across ten cognitive domains from CHC theory, finding a jagged profile with a clear gap in long-term memory.",
+       "summary": "Hendrycks and coauthors score models across ten cognitive domains from CHC theory, reporting a jagged profile with a clear gap in long-term memory.",
        "date": "2025-10",
        "kind": "research",
        "source": "https://liner.com/review/definition-agi",
-       "verified": true
+       "verified": false,
+       "note": "Secondary summary as source; primary paper not re-checked (search budget ran out)."
       },
       {
-       "name": "LeCun et al. argue for specialization",
+       "name": "LeCun et al. argue for specialisation",
        "summary": "Paper proposes 'Superhuman Adaptable Intelligence' as a goal instead of AGI, questioning whether humans themselves are truly general.",
        "date": "2026-02",
        "kind": "debate",
        "source": "https://arxiv.org/html/2602.23643v1",
-       "verified": true
+       "verified": false,
+       "note": "Not re-checked this pass: web search budget ran out before it was reached."
       },
       {
        "name": "METR Time Horizon 1.1",
-       "summary": "Updated benchmark of how long tasks AI agents can complete; recent trend suggests doubling every few months, faster than the earlier seven-month estimate.",
+       "summary": "Updated measure of how long tasks AI agents can complete; reported recent trend is a doubling every few months, faster than the earlier seven-month estimate.",
        "date": "2026-01",
        "kind": "research",
        "source": "https://www.lesswrong.com/posts/EYb2K9acKfyG2bome/metr-time-horizons-now-10x-year",
-       "verified": false
+       "verified": false,
+       "note": "Forum post as source; METR's own page not re-checked (search budget ran out)."
+      },
+      {
+       "name": "The AI expectations gap",
+       "summary": "August 2026 survey: 39% of US adults and 91% of Anthropic staff expect AI able to make a Nobel-level discovery by 2030, showing a wide gap in beliefs.",
+       "date": "2026-10",
+       "kind": "research",
+       "source": "https://www.anthropic.com/research/ai-expectations-gap",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Claims that AGI is near drive investment and policy, yet depend on definitions and measures that remain disputed.",
+     "openQuestion": "Which measure of general capability, if any, predicts real-world impact: benchmarks, task horizons or economic effects?",
+     "deepDives": [
+      {
+       "title": "AI Must Embrace Specialization (LeCun et al.)",
+       "url": "https://arxiv.org/html/2602.23643v1",
+       "kind": "paper",
+       "why": "Argument that 'general' intelligence is the wrong target; not re-checked this pass."
+      },
+      {
+       "title": "Measuring AI agent autonomy in practice",
+       "url": "https://www.anthropic.com/research/measuring-agent-autonomy",
+       "kind": "report",
+       "why": "Usage data on how long agents work unattended, a complement to benchmark horizons."
+      },
+      {
+       "title": "Anthropic's core views on AI safety",
+       "url": "https://www.anthropic.com/news/core-views-on-ai-safety",
+       "kind": "overview",
+       "why": "One lab's 2023 statement of why it expects transformative AI and how it plans for it."
       }
      ]
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "Taking AI Welfare Seriously",
+     "url": "https://arxiv.org/abs/2411.00986",
+     "kind": "report",
+     "why": "Philosophers' case that AI moral status is a near-term issue, with steps for labs."
+    },
+    {
+     "title": "Consciousness in AI: Insights from the Science of Consciousness",
+     "url": "https://arxiv.org/abs/2308.08708v1",
+     "kind": "paper",
+     "why": "Turns leading theories of consciousness into indicator properties to check AI systems against."
+    },
+    {
+     "title": "Claude's Constitution",
+     "url": "https://www.anthropic.com/constitution",
+     "kind": "overview",
+     "why": "Full text of a lab's stated values for its models, with the reasoning behind each priority."
+    },
+    {
+     "title": "Anthropic Economic Index",
+     "url": "https://www.anthropic.com/economic-index",
+     "kind": "tracker",
+     "why": "Regularly updated data on which tasks and occupations AI is actually used for."
+    },
+    {
+     "title": "Sycophancy in Large Language Models: Causes and Mitigations",
+     "url": "https://arxiv.org/pdf/2411.15287",
+     "kind": "overview",
+     "why": "Survey of why models flatter and agree with users, and the main proposed fixes."
     }
    ]
   },
   {
    "id": "geo",
    "name": "Strategy & Geopolitics",
-   "summary": "AI is now treated as strategic infrastructure: chip controls swing between easing and tightening, states fund sovereign compute, militaries go AI-first, and power grids become the binding constraint.",
+   "summary": "AI is now treated as strategic infrastructure: chip controls swing between easing and tightening, states fund sovereign compute, militaries adopt AI-first plans, and power grids become a binding constraint.",
    "regions": [
     {
      "id": "geo.compute",
      "name": "Compute, chips & export controls",
-     "summary": "US rules on Nvidia sales to China loosened for H200 in early 2026 then tightened on offshore subsidiaries; Blackwell stays banned and actual China sales have stalled.",
+     "summary": "The US opened case-by-case H200 sales to China in January 2026, yet shipments stalled; Blackwell stays barred and a May guidance tightened rules on Chinese firms' offshore units.",
      "activity": 5,
      "maturity": "established",
+     "whyItMatters": "Who can buy frontier chips shapes which countries and companies can train and run the largest models.",
+     "openQuestion": "Will licensed H200 sales to China ever ship at scale, or do both governments now prefer decoupling?",
      "landmarks": [
       {
-       "name": "US conditionally allows Nvidia H200 sales to China",
-       "summary": "Commerce opened H200 exports under conditions, following a December 2025 deal giving the US government a 25% cut; the most advanced chips remain blocked.",
+       "name": "US opens case-by-case H200 sales to China",
+       "summary": "A BIS rule moved H200-class chips from presumed denial to case-by-case licence review for China, with volume caps and supply certifications, after Trump's offer tied to a 25% cut.",
        "date": "2026-01",
        "kind": "policy",
-       "source": "https://investinglive.com/stocks/us-eases-nvidia-h200-export-rules-to-china-under-strict-conditions-shares-higher-20260113/amp",
+       "source": "https://www.cov.com/news-and-insights/insights/2026/01/us-commerce-department-revises-license-review-policy-for-exports-of-certain-advanced-computing-commodities-to-china-and-macau",
        "verified": true
       },
       {
        "name": "Export enforcer: zero H200s sold to China",
-       "summary": "A Commerce official told Congress no H200s had shipped, as Beijing reportedly urged firms to pause purchases and favour domestic chips.",
+       "summary": "Commerce export enforcement chief David Peters told a House hearing on 24 February that, to his understanding, no H200s had yet gone to China.",
        "date": "2026-02",
        "kind": "debate",
-       "source": "https://news.bgov.com/capital-markets/nvidia-has-sold-zero-h200s-to-china-top-us-export-enforcer-says",
+       "source": "https://www.bloomberg.com/news/articles/2026-02-24/nvidia-has-sold-zero-h200s-to-china-top-us-export-enforcer-says",
        "verified": true
       },
       {
-       "name": "BIS closes offshore subsidiary loophole",
-       "summary": "New guidance blocks exports of top chips such as Blackwell to subsidiaries of Chinese companies located outside China, clarifying license rules in place since 2023.",
+       "name": "BIS targets Chinese firms' offshore units",
+       "summary": "Guidance issued on 31 May says licence requirements for advanced chips apply to entities headquartered in China even when located abroad, per Reuters.",
        "date": "2026-05",
        "kind": "policy",
-       "source": "https://www.khaleejtimes.com/tech/us-takes-step-to-halt-nvidia-ai-chip-shipments-to-chinese-firms-outside-china-2",
-       "verified": false
+       "source": "https://www.thestar.com.my/business/business-news/2026/06/01/us-takes-step-to-halt-nvidia-ai-chip-shipments-to-chinese-firms-outside-china",
+       "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "CNAS Insights: Unpacking the H200 Export Policy",
+       "url": "https://www.cnas.org/publications/cnas-insights/cnas-insights-unpacking-the-h200-export-policy",
+       "kind": "report",
+       "why": "Think-tank analysis of what the January 2026 rule allows, its caps and its weak points."
+      },
+      {
+       "title": "Mayer Brown: advanced AI chip policies codified",
+       "url": "https://www.mayerbrown.com/en/insights/publications/2026/01/administration-policies-on-advanced-ai-chips-codified",
+       "kind": "overview",
+       "why": "Legal explainer of the BIS rule and the related 25% chip tariff proclamation."
       }
      ]
     },
     {
      "id": "geo.us-china",
      "name": "US-China competition",
-     "summary": "China is building a domestic AI stack on Huawei Ascend chips and open models while US-China summitry produced stability but no settlement on chips or rare earths.",
+     "summary": "China is building a domestic AI stack on Huawei Ascend chips and open models, while the May 2026 Trump-Xi summit brought warm words but no settlement on chips or rare earths.",
      "activity": 5,
      "maturity": "established",
+     "whyItMatters": "The two countries set the pace of frontier AI, and their rivalry drives chip rules, supply chains and model access worldwide.",
+     "openQuestion": "Can China's domestic chips sustain frontier training without Nvidia hardware?",
      "landmarks": [
       {
-       "name": "DeepSeek V4 runs on Huawei Ascend",
-       "summary": "DeepSeek released V4-Pro and V4-Flash open weights with day-zero support on Huawei, Cambricon and other Chinese chips, a test of China's domestic hardware stack.",
+       "name": "DeepSeek V4 adapted for Huawei chips",
+       "summary": "DeepSeek previewed V4-Pro and V4-Flash on 24 April; Huawei said V4 is supported on Ascend 950 clusters and that its chips were used for part of V4-Flash's training, per Reuters.",
        "date": "2026-04",
        "kind": "product",
-       "source": "https://www.theregister.com/2026/04/24/deepseek_v4/",
+       "source": "https://finance.yahoo.com/sectors/technology/articles/chinas-deepseek-returns-model-viral-031101388.html",
        "verified": true
       },
       {
        "name": "Trump-Xi Beijing summit",
-       "summary": "The May 14-15 summit extended the trade truce but left AI chip exports and rare-earth supply unresolved, per most analyses.",
+       "summary": "The 14-15 May summit ended with warm words and few firm deals: no confirmed rare-earth fix, top Nvidia chips still restricted, and no extension of the trade truce, per Reuters.",
        "date": "2026-05",
        "kind": "policy",
-       "source": "https://www.china-briefing.com/news/xi-trump-beijing-summit-what-was-agreed/",
+       "source": "https://www.thestandard.com.hk/world/article/332095/Trump-leaves-Beijing-with-few-wins-but-warm-words-for-Xi",
        "verified": true
       },
       {
        "name": "China's 15th Five-Year Plan elevates AI+",
-       "summary": "Adopted in March 2026, the plan mentions AI 52 times and makes the AI+ integration initiative and chip self-reliance top national priorities.",
+       "summary": "Approved by the National People's Congress in March 2026, the 2026-2030 plan mentions AI more than 50 times and stresses AI+ integration and technological self-reliance.",
        "date": "2026-03",
        "kind": "policy",
-       "source": "https://www.scmp.com/tech/policy/article/3345586/chinas-five-year-plan-emphasises-orderly-ai-development-amid-global-tech-volatility",
+       "source": "https://www.thestar.com.my/aseanplus/aseanplus-news/2026/03/05/chinas-five-year-plan-emphasises-orderly-ai-development-amid-global-tech-volatility",
        "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "ASPI Strategist: key takeaways from China's Two Sessions",
+       "url": "https://www.aspistrategist.org.au/key-takeaways-from-chinas-new-five-year-plan/",
+       "kind": "overview",
+       "why": "Short analytical read on what the new five-year plan signals for technology and security."
+      },
+      {
+       "title": "ORF: reading the Trump-Xi summit",
+       "url": "https://www.orfonline.org/expert-speak/selective-cooperation-enduring-rivalry-reading-the-trump-xi-summit",
+       "kind": "overview",
+       "why": "Outside-view assessment of what the May 2026 summit did and did not change."
+      },
+      {
+       "title": "China Briefing: what the summit agreed, and what not",
+       "url": "https://www.china-briefing.com/news/xi-trump-beijing-summit-what-was-agreed/",
+       "kind": "overview",
+       "why": "Itemised list of summit outcomes and the gaps between US and Chinese readouts."
       }
      ]
     },
     {
      "id": "geo.national",
      "name": "National AI strategies & sovereign AI",
-     "summary": "Governments from Canada and the UK to the Gulf and EU are funding domestic compute and models to reduce dependence on foreign providers, often through deals with US chipmakers.",
+     "summary": "Governments from Canada to the Gulf and EU are funding domestic compute and models to reduce dependence on foreign providers, often through deals with US chipmakers.",
      "activity": 4,
      "maturity": "adopting",
+     "whyItMatters": "Public money and state deals now decide where large AI clusters get built and who controls them.",
+     "openQuestion": "Does sovereign AI built on imported US chips and cloud software deliver real independence?",
      "landmarks": [
       {
        "name": "Canada's 'AI for All' strategy",
-       "summary": "Canada's national AI strategy commits over C$2bn, with a sovereign AI foundation as one of six pillars, after a sovereign compute strategy in April.",
+       "summary": "Launched by Mark Carney and AI minister Evan Solomon on 4 June, the six-pillar strategy includes building a sovereign AI foundation and reportedly more than C$2bn in spending.",
        "date": "2026-06",
        "kind": "policy",
-       "source": "https://www.globalgovernmentforum.com/canada-publishes-new-national-ai-strategy-with-focus-on-trust-and-sovereignty/",
+       "source": "https://www.canada.ca/en/innovation-science-economic-development/news/2026/06/minister-solomon-highlights-canadas-national-artificial-intelligence.html",
        "verified": true
       },
       {
        "name": "EU AI gigafactories tender",
-       "summary": "The EU is procuring up to seven AI gigafactories backed by about EUR 10bn in public funds; bids close 12 November 2026 with awards expected in early 2027.",
-       "date": "2026-11",
+       "summary": "EuroHPC opened a tender on 30 July for up to seven AI gigafactories backed by up to EUR 10bn of EU and national funds; bids are due 3 December 2026 and 4 February 2027 by lot.",
+       "date": "2026-07",
        "kind": "policy",
-       "source": "https://www.eweek.com/news/eu-10-billion-ai-gigafactories/",
+       "source": "https://www.eurohpc-ju.europa.eu/call-tenders-selection-artificial-intelligence-gigafactory-consortia-and-establishment-ai_en",
        "verified": true
       },
       {
        "name": "Saudi Humain expands Nvidia deal",
-       "summary": "PIF-owned Humain expanded its Nvidia agreement as it targets about 3GW of data centre capacity by 2030, part of a Gulf push alongside Stargate UAE.",
+       "summary": "PIF-owned Humain announced up to 84MW of Nvidia compute, about 27,000 GPUs, in two phases through 2027; the later Vera Rubin phase is subject to final agreements.",
        "date": "2026-10",
        "kind": "deal",
        "source": "https://www.thenationalnews.com/future/technology/2026/10/22/saudi-arabias-humain-expands-nvidia-deal-with-84mw-ai-computing-plan/",
@@ -1754,11 +3148,31 @@ window.ATLAS = {
       },
       {
        "name": "US Genesis Mission for AI in science",
-       "summary": "Executive Order 14363 directs DOE and the national labs to build a shared AI platform for scientific discovery, with 2026 deadlines for an initial capability.",
+       "summary": "Executive Order 14363, signed 24 November 2025, directs the Energy Department to build a shared AI platform for scientific discovery across the national labs.",
        "date": "2025-11",
        "kind": "policy",
-       "source": "https://www.whitehouse.gov/fact-sheets/2025/11/launching-the-genesis-mission/",
+       "source": "https://www.govinfo.gov/content/pkg/FR-2025-11-28/html/2025-21665.htm",
        "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "Canada's national AI strategy (full text)",
+       "url": "https://ised-isde.canada.ca/site/ised/sites/default/files/documents/ai-strategy-en.pdf",
+       "kind": "report",
+       "why": "The primary document: six pillars, funding lines and the build-partner-buy approach."
+      },
+      {
+       "title": "European Commission: AI gigafactories",
+       "url": "https://commission.europa.eu/topics/competitiveness/competitiveness-coordination-tool-projects/ai-gigafactories_en",
+       "kind": "overview",
+       "why": "Official page with the programme's aims, timeline and the 2025 expressions of interest."
+      },
+      {
+       "title": "MoFo: the Genesis Mission executive order explained",
+       "url": "https://www.mofo.com/resources/insights/251211-executive-order-establishes-genesis-mission",
+       "kind": "overview",
+       "why": "Plain summary of what the order requires of DOE and by when."
       }
      ]
     },
@@ -1768,18 +3182,20 @@ window.ATLAS = {
      "summary": "Global AI governance has shifted to broad, nonbinding forums: the India summit, a new UN scientific panel and dialogue, and an annual international safety science report.",
      "activity": 3,
      "maturity": "emerging",
+     "whyItMatters": "These forums are the only places where most governments, including the US and China, discuss AI risk together.",
+     "openQuestion": "Can nonbinding declarations and science panels constrain frontier developers, or only describe what they do?",
      "landmarks": [
       {
        "name": "International AI Safety Report 2026",
-       "summary": "Chaired by Yoshua Bengio with 100+ experts, the second report finds fast capability gains and uneven, underdeveloped risk management practices.",
+       "summary": "Published 3 February and chaired by Yoshua Bengio, the second report finds continued capability gains and a widening gap between safety testing and real-world behaviour.",
        "date": "2026-02",
        "kind": "research",
-       "source": "https://yoshuabengio.org/en/publication/international-ai-safety-report-2026",
+       "source": "https://www.globalpolicywatch.com/2026/02/international-ai-safety-report-2026-examines-ai-capabilities-risks-and-safeguards/",
        "verified": true
       },
       {
        "name": "New Delhi Declaration at AI Impact Summit",
-       "summary": "About 88 to 91 countries and organisations adopted a nonbinding declaration on inclusive AI; frontier firms signed voluntary commitments critics called weak on safety.",
+       "summary": "Eighty-six countries and two international organisations, including the US, UK, EU and China, endorsed a voluntary, nonbinding declaration on collaborative and inclusive AI.",
        "date": "2026-02",
        "kind": "policy",
        "source": "https://theprint.in/tech/ai-summit-ends-with-88-nations-adopting-new-delhi-declaration-calls-for-cooperation-sovereignty/2860446",
@@ -1787,53 +3203,97 @@ window.ATLAS = {
       },
       {
        "name": "First UN Global Dialogue on AI Governance",
-       "summary": "All UN member states met in Geneva on 6-7 July, alongside the UN Scientific Panel on AI's first preliminary report; the next session is in New York in May 2027.",
+       "summary": "The first Dialogue met in Geneva on 6-7 July, informed by the UN scientific panel's preliminary report; the second is set for New York on 3-4 May 2027.",
        "date": "2026-07",
        "kind": "policy",
-       "source": "https://www.itu.int/en/mediacentre/Pages/PR-2026-07-06-Global-Dialogue.aspx",
+       "source": "https://www.un.org/global-dialogue-ai-governance/en/faq",
        "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "International AI Safety Report 2026: extended summary",
+       "url": "https://internationalaisafetyreport.org/publication/2026-report-extended-summary-policymakers",
+       "kind": "report",
+       "why": "The report's own policymaker summary of capabilities, risks and safeguards."
+      },
+      {
+       "title": "UN Global Dialogue on AI Governance: FAQ",
+       "url": "https://www.un.org/global-dialogue-ai-governance/en/faq",
+       "kind": "overview",
+       "why": "How the Dialogue and the scientific panel work, who takes part and what comes next."
+      },
+      {
+       "title": "Covington: what the 2026 safety report covers",
+       "url": "https://www.insideprivacy.com/artificial-intelligence/international-ai-safety-report-2026-examines-ai-capabilities-risks-and-safeguards/",
+       "kind": "overview",
+       "why": "Lawyer's digest of the report's main findings for readers short on time."
       }
      ]
     },
     {
      "id": "geo.defense",
      "name": "Defense & military AI",
-     "summary": "The Pentagon declared an AI-first strategy and clashed with Anthropic over usage limits, while Ukraine scales AI-assisted drones and ground robots with humans still approving strikes.",
+     "summary": "The Pentagon adopted an AI-first strategy and fought Anthropic in court over a supply chain risk label, while Ukraine pushes battlefield AI but says full integration is years away.",
      "activity": 5,
      "maturity": "adopting",
+     "whyItMatters": "Militaries are becoming major AI customers, and the terms they set test how far labs can restrict use of their models.",
+     "openQuestion": "Can an AI lab keep usage limits on its models once a government treats them as defence infrastructure?",
      "landmarks": [
       {
        "name": "Pentagon AI Acceleration Strategy",
-       "summary": "Hegseth's memo aims for an 'AI-first warfighting force', sets seven pace-setting projects and requires frontier models reach warfighters within 30 days of release.",
+       "summary": "Hegseth's January strategy aims for an 'AI-first' warfighting force, sets seven pace-setting projects and wants frontier models deployed within 30 days of public release.",
        "date": "2026-01",
        "kind": "policy",
-       "source": "https://nextgov.com/ideas/2026/02/dods-ai-acceleration-strategy/411135",
+       "source": "https://defensescoop.com/2026/01/13/hegseth-ai-tech-hubs-reorganization-dod-dow/",
        "verified": true
       },
       {
-       "name": "Pentagon labels Anthropic a supply chain risk",
-       "summary": "After Anthropic refused to drop bans on autonomous weapons and mass surveillance, DoD designated it a risk; a district court ruled the move arbitrary in August.",
-       "date": "2026-03",
+       "name": "Court rules Anthropic risk label unlawful",
+       "summary": "A California federal judge ruled on 27 August that the Pentagon's supply chain risk label for Anthropic was unlawful; a separate DC case went the other way.",
+       "date": "2026-08",
        "kind": "incident",
-       "source": "https://www.npr.org/2026/03/06/g-s1-112713/pentagon-labels-ai-company-anthropic-a-supply-chain-risk",
+       "source": "https://techcrunch.com/2026/08/28/anthropic-gets-its-first-court-win-over-the-pentagons-supply-chain-risk-label/",
        "verified": true
       },
       {
        "name": "Ukraine bets on battlefield AI",
-       "summary": "Ukraine's Defense AI Center coordinates 2,000+ firms and reports 70+ AI and vision systems at the front, while officials say full autonomy is years away.",
+       "summary": "Defense AI Center head Danylo Tsvok told AP that AI is a matter of national survival and that full battlefield integration may take three to five years.",
        "date": "2026-04",
        "kind": "experiment",
        "source": "https://wtop.com/russia-ukraine-war-news/2026/04/the-ap-interview-ukraine-bets-on-battlefield-ai-as-the-race-for-weapons-autonomy-intensifies/",
        "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "Release of the War Department's AI Acceleration Strategy",
+       "url": "https://www.cto.mil/?p=13655",
+       "kind": "report",
+       "why": "The department's own release of the strategy, for reading the text rather than coverage."
+      },
+      {
+       "title": "Nextgov: DOD's AI acceleration strategy",
+       "url": "https://nextgov.com/ideas/2026/02/dods-ai-acceleration-strategy/411135",
+       "kind": "overview",
+       "why": "Commentary on what the strategy changes in practice and where it may fall short."
+      },
+      {
+       "title": "Small Wars Journal: Ukraine bets on AI",
+       "url": "https://smallwarsjournal.com/2026/05/03/ukraine-bets-on-ai/",
+       "kind": "overview",
+       "why": "Practitioner-oriented take on Ukraine's battlefield AI programme."
       }
      ]
     },
     {
      "id": "geo.energy",
      "name": "Energy & data centres",
-     "summary": "Gigawatt-scale AI campuses are coming online and data centre power use is rising about a quarter a year, pushing hyperscalers into nuclear deals and straining local grids like PJM.",
+     "summary": "Data centre electricity use is forecast to rise about a quarter in 2026, pushing hyperscalers into nuclear deals and making grids such as PJM a constraint on AI buildout.",
      "activity": 5,
      "maturity": "adopting",
+     "whyItMatters": "Power, not chips, is increasingly what limits how fast AI capacity can be added and who pays for it.",
+     "openQuestion": "Who bears the grid and bill costs if data centre demand forecasts prove too high, or too low?",
      "landmarks": [
       {
        "name": "Gartner: data centre power up 26% in 2026",
@@ -1844,69 +3304,115 @@ window.ATLAS = {
        "verified": true
       },
       {
-       "name": "Meta signs up to 6.6GW of nuclear power",
-       "summary": "Deals with Vistra, TerraPower and Oklo cover existing plants and new advanced reactors, the largest tech-nuclear commitment so far, with most capacity due by 2035.",
+       "name": "Meta backs up to 6.6GW of nuclear power",
+       "summary": "Deals announced on 9 January with Vistra, Oklo and TerraPower cover existing plants and planned advanced reactors; Meta says they could support up to 6.6GW by 2035.",
        "date": "2026-01",
        "kind": "deal",
-       "source": "https://introl.com/fr/blog/meta-nuclear-power-deal-oklo-terrapower-vistra-6gw-2026",
+       "source": "https://www.axios.com/2026/01/09/meta-nuclear-deal-vistra-terrapower-oklo",
        "verified": true
       },
       {
-       "name": "Data centres projected at a fifth of US power",
-       "summary": "Bloomberg reporting projects data centres could reach about 20% of US electricity use by 2035, intensifying fights over grid costs and capacity.",
-       "date": "2026-05",
+       "name": "BNEF: data centres a fifth of US power by 2035",
+       "summary": "BloombergNEF projects data centres at about 20% of US electricity use by 2035, up from about 6% now, with the share in the PJM grid reported at roughly a third.",
+       "date": "2026-07",
        "kind": "research",
        "source": "https://news.bloomberglaw.com/business-and-practice/data-centers-on-track-to-suck-up-a-fifth-of-us-power-use-by-2035",
-       "verified": false
+       "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "Gartner: data centre electricity forecast 2026",
+       "url": "https://www.gartner.com/en/newsroom/press-releases/2026-06-10-gartner-says-data-center-electricity-demand-to-grow-26-percent-in-2026",
+       "kind": "report",
+       "why": "Headline TWh and GW forecasts to 2030 and the split between AI and conventional servers."
+      },
+      {
+       "title": "World Nuclear News: Meta's nuclear agreements",
+       "url": "https://world-nuclear-news.org/articles/meta-announces-landmark-agreements-for-new-nuclear",
+       "kind": "overview",
+       "why": "Industry-press detail on each deal: plants, megawatts and target dates."
       }
      ]
     },
     {
      "id": "geo.info",
      "name": "Elections & information integrity",
-     "summary": "The 2026 US midterms saw widespread AI-generated political ads, mostly without disclaimers, plus foreign influence operations; rules are a patchwork of state disclosure laws.",
+     "summary": "The 2026 US midterms saw heavy spending on AI-generated political ads, mostly without disclaimers; rules are a patchwork of state labelling laws and few voters yet use chatbots.",
      "activity": 4,
      "maturity": "adopting",
+     "whyItMatters": "Elections are the most visible test of whether synthetic media and chatbots change what voters believe.",
+     "openQuestion": "Did AI-generated ads and chatbot answers measurably shift votes, or mainly erode trust in what is real?",
      "landmarks": [
       {
-       "name": "AI deepfake ads in US midterms",
-       "summary": "A multimillion-dollar wave of AI-generated political ads ran in 2026 races; the Wesleyan Media Project found only 27% carried an AI disclaimer.",
+       "name": "AI-generated ads in US midterms",
+       "summary": "The Wesleyan Media Project tracked well over $100m of spending on AI-generated or AI-enhanced political ads in 2026 races; only about 27% carried an AI disclaimer.",
        "date": "2026-10",
        "kind": "incident",
-       "source": "https://www.nst.com.my/amp/opinion/columnists/2026/10/1565001/ai-deepfake-ads-blur-truth-us-midterms",
+       "source": "https://gizmodo.com/137-million-has-been-spent-on-ai-generated-ads-ahead-of-midterms-only-27-included-a-disclaimer-2000827138",
        "verified": true
       },
       {
-       "name": "OECD logs midterm deepfakes as realised harm",
-       "summary": "The OECD AI incident monitor recorded AI deepfakes used to mislead voters in 2026 US campaigns.",
-       "date": "2026-03",
-       "kind": "incident",
-       "source": "https://oecd.ai/en/incidents/2026-03-28-b14f",
+       "name": "State AI ad laws fail to ensure disclosure",
+       "summary": "AP reported that AI ads were popular in the midterms while state labelling laws, reportedly in 31 states, had not stopped a lack of disclosure; there is no federal rule.",
+       "date": "2026-09",
+       "kind": "policy",
+       "source": "https://www.ajc.com/news/2026/09/ai-ads-are-popular-in-the-2026-midterms-but-state-laws-havent-stopped-a-lack-of-disclosure/",
        "verified": true
       },
       {
-       "name": "Voters turn to chatbots for election info",
-       "summary": "A Pew survey found 8% of US adults used chatbots for 2026 election information, raising questions about accuracy and persuasion.",
+       "name": "Few voters use chatbots for election info",
+       "summary": "A Pew survey of 5,273 US adults in October found 8% using AI chatbots for 2026 election information, rising to 11% of those under 50.",
        "date": "2026-10",
        "kind": "research",
-       "source": "https://www.eweek.com/news/ai-2026-midterms-deepfakes-chatbots-election-security/",
-       "verified": false
+       "source": "https://www.pewresearch.org/short-reads/2026/10/23/few-americans-say-they-are-asking-ai-chatbots-for-2026-election-information",
+       "verified": true
+      }
+     ],
+     "deepDives": [
+      {
+       "title": "Wesleyan Media Project: AI in political ads",
+       "url": "https://mediaproject.wesleyan.edu/?p=56458",
+       "kind": "tracker",
+       "why": "The research group's own running counts of AI ad spending, sponsors and disclaimers."
+      },
+      {
+       "title": "Pew: chatbots and 2026 election information",
+       "url": "https://www.pewresearch.org/short-reads/2026/10/23/few-americans-say-they-are-asking-ai-chatbots-for-2026-election-information",
+       "kind": "report",
+       "why": "Survey data on who asks chatbots about elections and what they ask for."
+      },
+      {
+       "title": "States United: how well AI answers voter questions",
+       "url": "https://statesunited.org/resources/ai-and-elections/",
+       "kind": "report",
+       "why": "Tests of AI platforms' answers to practical voting questions."
       }
      ]
     },
     {
      "id": "geo.open-weights",
      "name": "Open vs closed models",
-     "summary": "Chinese labs now lead open-weight models on usage and benchmarks, while Meta moved its frontier work to a closed model, leaving OpenAI's gpt-oss as a main US open option.",
+     "summary": "Chinese labs keep releasing strong open-weight models and are reported to lead open-model usage, while Meta moved its newest frontier model to closed weights.",
      "activity": 4,
      "maturity": "established",
+     "whyItMatters": "Open weights decide who can run and adapt capable models without permission, including outside the US.",
+     "openQuestion": "Will US labs keep releasing competitive open weights, or cede that layer to Chinese developers?",
      "landmarks": [
       {
        "name": "Meta launches closed Muse Spark",
-       "summary": "Meta's first closed frontier model ships with no public weights, a break from its Llama open-weights strategy.",
+       "summary": "The first model from Meta Superintelligence Labs shipped on 8 April with no public weights, a break from Llama; Meta said future versions may be open-sourced.",
        "date": "2026-04",
        "kind": "product",
-       "source": "https://www.webpronews.com/metas-bold-ai-pivot-ditching-llamas-open-weights-for-muse-sparks-closed-power-play/",
+       "source": "https://www.bloomberg.com/news/articles/2026-04-08/meta-debuts-first-ai-model-from-prized-superintelligence-group",
+       "verified": true
+      },
+      {
+       "name": "DeepSeek V4 released as open weights",
+       "summary": "DeepSeek posted V4-Pro and V4-Flash on Hugging Face on 24 April, keeping its flagship models openly downloadable a year after its first breakout release.",
+       "date": "2026-04",
+       "kind": "product",
+       "source": "https://thenextweb.com/news/deepseek-v4-pro-flash-launch-open-source",
        "verified": true
       },
       {
@@ -1915,7 +3421,8 @@ window.ATLAS = {
        "date": "2026-05",
        "kind": "research",
        "source": "https://www.wing.vc/content/chinas-open-weight-takeover",
-       "verified": false
+       "verified": false,
+       "note": "Single VC analysis; figure not re-checked this pass (search budget ran out)."
       },
       {
        "name": "MIT Tech Review on China's open-source lead",
@@ -1923,9 +3430,11 @@ window.ATLAS = {
        "date": "2026-04",
        "kind": "debate",
        "source": "https://www.technologyreview.com/2026/04/21/1135658/china-open-source-models-ai-artificial-intelligence/",
-       "verified": false
+       "verified": false,
+       "note": "Plausible and important; article could not be opened or searched this pass."
       }
-     ]
+     ],
+     "deepDives": []
     },
     {
      "id": "geo.regulation",
@@ -1933,6 +3442,8 @@ window.ATLAS = {
      "summary": "The EU delayed AI Act high-risk rules to 2027-28 via a digital omnibus, and the US White House moved to preempt state AI laws through litigation and funding conditions.",
      "activity": 4,
      "maturity": "adopting",
+     "whyItMatters": "These rules set the compliance burden for anyone building or deploying AI in the two largest Western markets.",
+     "openQuestion": "Will delay and preemption produce simpler rules, or a long gap with few binding rules at all?",
      "landmarks": [
       {
        "name": "EU agrees AI Act omnibus delay",
@@ -1940,7 +3451,8 @@ window.ATLAS = {
        "date": "2026-05",
        "kind": "policy",
        "source": "https://www.euronews.com/2026/05/07/eu-reaches-tentative-deal-to-simplify-ai-rules",
-       "verified": true
+       "verified": false,
+       "note": "Not re-checked this pass (search budget ran out); marked verified by the earlier pass."
       },
       {
        "name": "US order targets state AI laws",
@@ -1948,113 +3460,215 @@ window.ATLAS = {
        "date": "2025-12",
        "kind": "policy",
        "source": "https://axios.com/2025/12/11/trump-signs-executive-order-state-ai-laws",
-       "verified": true
+       "verified": false,
+       "note": "Not re-checked this pass (search budget ran out); marked verified by the earlier pass."
       }
-     ]
+     ],
+     "deepDives": []
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "International AI Safety Report 2026: extended summary",
+     "url": "https://internationalaisafetyreport.org/publication/2026-report-extended-summary-policymakers",
+     "kind": "report",
+     "why": "Shared evidence base on capabilities and risks that governments cite in AI diplomacy."
+    },
+    {
+     "title": "CNAS Insights: Unpacking the H200 Export Policy",
+     "url": "https://www.cnas.org/publications/cnas-insights/cnas-insights-unpacking-the-h200-export-policy",
+     "kind": "report",
+     "why": "Clear analysis of the chip export rules at the centre of US-China AI competition."
+    },
+    {
+     "title": "UN Global Dialogue on AI Governance: FAQ",
+     "url": "https://www.un.org/global-dialogue-ai-governance/en/faq",
+     "kind": "overview",
+     "why": "How the new UN dialogue and scientific panel are meant to work."
+    },
+    {
+     "title": "Gartner: data centre electricity forecast 2026",
+     "url": "https://www.gartner.com/en/newsroom/press-releases/2026-06-10-gartner-says-data-center-electricity-demand-to-grow-26-percent-in-2026",
+     "kind": "report",
+     "why": "Reference numbers for the energy side of the AI buildout."
     }
    ]
   },
   {
    "id": "health",
    "name": "Health & Medicine",
-   "summary": "AI is widely used in radiology and note-taking, consumer chatbots field health questions at scale, AI-designed drugs reach late-stage trials, and regulators loosen some rules while debating others.",
+   "summary": "AI is routine in radiology and clinical note-taking, chatbots field health questions at vast scale, AI-designed drugs reach late-stage trials, and regulators loosen some rules while tightening others.",
    "regions": [
     {
      "id": "health.diagnostics",
      "name": "Imaging & diagnostics",
-     "summary": "Radiology accounts for about three quarters of FDA-cleared AI devices. Large randomized trials now show AI-supported screening can detect more cancers without raising radiologist workload.",
-     "activity": 4,
+     "summary": "Radiology makes up about three quarters of FDA-authorized AI devices. A large randomized trial and a national rollout study show AI-supported breast screening finds more cancers.",
+     "activity": 3,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "MASAI trial final results in The Lancet",
-       "summary": "Swedish RCT of 100,000+ women: AI-supported mammography found more cancers and cut interval cancers about 12% versus standard double reading.",
+       "summary": "Swedish randomized trial of about 106,000 women: AI-supported mammography had a 12% lower interval cancer rate than standard double reading, meeting non-inferiority.",
        "date": "2026-01",
        "kind": "research",
-       "source": "https://ascopost.com/news/february-2026/randomized-trial-shows-ai-supported-mammography-improves-sensitivity-and-lowers-interval-cancer-rate",
+       "source": "https://www.lunduniversity.lu.se/article/ai-support-breast-cancer-screening-fewer-missed-cancer-cases",
        "verified": true
       },
       {
        "name": "FDA AI device list passes 1,500",
-       "summary": "Analyses of the FDA list count about 1,524 AI-enabled device authorizations through March 2026, roughly 76% in radiology, with 92 added in Q1 2026 alone.",
+       "summary": "Third-party counts of the FDA list put AI-enabled device authorizations at about 1,524 through March 2026 and about 1,600 by mid-year, roughly 76% in radiology.",
        "date": "2026-03",
        "kind": "policy",
        "source": "https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/list-artificial-intelligence-enabled-medical-devices",
        "verified": true
       },
       {
-       "name": "Radiology AI tools dominate new clearances",
-       "summary": "Recent FDA authorizations continue to be led by imaging tools such as CT triage and coronary analysis from vendors including Siemens, GE HealthCare and Aidoc.",
-       "date": "2026-06",
-       "kind": "product",
-       "source": "https://www.appliedradiationoncology.com/articles/radiology-ai-tools-dominate-latest-fda-device-approvals",
-       "verified": false
+       "name": "PRAIM: AI in German breast screening",
+       "summary": "Real-world study of about 460,000 women in Germany's screening program found a 17.6% higher cancer detection rate with AI-supported reading and no rise in recalls.",
+       "date": "2025-01",
+       "kind": "research",
+       "source": "https://www.eurekalert.org/news-releases/1069807",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Imaging is where medical AI has the most approvals and the strongest trial evidence, so it shows what real clinical adoption looks like.",
+     "openQuestion": "Does finding more cancers with AI mean fewer deaths, and do the results hold outside European double-reading programs?",
+     "deepDives": [
+      {
+       "title": "AI-Enabled Medical Devices List (FDA)",
+       "url": "https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/list-artificial-intelligence-enabled-medical-devices",
+       "kind": "tracker",
+       "why": "The primary record of authorized AI devices, with specialty and decision date."
+      },
+      {
+       "title": "Expert reactions to the MASAI trial (Science Media Centre Spain)",
+       "url": "https://sciencemediacentre.es/en/node/6636",
+       "kind": "overview",
+       "why": "Independent researchers on what the 100,000-woman trial does and does not show."
+      },
+      {
+       "title": "PRAIM study dataset (Dryad)",
+       "url": "https://datadryad.org/dataset/doi:10.5061/dryad.zs7h44jgn",
+       "kind": "tracker",
+       "why": "Open data behind the German nationwide AI mammography implementation study."
+      },
+      {
+       "title": "Radiology dominates thirty years of FDA AI device approvals",
+       "url": "https://www.auntminnie.com/imaging-informatics/artificial-intelligence/article/15830219/radiology-dominates-thirty-years-of-fda-ai-device-approvals",
+       "kind": "overview",
+       "why": "Trade-press analysis of how the FDA's AI authorizations split across specialties."
       }
      ]
     },
     {
      "id": "health.scribes",
      "name": "Clinical documentation & scribes",
-     "summary": "Ambient AI scribes that draft visit notes are spreading fast across US health systems. Studies show modest time savings and some burnout relief, with vendor competition intensifying.",
-     "activity": 5,
+     "summary": "Ambient AI scribes that draft visit notes have spread fast across US health systems. Studies show modest time savings, and Epic's built-in scribe now competes with Microsoft and Abridge.",
+     "activity": 4,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "JAMA multisite study of AI scribes",
-       "summary": "Study of 8,581 ambulatory clinicians at five sites found AI scribes cut documentation time about 16 minutes a day, with no change in after-hours EHR time.",
+       "summary": "Study of 8,581 ambulatory clinicians at five health systems linked AI scribes to about 16 fewer documentation minutes per 8 patient hours, with no significant change after hours.",
        "date": "2026-04",
        "kind": "research",
-       "source": "https://hitconsultant.net/2026/04/01/jama-ai-scribe-study-ehr-time-savings-burnout-reality-check/",
+       "source": "https://www.beckersasc.com/asc-news/ai-scribes-underdeliver-on-cutting-down-after-hours-charting-study/",
        "verified": true
       },
       {
-       "name": "Microsoft Dragon Copilot scale",
-       "summary": "Microsoft reported 600+ health systems adopting DAX Copilot and 100,000+ clinicians using Dragon Copilot daily; Abridge reports 300+ health systems.",
-       "date": "2026-02",
+       "name": "Dragon Copilot passes 100,000 clinicians",
+       "summary": "At HIMSS 2026 Microsoft said more than 100,000 clinicians use Dragon Copilot in daily practice and opened it to partner-built apps and agents.",
+       "date": "2026-03",
        "kind": "product",
-       "source": "https://ehrsource.com/articles/ambient-ai-scribes-comparison/",
-       "verified": false
+       "source": "https://microsoft.com/en-us/industry/blog/healthcare/2026/03/05/unify-simplify-scale-microsoft-dragon-copilot-meets-the-moment-at-himss-2026",
+       "verified": true
       },
       {
-       "name": "Three vendors hold 80% of Epic deployments",
-       "summary": "AJMC cross-sectional study found DAX Copilot, Abridge and one other vendor made up over 80% of ambient AI implementations among Epic hospitals.",
+       "name": "Two thirds of Epic hospitals use ambient AI",
+       "summary": "AJMC study of 2,784 Epic hospitals found 62.6% had adopted ambient AI by June 2025; DAX Copilot, Abridge and ThinkAndor made up over 80% of implementations.",
        "date": "2026-01",
        "kind": "research",
-       "source": "https://www.academicjobs.com/research-publication-news/ambient-ai-adoption-63percent-us-epic-hospitals-or-academicjobs-2698",
-       "verified": false
+       "source": "https://www.ajmc.com/view/ambient-ai-tool-adoption-in-us-hospitals-and-associated-factors",
+       "verified": true
+      },
+      {
+       "name": "Epic rolls out its own AI Charting",
+       "summary": "Epic made its native ambient scribe, built with Microsoft technology, available to customers nationwide, competing directly with third-party scribe vendors.",
+       "date": "2026-02",
+       "kind": "product",
+       "source": "https://www.statnews.com/2026/02/04/epic-ai-charting-ambient-scribe-abridge-microsoft/",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Scribes are the fastest-adopted generative AI tool in medicine and an early test of whether AI eases clinician workload in practice.",
+     "openQuestion": "Do scribes reduce burnout and cost, or mainly raise visit volume and billing, and how accurate are the notes?",
+     "deepDives": [
+      {
+       "title": "Ambient AI Tool Adoption in US Hospitals (AJMC)",
+       "url": "https://www.ajmc.com/view/ambient-ai-tool-adoption-in-us-hospitals-and-associated-factors",
+       "kind": "paper",
+       "why": "Peer-reviewed snapshot of which hospitals adopted ambient AI and which vendors lead."
+      },
+      {
+       "title": "AI scribes deliver modest time savings (TechTarget)",
+       "url": "https://www.techtarget.com/healthtechanalytics/feature/AI-scribes-deliver-modest-time-savings-but-still-boost-clinician-experience",
+       "kind": "overview",
+       "why": "Explainer on what the evidence says about time savings and clinician experience."
       }
      ]
     },
     {
      "id": "health.drug-dev",
      "name": "Drug development & trials",
-     "summary": "The first AI-discovered drugs are entering Phase III, large funding rounds continue, and US and EU regulators have published shared principles for AI use across the medicines lifecycle.",
+     "summary": "The first AI-discovered drug has entered Phase III, large funding rounds continue, and US and EU regulators have published shared principles for AI use across the medicines lifecycle.",
      "activity": 4,
      "maturity": "emerging",
      "landmarks": [
       {
        "name": "Insilico starts Phase III for rentosertib",
-       "summary": "Insilico began a 320-patient Phase III trial in China for its AI-discovered TNIK inhibitor for idiopathic pulmonary fibrosis, a first for a drug of this kind.",
-       "date": "2026-07",
+       "summary": "Insilico dosed the first patient in a 320-patient Phase III trial in China of its AI-discovered TNIK inhibitor for idiopathic pulmonary fibrosis; the drug remains investigational.",
+       "date": "2026-09",
        "kind": "research",
-       "source": "https://www.clinicalresearchnewsonline.com/news/2026/07/08/insilico-medicine-launches-phase-iii-trial-for-ai-developed-drug",
+       "source": "https://www.news-medical.net/news/20260910/Generative-AI-driven-drug-Rentosertib-enters-Phase-III-trial-for-idiopathic-pulmonary-fibrosis.aspx",
        "verified": true
       },
       {
        "name": "Isomorphic Labs raises $2.1B",
-       "summary": "The DeepMind spinout raised a $2.1B Series B but pushed its first human trials of AI-designed drugs to end of 2026, prioritizing oncology.",
+       "summary": "Alphabet's drug-design unit raised a $2.1B Series B led by Thrive Capital. Its first human trials, once targeted for 2025, are now expected by the end of 2026.",
        "date": "2026-05",
        "kind": "deal",
-       "source": "https://ai2.work/blog/isomorphic-labs-2-1b-round-pushes-alphafold-drugs-to-trials",
-       "verified": false
+       "source": "https://www.rdworldonline.com/alphabet-spinoff-isomorphic-labs-raises-2-1-billion-in-quest-to-solve-all-disease-with-ai-based-drug-discovery-tools/",
+       "verified": true
       },
       {
        "name": "FDA and EMA joint AI principles",
-       "summary": "The two regulators issued 10 shared principles for good AI practice in drug development, covering risk-based use, context of use, data governance and lifecycle management.",
+       "summary": "The two regulators issued 10 guiding principles for good AI practice in drug development, spanning early research, clinical trials, manufacturing and safety monitoring.",
        "date": "2026-01",
        "kind": "policy",
-       "source": "https://www.jonesday.com/de/insights/2026/01/ema-and-fda-align-on-good-ai-practice-in-drug-development",
+       "source": "https://www.ema.europa.eu/en/news/ema-fda-set-common-principles-ai-medicine-development-0",
        "verified": true
+      }
+     ],
+     "whyItMatters": "Drug discovery is the highest-stakes test of whether AI can speed up science, and no AI-discovered drug has yet been approved.",
+     "openQuestion": "Will AI-designed drugs succeed in late-stage trials at a higher rate than conventionally discovered ones?",
+     "deepDives": [
+      {
+       "title": "Guiding principles of good AI practice in drug development",
+       "url": "https://www.ema.europa.eu/en/documents/other/guiding-principles-good-ai-practice-drug-development_en.pdf",
+       "kind": "report",
+       "why": "The 10 joint EMA and FDA principles in full, in a short primary document."
+      },
+      {
+       "title": "Artificial Intelligence for Drug Development (FDA CDER)",
+       "url": "https://www.fda.gov/about-fda/center-drug-evaluation-and-research-cder/artificial-intelligence-drug-development",
+       "kind": "overview",
+       "why": "The FDA's running hub for guidance and policy on AI in drug and biologic development."
+      },
+      {
+       "title": "EMA AI Observatory 2025 report",
+       "url": "https://www.ema.europa.eu/system/files/documents/report/2025-ai-observatory-report_en.pdf",
+       "kind": "report",
+       "why": "European regulator's yearly review of how AI is used in medicines and what is coming."
       }
      ]
     },
@@ -2067,7 +3681,7 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "OpenAI launches ChatGPT Health",
-       "summary": "A dedicated ChatGPT space that links patient portals and wellness apps; OpenAI says 230M+ people ask health questions on ChatGPT each week.",
+       "summary": "A dedicated ChatGPT space that links medical records and wellness apps; OpenAI says more than 230M people ask health and wellness questions on ChatGPT each week.",
        "date": "2026-01",
        "kind": "product",
        "source": "https://fortune.com/2026/01/07/openai-launches-chatgpt-health-in-a-push-to-become-a-hub-for-personal-health-data/",
@@ -2075,32 +3689,54 @@ window.ATLAS = {
       },
       {
        "name": "Illinois bans AI therapy",
-       "summary": "Illinois law bars AI from independently providing therapy or mental health treatment, with fines up to $10,000; Nevada and Utah passed related limits.",
+       "summary": "Illinois law bars AI from providing therapy or making therapeutic decisions without a licensed professional, with fines up to $10,000 per violation. Nevada passed a similar limit.",
        "date": "2025-08",
        "kind": "policy",
-       "source": "https://www.axios.com/local/chicago/2025/08/06/illinois-ai-therapy-ban-mental-health-regulation",
+       "source": "https://www.beckershospitalreview.com/healthcare-information-technology/illinois-bans-ai-therapy-without-clinician-oversight/",
        "verified": true
       },
       {
        "name": "California SB 243 on companion chatbots",
-       "summary": "First US state law with binding safety rules for companion chatbots, including self-harm protocols and crisis referrals, effective January 2026.",
+       "summary": "First US state law regulating companion chatbots, requiring AI disclosure and protocols for suicidal ideation and self-harm, effective January 2026.",
        "date": "2025-10",
        "kind": "policy",
        "source": "https://techcrunch.com/2025/10/13/california-becomes-first-state-to-regulate-ai-companion-chatbots",
        "verified": true
+      }
+     ],
+     "whyItMatters": "This is where most people actually meet medical AI, largely outside clinical oversight and medical device rules.",
+     "openQuestion": "Do health chatbots improve outcomes for ordinary users, and who is liable when their advice causes harm?",
+     "deepDives": [
+      {
+       "title": "States crack down on AI for behavioral health care (AHCJ)",
+       "url": "https://healthjournalism.org/blog/2025/08/states-crack-down-on-ai-for-behavioral-health-care",
+       "kind": "overview",
+       "why": "Summary of state laws on AI therapy from the Association of Health Care Journalists."
+      },
+      {
+       "title": "FDA committee meets on generative AI mental health devices",
+       "url": "https://www.psychiatrictimes.com/view/fda-committee-meets-on-generative-ai-digital-mental-health-devices",
+       "kind": "overview",
+       "why": "Clinician-oriented account of the risks and evidence standards the FDA panel discussed."
+      },
+      {
+       "title": "The Batch: Illinois follows Nevada on therapy chatbots",
+       "url": "https://www.deeplearning.ai/the-batch/illinois-follows-nevada-prohibiting-certain-uses-of-chatbots-unless-used-by-licensed-therapists",
+       "kind": "newsletter",
+       "why": "Andrew Ng's newsletter on the state laws and the debate over restricting AI therapy."
       }
      ]
     },
     {
      "id": "health.regulation",
      "name": "Medical AI regulation & validation",
-     "summary": "The FDA has relaxed oversight of decision-support software and wearables, while questions remain on generative AI devices and real-world performance monitoring. EU high-risk rules are delayed.",
+     "summary": "The FDA has relaxed oversight of decision-support software and wearables while still weighing how to handle generative AI devices. The EU has delayed high-risk rules for medical devices to 2028.",
      "activity": 3,
      "maturity": "emerging",
      "landmarks": [
       {
        "name": "FDA relaxes CDS and wellness guidance",
-       "summary": "Revised final guidances widened enforcement discretion for clinical decision support software and let more non-invasive wearables count as general wellness products.",
+       "summary": "Revised final guidances, issued without prior comment, clarified when clinical decision support software is exempt and let more non-invasive wearables count as wellness products.",
        "date": "2026-01",
        "kind": "policy",
        "source": "https://www.arnoldporter.com/en/perspectives/advisories/2026/01/fda-cuts-red-tape-on-clinical-decision-support-software",
@@ -2108,252 +3744,474 @@ window.ATLAS = {
       },
       {
        "name": "FDA panel on generative AI mental health devices",
-       "summary": "FDA's Digital Health Advisory Committee weighed evidence standards for generative AI therapy chatbots; no such device is yet authorized for mental health.",
+       "summary": "FDA's Digital Health Advisory Committee weighed evidence and monitoring standards for generative AI therapy chatbots; the FDA had not authorized any such device.",
        "date": "2025-11",
        "kind": "debate",
        "source": "https://www.orrick.com/en/insights/2025/11/fdas-digital-health-advisory-committee-considers-generative-ai-therapy-chatbots-for-depression",
        "verified": true
       },
       {
-       "name": "EU delays AI Act rules for regulated products",
-       "summary": "Provisional AI Omnibus deal moves high-risk obligations for AI embedded in regulated products, including medical devices, to August 2028.",
-       "date": "2026-05",
+       "name": "EU delays AI Act rules for medical devices",
+       "summary": "The Digital Omnibus on AI, in force since July 2026, moves high-risk obligations for AI in regulated products, including medical devices, from August 2027 to August 2028.",
+       "date": "2026-07",
        "kind": "policy",
-       "source": "https://www.simmons-simmons.com/en/publications/cmoveo6ke00icuxskpgueb0od/ai-omnibus-update",
+       "source": "https://www.whitecase.com/insight-alert/eu-ai-omnibus-enters-force-amending-ai-act",
        "verified": true
       }
+     ],
+     "whyItMatters": "Rules written for fixed software are being stretched to cover generative models, and the outcome decides what reaches patients.",
+     "openQuestion": "How should regulators evaluate and monitor generative AI whose outputs vary and whose models change after approval?",
+     "deepDives": [
+      {
+       "title": "FDA advisory committee weighs guardrails for generative AI",
+       "url": "https://ca.hoganlovells.com/en/publications/fdas-digital-health-advisory-committee-weighs-guardrails-for-generative-ai-in-mental-health-devices",
+       "kind": "overview",
+       "why": "Detailed legal analysis of the panel's recommendations on evidence and monitoring."
+      },
+      {
+       "title": "FDA Law Blog on the 2026 CDS and wellness guidances",
+       "url": "https://www.thefdalawblog.com/?p=15814",
+       "kind": "newsletter",
+       "why": "Specialist FDA lawyers explain what changed in the two January 2026 guidances."
+      },
+      {
+       "title": "EU AI Act unpacked #34: the final Digital Omnibus on AI",
+       "url": "https://www.freshfields.com/en/our-thinking/blogs/technology-quotient/eu-ai-act-unpacked-34-the-final-digital-omnibus-on-ai-key-amendments-to-the-a-102nber",
+       "kind": "overview",
+       "why": "Walk-through of the amended AI Act deadlines and what changed for high-risk systems."
+      },
+      {
+       "title": "Automation bias and clinical practice: FDA's CDS update (Cooley)",
+       "url": "https://www.cooley.com/news/insight/2026/2026-01-20-automation-bias-and-clinical-practice-fda-makes-incremental-updates-to-clinical-decision-support-software-guidance",
+       "kind": "overview",
+       "why": "Close reading of how the FDA now interprets the four decision-support criteria."
+      }
      ]
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "AI-Enabled Medical Devices List (FDA)",
+     "url": "https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/list-artificial-intelligence-enabled-medical-devices",
+     "kind": "tracker",
+     "why": "Official, periodically updated list of AI-enabled devices the FDA has authorized."
+    },
+    {
+     "title": "Artificial Intelligence for Drug Development (FDA CDER)",
+     "url": "https://www.fda.gov/about-fda/center-drug-evaluation-and-research-cder/artificial-intelligence-drug-development",
+     "kind": "overview",
+     "why": "The FDA drug center's hub for its AI guidance, principles and policy work."
+    },
+    {
+     "title": "The Current State of FDA-Approved AI-Based Medical Devices",
+     "url": "https://medicalfuturist.com/the-current-state-of-fda-approved-ai-based-medical-devices",
+     "kind": "overview",
+     "why": "Readable breakdown of the FDA list by specialty, year and vendor."
+    },
+    {
+     "title": "States crack down on AI for behavioral health care (AHCJ)",
+     "url": "https://healthjournalism.org/blog/2025/08/states-crack-down-on-ai-for-behavioral-health-care",
+     "kind": "overview",
+     "why": "Health journalists' guide to state laws on AI therapy and how to report on them."
     }
    ]
   },
   {
    "id": "education",
    "name": "Education",
-   "summary": "Students use AI widely, tech firms offer study modes and free tools to schools, institutions are reworking exams around it, and trials show AI tutors help only when designed and supervised with care.",
+   "summary": "AI labs ship study modes and fund training at scale, governments add AI to schooling, universities return to proctored exams, and trials suggest AI tutors help only when constrained and supervised.",
    "regions": [
     {
      "id": "education.tutoring",
      "name": "AI tutors",
-     "summary": "Major AI labs ship tutoring modes that guide rather than answer, and Khan Academy's Khanmigo runs on Gemini. Use is broad, but quality depends on design and school setup.",
+     "summary": "OpenAI and Google ship tutoring modes that guide rather than answer, and Khan Academy is building Khanmigo features on Gemini. Trials favor AI that works alongside human tutors.",
      "activity": 4,
      "maturity": "adopting",
      "landmarks": [
       {
-       "name": "ChatGPT Study Mode",
-       "summary": "OpenAI added a Socratic study mode to all ChatGPT plans that quizzes students and breaks problems into steps instead of giving answers.",
+       "name": "ChatGPT study mode",
+       "summary": "OpenAI launched a study mode that uses Socratic questions and step-by-step prompts instead of direct answers, for Free, Plus, Pro and Team users, with Edu to follow.",
        "date": "2025-07",
        "kind": "product",
-       "source": "https://dupple.com/learn/best-ai-education-tools",
-       "verified": false
+       "source": "https://openai.com/index/chatgpt-study-mode/",
+       "verified": true
       },
       {
-       "name": "Khanmigo rebuilt on Gemini",
-       "summary": "Google and Khan Academy partnered to power Khanmigo with Gemini models, adding generated visual aids and diagrams for students and teachers.",
+       "name": "Gemini Guided Learning",
+       "summary": "Google added Guided Learning to the Gemini app, a tutoring mode built on its education-tuned LearnLM work that breaks problems into steps and checks understanding.",
+       "date": "2025-08",
+       "kind": "product",
+       "source": "https://blog.google/outreach-initiatives/education/guided-learning/",
+       "verified": true
+      },
+      {
+       "name": "Khan Academy builds Khanmigo tools on Gemini",
+       "summary": "After a partnership announced in January 2026, Google and Khan Academy shipped Gemini-based interactive diagrams and a rebuilt practice tool in Khanmigo for back to school.",
        "date": "2026-08",
        "kind": "deal",
        "source": "https://blog.google/products-and-platforms/products/education/khan-academy-back-to-school/",
-       "verified": false
+       "verified": true
       },
       {
-       "name": "Gemini Guided Learning and LearnLM",
-       "summary": "Google folded its education-tuned LearnLM models into Gemini with a Guided Learning mode, offered to schools through Workspace for Education.",
-       "date": "2025-08",
-       "kind": "product",
-       "source": "https://services.google.com/fh/files/misc/learnlm_oct26.pdf",
-       "verified": false
+       "name": "Tutor CoPilot RCT",
+       "summary": "Preregistered trial with 900 tutors and 1,800 K-12 students found AI suggestions to human tutors raised topic mastery 4 points, and up to 9 for weaker tutors. Working paper.",
+       "date": "2024-10",
+       "kind": "research",
+       "source": "https://arxiv.org/abs/2410.03017",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Tutoring modes are how most students now meet AI, and their design decides whether it supports learning or replaces the effort.",
+     "openQuestion": "Will students choose a mode that makes them work when a direct answer is one click away?",
+     "deepDives": [
+      {
+       "title": "AI tutoring in UK classrooms: exploratory RCT (Eedi, DeepMind)",
+       "url": "https://arxiv.org/abs/2512.23633v1",
+       "kind": "paper",
+       "why": "Shows how a supervised LearnLM tutor was run and measured against human tutors in real schools."
+      },
+      {
+       "title": "Tutor CoPilot study page (Stanford NSSA)",
+       "url": "https://nssa.stanford.edu/studies/tutor-copilot-human-ai-approach-scaling-real-time-expertise",
+       "kind": "overview",
+       "why": "Readable account of the human-plus-AI tutoring model and its measured effects."
+      },
+      {
+       "title": "Khan Academy blog on its Google.org partnership",
+       "url": "https://blog.khanacademy.org/?p=22106",
+       "kind": "newsletter",
+       "why": "Khan Academy's own account of what the Gemini-based Khanmigo tools do for students and teachers."
       }
      ]
     },
     {
      "id": "education.assessment",
      "name": "Assessment & cheating",
-     "summary": "Most faculty report more cheating since generative AI. Institutions are moving away from AI detectors and back to proctored, handwritten and oral exams.",
-     "activity": 4,
+     "summary": "Universities are stepping back from AI detectors, which courts and campuses have found unreliable as sole evidence, and returning to proctored, in-person exams.",
+     "activity": 3,
      "maturity": "adopting",
      "landmarks": [
       {
-       "name": "Universities return to blue books and proctors",
-       "summary": "Stanford expanded proctoring to 50+ courses and Princeton set mandatory proctoring from July 2026 as AI detectors proved unreliable.",
+       "name": "Princeton ends 133 years of unproctored exams",
+       "summary": "Princeton faculty voted almost unanimously to proctor all in-person exams from 1 July 2026, the first time since its Honor Code began in 1893, citing AI-enabled cheating.",
        "date": "2026-05",
        "kind": "policy",
-       "source": "https://www.implicator.ai/universities-return-to-blue-books-and-proctors-as-ai-detectors-prove-unreliable/",
+       "source": "https://paw.princeton.edu/article/after-133-years-princeton-going-back-proctoring-exams",
+       "verified": true
+      },
+      {
+       "name": "Stanford moves to proctored exams",
+       "summary": "Stanford said it would begin proctoring in-person exams after a pilot that grew from seven courses in 2024 to more than 50, its first shift from unproctored exams since 1921.",
+       "date": "2026-05",
+       "kind": "policy",
+       "source": "https://stanforddaily.com/2026/05/20/stanford-to-begin-proctoring",
        "verified": true
       },
       {
        "name": "Curtin University turns off AI detection",
-       "summary": "Curtin in Australia disabled Turnitin's AI writing detector from January 2026, part of a wider retreat from detection tools.",
+       "summary": "Curtin in Australia disabled Turnitin's AI writing detection across all campuses from 1 January 2026, keeping text-matching checks, as several universities did the same.",
        "date": "2026-01",
        "kind": "policy",
-       "source": "https://etcjournal.com/2026/10/07/university-decisions-to-quit-ai-detection-are-short-sighted/",
-       "verified": false
+       "source": "https://www.curtin.edu.au/news/oasis-news/update-on-turnitin-ai-detection-tool/",
+       "verified": true
       },
       {
-       "name": "Court sides with student flagged by Turnitin",
-       "summary": "A New York state judge ruled for an Adelphi University student whose paper Turnitin had flagged as fully AI-generated.",
-       "date": "2026-02",
+       "name": "Court voids sanction based on Turnitin flag",
+       "summary": "In Newby v. Adelphi University, a New York state judge threw out sanctions on a student whose paper Turnitin flagged as 100% AI, faulting the university's process.",
+       "date": "2026-01",
        "kind": "incident",
-       "source": "https://www.implicator.ai/universities-return-to-blue-books-and-proctors-as-ai-detectors-prove-unreliable/",
-       "verified": false
+       "source": "https://www.nycourts.gov/reporter/3dseries/2026/2026_26021.htm",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "How schools verify that work is a student's own shapes what degrees certify and how much AI use is treated as misconduct.",
+     "openQuestion": "Can take-home and written coursework be assessed credibly at all, or only work done under supervision?",
+     "deepDives": [
+      {
+       "title": "Vanderbilt: why we disabled Turnitin's AI detector",
+       "url": "https://www.vanderbilt.edu/brightspace/2023/08/16/guidance-on-ai-detection-and-why-were-disabling-turnitins-ai-detector/",
+       "kind": "overview",
+       "why": "An early, widely cited explanation of the false-positive and transparency problems with detectors."
+      },
+      {
+       "title": "Matter of Newby v. Adelphi University (decision)",
+       "url": "https://www.nycourts.gov/reporter/3dseries/2026/2026_26021.htm",
+       "kind": "report",
+       "why": "The court's own reasoning on what process a university owes a student accused through an AI detector."
+      },
+      {
+       "title": "Plagiarism Today on the Adelphi case",
+       "url": "https://www.plagiarismtoday.com/2026/02/11/adelphi-student-wins-ai-plagiarism-lawsuit/",
+       "kind": "newsletter",
+       "why": "Long-running academic integrity blog that tracks AI misconduct disputes and what they mean."
       }
      ]
     },
     {
      "id": "education.policy",
      "name": "School & university policy",
-     "summary": "Governments are mandating AI education in schools and providing AI tools to students, often through partnerships with AI companies, while universities sign campus-wide deals.",
+     "summary": "Governments are requiring AI education in schools and giving students and teachers access to AI tools, often in partnership with AI companies.",
      "activity": 3,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "US executive order on AI education",
-       "summary": "EO 14277 created a White House task force on AI education and a Presidential AI Challenge, and encouraged AI training for teachers and students.",
+       "summary": "EO 14277 created a White House task force on AI education, called for a Presidential AI Challenge and told agencies to prioritize AI in teacher training grants.",
        "date": "2025-04",
        "kind": "policy",
-       "source": "https://www.presidency.ucsb.edu/documents/executive-order-14277-advancing-artificial-intelligence-education-for-american-youth",
+       "source": "https://www.whitehouse.gov/presidential-actions/2025/04/Advancing-Artificial-Intelligence-Education-For-American-youth/",
        "verified": true
       },
       {
        "name": "Beijing requires AI classes in schools",
-       "summary": "Beijing required at least eight hours of AI instruction a year in primary and secondary schools from fall 2025; national guidelines followed in May 2025.",
+       "summary": "Beijing's education commission required at least eight class hours of AI instruction a year in primary and secondary schools from the fall 2025 semester.",
        "date": "2025-03",
        "kind": "policy",
-       "source": "https://govt.chinadaily.com.cn/s/202510/21/WS694a49c7498e368550339296/beijing-makes-ai-education-compulsory-in-public-schools.html",
+       "source": "https://english.www.gov.cn/news/202503/12/content_WS67d18e9ec6d0868f4e8f0c40.html",
        "verified": true
       },
       {
        "name": "Estonia AI Leap",
-       "summary": "National program giving secondary students and teachers free access to AI tools from September 2025, with OpenAI and Anthropic as partners.",
+       "summary": "National program giving about 20,000 students in grades 10-11 and their teachers free AI tools from September 2025, with OpenAI as a partner and expansion planned for 2026.",
        "date": "2025-09",
        "kind": "policy",
        "source": "https://hm.ee/en/news/estonia-announces-groundbreaking-national-initiative-ai-leap-programme-bring-ai-tools-all",
        "verified": true
+      }
+     ],
+     "whyItMatters": "National mandates and vendor partnerships set which AI tools a generation of students grows up using, and on whose terms.",
+     "openQuestion": "Do national rollouts improve learning, or mainly lock school systems into particular vendors?",
+     "deepDives": [
+      {
+       "title": "EO 14277 text in the Federal Register",
+       "url": "https://www.govinfo.gov/content/pkg/FR-2025-04-28/html/2025-07368.htm",
+       "kind": "report",
+       "why": "The exact duties and deadlines the US order sets for the task force and federal agencies."
+      },
+      {
+       "title": "Eurydice: Estonia's AI Leap initiative",
+       "url": "https://eurydice.eacea.ec.europa.eu/news/estonia-ai-leap-initiative-enhance-learning-and-teaching",
+       "kind": "overview",
+       "why": "EU education network's summary of how Estonia structured its national AI rollout."
+      },
+      {
+       "title": "ERR: how will AI Leap change schools?",
+       "url": "https://news.err.ee/1609641896/how-will-estonia-s-new-ai-initiative-change-schools",
+       "kind": "overview",
+       "why": "Estonian public broadcaster's explainer on the aims, partners and concerns around the program."
       }
      ]
     },
     {
      "id": "education.skills",
      "name": "Upskilling & workforce learning",
-     "summary": "AI companies are funding large training programs and credentials for workers and teachers, with goals in the tens of millions of people.",
+     "summary": "AI companies are funding large training programs and credentials for workers and teachers, with stated goals in the tens of millions of people. Outcomes are not yet measured.",
      "activity": 3,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "Microsoft Elevate $4B commitment",
-       "summary": "Microsoft pledged more than $4B over five years for AI education and skilling, aiming to help 20 million people earn AI credentials.",
+       "summary": "Microsoft pledged more than $4B in cash and technology over five years for AI education and skilling, with a goal of helping 20 million people earn AI credentials.",
        "date": "2025-07",
        "kind": "deal",
        "source": "https://www.theregister.com/2025/07/09/microsoft_ai_training/",
        "verified": true
       },
       {
-       "name": "OpenAI Certifications and Jobs Platform",
-       "summary": "OpenAI announced free AI certifications via OpenAI Academy and a hiring platform for AI-skilled workers, targeting 10 million certified Americans by 2030.",
+       "name": "OpenAI certifications and jobs platform",
+       "summary": "OpenAI announced AI certifications through OpenAI Academy and plans for a jobs platform by mid-2026, committing to certify 10 million Americans by 2030 with Walmart as a partner.",
        "date": "2025-09",
        "kind": "product",
-       "source": "https://builtin.com/articles/openai-jobs-platform",
-       "verified": false
+       "source": "https://openai.com/index/expanding-economic-opportunity-with-ai/",
+       "verified": true
       },
       {
        "name": "AFT National Academy for AI Instruction",
-       "summary": "Teachers union AFT launched a $23M AI training academy funded by Microsoft, OpenAI and Anthropic, aiming to train 400,000 educators.",
+       "summary": "Teachers union AFT announced a $23M academy funded by Microsoft ($12.5M), OpenAI ($10M) and Anthropic ($0.5M), aiming to reach 400,000 educators in five years.",
        "date": "2025-07",
        "kind": "deal",
        "source": "https://www.edweek.org/technology/microsoft-openai-partner-with-aft-to-train-teachers-on-ai/2025/07",
        "verified": true
+      }
+     ],
+     "whyItMatters": "Vendor-funded training is becoming the main route by which workers and teachers learn AI, which shapes what counts as AI skill.",
+     "openQuestion": "Do vendor-issued AI credentials lead to better jobs or teaching, and who checks that independently?",
+     "deepDives": [
+      {
+       "title": "OpenAI: expanding economic opportunity with AI",
+       "url": "https://openai.com/index/expanding-economic-opportunity-with-ai/",
+       "kind": "overview",
+       "why": "The company's own statement of its certification targets, partners and jobs platform plan."
+      },
+      {
+       "title": "AFT press release on the AI academy",
+       "url": "https://www.aft.org/node/101397",
+       "kind": "overview",
+       "why": "The union's account of the academy's funding, governance and training goals."
       }
      ]
     },
     {
      "id": "education.evidence",
      "name": "Evidence on learning outcomes",
-     "summary": "Rigorous trials are accumulating. Unrestricted chatbots can harm learning, while constrained, supervised tutors show gains in some studies and null results in others.",
+     "summary": "Controlled trials are accumulating. Unrestricted chatbots can hurt later unaided performance, while constrained or supervised tutors show gains in small, short studies.",
      "activity": 3,
-     "maturity": "frontier",
+     "maturity": "emerging",
      "landmarks": [
       {
        "name": "Unguarded AI can harm learning (PNAS)",
-       "summary": "Field experiment with ~1,000 high school math students found unrestricted GPT-4 access hurt later unaided performance; a hint-based tutor mostly avoided this.",
+       "summary": "Peer-reviewed field experiment with nearly 1,000 high school math students: standard GPT-4 access cut later unaided grades by 17%, while a guardrailed tutor largely avoided this.",
        "date": "2025-06",
        "kind": "research",
-       "source": "https://knowledge.wharton.upenn.edu/article/without-guardrails-generative-ai-can-harm-education/",
+       "source": "https://chibe.upenn.edu/publications/generative-ai-without-guardrails-can-harm-learning-evidence-from-high-school-mathematics",
        "verified": true
       },
       {
-       "name": "MIT 'Your Brain on ChatGPT' preprint",
-       "summary": "Small EEG study of 54 essay writers found lower engagement with ChatGPT use and weaker unaided writing afterward; not yet peer reviewed.",
+       "name": "Harvard physics AI tutor RCT",
+       "summary": "Crossover RCT in Scientific Reports (N=194): students using a custom GPT-4 tutor learned more than twice as much, in less time, as in an active learning class. Two topics only.",
        "date": "2025-06",
        "kind": "research",
-       "source": "https://aiforbeginners.substack.com/p/your-brain-on-chatgpt",
-       "verified": false
+       "source": "https://hechingerreport.org/?p=103689",
+       "verified": true
       },
       {
-       "name": "Eedi and Google AI tutoring RCT",
-       "summary": "UK classroom trial found a supervised, pedagogically tuned AI tutor raised correct answers on new questions 5.5 points versus human tutoring alone.",
-       "date": "2026-03",
+       "name": "Eedi and Google DeepMind tutoring RCT",
+       "summary": "Exploratory trial with 165 students in five UK schools: a tutor-supervised LearnLM solved 66.2% of later novel problems versus 60.7% with human tutors alone. Preprint.",
+       "date": "2025-12",
        "kind": "research",
-       "source": "https://www.eedi.com/news/just-launched---our-second-ai-tutor-rct",
-       "verified": false
+       "source": "https://arxiv.org/abs/2512.23633v1",
+       "verified": true
       },
       {
-       "name": "OECD Digital Education Outlook 2026",
-       "summary": "OECD report reviews evidence on generative AI in education, citing a physics RCT where an AI tutor beat in-class active learning while noting limits.",
-       "date": "2026-01",
+       "name": "World Bank GPT-4 tutoring RCT in Nigeria",
+       "summary": "Randomized trial of a six-week, teacher-supervised after-school program using GPT-4 in nine Edo State schools reported sizable gains in English. Working paper.",
+       "date": "2025-05",
        "kind": "research",
-       "source": "https://letsdatascience.com/news/oecd-report-cites-trial-where-ai-tutor-beat-classroom-learni-a231228d",
-       "verified": false
+       "source": "https://openknowledge.worldbank.org/entities/publication/15e1ff08-15ae-4f7a-b2a8-d146e6c113ee/full",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Billions are being spent on AI in classrooms on the strength of a handful of short trials, so what the evidence shows matters.",
+     "openQuestion": "Do gains from constrained AI tutors persist over a school year and replicate outside small, supervised trials?",
+     "deepDives": [
+      {
+       "title": "OECD Digital Education Outlook 2026",
+       "url": "https://www.oecd.org/en/publications/2026/01/oecd-digital-education-outlook-2026_940e0dd8.html",
+       "kind": "report",
+       "why": "Synthesis of the trial evidence, separating general chatbots from purpose-built education tools."
+      },
+      {
+       "title": "Bastani et al., open version of the PNAS paper",
+       "url": "https://papers.ssrn.com/abstract=4895486",
+       "kind": "paper",
+       "why": "Full design and results of the best known experiment on chatbots harming unaided performance."
+      },
+      {
+       "title": "Your Brain on ChatGPT (MIT Media Lab preprint)",
+       "url": "https://arxiv.org/abs/2506.08872",
+       "kind": "paper",
+       "why": "Much cited 54-person EEG study of essay writing with an LLM; not peer reviewed, read with care."
+      },
+      {
+       "title": "World Bank blog: lessons from the Nigeria trial",
+       "url": "https://blogs.worldbank.org/en/education/From-chalkboards-to-chatbots-Transforming-learning-in-Nigeria",
+       "kind": "overview",
+       "why": "The study team's plain account of the program, its results and what made it work."
       }
      ]
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "OECD Digital Education Outlook 2026",
+     "url": "https://www.oecd.org/en/publications/2026/01/oecd-digital-education-outlook-2026_940e0dd8.html",
+     "kind": "report",
+     "why": "Cross-country review of what generative AI does and does not do for learning, teaching and administration."
+    },
+    {
+     "title": "Generative AI without guardrails can harm learning",
+     "url": "https://papers.ssrn.com/abstract=4895486",
+     "kind": "paper",
+     "why": "Open version of the PNAS field experiment that anchors the debate on chatbots as a crutch."
+    },
+    {
+     "title": "Tutor CoPilot study page (Stanford NSSA)",
+     "url": "https://nssa.stanford.edu/studies/tutor-copilot-human-ai-approach-scaling-real-time-expertise",
+     "kind": "overview",
+     "why": "Plain summary of a large RCT on AI that assists human tutors rather than replacing them."
+    },
+    {
+     "title": "EO 14277 text in the Federal Register",
+     "url": "https://www.govinfo.gov/content/pkg/FR-2025-04-28/html/2025-07368.htm",
+     "kind": "report",
+     "why": "The primary text of the US federal policy on AI education, with its deadlines and agency duties."
     }
    ]
   },
   {
    "id": "creative",
    "name": "Creative & Media",
-   "summary": "Image and music generation are mainstream, video is consolidating after Sora's exit, and the fight over training data is shifting from lawsuits to licensing deals and labelling rules.",
+   "summary": "Image and music generation are mainstream, video is consolidating after Sora's exit, and the fight over training data is moving from lawsuits to settlements, licensing deals and labelling rules.",
    "regions": [
     {
      "id": "creative.image",
      "name": "Image & design",
-     "summary": "Image generation is built into chat apps and pro tools; Adobe is adding agents across Creative Cloud, while misuse such as nonconsensual deepfakes draws regulator action.",
-     "activity": 5,
+     "summary": "Image generation is built into chat apps, search and pro tools; Adobe is adding agents across Creative Cloud, while nonconsensual sexualized images draw regulator action.",
+     "activity": 4,
      "maturity": "established",
      "landmarks": [
       {
        "name": "Nano Banana 2 (Gemini 3.1 Flash Image)",
-       "summary": "Google's image model generating up to 4K, widely ranked among the top image generators of 2026; sources give differing release dates.",
+       "summary": "Google released its faster image model on 26 February with 4K output and made it the default in the Gemini app, Search AI Mode and Lens.",
        "date": "2026-02",
        "kind": "product",
-       "source": "https://flowith.io/blog/midjourney-v7-vs-nano-banana-2-ai-photography-2026",
-       "verified": false
+       "source": "https://9to5google.com/2026/02/26/nano-banana-2-gemini-app/",
+       "verified": true
       },
       {
        "name": "Adobe Firefly AI Assistant",
-       "summary": "Agentic assistant that runs multi-step tasks across Photoshop, Premiere, Illustrator and InDesign, with 30+ partner models and links to ChatGPT, Claude and Copilot.",
+       "summary": "Adobe announced an agentic assistant that runs multi-step tasks across Photoshop, Premiere, Illustrator and other apps; in-app public betas followed in June.",
        "date": "2026-04",
        "kind": "product",
-       "source": "https://gilbane.com/2026/04/adobe-unveils-firefly-ai-assistant-with-new-creative-agent/",
+       "source": "https://venturebeat.com/technology/adobes-new-firefly-ai-assistant-wants-to-run-photoshop-premiere-illustrator-and-more-from-one-prompt",
        "verified": true
       },
       {
        "name": "Grok sexualized deepfake scandal",
-       "summary": "Grok image editing produced sexualized images of real women and minors; UK, EU, France, India, Australia and California opened inquiries or sent orders.",
+       "summary": "Grok on X produced undressed images of real people, including children; Ofcom opened a formal probe on 12 January, the EU followed, and Indonesia and Malaysia blocked it.",
        "date": "2026-01",
        "kind": "incident",
-       "source": "https://www.malwarebytes.com/blog/news/2026/01/regulators-around-the-world-are-scrutinizing-grok-over-sexual-deepfakes",
+       "source": "https://www.nbcnews.com/tech/tech-news/international-pressure-builds-x-musk-grok-deepfakes-rcna253639",
        "verified": true
+      }
+     ],
+     "whyItMatters": "Image tools are where most people first meet generative AI, and where misuse against real people is most visible.",
+     "openQuestion": "Can safeguards and labelling keep pace with models that edit photos of real people on request?",
+     "deepDives": [
+      {
+       "title": "The Batch: Nano Banana 2 ups performance per price",
+       "url": "https://www.deeplearning.ai/the-batch/nano-banana-2-aka-gemini-3-1-flash-image-makes-edits-easier-and-faster",
+       "kind": "newsletter",
+       "why": "DeepLearning.AI's plain summary of what the model does and what Google has not disclosed"
+      },
+      {
+       "title": "RPC: regulators investigate X over Grok images",
+       "url": "https://www.rpclegal.com/snapshots/technology-digital/spring-2026/online-safety-regulators-investigate-x-over-grok-ai-chatbot-images/",
+       "kind": "overview",
+       "why": "Law firm overview of the UK and EU investigations and the legal duties at stake"
       }
      ]
     },
     {
      "id": "creative.video",
      "name": "Video & film",
-     "summary": "Video models from Google and Chinese labs lead after OpenAI shut the Sora app over cost; studios use AI for effects shots while licensing deals remain unsettled.",
+     "summary": "Video models from Google and Chinese labs lead after OpenAI said it would shut Sora; studios use AI for effects shots while studio licensing deals remain unsettled.",
      "activity": 4,
      "maturity": "adopting",
      "landmarks": [
       {
-       "name": "OpenAI shuts down Sora app",
-       "summary": "OpenAI discontinued the Sora app (closed April 2026, API in September), reportedly over compute costs, ending its planned Disney character deal.",
+       "name": "OpenAI discontinues Sora",
+       "summary": "OpenAI said on 24 March it would discontinue the Sora app and API; reports cite compute costs and a research pivot. Disney then dropped its planned deal.",
        "date": "2026-03",
        "kind": "product",
        "source": "https://www.opb.org/article/2026/03/24/openai-pulls-the-plug-on-sora-the-viral-ai-video-app-that-sparked-deepfake-concerns",
@@ -2361,7 +4219,7 @@ window.ATLAS = {
       },
       {
        "name": "Disney and OpenAI $1B licensing deal",
-       "summary": "Disney agreed to license 200+ characters for Sora and invest $1B in OpenAI, a first major studio licensing deal; it lapsed with Sora's shutdown.",
+       "summary": "Disney agreed to license 200+ characters to Sora for three years and invest $1B in OpenAI; the deal was reportedly never completed before Sora was shut.",
        "date": "2025-12",
        "kind": "deal",
        "source": "https://www.thewrap.com/disney-sora-openai-licensing-deal",
@@ -2369,21 +4227,24 @@ window.ATLAS = {
       },
       {
        "name": "Kling 3.0 launch",
-       "summary": "Kuaishou's Kling 3.0 and Omni variant with native multilingual audio, ranked near Google Veo 3.1 at the top of video leaderboards.",
+       "summary": "Kuaishou launched Kling Video 3.0 and 3.0 Omni with clips of up to 15 seconds and native audio in several languages, first for Ultra subscribers.",
        "date": "2026-02",
        "kind": "product",
-       "source": "https://www.wavespeed.ai/blog/posts/ai-video-generation-news-2026/",
+       "source": "https://www.bernama.com/en/news.php/?id=2520897",
        "verified": true
       },
       {
        "name": "Netflix uses generative AI in final footage",
-       "summary": "Netflix said 'The Eternaut' used generative AI for a building-collapse scene, its first use in final footage of a series.",
+       "summary": "Netflix said 'The Eternaut' used generative AI for a building-collapse scene, its first use in final footage, finished about ten times faster than usual.",
        "date": "2025-07",
        "kind": "product",
-       "source": "https://www.tomsguide.com/ai/netflix-just-gave-its-reasons-for-using-generative-ai-in-a-tv-show-and-it-could-be-a-watershed-moment",
+       "source": "https://www.ibc.org/artificial-intelligence/news/netflix-embraces-generative-ai-for-argentine-tv-series/22053",
        "verified": true
       }
-     ]
+     ],
+     "whyItMatters": "Video is the costliest media to generate, so it shows whether consumer generative AI can pay for its own compute.",
+     "openQuestion": "Will studios license characters and libraries to video models, or keep the tools in-house for effects work?",
+     "deepDives": []
     },
     {
      "id": "creative.music",
@@ -2394,11 +4255,12 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Warner Music settles with Suno",
-       "summary": "WMG dropped its suit for a licensing deal; Suno will launch licensed models in 2026 and deprecate current ones. UMG and Sony talks with Suno stalled.",
+       "summary": "WMG dropped its suit for a licensing deal; Suno said it would launch licensed models in 2026 and retire current ones.",
        "date": "2025-11",
        "kind": "deal",
        "source": "https://www.musicbusinessworldwide.com/warner-music-group-settles-with-suno-strikes-first-of-its-kind-deal-with-ai-song-generator/",
-       "verified": true
+       "verified": false,
+       "note": "Not re-checked in this pass (search budget ran out); trade-press source, widely reported"
       },
       {
        "name": "Universal settles with Udio",
@@ -2406,69 +4268,109 @@ window.ATLAS = {
        "date": "2025-10",
        "kind": "deal",
        "source": "https://www.musicbusinessworldwide.com/universal-music-settles-udio-lawsuit-strikes-deal-for-licensed-ai-music-platform",
-       "verified": true
+       "verified": false,
+       "note": "Not re-checked in this pass (search budget ran out); trade-press source, widely reported"
       },
       {
        "name": "AI tracks pass half of Deezer uploads",
-       "summary": "Deezer reports AI-generated tracks over half of daily deliveries but only 1 to 3% of streams; it excludes them from recommendations and royalties.",
+       "summary": "Deezer said AI-generated tracks passed 50% of daily uploads for the first time, up from 44% in April, yet draw only 1 to 3% of streams.",
        "date": "2026-07",
        "kind": "research",
-       "source": "https://t2online.in/tech/tech-news/ai-tracks-now-make-up-more-than-half-of-daily-uploads-to-deezer/2006666",
-       "verified": false
+       "source": "https://newsroom-deezer.com/2026/07/ai-music-exceeds-50-percent-daily-uploads-deezer/",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Music is the first creative sector where rights holders and AI generators have moved from court to licensed products.",
+     "openQuestion": "Will licensed AI music pay artists meaningfully, and can streaming services contain the flood of uploads?",
+     "deepDives": [
+      {
+       "title": "Deezer newsroom: AI music share of uploads",
+       "url": "https://newsroom-deezer.com/2026/07/ai-music-exceeds-50-percent-daily-uploads-deezer/",
+       "kind": "report",
+       "why": "The only regular platform data on AI upload volumes, stream share and detection"
       }
      ]
     },
     {
      "id": "creative.writing",
      "name": "Writing & publishing",
-     "summary": "AI-written books fill self-publishing platforms and dilute human earnings, while publishers pursue licensing and authors win payouts over pirated training data.",
+     "summary": "AI-written books fill self-publishing platforms and dilute revenue per title, while publishers test licensing and authors win payouts over pirated training data.",
      "activity": 3,
      "maturity": "adopting",
      "landmarks": [
       {
-       "name": "Anthropic $1.5B authors settlement",
-       "summary": "Largest US copyright settlement: training on lawfully acquired books was ruled fair use, but downloading pirated books was not; court has approved the payout.",
-       "date": "2025-09",
+       "name": "Anthropic $1.5B authors settlement approved",
+       "summary": "A US judge gave final approval to the largest copyright class settlement, about $3,000 per work for roughly 500,000 pirated books used by Anthropic.",
+       "date": "2026-07",
        "kind": "deal",
-       "source": "https://natlawreview.com/article/ai-vs-authors-update-court-approves-historic-anthropic-settlement-while-meta",
+       "source": "https://www.jurist.org/news/2026/07/judge-approves-record-1-5-billion-settlement-involving-anthropic/",
        "verified": true
       },
       {
        "name": "AI books reach 20% of Amazon self-publishing",
-       "summary": "Study of 14,419 self-published titles finds AI-generated books are 20% of the catalogue and 12% of sales, with human revenue per title falling in most genres.",
-       "date": "2026-09",
+       "summary": "Preprint on 14,419 self-published genre-fiction e-books finds about 20% have substantial AI text; revenue per selling book fell across most genres.",
+       "date": "2026-07",
        "kind": "research",
-       "source": "https://the-decoder.com/ai-generated-books-are-flooding-amazon-and-tanking-sales-for-human-authors/",
-       "verified": false
+       "source": "https://arxiv.org/pdf/2607.20349",
+       "verified": true,
+       "note": "arXiv ID 2607 = posted July 2026; wider press coverage followed in September"
       },
       {
-       "name": "Publisher licenses backlist for AI training",
-       "summary": "Arcadia Publishing licensed titles to an unnamed tech firm for AI training, reportedly paying authors about $340 per book.",
-       "date": "2025-01",
+       "name": "HarperCollins AI training licence",
+       "summary": "HarperCollins offered nonfiction authors $2,500 per title for a three-year opt-in AI training licence; Bloomberg reported the buyer was Microsoft.",
+       "date": "2024-11",
        "kind": "deal",
-       "source": "https://www.clmp.org/news/ai-101-series-6-genai-news-affecting-publishers-and-authors/",
-       "verified": false
+       "source": "https://www.publishersweekly.com/pw/print/20241125/96533-agents-authors-question-harpercollins-ai-deal.html",
+       "verified": true
+      }
+     ],
+     "whyItMatters": "Books are the clearest test of what training data is worth and of how cheap AI text changes a market for human work.",
+     "openQuestion": "Will per-book licensing become standard, and can platforms stop AI titles from diluting author income?",
+     "deepDives": [
+      {
+       "title": "Generative AI floods and dilutes the market for books",
+       "url": "https://arxiv.org/pdf/2607.20349",
+       "kind": "paper",
+       "why": "The underlying study: full-text AI detection matched to Amazon sales data through June 2026"
+      },
+      {
+       "title": "Authors Guild: AI licensing, what authors should know",
+       "url": "https://authorsguild.org/advocacy/artificial-intelligence/ai-licensing-what-authors-should-know/",
+       "kind": "overview",
+       "why": "The main US authors' body on rights, contract terms and fair splits for AI licences"
+      },
+      {
+       "title": "Jane Friedman: AI licensing for authors",
+       "url": "https://janefriedman.com/ai-licensing-for-authors-who-owns-the-rights-and-whats-the-split/",
+       "kind": "newsletter",
+       "why": "A respected publishing analyst on who holds AI rights and how deals are structured"
+      },
+      {
+       "title": "Publishers Weekly: an AI licensing primer for publishers",
+       "url": "https://publishersweekly.com/pw/print/20241125/96590-an-ai-licensing-primer-for-book-publishers.html",
+       "kind": "overview",
+       "why": "Trade-press explainer on how book licensing deals with AI firms work"
       }
      ]
     },
     {
      "id": "creative.games",
      "name": "Games & interactive",
-     "summary": "Generative AI is now disclosed in a large share of new Steam games, mostly small titles; world models generate playable scenes but are not yet game-engine ready.",
+     "summary": "About half of new Steam games now disclose generative AI, mostly small titles; world models generate explorable scenes but remain research prototypes.",
      "activity": 3,
-     "maturity": "emerging",
+     "maturity": "adopting",
      "landmarks": [
       {
        "name": "Google Project Genie",
-       "summary": "Experiment built on the Genie 3 world model lets Ultra subscribers generate explorable worlds; early tests found them rudimentary and not engine compatible.",
+       "summary": "Experimental prototype built on the Genie 3 world model lets US Google AI Ultra subscribers generate and explore worlds from text or image prompts.",
        "date": "2026-01",
        "kind": "experiment",
-       "source": "https://www.gamingonlinux.com/2026/02/googles-project-genie-experiment-allows-creating-interactive-worlds-with-generative-ai",
+       "source": "https://9to5google.com/2026/01/29/google-project-genie/",
        "verified": true
       },
       {
        "name": "Steam rewrites AI disclosure rules",
-       "summary": "Valve separated AI efficiency tools from generative content shipped to players in its disclosure form, narrowing what developers must report.",
+       "summary": "Valve reworded its disclosure form to focus on AI-generated content that players see, not efficiency tools used behind the scenes in development.",
        "date": "2026-01",
        "kind": "policy",
        "source": "https://www.videogameschronicle.com/news/valve-has-significantly-rewritten-steams-rules-for-how-developers-much-disclose-ai-use",
@@ -2476,54 +4378,130 @@ window.ATLAS = {
       },
       {
        "name": "Nearly half of new Steam games disclose AI",
-       "summary": "Independent analysis finds about half of October 2026 Steam releases disclosed AI content, far more among small titles than popular ones.",
+       "summary": "A community analysis found 49.9% of October 2026 Steam releases disclosed AI content, up from 26.4% a year earlier and far more common among small titles.",
        "date": "2026-11",
        "kind": "research",
        "source": "https://dexerto.com/gaming/almost-half-of-all-new-steam-games-use-ai-now-3423933",
-       "verified": false
+       "verified": true
       },
       {
        "name": "SAG-AFTRA game deal with AI consent rules",
-       "summary": "Ratified Interactive Media Agreement ended the video game strike, requiring performer consent for digital replicas and letting actors suspend them during strikes.",
+       "summary": "Members ratified the Interactive Media Agreement, ending the video game strike; it requires consent and disclosure for digital replicas of performers.",
        "date": "2025-07",
        "kind": "policy",
-       "source": "https://decrypt.co/329479/video-game-performers-ai-consent-rules?amp=1",
+       "source": "https://www.thewrap.com/sag-aftra-ratify-interactive-media-agreement-video-game-strike/",
        "verified": true
+      }
+     ],
+     "whyItMatters": "Games combine art, code, voice and live interaction, so they show how AI spreads through a whole production pipeline.",
+     "openQuestion": "Will players accept AI-made content in major releases, or will it stay concentrated in small titles?",
+     "deepDives": [
+      {
+       "title": "Three years of AI on Steam",
+       "url": "https://fragwyz.substack.com/p/three-years-of-ai-on-steam",
+       "kind": "report",
+       "why": "Data analysis of Steam AI disclosures over time, by game size and content type"
+      },
+      {
+       "title": "PC Gamer: Steam week in review on AI disclosures",
+       "url": "https://www.pcgamer.com/gaming-industry/steam-week-in-review-take-cover-because-it-looks-like-more-than-half-of-steam-games-will-have-an-ai-disclosure-by-2027-2028/",
+       "kind": "newsletter",
+       "why": "Recurring column tracking weekly Steam releases and the share with AI disclosures"
+      },
+      {
+       "title": "Inside the SAG-AFTRA Interactive Media Agreement",
+       "url": "https://technologylaw.fkks.com/post/102mewu/inside-the-new-sag-aftra-interactive-media-agreement-new-standards-for-ai-and-di",
+       "kind": "overview",
+       "why": "Law firm walk-through of the contract's digital replica consent and pay terms"
       }
      ]
     },
     {
      "id": "creative.labour",
      "name": "Creators, licensing & provenance",
-     "summary": "Courts are drawing narrow lines on training and fair use, the EU's AI labelling duties took effect in August 2026, and licensing deals are becoming the norm.",
-     "activity": 5,
+     "summary": "Courts are drawing narrow lines on training and fair use, EU labelling duties were set to apply from August 2026, and settlements and licensing deals are becoming the norm.",
+     "activity": 4,
      "maturity": "adopting",
      "landmarks": [
       {
        "name": "Getty v Stability AI UK ruling",
-       "summary": "UK High Court dismissed Getty's secondary copyright claims, finding Stable Diffusion holds no infringing copies; Getty won only a narrow watermark trademark point.",
+       "summary": "UK High Court rejected Getty's secondary copyright claim, finding Stable Diffusion holds no infringing copies; Getty won only narrow watermark trade mark points.",
        "date": "2025-11",
        "kind": "policy",
-       "source": "https://www.scl.org/high-court-issues-eagerly-awaited-judgment-in-getty-v-stability-ai-case/",
+       "source": "https://www.mishcon.com/news/getty-images-v-stability-ai-unpacking-the-high-courts-judgment?publication=7570",
        "verified": true
       },
       {
        "name": "EU code on labelling AI-generated content",
-       "summary": "Final Code of Practice sets layered marking (metadata, watermarks, icons) to meet AI Act Article 50 transparency duties applying from 2 August 2026.",
+       "summary": "The Commission published the final voluntary Code of Practice on marking and labelling AI content, to help meet AI Act Article 50 duties from 2 August 2026.",
        "date": "2026-06",
        "kind": "policy",
-       "source": "https://www.jonesday.com/en/insights/2026/06/european-commission-publishes-final-code-of-practice-on-marking-and-labelling-aigenerated-content",
+       "source": "https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content",
        "verified": true
       },
       {
        "name": "Thomson Reuters v Ross upheld on appeal",
-       "summary": "Third Circuit rejected Ross's fair use defense for training on Westlaw content, while saying it does not settle the question for generative models.",
-       "date": "2026-10",
+       "summary": "Third Circuit held that training a legal search tool on Westlaw headnotes was not fair use, while leaving the question open for generative models.",
+       "date": "2026-09",
        "kind": "policy",
-       "source": "https://mediacopilot.ai/thomson-reuters-ross-ai-copyright/",
+       "source": "https://www.ballardspahr.com/insights/alerts-and-articles/2026/10/third-circuit-addresses-fair-use-in-ai-training-but-leaves-generative-ai-questions-unresolved",
        "verified": true
       }
+     ],
+     "whyItMatters": "How courts and regulators treat training data and labelling sets the terms on which every generative model is built and sold.",
+     "openQuestion": "Is training generative models on copyrighted work fair use, and who gets paid if it is not?",
+     "deepDives": [
+      {
+       "title": "CMS AI and copyright case tracker",
+       "url": "https://cms.law/en/mar/publication/artificial-intelligence-and-copyright-case-tracker/united-kingdom-getty-images-us-inc-ors-v-stability-ai-ltd2",
+       "kind": "tracker",
+       "why": "Maintained case-by-case tracker of AI copyright litigation, with status updates"
+      },
+      {
+       "title": "European Commission: code of practice on AI-generated content",
+       "url": "https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content",
+       "kind": "report",
+       "why": "The primary source for the EU marking and labelling code and related guidance"
+      },
+      {
+       "title": "Tech Policy Press: the EU AI transparency code explained",
+       "url": "https://techpolicy.press/the-eus-ai-transparency-code-of-practice-explained",
+       "kind": "overview",
+       "why": "Readable explainer of what providers and deployers are expected to do"
+      },
+      {
+       "title": "Matthew Sag on Thomson Reuters v Ross",
+       "url": "https://matthewsag.com/2025/02/",
+       "kind": "newsletter",
+       "why": "A leading copyright scholar's analysis of the first AI training fair use ruling"
+      }
      ]
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "CMS AI and copyright case tracker",
+     "url": "https://cms.law/en/mar/publication/artificial-intelligence-and-copyright-case-tracker/united-kingdom-getty-images-us-inc-ors-v-stability-ai-ltd2",
+     "kind": "tracker",
+     "why": "Follow the court cases that decide how creative work can be used for training"
+    },
+    {
+     "title": "European Commission: code of practice on AI-generated content",
+     "url": "https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content",
+     "kind": "report",
+     "why": "Primary source for EU rules on marking and labelling AI-generated media"
+    },
+    {
+     "title": "Generative AI floods and dilutes the market for books",
+     "url": "https://arxiv.org/pdf/2607.20349",
+     "kind": "paper",
+     "why": "Rare market-level evidence on how AI output affects human creators' revenue"
+    },
+    {
+     "title": "Authors Guild: AI licensing, what authors should know",
+     "url": "https://authorsguild.org/advocacy/artificial-intelligence/ai-licensing-what-authors-should-know/",
+     "kind": "overview",
+     "why": "A creator-side guide to licensing terms, applicable beyond books"
     }
    ]
   }
@@ -2668,6 +4646,388 @@ window.ATLAS = {
    "from": "mind.agi",
    "to": "geo.us-china",
    "label": "Timelines drive the race narrative"
+  },
+  {
+   "from": "health.scribes",
+   "to": "enterprise.knowledge",
+   "label": "Ambient note-taking is knowledge work in a clinic"
+  },
+  {
+   "from": "health.patient",
+   "to": "mind.meaning",
+   "label": "Leaning on chatbots for advice and emotional support"
+  },
+  {
+   "from": "health.diagnostics",
+   "to": "research.multimodal",
+   "label": "Vision models read scans"
+  },
+  {
+   "from": "education.assessment",
+   "to": "mind.epistemics",
+   "label": "What counts as knowing when a model can answer"
+  },
+  {
+   "from": "education.evidence",
+   "to": "mind.cognition",
+   "label": "Learning science meets cognitive offloading"
+  },
+  {
+   "from": "geo.regulation",
+   "to": "legal.ai-law",
+   "label": "Statutes, and how courts and firms apply them"
+  },
+  {
+   "from": "geo.energy",
+   "to": "science.physics",
+   "label": "Fusion and grid research aimed at data-centre demand"
+  },
+  {
+   "from": "creative.music",
+   "to": "legal.copyright",
+   "label": "Label lawsuits turn into licences"
+  },
+  {
+   "from": "creative.writing",
+   "to": "education.assessment",
+   "label": "Generated text and the question of authorship"
+  },
+  {
+   "from": "creative.games",
+   "to": "research.multimodal",
+   "label": "World models as playable environments"
+  },
+  {
+   "from": "enterprise.hr",
+   "to": "legal.compliance",
+   "label": "Bias and transparency rules for automated hiring"
+  },
+  {
+   "from": "software.observability",
+   "to": "enterprise.governance",
+   "label": "Tracing what an agent actually did"
+  },
+  {
+   "from": "science.ai-scientist",
+   "to": "research.agents",
+   "label": "Research agents are long-horizon agents"
+  },
+  {
+   "from": "mind.ethics",
+   "to": "legal.ai-law",
+   "label": "From principles to legal obligations"
+  },
+  {
+   "from": "geo.defense",
+   "to": "mind.ethics",
+   "label": "Autonomy and responsibility in weapons"
+  },
+  {
+   "from": "research.evals",
+   "to": "geo.governance",
+   "label": "Safety institutes test frontier models"
+  },
+  {
+   "from": "enterprise.support",
+   "to": "mind.labor",
+   "label": "Frontline jobs are the first to be automated"
+  }
+ ],
+ "themes": [
+  {
+   "id": "agents",
+   "name": "Agents leave the lab",
+   "blurb": "Models that plan, use tools and work for hours are the main product bet. Coding is where it works best so far. Business workflows follow, and controls for what agents may do trail behind.",
+   "regions": [
+    "software.coding-agents",
+    "research.agents",
+    "enterprise.protocols",
+    "enterprise.support",
+    "enterprise.browser",
+    "enterprise.governance",
+    "software.security",
+    "enterprise.roi"
+   ]
+  },
+  {
+   "id": "compute",
+   "name": "Chips, power and the race",
+   "blurb": "Progress is bought with chips and electricity. That pulls data centres, export controls, power grids and national strategy into the AI story.",
+   "regions": [
+    "research.scaling",
+    "research.efficiency",
+    "geo.compute",
+    "geo.energy",
+    "geo.us-china",
+    "geo.national",
+    "geo.open-weights"
+   ]
+  },
+  {
+   "id": "evidence",
+   "name": "Does it actually work?",
+   "blurb": "Adoption runs ahead of measurement. Benchmarks saturate, productivity studies disagree, and regulated fields ask for trials before trusting results.",
+   "regions": [
+    "research.evals",
+    "software.testing",
+    "enterprise.roi",
+    "education.evidence",
+    "health.regulation",
+    "mind.labor",
+    "legal.research"
+   ]
+  },
+  {
+   "id": "rules",
+   "name": "Who sets the rules",
+   "blurb": "Legislators, courts, regulators and licensing deals are each writing part of the rulebook, often at different speeds and in different directions.",
+   "regions": [
+    "legal.ai-law",
+    "geo.regulation",
+    "geo.governance",
+    "legal.copyright",
+    "legal.compliance",
+    "health.regulation",
+    "education.policy",
+    "creative.labour"
+   ]
+  },
+  {
+   "id": "inside",
+   "name": "Understanding the machine",
+   "blurb": "What is happening inside a model, whether it can be trusted to hold to its goals, and what, if anything, it is like to be one. Empirical research meets philosophy here.",
+   "regions": [
+    "research.interpretability",
+    "research.alignment",
+    "mind.consciousness",
+    "mind.cognition",
+    "mind.agi",
+    "mind.ethics"
+   ]
+  },
+  {
+   "id": "discovery",
+   "name": "AI as a scientist",
+   "blurb": "From protein design to proofs and weather forecasts, models are moving from analysing results to proposing and running the experiments.",
+   "regions": [
+    "science.biology",
+    "science.materials",
+    "science.math",
+    "science.weather",
+    "science.physics",
+    "science.ai-scientist",
+    "research.reasoning",
+    "research.robotics",
+    "health.drug-dev"
+   ]
+  },
+  {
+   "id": "people",
+   "name": "People, work and trust",
+   "blurb": "How AI changes jobs, learning, relationships and what people believe. The effects are real but uneven, and the evidence is still coming in.",
+   "regions": [
+    "mind.labor",
+    "mind.meaning",
+    "mind.epistemics",
+    "education.tutoring",
+    "education.skills",
+    "education.assessment",
+    "health.patient",
+    "geo.info",
+    "creative.labour"
+   ]
+  }
+ ],
+ "lenses": [
+  {
+   "id": "engineer",
+   "name": "Software engineer",
+   "blurb": "The tools changing how software is written, reviewed, tested and run, plus the agent research and protocols underneath them.",
+   "regions": [
+    "software.coding-agents",
+    "software.code-review",
+    "software.testing",
+    "software.observability",
+    "software.security",
+    "software.devops",
+    "software.modernization",
+    "software.spec-design",
+    "software.docs",
+    "research.agents",
+    "research.evals",
+    "enterprise.protocols",
+    "enterprise.governance",
+    "enterprise.browser"
+   ]
+  },
+  {
+   "id": "leader",
+   "name": "Business or product leader",
+   "blurb": "Where agents are being deployed in companies, what the returns look like, and the rules and workforce questions that come with them.",
+   "regions": [
+    "enterprise.support",
+    "enterprise.sales-marketing",
+    "enterprise.finance-ops",
+    "enterprise.hr",
+    "enterprise.knowledge",
+    "enterprise.protocols",
+    "enterprise.governance",
+    "enterprise.browser",
+    "enterprise.roi",
+    "software.coding-agents",
+    "mind.labor",
+    "legal.compliance",
+    "legal.ai-law",
+    "geo.regulation",
+    "education.skills"
+   ]
+  },
+  {
+   "id": "researcher",
+   "name": "ML researcher",
+   "blurb": "The research frontier itself, the sciences it is being tested on, and the debates about where it leads.",
+   "regions": [
+    "research.scaling",
+    "research.reasoning",
+    "research.interpretability",
+    "research.alignment",
+    "research.evals",
+    "research.efficiency",
+    "research.multimodal",
+    "research.agents",
+    "research.robotics",
+    "science.math",
+    "science.ai-scientist",
+    "mind.cognition",
+    "mind.agi",
+    "geo.open-weights"
+   ]
+  },
+  {
+   "id": "scientist",
+   "name": "Scientist",
+   "blurb": "AI as an instrument for discovery, the reasoning and robotics research behind it, and how results are checked.",
+   "regions": [
+    "science.biology",
+    "science.materials",
+    "science.math",
+    "science.weather",
+    "science.physics",
+    "science.ai-scientist",
+    "research.reasoning",
+    "research.robotics",
+    "research.evals",
+    "health.drug-dev"
+   ]
+  },
+  {
+   "id": "lawyer",
+   "name": "Lawyer or compliance lead",
+   "blurb": "AI inside legal practice, and the law being written about AI: statutes, court rulings, licensing and sector rules.",
+   "regions": [
+    "legal.contracts",
+    "legal.research",
+    "legal.ediscovery",
+    "legal.compliance",
+    "legal.ai-law",
+    "legal.copyright",
+    "legal.access",
+    "geo.regulation",
+    "geo.governance",
+    "enterprise.governance",
+    "health.regulation",
+    "creative.labour"
+   ]
+  },
+  {
+   "id": "policy",
+   "name": "Policy or strategy analyst",
+   "blurb": "Compute, power, national strategy and governance, with the safety research and economic debates that inform them.",
+   "regions": [
+    "geo.compute",
+    "geo.us-china",
+    "geo.national",
+    "geo.governance",
+    "geo.defense",
+    "geo.energy",
+    "geo.info",
+    "geo.open-weights",
+    "geo.regulation",
+    "legal.ai-law",
+    "research.alignment",
+    "research.evals",
+    "mind.labor",
+    "mind.agi",
+    "mind.epistemics"
+   ]
+  },
+  {
+   "id": "educator",
+   "name": "Educator or learner",
+   "blurb": "Tutors, assessment and policy in education, and what research says about learning with AI.",
+   "regions": [
+    "education.tutoring",
+    "education.assessment",
+    "education.policy",
+    "education.skills",
+    "education.evidence",
+    "mind.meaning",
+    "mind.cognition",
+    "mind.epistemics",
+    "mind.labor",
+    "creative.writing"
+   ]
+  },
+  {
+   "id": "clinician",
+   "name": "Clinician or health researcher",
+   "blurb": "AI in diagnosis, documentation, drug development and patient use, and how it is validated and regulated.",
+   "regions": [
+    "health.diagnostics",
+    "health.scribes",
+    "health.drug-dev",
+    "health.patient",
+    "health.regulation",
+    "science.biology",
+    "legal.compliance",
+    "mind.meaning"
+   ]
+  },
+  {
+   "id": "maker",
+   "name": "Artist, writer or media maker",
+   "blurb": "Generative tools across image, video, music, writing and games, and the fights over training data, pay and provenance.",
+   "regions": [
+    "creative.image",
+    "creative.video",
+    "creative.music",
+    "creative.writing",
+    "creative.games",
+    "creative.labour",
+    "legal.copyright",
+    "research.multimodal",
+    "geo.info",
+    "mind.meaning"
+   ]
+  },
+  {
+   "id": "humanist",
+   "name": "Philosopher or humanist",
+   "blurb": "Questions about mind, knowledge, values and work, and the technical research that bears on them.",
+   "regions": [
+    "mind.consciousness",
+    "mind.cognition",
+    "mind.epistemics",
+    "mind.ethics",
+    "mind.labor",
+    "mind.meaning",
+    "mind.agi",
+    "research.interpretability",
+    "research.alignment",
+    "geo.governance",
+    "geo.defense",
+    "education.assessment"
+   ]
   }
  ]
 };

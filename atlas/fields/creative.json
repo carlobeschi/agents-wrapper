@@ -1,0 +1,357 @@
+{
+ "id": "creative",
+ "name": "Creative & Media",
+ "summary": "Image and music generation are mainstream, video is consolidating after Sora's exit, and the fight over training data is moving from lawsuits to settlements, licensing deals and labelling rules.",
+ "regions": [
+  {
+   "id": "creative.image",
+   "name": "Image & design",
+   "summary": "Image generation is built into chat apps, search and pro tools; Adobe is adding agents across Creative Cloud, while nonconsensual sexualized images draw regulator action.",
+   "activity": 4,
+   "maturity": "established",
+   "landmarks": [
+    {
+     "name": "Nano Banana 2 (Gemini 3.1 Flash Image)",
+     "summary": "Google released its faster image model on 26 February with 4K output and made it the default in the Gemini app, Search AI Mode and Lens.",
+     "date": "2026-02",
+     "kind": "product",
+     "source": "https://9to5google.com/2026/02/26/nano-banana-2-gemini-app/",
+     "verified": true
+    },
+    {
+     "name": "Adobe Firefly AI Assistant",
+     "summary": "Adobe announced an agentic assistant that runs multi-step tasks across Photoshop, Premiere, Illustrator and other apps; in-app public betas followed in June.",
+     "date": "2026-04",
+     "kind": "product",
+     "source": "https://venturebeat.com/technology/adobes-new-firefly-ai-assistant-wants-to-run-photoshop-premiere-illustrator-and-more-from-one-prompt",
+     "verified": true
+    },
+    {
+     "name": "Grok sexualized deepfake scandal",
+     "summary": "Grok on X produced undressed images of real people, including children; Ofcom opened a formal probe on 12 January, the EU followed, and Indonesia and Malaysia blocked it.",
+     "date": "2026-01",
+     "kind": "incident",
+     "source": "https://www.nbcnews.com/tech/tech-news/international-pressure-builds-x-musk-grok-deepfakes-rcna253639",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Image tools are where most people first meet generative AI, and where misuse against real people is most visible.",
+   "openQuestion": "Can safeguards and labelling keep pace with models that edit photos of real people on request?",
+   "deepDives": [
+    {
+     "title": "The Batch: Nano Banana 2 ups performance per price",
+     "url": "https://www.deeplearning.ai/the-batch/nano-banana-2-aka-gemini-3-1-flash-image-makes-edits-easier-and-faster",
+     "kind": "newsletter",
+     "why": "DeepLearning.AI's plain summary of what the model does and what Google has not disclosed"
+    },
+    {
+     "title": "RPC: regulators investigate X over Grok images",
+     "url": "https://www.rpclegal.com/snapshots/technology-digital/spring-2026/online-safety-regulators-investigate-x-over-grok-ai-chatbot-images/",
+     "kind": "overview",
+     "why": "Law firm overview of the UK and EU investigations and the legal duties at stake"
+    }
+   ]
+  },
+  {
+   "id": "creative.video",
+   "name": "Video & film",
+   "summary": "Video models from Google and Chinese labs lead after OpenAI said it would shut Sora; studios use AI for effects shots while studio licensing deals remain unsettled.",
+   "activity": 4,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "OpenAI discontinues Sora",
+     "summary": "OpenAI said on 24 March it would discontinue the Sora app and API; reports cite compute costs and a research pivot. Disney then dropped its planned deal.",
+     "date": "2026-03",
+     "kind": "product",
+     "source": "https://www.opb.org/article/2026/03/24/openai-pulls-the-plug-on-sora-the-viral-ai-video-app-that-sparked-deepfake-concerns",
+     "verified": true
+    },
+    {
+     "name": "Disney and OpenAI $1B licensing deal",
+     "summary": "Disney agreed to license 200+ characters to Sora for three years and invest $1B in OpenAI; the deal was reportedly never completed before Sora was shut.",
+     "date": "2025-12",
+     "kind": "deal",
+     "source": "https://www.thewrap.com/disney-sora-openai-licensing-deal",
+     "verified": true
+    },
+    {
+     "name": "Kling 3.0 launch",
+     "summary": "Kuaishou launched Kling Video 3.0 and 3.0 Omni with clips of up to 15 seconds and native audio in several languages, first for Ultra subscribers.",
+     "date": "2026-02",
+     "kind": "product",
+     "source": "https://www.bernama.com/en/news.php/?id=2520897",
+     "verified": true
+    },
+    {
+     "name": "Netflix uses generative AI in final footage",
+     "summary": "Netflix said 'The Eternaut' used generative AI for a building-collapse scene, its first use in final footage, finished about ten times faster than usual.",
+     "date": "2025-07",
+     "kind": "product",
+     "source": "https://www.ibc.org/artificial-intelligence/news/netflix-embraces-generative-ai-for-argentine-tv-series/22053",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Video is the costliest media to generate, so it shows whether consumer generative AI can pay for its own compute.",
+   "openQuestion": "Will studios license characters and libraries to video models, or keep the tools in-house for effects work?",
+   "deepDives": []
+  },
+  {
+   "id": "creative.music",
+   "name": "Music & audio",
+   "summary": "Major labels have moved from suing AI music generators to licensing them, while AI tracks flood streaming uploads and begin to appear on charts.",
+   "activity": 4,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "Warner Music settles with Suno",
+     "summary": "WMG dropped its suit for a licensing deal; Suno said it would launch licensed models in 2026 and retire current ones.",
+     "date": "2025-11",
+     "kind": "deal",
+     "source": "https://www.musicbusinessworldwide.com/warner-music-group-settles-with-suno-strikes-first-of-its-kind-deal-with-ai-song-generator/",
+     "verified": false,
+     "note": "Not re-checked in this pass (search budget ran out); trade-press source, widely reported"
+    },
+    {
+     "name": "Universal settles with Udio",
+     "summary": "UMG settled and agreed a licensed AI music platform with Udio; download limits that followed angered existing Udio users.",
+     "date": "2025-10",
+     "kind": "deal",
+     "source": "https://www.musicbusinessworldwide.com/universal-music-settles-udio-lawsuit-strikes-deal-for-licensed-ai-music-platform",
+     "verified": false,
+     "note": "Not re-checked in this pass (search budget ran out); trade-press source, widely reported"
+    },
+    {
+     "name": "AI tracks pass half of Deezer uploads",
+     "summary": "Deezer said AI-generated tracks passed 50% of daily uploads for the first time, up from 44% in April, yet draw only 1 to 3% of streams.",
+     "date": "2026-07",
+     "kind": "research",
+     "source": "https://newsroom-deezer.com/2026/07/ai-music-exceeds-50-percent-daily-uploads-deezer/",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Music is the first creative sector where rights holders and AI generators have moved from court to licensed products.",
+   "openQuestion": "Will licensed AI music pay artists meaningfully, and can streaming services contain the flood of uploads?",
+   "deepDives": [
+    {
+     "title": "Deezer newsroom: AI music share of uploads",
+     "url": "https://newsroom-deezer.com/2026/07/ai-music-exceeds-50-percent-daily-uploads-deezer/",
+     "kind": "report",
+     "why": "The only regular platform data on AI upload volumes, stream share and detection"
+    }
+   ]
+  },
+  {
+   "id": "creative.writing",
+   "name": "Writing & publishing",
+   "summary": "AI-written books fill self-publishing platforms and dilute revenue per title, while publishers test licensing and authors win payouts over pirated training data.",
+   "activity": 3,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "Anthropic $1.5B authors settlement approved",
+     "summary": "A US judge gave final approval to the largest copyright class settlement, about $3,000 per work for roughly 500,000 pirated books used by Anthropic.",
+     "date": "2026-07",
+     "kind": "deal",
+     "source": "https://www.jurist.org/news/2026/07/judge-approves-record-1-5-billion-settlement-involving-anthropic/",
+     "verified": true
+    },
+    {
+     "name": "AI books reach 20% of Amazon self-publishing",
+     "summary": "Preprint on 14,419 self-published genre-fiction e-books finds about 20% have substantial AI text; revenue per selling book fell across most genres.",
+     "date": "2026-07",
+     "kind": "research",
+     "source": "https://arxiv.org/pdf/2607.20349",
+     "verified": true,
+     "note": "arXiv ID 2607 = posted July 2026; wider press coverage followed in September"
+    },
+    {
+     "name": "HarperCollins AI training licence",
+     "summary": "HarperCollins offered nonfiction authors $2,500 per title for a three-year opt-in AI training licence; Bloomberg reported the buyer was Microsoft.",
+     "date": "2024-11",
+     "kind": "deal",
+     "source": "https://www.publishersweekly.com/pw/print/20241125/96533-agents-authors-question-harpercollins-ai-deal.html",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Books are the clearest test of what training data is worth and of how cheap AI text changes a market for human work.",
+   "openQuestion": "Will per-book licensing become standard, and can platforms stop AI titles from diluting author income?",
+   "deepDives": [
+    {
+     "title": "Generative AI floods and dilutes the market for books",
+     "url": "https://arxiv.org/pdf/2607.20349",
+     "kind": "paper",
+     "why": "The underlying study: full-text AI detection matched to Amazon sales data through June 2026"
+    },
+    {
+     "title": "Authors Guild: AI licensing, what authors should know",
+     "url": "https://authorsguild.org/advocacy/artificial-intelligence/ai-licensing-what-authors-should-know/",
+     "kind": "overview",
+     "why": "The main US authors' body on rights, contract terms and fair splits for AI licences"
+    },
+    {
+     "title": "Jane Friedman: AI licensing for authors",
+     "url": "https://janefriedman.com/ai-licensing-for-authors-who-owns-the-rights-and-whats-the-split/",
+     "kind": "newsletter",
+     "why": "A respected publishing analyst on who holds AI rights and how deals are structured"
+    },
+    {
+     "title": "Publishers Weekly: an AI licensing primer for publishers",
+     "url": "https://publishersweekly.com/pw/print/20241125/96590-an-ai-licensing-primer-for-book-publishers.html",
+     "kind": "overview",
+     "why": "Trade-press explainer on how book licensing deals with AI firms work"
+    }
+   ]
+  },
+  {
+   "id": "creative.games",
+   "name": "Games & interactive",
+   "summary": "About half of new Steam games now disclose generative AI, mostly small titles; world models generate explorable scenes but remain research prototypes.",
+   "activity": 3,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "Google Project Genie",
+     "summary": "Experimental prototype built on the Genie 3 world model lets US Google AI Ultra subscribers generate and explore worlds from text or image prompts.",
+     "date": "2026-01",
+     "kind": "experiment",
+     "source": "https://9to5google.com/2026/01/29/google-project-genie/",
+     "verified": true
+    },
+    {
+     "name": "Steam rewrites AI disclosure rules",
+     "summary": "Valve reworded its disclosure form to focus on AI-generated content that players see, not efficiency tools used behind the scenes in development.",
+     "date": "2026-01",
+     "kind": "policy",
+     "source": "https://www.videogameschronicle.com/news/valve-has-significantly-rewritten-steams-rules-for-how-developers-much-disclose-ai-use",
+     "verified": true
+    },
+    {
+     "name": "Nearly half of new Steam games disclose AI",
+     "summary": "A community analysis found 49.9% of October 2026 Steam releases disclosed AI content, up from 26.4% a year earlier and far more common among small titles.",
+     "date": "2026-11",
+     "kind": "research",
+     "source": "https://dexerto.com/gaming/almost-half-of-all-new-steam-games-use-ai-now-3423933",
+     "verified": true
+    },
+    {
+     "name": "SAG-AFTRA game deal with AI consent rules",
+     "summary": "Members ratified the Interactive Media Agreement, ending the video game strike; it requires consent and disclosure for digital replicas of performers.",
+     "date": "2025-07",
+     "kind": "policy",
+     "source": "https://www.thewrap.com/sag-aftra-ratify-interactive-media-agreement-video-game-strike/",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Games combine art, code, voice and live interaction, so they show how AI spreads through a whole production pipeline.",
+   "openQuestion": "Will players accept AI-made content in major releases, or will it stay concentrated in small titles?",
+   "deepDives": [
+    {
+     "title": "Three years of AI on Steam",
+     "url": "https://fragwyz.substack.com/p/three-years-of-ai-on-steam",
+     "kind": "report",
+     "why": "Data analysis of Steam AI disclosures over time, by game size and content type"
+    },
+    {
+     "title": "PC Gamer: Steam week in review on AI disclosures",
+     "url": "https://www.pcgamer.com/gaming-industry/steam-week-in-review-take-cover-because-it-looks-like-more-than-half-of-steam-games-will-have-an-ai-disclosure-by-2027-2028/",
+     "kind": "newsletter",
+     "why": "Recurring column tracking weekly Steam releases and the share with AI disclosures"
+    },
+    {
+     "title": "Inside the SAG-AFTRA Interactive Media Agreement",
+     "url": "https://technologylaw.fkks.com/post/102mewu/inside-the-new-sag-aftra-interactive-media-agreement-new-standards-for-ai-and-di",
+     "kind": "overview",
+     "why": "Law firm walk-through of the contract's digital replica consent and pay terms"
+    }
+   ]
+  },
+  {
+   "id": "creative.labour",
+   "name": "Creators, licensing & provenance",
+   "summary": "Courts are drawing narrow lines on training and fair use, EU labelling duties were set to apply from August 2026, and settlements and licensing deals are becoming the norm.",
+   "activity": 4,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "Getty v Stability AI UK ruling",
+     "summary": "UK High Court rejected Getty's secondary copyright claim, finding Stable Diffusion holds no infringing copies; Getty won only narrow watermark trade mark points.",
+     "date": "2025-11",
+     "kind": "policy",
+     "source": "https://www.mishcon.com/news/getty-images-v-stability-ai-unpacking-the-high-courts-judgment?publication=7570",
+     "verified": true
+    },
+    {
+     "name": "EU code on labelling AI-generated content",
+     "summary": "The Commission published the final voluntary Code of Practice on marking and labelling AI content, to help meet AI Act Article 50 duties from 2 August 2026.",
+     "date": "2026-06",
+     "kind": "policy",
+     "source": "https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content",
+     "verified": true
+    },
+    {
+     "name": "Thomson Reuters v Ross upheld on appeal",
+     "summary": "Third Circuit held that training a legal search tool on Westlaw headnotes was not fair use, while leaving the question open for generative models.",
+     "date": "2026-09",
+     "kind": "policy",
+     "source": "https://www.ballardspahr.com/insights/alerts-and-articles/2026/10/third-circuit-addresses-fair-use-in-ai-training-but-leaves-generative-ai-questions-unresolved",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "How courts and regulators treat training data and labelling sets the terms on which every generative model is built and sold.",
+   "openQuestion": "Is training generative models on copyrighted work fair use, and who gets paid if it is not?",
+   "deepDives": [
+    {
+     "title": "CMS AI and copyright case tracker",
+     "url": "https://cms.law/en/mar/publication/artificial-intelligence-and-copyright-case-tracker/united-kingdom-getty-images-us-inc-ors-v-stability-ai-ltd2",
+     "kind": "tracker",
+     "why": "Maintained case-by-case tracker of AI copyright litigation, with status updates"
+    },
+    {
+     "title": "European Commission: code of practice on AI-generated content",
+     "url": "https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content",
+     "kind": "report",
+     "why": "The primary source for the EU marking and labelling code and related guidance"
+    },
+    {
+     "title": "Tech Policy Press: the EU AI transparency code explained",
+     "url": "https://techpolicy.press/the-eus-ai-transparency-code-of-practice-explained",
+     "kind": "overview",
+     "why": "Readable explainer of what providers and deployers are expected to do"
+    },
+    {
+     "title": "Matthew Sag on Thomson Reuters v Ross",
+     "url": "https://matthewsag.com/2025/02/",
+     "kind": "newsletter",
+     "why": "A leading copyright scholar's analysis of the first AI training fair use ruling"
+    }
+   ]
+  }
+ ],
+ "deepDives": [
+  {
+   "title": "CMS AI and copyright case tracker",
+   "url": "https://cms.law/en/mar/publication/artificial-intelligence-and-copyright-case-tracker/united-kingdom-getty-images-us-inc-ors-v-stability-ai-ltd2",
+   "kind": "tracker",
+   "why": "Follow the court cases that decide how creative work can be used for training"
+  },
+  {
+   "title": "European Commission: code of practice on AI-generated content",
+   "url": "https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content",
+   "kind": "report",
+   "why": "Primary source for EU rules on marking and labelling AI-generated media"
+  },
+  {
+   "title": "Generative AI floods and dilutes the market for books",
+   "url": "https://arxiv.org/pdf/2607.20349",
+   "kind": "paper",
+   "why": "Rare market-level evidence on how AI output affects human creators' revenue"
+  },
+  {
+   "title": "Authors Guild: AI licensing, what authors should know",
+   "url": "https://authorsguild.org/advocacy/artificial-intelligence/ai-licensing-what-authors-should-know/",
+   "kind": "overview",
+   "why": "A creator-side guide to licensing terms, applicable beyond books"
+  }
+ ]
+}

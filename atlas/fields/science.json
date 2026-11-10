@@ -1,0 +1,344 @@
+{
+ "id": "science",
+ "name": "Science & Discovery",
+ "summary": "AI models run in operational weather forecasting, design proteins and help resolve some open math problems; governments fund AI-driven labs, but clinical and lab validation lag.",
+ "regions": [
+  {
+   "id": "science.biology",
+   "name": "Protein design & biology",
+   "summary": "Open models design proteins and predict how DNA variants affect gene regulation. AI-designed drugs are still short of human trials, and timelines have slipped.",
+   "activity": 4,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "AlphaGenome published in Nature",
+     "summary": "DeepMind model reads up to one million DNA bases to predict regulatory variant effects; code and weights released under non-commercial terms.",
+     "date": "2026-01",
+     "kind": "research",
+     "source": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12851941/",
+     "verified": true
+    },
+    {
+     "name": "RFdiffusion3 open-sourced",
+     "summary": "Baker lab's all-atom model designs proteins that bind molecules commonly found in cells, about 10x faster than RFdiffusion2; training code included.",
+     "date": "2025-12",
+     "kind": "product",
+     "source": "https://www.ipd.uw.edu/2025/12/rfdiffusion3-now-available",
+     "verified": true
+    },
+    {
+     "name": "Isomorphic Labs: $2.1B raise, trials slip",
+     "summary": "DeepMind spinout raised a reported $2.1B; first clinical trials were said to be due by end of 2026 after a missed 2025 goal, a timeline Hassabis later muddied.",
+     "date": "2026-05",
+     "kind": "deal",
+     "source": "https://qz.com/isomorphic-labs-series-b-funding-ai-drug-discovery-051226",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Biology is where AI-for-science has its clearest wins, and drug trials will test whether they turn into medicines.",
+   "openQuestion": "Will AI-designed drugs succeed in human trials at a higher rate than conventionally discovered ones?",
+   "deepDives": [
+    {
+     "title": "AlphaGenome: AI for better understanding the genome",
+     "url": "https://deepmind.google/discover/blog/alphagenome-ai-for-better-understanding-the-genome/",
+     "kind": "overview",
+     "why": "DeepMind's plain-language explainer of what the model predicts and its limits."
+    },
+    {
+     "title": "Genomic deep learning for noncoding variant effects",
+     "url": "https://www.nature.com/articles/s41588-026-02769-7",
+     "kind": "overview",
+     "why": "Nature Genetics review of how sequence models are used to interpret noncoding variants."
+    },
+    {
+     "title": "De novo design of all-atom interactions with RFdiffusion3",
+     "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12458353/",
+     "kind": "paper",
+     "why": "The preprint behind RFdiffusion3, with methods and design benchmarks."
+    },
+    {
+     "title": "AlphaGenome research code and weights",
+     "url": "https://github.com/google-deepmind/alphagenome_research",
+     "kind": "community",
+     "why": "Repository with model code, weight access and documentation for running it yourself."
+    }
+   ]
+  },
+  {
+   "id": "science.materials",
+   "name": "Materials & chemistry",
+   "summary": "Generative models propose millions of candidate materials and well-funded startups build robotic labs to test them; few predictions have been synthesized and verified.",
+   "activity": 3,
+   "maturity": "emerging",
+   "landmarks": [
+    {
+     "name": "Periodic Labs $300M seed",
+     "summary": "Startup founded by former OpenAI and Google DeepMind researchers raised a $300M seed to build AI scientists and autonomous labs for materials discovery.",
+     "date": "2025-09",
+     "kind": "deal",
+     "source": "https://techcrunch.com/2025/09/30/former-openai-and-deepmind-researchers-raise-whopping-300m-seed-to-automate-science",
+     "verified": true
+    },
+    {
+     "name": "Materials AI must leave the computer",
+     "summary": "MIT Technology Review on a wave of investment in AI materials startups and the gap between predicted and real synthesized materials.",
+     "date": "2025-12",
+     "kind": "debate",
+     "source": "https://www.technologyreview.com/2025/12/15/1129210/ai-materials-science-discovery-startups-investment/amp/",
+     "verified": false,
+     "note": "Not re-checked in this pass: site unreachable and search budget ran out. URL from first pass."
+    },
+    {
+     "name": "Periodic Neon lab-trained model",
+     "summary": "Reported model of about 1 trillion parameters trained on literature and lab data; company cites 55.3% on its own XRD analysis benchmark, not independently tested.",
+     "date": "2026-09",
+     "kind": "product",
+     "source": "https://runtimewire.com/article/periodic-labs-neon-reinforcement-learning-infrastructure",
+     "verified": false,
+     "note": "Only secondary coverage of the company's Sept 2026 post was seen; results are internal."
+    }
+   ],
+   "whyItMatters": "New materials underpin batteries, chips and energy, but a prediction only counts once it is made and measured.",
+   "openQuestion": "Can AI-driven labs deliver a useful new material that is synthesized, verified and adopted by industry?",
+   "deepDives": []
+  },
+  {
+   "id": "science.math",
+   "name": "Mathematics & formal proof",
+   "summary": "LLMs paired with Lean verification are resolving some open Erdős problems, with proofs checked by machine. Most wins are easier problems, and hype remains an issue.",
+   "activity": 4,
+   "maturity": "emerging",
+   "landmarks": [
+    {
+     "name": "Erdős #397 solved and formalized",
+     "summary": "GPT-5.2 Pro reportedly produced a solution, Harmonic's Aristotle formalized it in Lean, and Terence Tao accepted it while calling such wins low-hanging fruit.",
+     "date": "2026-01",
+     "kind": "research",
+     "source": "https://www.eweek.com/news/gpt-5-2-just-solved-a-30-year-math-problem/",
+     "verified": true
+    },
+    {
+     "name": "AlphaProof Nexus on Erdős problems",
+     "summary": "DeepMind preprint: agents querying frontier LLMs and the Lean compiler resolved 9 of 353 open Erdős problems and 44 of 492 OEIS conjectures.",
+     "date": "2026-05",
+     "kind": "research",
+     "source": "https://arxiv.org/abs/2605.22763",
+     "verified": true
+    },
+    {
+     "name": "FrontierMath Erdős benchmark",
+     "summary": "Epoch AI and Thomas Bloom set 68 open Erdős problems; a solve counts only if a Lean proof passes verification. Top score at launch was 3%.",
+     "date": "2026-09",
+     "kind": "research",
+     "source": "https://epoch.ai/latest/announcing-frontiermath-erdos",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Machine-checked proofs make math the one research field where an AI's claimed result can be verified outright.",
+   "openQuestion": "Can AI go beyond easier open problems to results mathematicians consider deep or surprising?",
+   "deepDives": [
+    {
+     "title": "FrontierMath Erdős leaderboard",
+     "url": "https://epoch.ai/benchmarks/frontiermath-erdos",
+     "kind": "tracker",
+     "why": "Current model scores on open Erdős problems, with solve counts and methodology."
+    },
+    {
+     "title": "FrontierMath Erdős paper",
+     "url": "https://epoch.ai/files/frontiermath-erdos.pdf",
+     "kind": "paper",
+     "why": "How the benchmark was built, how solves are verified, and its stated limits."
+    },
+    {
+     "title": "Epoch AI: AI in math",
+     "url": "https://epoch.ai/topics/math",
+     "kind": "overview",
+     "why": "Epoch's hub for benchmarks and analysis on AI progress in mathematics."
+    }
+   ]
+  },
+  {
+   "id": "science.weather",
+   "name": "Weather & climate",
+   "summary": "AI forecast models run operationally at ECMWF and NOAA at a fraction of the compute of physics models, and developers report gains on cyclone forecasts.",
+   "activity": 4,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "WeatherNext open-sourced",
+     "summary": "Google DeepMind released code and weights for WeatherNext 2 and WeatherNext Cyclones; its Nature paper reports about a day more cyclone lead time.",
+     "date": "2026-08",
+     "kind": "research",
+     "source": "https://deepmind.google/blog/weathernext-ai-model-achieves-breakthrough-in-forecasting-cyclones/",
+     "verified": true
+    },
+    {
+     "name": "ECMWF AIFS upgraded to v2",
+     "summary": "Europe's operational AI forecast system, running since February 2025, moved its single and ensemble models to v2, adding wave and snow cover forecasts.",
+     "date": "2026-05",
+     "kind": "product",
+     "source": "https://www.ecmwf.int/en/about/media-centre/news/2026/ifs-cycle-50r1-aifsv2-live",
+     "verified": true
+    },
+    {
+     "name": "NOAA deploys AIGFS, AIGEFS and HGEFS",
+     "summary": "NOAA put AI global models into operations; it says the 31-member AIGEFS ensemble needs about 9% of the computing of its physics-based GEFS.",
+     "date": "2025-12",
+     "kind": "product",
+     "source": "https://www.noaa.gov/news-release/noaa-deploys-new-generation-of-ai-driven-global-weather-models",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Weather is the clearest case of AI models moving from papers into public operational services.",
+   "openQuestion": "How well do AI models handle storm intensity and extremes outside their training data, and who validates them?",
+   "deepDives": [
+    {
+     "title": "ECMWF AIFS machine learning data",
+     "url": "https://www.ecmwf.int/en/forecasts/datasets/aifs-machine-learning-data",
+     "kind": "tracker",
+     "why": "Live open forecast data and documentation for ECMWF's operational AI models."
+    },
+    {
+     "title": "NOAA Project EAGLE overview",
+     "url": "https://epic.noaa.gov/ai/eagle-overview/",
+     "kind": "overview",
+     "why": "How NOAA builds and evaluates the AI models behind AIGFS and AIGEFS."
+    },
+    {
+     "title": "WP-MIP: AI, hybrid and physical model intercomparison",
+     "url": "https://arxiv.org/pdf/2604.16643",
+     "kind": "paper",
+     "why": "A like-for-like comparison of AI, hybrid and physics-based weather models."
+    },
+    {
+     "title": "AIFS ENS 2.0 model card",
+     "url": "https://huggingface.co/ecmwf/aifs-ens-2.0",
+     "kind": "community",
+     "why": "Open weights and technical details for ECMWF's AI ensemble model."
+    }
+   ]
+  },
+  {
+   "id": "science.physics",
+   "name": "Physics & fusion",
+   "summary": "Machine learning controls and predicts tokamak plasma behavior in real experiments, and fusion startups use AI simulators to plan operations before first plasma.",
+   "activity": 3,
+   "maturity": "emerging",
+   "landmarks": [
+    {
+     "name": "PPPL PACMAN control framework",
+     "summary": "Princeton framework unifying ML plasma controllers was tested on DIII-D, including predicting tearing modes about 200 ms in advance.",
+     "date": "2026-09",
+     "kind": "research",
+     "source": "https://www.ans.org/news/2026-09-08/article-8370/pppl-develops-framework-for-unifying-tokamak-ml-control-models/",
+     "verified": true
+    },
+    {
+     "name": "DeepMind partners with CFS",
+     "summary": "Google DeepMind and Commonwealth Fusion Systems use the open-source TORAX simulator and RL to plan SPARC tokamak operation ahead of first plasma.",
+     "date": "2025-10",
+     "kind": "deal",
+     "source": "https://deepmind.google/discover/blog/bringing-ai-to-the-next-generation-of-fusion-energy/",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Fusion needs fast, reliable plasma control, and ML controllers are now being tested on real machines.",
+   "openQuestion": "Will ML control proven on research tokamaks transfer to burning plasmas in SPARC and ITER-class devices?",
+   "deepDives": [
+    {
+     "title": "Enabling Integrated AI Control on DIII-D",
+     "url": "https://arxiv.org/html/2511.08818",
+     "kind": "paper",
+     "why": "The PACMAN paper: control system design and the experiments run on DIII-D."
+    },
+    {
+     "title": "How AI will help get fusion from lab to grid",
+     "url": "https://www.weforum.org/stories/energy-transition/how-ai-will-help-get-fusion-from-lab-to-grid-by-the-2030s/",
+     "kind": "overview",
+     "why": "Non-technical explainer of where AI is used in fusion simulation, control and materials."
+    }
+   ]
+  },
+  {
+   "id": "science.ai-scientist",
+   "name": "Autonomous labs & AI scientists",
+   "summary": "Agent systems that read papers, run analyses and propose hypotheses are sold to pharma, and the US DOE funds a national network of AI-driven autonomous labs.",
+   "activity": 4,
+   "maturity": "emerging",
+   "landmarks": [
+    {
+     "name": "DOE Genesis Mission challenges",
+     "summary": "US Energy Department named 26 science and technology challenges for its AI-for-science mission, including AI-driven autonomous laboratories.",
+     "date": "2026-02",
+     "kind": "policy",
+     "source": "https://www.energy.gov/articles/energy-department-announces-26-genesis-mission-science-and-technology-challenges",
+     "verified": true
+    },
+    {
+     "name": "First Genesis Mission projects selected",
+     "summary": "DOE selected its first 278 Genesis Mission projects; Berkeley Lab leads 13 of them and partners on more than 30 others.",
+     "date": "2026-07",
+     "kind": "policy",
+     "source": "https://newscenter.lbl.gov/2026/07/22/berkeley-lab-to-lead-13-new-genesis-mission-ai-projects/",
+     "verified": true
+    },
+    {
+     "name": "Incyte deploys Kosmos AI scientist",
+     "summary": "Incyte will use Edison Scientific's Kosmos agent for target discovery and translational biology; Edison spun out of nonprofit FutureHouse in 2025.",
+     "date": "2026-05",
+     "kind": "deal",
+     "source": "https://www.fiercebiotech.com/biotech/incyte-inks-deal-edison-scientific-train-ai-through-drug-discovery",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "If agents can run parts of the research loop, the pace of science could change well beyond any single field.",
+   "openQuestion": "Do AI scientist systems produce findings that hold up to independent replication, or mainly plausible analyses?",
+   "deepDives": [
+    {
+     "title": "How we built Kosmos",
+     "url": "https://labs.edisonscientific.com/research/how-we-built-kosmos/",
+     "kind": "overview",
+     "why": "Edison's own account of how its AI scientist agent is designed and what it can do."
+    },
+    {
+     "title": "Berkeley Lab Genesis Mission projects",
+     "url": "https://www.lbl.gov/genesis-mission-projects/",
+     "kind": "tracker",
+     "why": "List of the funded Genesis projects one national lab leads or partners on."
+    },
+    {
+     "title": "Google DeepMind and Edison are building the AI scientist",
+     "url": "https://www.genengnews.com/topics/artificial-intelligence/google-deepmind-and-edison-are-building-the-ai-scientist/",
+     "kind": "overview",
+     "why": "GEN's survey of the main AI scientist efforts and how they differ."
+    }
+   ]
+  }
+ ],
+ "deepDives": [
+  {
+   "title": "DOE Genesis Mission science and technology challenges",
+   "url": "https://www.energy.gov/articles/energy-department-announces-26-genesis-mission-science-and-technology-challenges",
+   "kind": "report",
+   "why": "The US government's list of the science problems it wants AI aimed at."
+  },
+  {
+   "title": "Epoch AI: AI in math",
+   "url": "https://epoch.ai/topics/math",
+   "kind": "tracker",
+   "why": "Benchmarks and analysis tracking AI progress on research-level mathematics."
+  },
+  {
+   "title": "ECMWF AIFS machine learning data",
+   "url": "https://www.ecmwf.int/en/forecasts/datasets/aifs-machine-learning-data",
+   "kind": "tracker",
+   "why": "Open data from an AI model running in an operational forecasting service."
+  },
+  {
+   "title": "Genomic deep learning for noncoding variant effects",
+   "url": "https://www.nature.com/articles/s41588-026-02769-7",
+   "kind": "overview",
+   "why": "Review of sequence models in genomics, a leading area of AI for biology."
+  }
+ ]
+}

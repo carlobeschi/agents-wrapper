@@ -37,3 +37,41 @@ test('search finds a topic and the hash opens it', async ({ page }) => {
   await page.goto(URL + '#geo-compute');
   await expect(page.locator('#panel h2')).toHaveText(/Compute/);
 });
+
+test('a viewpoint highlights topics and can be added to my focus', async ({ page }) => {
+  await page.goto(URL + '#lens-lawyer');
+  await expect(page.locator('#panel h2')).toHaveText('Lawyer or compliance lead');
+  await expect(page.locator('#banner')).toBeVisible();
+  expect(await page.locator('#world path.prov.lit').count()).toBeGreaterThan(5);
+  await page.locator('button[data-act="pin-all"]').click();
+  const n = Number(await page.locator('#focus-n').textContent());
+  expect(n).toBeGreaterThan(5);
+
+  // the stars survive a reload and My focus explains how they fit
+  await page.goto(URL + '#focus');
+  await page.reload();
+  await expect(page.locator('#panel h2')).toHaveText('My focus');
+  await expect(page.locator('#panel .lede')).toContainText(`You follow ${n} topics`);
+  expect(await page.locator('#world path.prov.pinned').count()).toBe(n);
+  await page.locator('#banner-clear').click();
+  await expect(page.locator('#banner')).toBeHidden();
+});
+
+test('a topic offers deep-dive links and a star toggle', async ({ page }) => {
+  await page.goto(URL + '#legal-contracts');
+  expect(await page.locator('#panel .dd a[href^="http"]').count()).toBeGreaterThan(0);
+  await page.locator('#panel .picks button[data-pin="legal.contracts"]').click();
+  await expect(page.locator('#focus-n')).toHaveText('1');
+  await page.locator('#panel .picks button[data-pin="legal.contracts"]').click();
+  await expect(page.locator('#focus-n')).toHaveText('0');
+});
+
+test('every landmark source and deep dive is an http(s) link', () => {
+  const src = require('fs').readFileSync(path.join(__dirname, '..', 'atlas', 'atlas-data.js'), 'utf8');
+  const data = JSON.parse(src.slice(src.indexOf('{'), src.lastIndexOf('}') + 1));
+  for (const f of data.fields) for (const r of f.regions) {
+    expect(r.landmarks.length, r.id).toBeGreaterThan(0);
+    for (const l of r.landmarks) if (l.source) expect(l.source, l.name).toMatch(/^https?:\/\//);
+    for (const d of r.deepDives || []) expect(d.url, r.id).toMatch(/^https?:\/\//);
+  }
+});

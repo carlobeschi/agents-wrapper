@@ -1,48 +1,524 @@
 {
   "title": "AI Atlas",
   "asOf": "2026-11-10",
-  "world": { "width": 3900, "height": 2700 },
-  "order": ["research", "software", "enterprise", "legal", "science", "mind", "geo", "health", "education", "creative"],
+  "world": {
+    "width": 3900,
+    "height": 2700
+  },
+  "order": [
+    "research",
+    "software",
+    "enterprise",
+    "legal",
+    "science",
+    "mind",
+    "geo",
+    "health",
+    "education",
+    "creative"
+  ],
   "positions": {
-    "software":   { "x": 760,  "y": 640 },
-    "enterprise": { "x": 1880, "y": 430 },
-    "legal":      { "x": 2980, "y": 560 },
-    "science":    { "x": 640,  "y": 1520 },
-    "research":   { "x": 1840, "y": 1380 },
-    "mind":       { "x": 3000, "y": 1420 },
-    "health":     { "x": 900,  "y": 2340 },
-    "education":  { "x": 1780, "y": 2330 },
-    "creative":   { "x": 2560, "y": 2330 },
-    "geo":        { "x": 3420, "y": 2200 }
+    "software": {
+      "x": 760,
+      "y": 640
+    },
+    "enterprise": {
+      "x": 1880,
+      "y": 430
+    },
+    "legal": {
+      "x": 2980,
+      "y": 560
+    },
+    "science": {
+      "x": 640,
+      "y": 1520
+    },
+    "research": {
+      "x": 1840,
+      "y": 1380
+    },
+    "mind": {
+      "x": 3000,
+      "y": 1420
+    },
+    "health": {
+      "x": 900,
+      "y": 2340
+    },
+    "education": {
+      "x": 1780,
+      "y": 2330
+    },
+    "creative": {
+      "x": 2560,
+      "y": 2330
+    },
+    "geo": {
+      "x": 3420,
+      "y": 2200
+    }
   },
   "routes": [
-    { "from": "software.coding-agents", "to": "research.agents", "label": "Coding is the proving ground for agent research" },
-    { "from": "software.coding-agents", "to": "enterprise.protocols", "label": "Agent tooling built for developers moves into business workflows" },
-    { "from": "software.security", "to": "enterprise.governance", "label": "Securing agents that act with real permissions" },
-    { "from": "software.security", "to": "geo.defense", "label": "AI-found vulnerabilities and cyber operations" },
-    { "from": "software.testing", "to": "research.evals", "label": "Measuring whether model output actually works" },
-    { "from": "software.spec-design", "to": "creative.image", "label": "Generated interfaces and design assets" },
-    { "from": "research.interpretability", "to": "mind.consciousness", "label": "What happens inside a model, and whether anyone is home" },
-    { "from": "research.alignment", "to": "mind.ethics", "label": "Whose values a model should hold" },
-    { "from": "research.alignment", "to": "geo.governance", "label": "Safety testing becomes a policy instrument" },
-    { "from": "research.efficiency", "to": "geo.compute", "label": "Chips and inference cost shape who can compete" },
-    { "from": "research.scaling", "to": "geo.energy", "label": "Training runs need power plants" },
-    { "from": "research.scaling", "to": "geo.open-weights", "label": "Frontier versus open models" },
-    { "from": "research.reasoning", "to": "science.math", "label": "Reasoning models tested on proofs" },
-    { "from": "research.robotics", "to": "science.ai-scientist", "label": "Robots run the experiments" },
-    { "from": "research.multimodal", "to": "creative.video", "label": "World models and video generation share methods" },
-    { "from": "research.agents", "to": "enterprise.browser", "label": "Computer-use research becomes products" },
-    { "from": "science.biology", "to": "health.drug-dev", "label": "Designed molecules enter trials" },
-    { "from": "legal.ai-law", "to": "geo.governance", "label": "Regulation of AI at home and abroad" },
-    { "from": "legal.copyright", "to": "creative.labour", "label": "Training data, licensing and creator pay" },
-    { "from": "legal.compliance", "to": "enterprise.governance", "label": "Audit trails for automated decisions" },
-    { "from": "legal.research", "to": "enterprise.knowledge", "label": "Grounded answers over private document collections" },
-    { "from": "health.regulation", "to": "legal.compliance", "label": "Medical device rules for software" },
-    { "from": "mind.labor", "to": "enterprise.roi", "label": "Which jobs change, and whether it pays" },
-    { "from": "mind.labor", "to": "education.skills", "label": "Retraining for changed work" },
-    { "from": "mind.epistemics", "to": "geo.info", "label": "Truth, persuasion and elections" },
-    { "from": "mind.meaning", "to": "education.tutoring", "label": "Learning with, or leaning on, an AI" },
-    { "from": "creative.video", "to": "geo.info", "label": "Deepfakes and provenance" },
-    { "from": "mind.agi", "to": "geo.us-china", "label": "Timelines drive the race narrative" }
+    {
+      "from": "software.coding-agents",
+      "to": "research.agents",
+      "label": "Coding is the proving ground for agent research"
+    },
+    {
+      "from": "software.coding-agents",
+      "to": "enterprise.protocols",
+      "label": "Agent tooling built for developers moves into business workflows"
+    },
+    {
+      "from": "software.security",
+      "to": "enterprise.governance",
+      "label": "Securing agents that act with real permissions"
+    },
+    {
+      "from": "software.security",
+      "to": "geo.defense",
+      "label": "AI-found vulnerabilities and cyber operations"
+    },
+    {
+      "from": "software.testing",
+      "to": "research.evals",
+      "label": "Measuring whether model output actually works"
+    },
+    {
+      "from": "software.spec-design",
+      "to": "creative.image",
+      "label": "Generated interfaces and design assets"
+    },
+    {
+      "from": "research.interpretability",
+      "to": "mind.consciousness",
+      "label": "What happens inside a model, and whether anyone is home"
+    },
+    {
+      "from": "research.alignment",
+      "to": "mind.ethics",
+      "label": "Whose values a model should hold"
+    },
+    {
+      "from": "research.alignment",
+      "to": "geo.governance",
+      "label": "Safety testing becomes a policy instrument"
+    },
+    {
+      "from": "research.efficiency",
+      "to": "geo.compute",
+      "label": "Chips and inference cost shape who can compete"
+    },
+    {
+      "from": "research.scaling",
+      "to": "geo.energy",
+      "label": "Training runs need power plants"
+    },
+    {
+      "from": "research.scaling",
+      "to": "geo.open-weights",
+      "label": "Frontier versus open models"
+    },
+    {
+      "from": "research.reasoning",
+      "to": "science.math",
+      "label": "Reasoning models tested on proofs"
+    },
+    {
+      "from": "research.robotics",
+      "to": "science.ai-scientist",
+      "label": "Robots run the experiments"
+    },
+    {
+      "from": "research.multimodal",
+      "to": "creative.video",
+      "label": "World models and video generation share methods"
+    },
+    {
+      "from": "research.agents",
+      "to": "enterprise.browser",
+      "label": "Computer-use research becomes products"
+    },
+    {
+      "from": "science.biology",
+      "to": "health.drug-dev",
+      "label": "Designed molecules enter trials"
+    },
+    {
+      "from": "legal.ai-law",
+      "to": "geo.governance",
+      "label": "Regulation of AI at home and abroad"
+    },
+    {
+      "from": "legal.copyright",
+      "to": "creative.labour",
+      "label": "Training data, licensing and creator pay"
+    },
+    {
+      "from": "legal.compliance",
+      "to": "enterprise.governance",
+      "label": "Audit trails for automated decisions"
+    },
+    {
+      "from": "legal.research",
+      "to": "enterprise.knowledge",
+      "label": "Grounded answers over private document collections"
+    },
+    {
+      "from": "health.regulation",
+      "to": "legal.compliance",
+      "label": "Medical device rules for software"
+    },
+    {
+      "from": "mind.labor",
+      "to": "enterprise.roi",
+      "label": "Which jobs change, and whether it pays"
+    },
+    {
+      "from": "mind.labor",
+      "to": "education.skills",
+      "label": "Retraining for changed work"
+    },
+    {
+      "from": "mind.epistemics",
+      "to": "geo.info",
+      "label": "Truth, persuasion and elections"
+    },
+    {
+      "from": "mind.meaning",
+      "to": "education.tutoring",
+      "label": "Learning with, or leaning on, an AI"
+    },
+    {
+      "from": "creative.video",
+      "to": "geo.info",
+      "label": "Deepfakes and provenance"
+    },
+    {
+      "from": "mind.agi",
+      "to": "geo.us-china",
+      "label": "Timelines drive the race narrative"
+    },
+    {
+      "from": "health.scribes",
+      "to": "enterprise.knowledge",
+      "label": "Ambient note-taking is knowledge work in a clinic"
+    },
+    {
+      "from": "health.patient",
+      "to": "mind.meaning",
+      "label": "Leaning on chatbots for advice and emotional support"
+    },
+    {
+      "from": "health.diagnostics",
+      "to": "research.multimodal",
+      "label": "Vision models read scans"
+    },
+    {
+      "from": "education.assessment",
+      "to": "mind.epistemics",
+      "label": "What counts as knowing when a model can answer"
+    },
+    {
+      "from": "education.evidence",
+      "to": "mind.cognition",
+      "label": "Learning science meets cognitive offloading"
+    },
+    {
+      "from": "geo.regulation",
+      "to": "legal.ai-law",
+      "label": "Statutes, and how courts and firms apply them"
+    },
+    {
+      "from": "geo.energy",
+      "to": "science.physics",
+      "label": "Fusion and grid research aimed at data-centre demand"
+    },
+    {
+      "from": "creative.music",
+      "to": "legal.copyright",
+      "label": "Label lawsuits turn into licences"
+    },
+    {
+      "from": "creative.writing",
+      "to": "education.assessment",
+      "label": "Generated text and the question of authorship"
+    },
+    {
+      "from": "creative.games",
+      "to": "research.multimodal",
+      "label": "World models as playable environments"
+    },
+    {
+      "from": "enterprise.hr",
+      "to": "legal.compliance",
+      "label": "Bias and transparency rules for automated hiring"
+    },
+    {
+      "from": "software.observability",
+      "to": "enterprise.governance",
+      "label": "Tracing what an agent actually did"
+    },
+    {
+      "from": "science.ai-scientist",
+      "to": "research.agents",
+      "label": "Research agents are long-horizon agents"
+    },
+    {
+      "from": "mind.ethics",
+      "to": "legal.ai-law",
+      "label": "From principles to legal obligations"
+    },
+    {
+      "from": "geo.defense",
+      "to": "mind.ethics",
+      "label": "Autonomy and responsibility in weapons"
+    },
+    {
+      "from": "research.evals",
+      "to": "geo.governance",
+      "label": "Safety institutes test frontier models"
+    },
+    {
+      "from": "enterprise.support",
+      "to": "mind.labor",
+      "label": "Frontline jobs are the first to be automated"
+    }
+  ],
+  "themes": [
+    {
+      "id": "agents",
+      "name": "Agents leave the lab",
+      "blurb": "Models that plan, use tools and work for hours are the main product bet. Coding is where it works best so far. Business workflows follow, and controls for what agents may do trail behind.",
+      "regions": [
+        "software.coding-agents",
+        "research.agents",
+        "enterprise.protocols",
+        "enterprise.support",
+        "enterprise.browser",
+        "enterprise.governance",
+        "software.security",
+        "enterprise.roi"
+      ]
+    },
+    {
+      "id": "compute",
+      "name": "Chips, power and the race",
+      "blurb": "Progress is bought with chips and electricity. That pulls data centres, export controls, power grids and national strategy into the AI story.",
+      "regions": [
+        "research.scaling",
+        "research.efficiency",
+        "geo.compute",
+        "geo.energy",
+        "geo.us-china",
+        "geo.national",
+        "geo.open-weights"
+      ]
+    },
+    {
+      "id": "evidence",
+      "name": "Does it actually work?",
+      "blurb": "Adoption runs ahead of measurement. Benchmarks saturate, productivity studies disagree, and regulated fields ask for trials before trusting results.",
+      "regions": [
+        "research.evals",
+        "software.testing",
+        "enterprise.roi",
+        "education.evidence",
+        "health.regulation",
+        "mind.labor",
+        "legal.research"
+      ]
+    },
+    {
+      "id": "rules",
+      "name": "Who sets the rules",
+      "blurb": "Legislators, courts, regulators and licensing deals are each writing part of the rulebook, often at different speeds and in different directions.",
+      "regions": [
+        "legal.ai-law",
+        "geo.regulation",
+        "geo.governance",
+        "legal.copyright",
+        "legal.compliance",
+        "health.regulation",
+        "education.policy",
+        "creative.labour"
+      ]
+    },
+    {
+      "id": "inside",
+      "name": "Understanding the machine",
+      "blurb": "What is happening inside a model, whether it can be trusted to hold to its goals, and what, if anything, it is like to be one. Empirical research meets philosophy here.",
+      "regions": [
+        "research.interpretability",
+        "research.alignment",
+        "mind.consciousness",
+        "mind.cognition",
+        "mind.agi",
+        "mind.ethics"
+      ]
+    },
+    {
+      "id": "discovery",
+      "name": "AI as a scientist",
+      "blurb": "From protein design to proofs and weather forecasts, models are moving from analysing results to proposing and running the experiments.",
+      "regions": [
+        "science.biology",
+        "science.materials",
+        "science.math",
+        "science.weather",
+        "science.physics",
+        "science.ai-scientist",
+        "research.reasoning",
+        "research.robotics",
+        "health.drug-dev"
+      ]
+    },
+    {
+      "id": "people",
+      "name": "People, work and trust",
+      "blurb": "How AI changes jobs, learning, relationships and what people believe. The effects are real but uneven, and the evidence is still coming in.",
+      "regions": [
+        "mind.labor",
+        "mind.meaning",
+        "mind.epistemics",
+        "education.tutoring",
+        "education.skills",
+        "education.assessment",
+        "health.patient",
+        "geo.info",
+        "creative.labour"
+      ]
+    }
+  ],
+  "lenses": [
+    {
+      "id": "engineer",
+      "name": "Software engineer",
+      "blurb": "The tools changing how software is written, reviewed, tested and run, plus the agent research and protocols underneath them.",
+      "regions": [
+        "software.*",
+        "research.agents",
+        "research.evals",
+        "enterprise.protocols",
+        "enterprise.governance",
+        "enterprise.browser"
+      ]
+    },
+    {
+      "id": "leader",
+      "name": "Business or product leader",
+      "blurb": "Where agents are being deployed in companies, what the returns look like, and the rules and workforce questions that come with them.",
+      "regions": [
+        "enterprise.*",
+        "software.coding-agents",
+        "mind.labor",
+        "legal.compliance",
+        "legal.ai-law",
+        "geo.regulation",
+        "education.skills"
+      ]
+    },
+    {
+      "id": "researcher",
+      "name": "ML researcher",
+      "blurb": "The research frontier itself, the sciences it is being tested on, and the debates about where it leads.",
+      "regions": [
+        "research.*",
+        "science.math",
+        "science.ai-scientist",
+        "mind.cognition",
+        "mind.agi",
+        "geo.open-weights"
+      ]
+    },
+    {
+      "id": "scientist",
+      "name": "Scientist",
+      "blurb": "AI as an instrument for discovery, the reasoning and robotics research behind it, and how results are checked.",
+      "regions": [
+        "science.*",
+        "research.reasoning",
+        "research.robotics",
+        "research.evals",
+        "health.drug-dev"
+      ]
+    },
+    {
+      "id": "lawyer",
+      "name": "Lawyer or compliance lead",
+      "blurb": "AI inside legal practice, and the law being written about AI: statutes, court rulings, licensing and sector rules.",
+      "regions": [
+        "legal.*",
+        "geo.regulation",
+        "geo.governance",
+        "enterprise.governance",
+        "health.regulation",
+        "creative.labour"
+      ]
+    },
+    {
+      "id": "policy",
+      "name": "Policy or strategy analyst",
+      "blurb": "Compute, power, national strategy and governance, with the safety research and economic debates that inform them.",
+      "regions": [
+        "geo.*",
+        "legal.ai-law",
+        "research.alignment",
+        "research.evals",
+        "mind.labor",
+        "mind.agi",
+        "mind.epistemics"
+      ]
+    },
+    {
+      "id": "educator",
+      "name": "Educator or learner",
+      "blurb": "Tutors, assessment and policy in education, and what research says about learning with AI.",
+      "regions": [
+        "education.*",
+        "mind.meaning",
+        "mind.cognition",
+        "mind.epistemics",
+        "mind.labor",
+        "creative.writing"
+      ]
+    },
+    {
+      "id": "clinician",
+      "name": "Clinician or health researcher",
+      "blurb": "AI in diagnosis, documentation, drug development and patient use, and how it is validated and regulated.",
+      "regions": [
+        "health.*",
+        "science.biology",
+        "legal.compliance",
+        "mind.meaning"
+      ]
+    },
+    {
+      "id": "maker",
+      "name": "Artist, writer or media maker",
+      "blurb": "Generative tools across image, video, music, writing and games, and the fights over training data, pay and provenance.",
+      "regions": [
+        "creative.*",
+        "legal.copyright",
+        "research.multimodal",
+        "geo.info",
+        "mind.meaning"
+      ]
+    },
+    {
+      "id": "humanist",
+      "name": "Philosopher or humanist",
+      "blurb": "Questions about mind, knowledge, values and work, and the technical research that bears on them.",
+      "regions": [
+        "mind.*",
+        "research.interpretability",
+        "research.alignment",
+        "geo.governance",
+        "geo.defense",
+        "education.assessment"
+      ]
+    }
   ]
 }

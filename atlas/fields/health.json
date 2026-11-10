@@ -1,0 +1,322 @@
+{
+ "id": "health",
+ "name": "Health & Medicine",
+ "summary": "AI is routine in radiology and clinical note-taking, chatbots field health questions at vast scale, AI-designed drugs reach late-stage trials, and regulators loosen some rules while tightening others.",
+ "regions": [
+  {
+   "id": "health.diagnostics",
+   "name": "Imaging & diagnostics",
+   "summary": "Radiology makes up about three quarters of FDA-authorized AI devices. A large randomized trial and a national rollout study show AI-supported breast screening finds more cancers.",
+   "activity": 3,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "MASAI trial final results in The Lancet",
+     "summary": "Swedish randomized trial of about 106,000 women: AI-supported mammography had a 12% lower interval cancer rate than standard double reading, meeting non-inferiority.",
+     "date": "2026-01",
+     "kind": "research",
+     "source": "https://www.lunduniversity.lu.se/article/ai-support-breast-cancer-screening-fewer-missed-cancer-cases",
+     "verified": true
+    },
+    {
+     "name": "FDA AI device list passes 1,500",
+     "summary": "Third-party counts of the FDA list put AI-enabled device authorizations at about 1,524 through March 2026 and about 1,600 by mid-year, roughly 76% in radiology.",
+     "date": "2026-03",
+     "kind": "policy",
+     "source": "https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/list-artificial-intelligence-enabled-medical-devices",
+     "verified": true
+    },
+    {
+     "name": "PRAIM: AI in German breast screening",
+     "summary": "Real-world study of about 460,000 women in Germany's screening program found a 17.6% higher cancer detection rate with AI-supported reading and no rise in recalls.",
+     "date": "2025-01",
+     "kind": "research",
+     "source": "https://www.eurekalert.org/news-releases/1069807",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Imaging is where medical AI has the most approvals and the strongest trial evidence, so it shows what real clinical adoption looks like.",
+   "openQuestion": "Does finding more cancers with AI mean fewer deaths, and do the results hold outside European double-reading programs?",
+   "deepDives": [
+    {
+     "title": "AI-Enabled Medical Devices List (FDA)",
+     "url": "https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/list-artificial-intelligence-enabled-medical-devices",
+     "kind": "tracker",
+     "why": "The primary record of authorized AI devices, with specialty and decision date."
+    },
+    {
+     "title": "Expert reactions to the MASAI trial (Science Media Centre Spain)",
+     "url": "https://sciencemediacentre.es/en/node/6636",
+     "kind": "overview",
+     "why": "Independent researchers on what the 100,000-woman trial does and does not show."
+    },
+    {
+     "title": "PRAIM study dataset (Dryad)",
+     "url": "https://datadryad.org/dataset/doi:10.5061/dryad.zs7h44jgn",
+     "kind": "tracker",
+     "why": "Open data behind the German nationwide AI mammography implementation study."
+    },
+    {
+     "title": "Radiology dominates thirty years of FDA AI device approvals",
+     "url": "https://www.auntminnie.com/imaging-informatics/artificial-intelligence/article/15830219/radiology-dominates-thirty-years-of-fda-ai-device-approvals",
+     "kind": "overview",
+     "why": "Trade-press analysis of how the FDA's AI authorizations split across specialties."
+    }
+   ]
+  },
+  {
+   "id": "health.scribes",
+   "name": "Clinical documentation & scribes",
+   "summary": "Ambient AI scribes that draft visit notes have spread fast across US health systems. Studies show modest time savings, and Epic's built-in scribe now competes with Microsoft and Abridge.",
+   "activity": 4,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "JAMA multisite study of AI scribes",
+     "summary": "Study of 8,581 ambulatory clinicians at five health systems linked AI scribes to about 16 fewer documentation minutes per 8 patient hours, with no significant change after hours.",
+     "date": "2026-04",
+     "kind": "research",
+     "source": "https://www.beckersasc.com/asc-news/ai-scribes-underdeliver-on-cutting-down-after-hours-charting-study/",
+     "verified": true
+    },
+    {
+     "name": "Dragon Copilot passes 100,000 clinicians",
+     "summary": "At HIMSS 2026 Microsoft said more than 100,000 clinicians use Dragon Copilot in daily practice and opened it to partner-built apps and agents.",
+     "date": "2026-03",
+     "kind": "product",
+     "source": "https://microsoft.com/en-us/industry/blog/healthcare/2026/03/05/unify-simplify-scale-microsoft-dragon-copilot-meets-the-moment-at-himss-2026",
+     "verified": true
+    },
+    {
+     "name": "Two thirds of Epic hospitals use ambient AI",
+     "summary": "AJMC study of 2,784 Epic hospitals found 62.6% had adopted ambient AI by June 2025; DAX Copilot, Abridge and ThinkAndor made up over 80% of implementations.",
+     "date": "2026-01",
+     "kind": "research",
+     "source": "https://www.ajmc.com/view/ambient-ai-tool-adoption-in-us-hospitals-and-associated-factors",
+     "verified": true
+    },
+    {
+     "name": "Epic rolls out its own AI Charting",
+     "summary": "Epic made its native ambient scribe, built with Microsoft technology, available to customers nationwide, competing directly with third-party scribe vendors.",
+     "date": "2026-02",
+     "kind": "product",
+     "source": "https://www.statnews.com/2026/02/04/epic-ai-charting-ambient-scribe-abridge-microsoft/",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Scribes are the fastest-adopted generative AI tool in medicine and an early test of whether AI eases clinician workload in practice.",
+   "openQuestion": "Do scribes reduce burnout and cost, or mainly raise visit volume and billing, and how accurate are the notes?",
+   "deepDives": [
+    {
+     "title": "Ambient AI Tool Adoption in US Hospitals (AJMC)",
+     "url": "https://www.ajmc.com/view/ambient-ai-tool-adoption-in-us-hospitals-and-associated-factors",
+     "kind": "paper",
+     "why": "Peer-reviewed snapshot of which hospitals adopted ambient AI and which vendors lead."
+    },
+    {
+     "title": "AI scribes deliver modest time savings (TechTarget)",
+     "url": "https://www.techtarget.com/healthtechanalytics/feature/AI-scribes-deliver-modest-time-savings-but-still-boost-clinician-experience",
+     "kind": "overview",
+     "why": "Explainer on what the evidence says about time savings and clinician experience."
+    }
+   ]
+  },
+  {
+   "id": "health.drug-dev",
+   "name": "Drug development & trials",
+   "summary": "The first AI-discovered drug has entered Phase III, large funding rounds continue, and US and EU regulators have published shared principles for AI use across the medicines lifecycle.",
+   "activity": 4,
+   "maturity": "emerging",
+   "landmarks": [
+    {
+     "name": "Insilico starts Phase III for rentosertib",
+     "summary": "Insilico dosed the first patient in a 320-patient Phase III trial in China of its AI-discovered TNIK inhibitor for idiopathic pulmonary fibrosis; the drug remains investigational.",
+     "date": "2026-09",
+     "kind": "research",
+     "source": "https://www.news-medical.net/news/20260910/Generative-AI-driven-drug-Rentosertib-enters-Phase-III-trial-for-idiopathic-pulmonary-fibrosis.aspx",
+     "verified": true
+    },
+    {
+     "name": "Isomorphic Labs raises $2.1B",
+     "summary": "Alphabet's drug-design unit raised a $2.1B Series B led by Thrive Capital. Its first human trials, once targeted for 2025, are now expected by the end of 2026.",
+     "date": "2026-05",
+     "kind": "deal",
+     "source": "https://www.rdworldonline.com/alphabet-spinoff-isomorphic-labs-raises-2-1-billion-in-quest-to-solve-all-disease-with-ai-based-drug-discovery-tools/",
+     "verified": true
+    },
+    {
+     "name": "FDA and EMA joint AI principles",
+     "summary": "The two regulators issued 10 guiding principles for good AI practice in drug development, spanning early research, clinical trials, manufacturing and safety monitoring.",
+     "date": "2026-01",
+     "kind": "policy",
+     "source": "https://www.ema.europa.eu/en/news/ema-fda-set-common-principles-ai-medicine-development-0",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Drug discovery is the highest-stakes test of whether AI can speed up science, and no AI-discovered drug has yet been approved.",
+   "openQuestion": "Will AI-designed drugs succeed in late-stage trials at a higher rate than conventionally discovered ones?",
+   "deepDives": [
+    {
+     "title": "Guiding principles of good AI practice in drug development",
+     "url": "https://www.ema.europa.eu/en/documents/other/guiding-principles-good-ai-practice-drug-development_en.pdf",
+     "kind": "report",
+     "why": "The 10 joint EMA and FDA principles in full, in a short primary document."
+    },
+    {
+     "title": "Artificial Intelligence for Drug Development (FDA CDER)",
+     "url": "https://www.fda.gov/about-fda/center-drug-evaluation-and-research-cder/artificial-intelligence-drug-development",
+     "kind": "overview",
+     "why": "The FDA's running hub for guidance and policy on AI in drug and biologic development."
+    },
+    {
+     "title": "EMA AI Observatory 2025 report",
+     "url": "https://www.ema.europa.eu/system/files/documents/report/2025-ai-observatory-report_en.pdf",
+     "kind": "report",
+     "why": "European regulator's yearly review of how AI is used in medicines and what is coming."
+    }
+   ]
+  },
+  {
+   "id": "health.patient",
+   "name": "Patient-facing assistants & mental health",
+   "summary": "Hundreds of millions ask chatbots health questions weekly. Products now connect to medical records, while US states restrict AI therapy and companion bots after safety concerns.",
+   "activity": 4,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "OpenAI launches ChatGPT Health",
+     "summary": "A dedicated ChatGPT space that links medical records and wellness apps; OpenAI says more than 230M people ask health and wellness questions on ChatGPT each week.",
+     "date": "2026-01",
+     "kind": "product",
+     "source": "https://fortune.com/2026/01/07/openai-launches-chatgpt-health-in-a-push-to-become-a-hub-for-personal-health-data/",
+     "verified": true
+    },
+    {
+     "name": "Illinois bans AI therapy",
+     "summary": "Illinois law bars AI from providing therapy or making therapeutic decisions without a licensed professional, with fines up to $10,000 per violation. Nevada passed a similar limit.",
+     "date": "2025-08",
+     "kind": "policy",
+     "source": "https://www.beckershospitalreview.com/healthcare-information-technology/illinois-bans-ai-therapy-without-clinician-oversight/",
+     "verified": true
+    },
+    {
+     "name": "California SB 243 on companion chatbots",
+     "summary": "First US state law regulating companion chatbots, requiring AI disclosure and protocols for suicidal ideation and self-harm, effective January 2026.",
+     "date": "2025-10",
+     "kind": "policy",
+     "source": "https://techcrunch.com/2025/10/13/california-becomes-first-state-to-regulate-ai-companion-chatbots",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "This is where most people actually meet medical AI, largely outside clinical oversight and medical device rules.",
+   "openQuestion": "Do health chatbots improve outcomes for ordinary users, and who is liable when their advice causes harm?",
+   "deepDives": [
+    {
+     "title": "States crack down on AI for behavioral health care (AHCJ)",
+     "url": "https://healthjournalism.org/blog/2025/08/states-crack-down-on-ai-for-behavioral-health-care",
+     "kind": "overview",
+     "why": "Summary of state laws on AI therapy from the Association of Health Care Journalists."
+    },
+    {
+     "title": "FDA committee meets on generative AI mental health devices",
+     "url": "https://www.psychiatrictimes.com/view/fda-committee-meets-on-generative-ai-digital-mental-health-devices",
+     "kind": "overview",
+     "why": "Clinician-oriented account of the risks and evidence standards the FDA panel discussed."
+    },
+    {
+     "title": "The Batch: Illinois follows Nevada on therapy chatbots",
+     "url": "https://www.deeplearning.ai/the-batch/illinois-follows-nevada-prohibiting-certain-uses-of-chatbots-unless-used-by-licensed-therapists",
+     "kind": "newsletter",
+     "why": "Andrew Ng's newsletter on the state laws and the debate over restricting AI therapy."
+    }
+   ]
+  },
+  {
+   "id": "health.regulation",
+   "name": "Medical AI regulation & validation",
+   "summary": "The FDA has relaxed oversight of decision-support software and wearables while still weighing how to handle generative AI devices. The EU has delayed high-risk rules for medical devices to 2028.",
+   "activity": 3,
+   "maturity": "emerging",
+   "landmarks": [
+    {
+     "name": "FDA relaxes CDS and wellness guidance",
+     "summary": "Revised final guidances, issued without prior comment, clarified when clinical decision support software is exempt and let more non-invasive wearables count as wellness products.",
+     "date": "2026-01",
+     "kind": "policy",
+     "source": "https://www.arnoldporter.com/en/perspectives/advisories/2026/01/fda-cuts-red-tape-on-clinical-decision-support-software",
+     "verified": true
+    },
+    {
+     "name": "FDA panel on generative AI mental health devices",
+     "summary": "FDA's Digital Health Advisory Committee weighed evidence and monitoring standards for generative AI therapy chatbots; the FDA had not authorized any such device.",
+     "date": "2025-11",
+     "kind": "debate",
+     "source": "https://www.orrick.com/en/insights/2025/11/fdas-digital-health-advisory-committee-considers-generative-ai-therapy-chatbots-for-depression",
+     "verified": true
+    },
+    {
+     "name": "EU delays AI Act rules for medical devices",
+     "summary": "The Digital Omnibus on AI, in force since July 2026, moves high-risk obligations for AI in regulated products, including medical devices, from August 2027 to August 2028.",
+     "date": "2026-07",
+     "kind": "policy",
+     "source": "https://www.whitecase.com/insight-alert/eu-ai-omnibus-enters-force-amending-ai-act",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Rules written for fixed software are being stretched to cover generative models, and the outcome decides what reaches patients.",
+   "openQuestion": "How should regulators evaluate and monitor generative AI whose outputs vary and whose models change after approval?",
+   "deepDives": [
+    {
+     "title": "FDA advisory committee weighs guardrails for generative AI",
+     "url": "https://ca.hoganlovells.com/en/publications/fdas-digital-health-advisory-committee-weighs-guardrails-for-generative-ai-in-mental-health-devices",
+     "kind": "overview",
+     "why": "Detailed legal analysis of the panel's recommendations on evidence and monitoring."
+    },
+    {
+     "title": "FDA Law Blog on the 2026 CDS and wellness guidances",
+     "url": "https://www.thefdalawblog.com/?p=15814",
+     "kind": "newsletter",
+     "why": "Specialist FDA lawyers explain what changed in the two January 2026 guidances."
+    },
+    {
+     "title": "EU AI Act unpacked #34: the final Digital Omnibus on AI",
+     "url": "https://www.freshfields.com/en/our-thinking/blogs/technology-quotient/eu-ai-act-unpacked-34-the-final-digital-omnibus-on-ai-key-amendments-to-the-a-102nber",
+     "kind": "overview",
+     "why": "Walk-through of the amended AI Act deadlines and what changed for high-risk systems."
+    },
+    {
+     "title": "Automation bias and clinical practice: FDA's CDS update (Cooley)",
+     "url": "https://www.cooley.com/news/insight/2026/2026-01-20-automation-bias-and-clinical-practice-fda-makes-incremental-updates-to-clinical-decision-support-software-guidance",
+     "kind": "overview",
+     "why": "Close reading of how the FDA now interprets the four decision-support criteria."
+    }
+   ]
+  }
+ ],
+ "deepDives": [
+  {
+   "title": "AI-Enabled Medical Devices List (FDA)",
+   "url": "https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/list-artificial-intelligence-enabled-medical-devices",
+   "kind": "tracker",
+   "why": "Official, periodically updated list of AI-enabled devices the FDA has authorized."
+  },
+  {
+   "title": "Artificial Intelligence for Drug Development (FDA CDER)",
+   "url": "https://www.fda.gov/about-fda/center-drug-evaluation-and-research-cder/artificial-intelligence-drug-development",
+   "kind": "overview",
+   "why": "The FDA drug center's hub for its AI guidance, principles and policy work."
+  },
+  {
+   "title": "The Current State of FDA-Approved AI-Based Medical Devices",
+   "url": "https://medicalfuturist.com/the-current-state-of-fda-approved-ai-based-medical-devices",
+   "kind": "overview",
+   "why": "Readable breakdown of the FDA list by specialty, year and vendor."
+  },
+  {
+   "title": "States crack down on AI for behavioral health care (AHCJ)",
+   "url": "https://healthjournalism.org/blog/2025/08/states-crack-down-on-ai-for-behavioral-health-care",
+   "kind": "overview",
+   "why": "Health journalists' guide to state laws on AI therapy and how to report on them."
+  }
+ ]
+}

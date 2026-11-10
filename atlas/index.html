@@ -19,7 +19,7 @@
   --coast: #2b4350; --contour: rgba(43, 67, 80, .26); --border: rgba(43, 67, 80, .5);
   --lane: #23688a; --lane-soft: rgba(35, 104, 138, .45); --sel: #0f4e6b; --hl: rgba(15, 78, 107, .14);
   --h0: #eef0e4; --h1: #e2e6c6; --h2: #ead69c; --h3: #e7b574; --h4: #dc8a55; --h5: #c65e3e; --h6: #9f3a31;
-  --halo: rgba(247, 249, 250, .92);
+  --halo: rgba(247, 249, 250, .92); --pin: #6a3aa8; --veil: rgba(217, 227, 232, .68);
   --f-display: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
   --f-region: "Spectral", Georgia, "Times New Roman", serif;
   --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -33,7 +33,7 @@
     --coast: #8aa6b3; --contour: rgba(200, 222, 230, .15); --border: rgba(200, 222, 230, .38);
     --lane: #6cb2d3; --lane-soft: rgba(108, 178, 211, .45); --sel: #9ad3ee; --hl: rgba(154, 211, 238, .16);
     --h0: #1c2a2a; --h1: #26372e; --h2: #46472d; --h3: #6a522f; --h4: #8c5733; --h5: #ad5938; --h6: #cf6a49;
-    --halo: rgba(12, 23, 30, .88);
+    --halo: rgba(12, 23, 30, .88); --pin: #cdaef8; --veil: rgba(12, 23, 30, .66);
     color-scheme: dark;
   }
 }
@@ -43,10 +43,11 @@
   --coast: #8aa6b3; --contour: rgba(200, 222, 230, .15); --border: rgba(200, 222, 230, .38);
   --lane: #6cb2d3; --lane-soft: rgba(108, 178, 211, .45); --sel: #9ad3ee; --hl: rgba(154, 211, 238, .16);
   --h0: #1c2a2a; --h1: #26372e; --h2: #46472d; --h3: #6a522f; --h4: #8c5733; --h5: #ad5938; --h6: #cf6a49;
-  --halo: rgba(12, 23, 30, .88);
+  --halo: rgba(12, 23, 30, .88); --pin: #cdaef8; --veil: rgba(12, 23, 30, .66);
   color-scheme: dark;
 }
 html, body { height: 100%; }
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--sea); color: var(--ink); font: 14px/1.5 var(--f-body); overflow: hidden; }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--sel); outline-offset: 2px; }
@@ -64,6 +65,10 @@ button { font: inherit; color: inherit; }
 .prov { fill: transparent; stroke: var(--border); stroke-width: .7; stroke-dasharray: 3 3; }
 .prov.hover { fill: var(--hl); }
 .prov.sel { fill: transparent; stroke: var(--sel); stroke-width: 2; stroke-dasharray: none; }
+.prov.veil { fill: var(--veil); }
+.prov.lit { stroke: var(--sel); stroke-width: 1.5; stroke-dasharray: none; }
+.prov.pinned { stroke: var(--pin); stroke-width: 2.2; stroke-dasharray: none; }
+.prov.sel { stroke: var(--sel); stroke-width: 2.4; }
 .fog { fill: url(#hatch); pointer-events: none; }
 .hatch-line { stroke: var(--ink); stroke-opacity: .22; stroke-width: 1.2; }
 .lane { fill: none; stroke: var(--lane-soft); stroke-width: 1.2; stroke-dasharray: 2 5; stroke-linecap: round; }
@@ -75,6 +80,7 @@ button { font: inherit; color: inherit; }
 .lab-field-sub { font: 400 10.5px var(--f-mono); fill: var(--ink-soft); stroke-width: 4px; letter-spacing: .04em; }
 .lab-region { font: italic 500 13px var(--f-region); fill: var(--ink); stroke-width: 4px; }
 .lab-lm { font: 400 11px var(--f-body); fill: var(--ink); stroke-width: 3.5px; }
+.pin-mark { font: 15px var(--f-body); fill: var(--pin); stroke-width: 3.5px; }
 .dot { fill: var(--ink); stroke: var(--halo); stroke-width: 1.5px; }
 .dot.unv { fill: var(--halo); stroke: var(--ink); stroke-width: 1.4px; }
 .dot.sel { fill: var(--sel); stroke: var(--halo); }
@@ -150,6 +156,30 @@ button { font: inherit; color: inherit; }
 .lm p { margin: 0 !important; font-size: 13px; }
 .lm a { font: 400 11.5px var(--f-mono); color: var(--lane); word-break: break-all; }
 .unv-tag { color: var(--h5); }
+.tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.picks { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 4px; }
+.pick { font: 500 12px var(--f-body); padding: 5px 10px; border-radius: 999px; border: 1px solid var(--rule); background: var(--sea-shallow); cursor: pointer; text-align: left; }
+.pick:hover { border-color: var(--lane); }
+.pick.strong, .pick[aria-pressed="true"] { border-color: var(--pin); color: var(--pin); }
+#focus-n { font: 500 11px var(--f-mono); }
+#banner { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 4px 3px 10px; border-radius: 999px; border: 1px solid var(--sel); color: var(--sel); min-width: 0; }
+#banner-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; }
+#banner-clear { font: 500 11px var(--f-mono); border: 0; background: var(--hl); border-radius: 999px; padding: 2px 8px; cursor: pointer; color: var(--sel); }
+.list li.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+.star { background: none; border: 0; cursor: pointer; font-size: 17px; line-height: 1; padding: 7px 6px; color: var(--ink-soft); border-radius: 4px; }
+.star:hover { background: var(--hl); }
+.star[aria-pressed="true"] { color: var(--pin); }
+.list .date { font: 400 11px var(--f-mono); color: var(--ink-soft); white-space: nowrap; }
+.note { border-left: 2px solid var(--rule); padding: 2px 0 2px 10px; margin: 10px 0; font-size: 13px; }
+.note b { display: block; font: 600 10.5px var(--f-display); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); }
+.dd, .plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.plain { font-size: 13px; gap: 6px; }
+.dd li { display: grid; gap: 1px; }
+.dd a { font-weight: 500; color: var(--lane); text-underline-offset: 2px; }
+.dd-meta { font: 400 11px var(--f-mono); color: var(--ink-soft); }
+.dd-why { font-size: 12.5px; color: var(--ink); }
+.stats small { font: 400 11px var(--f-mono); color: var(--ink-soft); }
+.phone-only { display: none; }
 #tip { position: fixed; pointer-events: none; padding: 5px 9px; font-size: 12px; background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; box-shadow: 0 4px 14px rgba(10, 30, 40, .14); max-width: 260px; }
 #tip b { display: block; font-weight: 600; }
 #tip span { color: var(--ink-soft); font: 400 11px var(--f-mono); }
@@ -157,12 +187,13 @@ button { font: inherit; color: inherit; }
 @media (max-width: 760px) {
   :root { --panel-w: 0px; }
   #key { display: none; }
+  .phone-only { display: block; }
   .lab-field { font-size: 10.5px; letter-spacing: .12em; }
   #overlay.z2 .lab-field { font-size: 10px; }
   #cartouche { padding: 10px 12px; gap: 6px; }
   #cartouche h1 { font-size: 17px; }
   #cartouche .edition { display: none; }
-  #zoom { right: max(16px, env(safe-area-inset-right, 0px)); bottom: auto; top: calc(max(16px, env(safe-area-inset-top, 0px)) + 104px); }
+  #zoom { right: max(16px, env(safe-area-inset-right, 0px)); bottom: auto; top: calc(max(16px, env(safe-area-inset-top, 0px)) + 136px); }
   #panel { top: auto; left: max(8px, env(safe-area-inset-left, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); bottom: max(8px, env(safe-area-inset-bottom, 0px)); width: auto; max-height: 52%; }
   #panel:not(.open) #panel-body { display: none; }
   #sheet-handle { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; border: 0; background: none; padding: 10px 16px; cursor: pointer; text-align: left; }
@@ -193,6 +224,10 @@ button { font: inherit; color: inherit; }
       <label for="q" class="key-title" style="display:block">Find a field, topic or landmark</label>
       <input id="q" type="search" autocomplete="off" placeholder="e.g. code review, EU AI Act, tutors" aria-controls="results">
       <ul id="results" role="listbox" aria-label="Search results"></ul>
+    </div>
+    <div class="tools">
+      <button id="focus-btn" type="button" class="pick" aria-pressed="false">★ My focus <span id="focus-n">0</span></button>
+      <span id="banner" hidden><span id="banner-text"></span><button id="banner-clear" type="button" aria-label="Stop highlighting and show the whole map">Clear</button></span>
     </div>
   </section>
 
@@ -385,6 +420,8 @@ D.fields.forEach(f => {
 D.fields.forEach(f => f.regions.forEach(r => {
   const t = el('text', { class: 'lab-region', 'text-anchor': 'middle' }, overlay); t.textContent = r.name;
   items.push({ kind: 'region', el: t, x: r.x, y: r.y, w: r.name.length * 6.4 + 8, h: 17, pri: 100 + r.activity * 10, region: r });
+  const pm = el('text', { class: 'pin-mark hidden', 'text-anchor': 'middle' }, overlay); pm.textContent = '★';
+  items.push({ kind: 'pin', el: pm, x: r.x, y: r.y, pri: 2000, region: r });
   r.landmarks.forEach((l, i) => {
     const th = i * 2.4 + r.x * 0.01, rad = 30 + 11 * i;
     l.x = r.x + Math.cos(th) * rad; l.y = r.y + 16 + Math.sin(th) * rad * 0.75;
@@ -426,14 +463,18 @@ function render() {
     const onScreen = sx > -200 && sx < vw + 200 && sy > -60 && sy < vh + 60;
     if (it.kind === 'field') {
       const phone = isPhone(), w = phone ? it.name.length * 7.4 + 8 : z === 1 ? it.w : it.w * 0.8;
-      let show = z <= 2 && onScreen, sub = show && z === 1 && !phone;
+      let show = z <= 2 && onScreen, sub = show && z === 1 && !phone && !litSet;
       if (sub && !fits(sx - w / 2, sy - 16, w, it.h)) sub = false;
       if (show && !sub) show = fits(sx - w / 2, sy - 14, w, 18) || it.f === selField;
       it.el.classList.toggle('hidden', !show); it.sub.classList.toggle('hidden', !sub);
       if (show) { it.el.setAttribute('x', sx); it.el.setAttribute('y', sy); it.sub.setAttribute('x', sx); it.sub.setAttribute('y', sy + 16); }
+    } else if (it.kind === 'pin') {
+      const show = onScreen && pins.has(it.region.id); it.el.classList.toggle('hidden', !show);
+      if (show) { it.el.setAttribute('x', sx); it.el.setAttribute('y', sy - 15); placed.push([sx - 8, sy - 28, 16, 14]); }
     } else if (it.kind === 'region') {
-      let show = z >= 2 && onScreen;
-      if (show) show = fits(sx - it.w / 2, sy - 13, it.w, it.h) || it.region === selRegion;
+      const marked = pins.has(it.region.id) || (litSet && litSet.has(it.region));
+      let show = (z >= 2 || marked) && onScreen;
+      if (show) show = fits(sx - it.w / 2, sy - 13, it.w, it.h) || it.region === selRegion || (marked && z >= 2);
       it.el.classList.toggle('hidden', !show);
       if (show) { it.el.setAttribute('x', sx); it.el.setAttribute('y', sy); }
     } else {
@@ -487,93 +528,210 @@ function landmarkAt(sx, sy) {
   return best;
 }
 
-/* ---------- selection and panel ---------- */
-let selField = null, selRegion = null, selLm = null, hoverRegion = null;
+/* ---------- selection, focus pins, highlights and panel ---------- */
+let selField = null, selRegion = null, selLm = null, hoverRegion = null, coll = null, showColl = false, litSet = null, undoPins = null;
+const allRegions = Object.values(regionById);
+const STORE = 'ai-atlas-focus';
+const pins = new Set();
+try { JSON.parse(localStorage.getItem(STORE) || '[]').forEach(id => { if (regionById[id]) pins.add(id); }); } catch (e) {}
+const savePins = () => { try { localStorage.setItem(STORE, JSON.stringify([...pins])); } catch (e) {} };
+const mkColl = (type, c) => ({ type, id: c.id, name: c.name, blurb: c.blurb, regions: c.regions.map(id => regionById[id]).filter(Boolean) });
+const themes = (D.themes || []).map(c => mkColl('thread', c)), lenses = (D.lenses || []).map(c => mkColl('lens', c));
+const focusColl = { type: 'focus', id: 'focus', name: 'My focus', blurb: '', regions: [] };
+const syncFocus = () => { focusColl.regions = [...pins].map(id => regionById[id]); $('#focus-n').textContent = pins.size; };
+const COLLKIND = { thread: 'Thread', lens: 'Viewpoint', focus: 'My focus' };
+
 const pips = a => '<span class="pips" aria-hidden="true">' + [1, 2, 3, 4, 5].map(i => `<i style="${i <= a ? 'background:var(--h' + (a + 1) + ')' : ''}"></i>`).join('') + '</span>';
 const activityChip = a => `<span class="chip">${pips(a)} Activity ${a}/5</span>`;
 const maturityChip = m => `<span class="chip ${m}">${esc(MATURITY[m] || m)}</span>`;
+const star = r => { const on = pins.has(r.id); return `<button type="button" class="star" data-pin="${r.id}" aria-pressed="${on}" aria-label="${on ? 'Remove ' + esc(r.name) + ' from my focus' : 'Add ' + esc(r.name) + ' to my focus'}" title="${on ? 'In my focus' : 'Add to my focus'}">${on ? '★' : '☆'}</button>`; };
+const regionRow = (r, sub) => `<li class="row"><button type="button" data-region="${r.id}"><span class="n">${esc(r.name)}</span>${pips(r.activity)}<span class="m">${esc(sub)}</span></button>${star(r)}</li>`;
+const lmRow = l => `<li><button type="button" data-lm="${esc(l.id)}"><span class="n">${esc(l.name)}</span><span class="date">${esc(fmtDate(l.date))}</span><span class="m">${esc(l.region.field.name)} › ${esc(l.region.name)}</span></button></li>`;
+const newest = (list, n) => list.filter(l => l.verified).sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, n);
+const collPicks = list => `<div class="picks">${list.map(c => `<button type="button" class="pick" data-coll="${c.type}-${c.id}">${esc(c.name)}</button>`).join('')}</div>`;
+const DDKIND = { overview: 'Overview', paper: 'Paper', report: 'Report', tracker: 'Tracker', newsletter: 'Newsletter', course: 'Course', book: 'Book', community: 'Community' };
+function deepDives(list, title) {
+  list = (list || []).filter(d => /^https?:\/\//.test(d.url || '')); if (!list.length) return '';
+  return `<h3>${title}</h3><ul class="dd">${list.map(d => `<li><a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.title)}</a><span class="dd-meta">${esc(DDKIND[d.kind] || 'Link')} · ${esc(host(d.url))}</span>${d.why ? `<span class="dd-why">${esc(d.why)}</span>` : ''}</li>`).join('')}</ul>`;
+}
+function groupByField(regs, sub) {
+  return D.fields.filter(f => regs.some(r => r.field === f)).map(f => `<h3>${esc(f.name)}</h3><ul class="list">${regs.filter(r => r.field === f).sort((a, b) => b.activity - a.activity).map(r => regionRow(r, sub ? sub(r) : MATURITY[r.maturity] + ' · ' + r.summary)).join('')}</ul>`).join('');
+}
+const neighbours = (r, n) => r.field.regions.filter(o => o !== r).sort((a, b) => Math.hypot(a.x - r.x, a.y - r.y) - Math.hypot(b.x - r.x, b.y - r.y)).slice(0, n);
+const KEY_PHONE = `<div class="phone-only"><h3>How to read the map</h3><p class="fine">Higher, redder ground means more activity; each contour line is one point on a 1 to 5 scale. Hatching marks frontier research. Dotted lanes join topics in different fields that feed each other. A filled dot is a landmark checked against its source; a hollow dot could not be confirmed.</p></div>`;
 
 function panelWorld() {
-  const all = landmarks.length, unv = landmarks.filter(l => !l.verified).length, nreg = Object.keys(regionById).length;
+  const all = landmarks.length, unv = landmarks.filter(l => !l.verified).length;
   const ranked = D.fields.slice().sort((a, b) => b.heat - a.heat);
   return `<p class="crumbs">World</p>
   <h2>Where AI work is happening</h2>
-  <p class="lede">Each continent is a field. Each province is a topic inside it, and the higher the ground, the more is going on there right now. Zoom in to see the landmarks: products, papers, experiments, rulings and debates.</p>
-  <div class="stats"><div><b>${D.fields.length}</b><span>fields</span></div><div><b>${nreg}</b><span>topics</span></div><div><b>${all}</b><span>landmarks</span></div></div>
+  <p class="lede">Each continent is a field. Each province is a topic inside it, and the higher the ground, the more is going on there right now. Zoom in for the landmarks: products, papers, experiments, rulings and debates, each with a source.</p>
+  <div class="stats"><div><b>${D.fields.length}</b><span>fields</span></div><div><b>${allRegions.length}</b><span>topics</span></div><div><b>${all}</b><span>landmarks</span></div></div>
+  <h3>Follow a thread</h3>
+  <p class="fine">Storylines that run across several fields.</p>
+  ${collPicks(themes)}
+  <h3>See it from where you stand</h3>
+  <p class="fine">Pick the role closest to yours to light up the topics that matter most to it.</p>
+  ${collPicks(lenses)}
+  <h3>My focus</h3>
+  ${pins.size ? `<p class="fine">You follow ${pins.size} topic${pins.size > 1 ? 's' : ''}.</p><div class="picks"><button type="button" class="pick strong" data-coll="focus">★ Open my focus</button></div>`
+    : `<p class="fine">Star (☆) the topics you work on or care about. The map then shows where they sit, what they connect to and what is happening next door. Your stars are kept in this browser only.</p>`}
   <h3>Fields by activity</h3>
   <ul class="list">${ranked.map(f => `<li><button type="button" data-field="${f.id}"><span class="n">${esc(f.name)}</span>${pips(Math.round(f.heat))}<span class="m">${esc(f.summary)}</span></button></li>`).join('')}</ul>
+  <h3>Latest landmarks</h3>
+  <ul class="list">${newest(landmarks, 6).map(lmRow).join('')}</ul>
+  ${KEY_PHONE}
   <h3>About this edition</h3>
-  <p class="fine">Compiled ${esc(fmtDate(D.asOf))} from public web sources by research agents. ${unv} of ${all} landmarks could not be confirmed against a source and are drawn as hollow dots. Activity scores are judgement calls, relative across all fields. Review the sources before quoting anything from this map.</p>`;
+  <p class="fine">Compiled ${esc(fmtDate(D.asOf))} from public sources and checked by research agents against primary or reputable sources. ${unv ? `${unv} of ${all} landmarks could not be confirmed and are drawn as hollow dots.` : `All ${all} landmarks were checked against a source.`} Activity scores are judgement calls, relative across all fields. Follow the source links before quoting anything.</p>`;
 }
 function panelField(f) {
   const regs = f.regions.slice().sort((a, b) => b.activity - a.activity);
   const nl = f.regions.reduce((n, r) => n + r.landmarks.length, 0);
   const links = routes.filter(rt => rt.a.field === f || rt.b.field === f);
-  return `<p class="crumbs"><button type="button" data-go="world">World</button> › ${esc(f.name)}</p>
+  const rank = D.fields.slice().sort((a, b) => b.heat - a.heat).indexOf(f) + 1;
+  return `<p class="crumbs"><button type="button" data-go="world">World</button>${backCrumb()} › ${esc(f.name)}</p>
   <h2>${esc(f.name)}</h2>
   <p class="lede">${esc(f.summary)}</p>
-  <div class="stats"><div><b>${f.regions.length}</b><span>topics</span></div><div><b>${nl}</b><span>landmarks</span></div><div><b>${f.heat.toFixed(1)}</b><span>avg activity</span></div></div>
+  <div class="stats"><div><b>${f.regions.length}</b><span>topics</span></div><div><b>${nl}</b><span>landmarks</span></div><div><b>${rank}<small> of ${D.fields.length}</small></b><span>by activity</span></div></div>
   <h3>Topics</h3>
-  <ul class="list">${regs.map(r => `<li><button type="button" data-region="${r.id}"><span class="n">${esc(r.name)}</span>${pips(r.activity)}<span class="m">${esc(MATURITY[r.maturity])} · ${esc(r.summary)}</span></button></li>`).join('')}</ul>
+  <ul class="list">${regs.map(r => regionRow(r, MATURITY[r.maturity] + ' · ' + r.summary)).join('')}</ul>
+  ${deepDives(f.deepDives, 'Go deeper on this field')}
   ${links.length ? `<h3>Lanes to other fields</h3><ul class="list">${links.map(rt => { const mine = rt.a.field === f ? rt.a : rt.b, other = mine === rt.a ? rt.b : rt.a;
-    return `<li><button type="button" data-region="${other.id}"><span class="n">${esc(other.field.name)}: ${esc(other.name)}</span><span class="m">From ${esc(mine.name)}. ${esc(rt.label)}</span></button></li>`; }).join('')}</ul>` : ''}`;
+    return regionRow(other, other.field.name + ' · from ' + mine.name + '. ' + rt.label); }).join('')}</ul>` : ''}
+  <h3>Latest in this field</h3>
+  <ul class="list">${newest(f.regions.flatMap(r => r.landmarks), 5).map(lmRow).join('')}</ul>`;
 }
+function backCrumb() { return coll ? ` › <button type="button" data-coll="${coll.type === 'focus' ? 'focus' : coll.type + '-' + coll.id}">${esc(coll.name)}</button>` : ''; }
 function panelRegion(r) {
   const f = r.field, links = routes.filter(rt => rt.a === r || rt.b === r);
   const lms = r.landmarks.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-  return `<p class="crumbs"><button type="button" data-go="world">World</button> › <button type="button" data-field="${f.id}">${esc(f.name)}</button> › ${esc(r.name)}</p>
+  const quieter = allRegions.filter(o => o.activity < r.activity).length, same = allRegions.filter(o => o.activity === r.activity).length - 1;
+  const on = pins.has(r.id);
+  return `<p class="crumbs"><button type="button" data-go="world">World</button>${backCrumb()} › <button type="button" data-field="${f.id}">${esc(f.name)}</button> › ${esc(r.name)}</p>
   <h2>${esc(r.name)}</h2>
   <div class="chips">${activityChip(r.activity)}${maturityChip(r.maturity)}</div>
   <p class="lede">${esc(r.summary)}</p>
+  <div class="picks"><button type="button" class="pick${on ? ' strong' : ''}" data-pin="${r.id}" aria-pressed="${on}">${on ? '★ In my focus' : '☆ Add to my focus'}</button></div>
+  ${r.whyItMatters ? `<div class="note"><b>Why it matters</b>${esc(r.whyItMatters)}</div>` : ''}
+  ${r.openQuestion ? `<div class="note"><b>Open question</b>${esc(r.openQuestion)}</div>` : ''}
+  <p class="fine">Busier than ${quieter} of the ${allRegions.length} topics on the map, level with ${same}.</p>
   <h3>Landmarks, newest first</h3>
   ${lms.map(l => `<article class="lm${l === selLm ? ' sel' : ''}" id="lm-${esc(l.id.replace(/[^\w-]/g, '_'))}">
     <div class="lm-top"><span>${esc(fmtDate(l.date))}</span><span>${esc(KIND[l.kind] || l.kind)}</span>${l.verified ? '' : '<span class="unv-tag">Not confirmed</span>'}</div>
     <button type="button" class="lm-name" data-lm="${esc(l.id)}">${esc(l.name)}</button>
     <p>${esc(l.summary)}</p>
-    ${l.source ? `<a href="${esc(l.source)}" target="_blank" rel="noopener noreferrer">${esc(host(l.source))}</a>` : '<span class="fine">No source link</span>'}
+    ${!l.verified && l.note ? `<p class="fine">${esc(l.note)}</p>` : ''}
+    ${/^https?:\/\//.test(l.source || '') ? `<a href="${esc(l.source)}" target="_blank" rel="noopener noreferrer">Source: ${esc(host(l.source))}</a>` : '<span class="fine">No source link</span>'}
   </article>`).join('')}
-  ${links.length ? `<h3>Lanes to other fields</h3><ul class="list">${links.map(rt => { const o = rt.a === r ? rt.b : rt.a;
-    return `<li><button type="button" data-region="${o.id}"><span class="n">${esc(o.field.name)}: ${esc(o.name)}</span><span class="m">${esc(rt.label)}</span></button></li>`; }).join('')}</ul>` : ''}`;
+  ${deepDives(r.deepDives, 'Go deeper')}
+  ${links.length ? `<h3>Lanes to other fields</h3><ul class="list">${links.map(rt => { const o = rt.a === r ? rt.b : rt.a; return regionRow(o, o.field.name + ' · ' + rt.label); }).join('')}</ul>` : ''}
+  <h3>Next door in ${esc(f.name)}</h3>
+  <ul class="list">${neighbours(r, 3).map(o => regionRow(o, MATURITY[o.maturity] + ' · ' + o.summary)).join('')}</ul>`;
 }
-function updatePanel() {
-  const body = $('#panel-body');
-  body.innerHTML = selRegion ? panelRegion(selRegion) : selField ? panelField(selField) : panelWorld();
-  body.scrollTop = 0;
-  $('#sheet-title').textContent = selRegion ? selRegion.name : selField ? selField.name : 'Where AI work is happening';
-  if (selLm) { const n = document.getElementById('lm-' + selLm.id.replace(/[^\w-]/g, '_')); if (n) n.scrollIntoView({ block: 'nearest' }); }
+function panelColl(c) {
+  if (c.type === 'focus') return panelFocus();
+  const regs = c.regions, nf = new Set(regs.map(r => r.field)).size, avg = regs.reduce((s, r) => s + r.activity, 0) / (regs.length || 1);
+  const missing = regs.filter(r => !pins.has(r.id)).length;
+  return `<p class="crumbs"><button type="button" data-go="world">World</button> › ${esc(COLLKIND[c.type])}</p>
+  <h2>${esc(c.name)}</h2>
+  <p class="lede">${esc(c.blurb)}</p>
+  <div class="stats"><div><b>${regs.length}</b><span>topics</span></div><div><b>${nf}</b><span>fields</span></div><div><b>${avg.toFixed(1)}</b><span>avg activity</span></div></div>
+  <div class="picks">${missing ? `<button type="button" class="pick" data-act="pin-all">☆ Add all ${regs.length} to my focus</button>` : '<span class="fine">All of these are in your focus.</span>'}<button type="button" class="pick" data-act="clear-coll">Show the whole map</button></div>
+  ${groupByField(regs)}
+  <h3>Latest on this ${c.type === 'thread' ? 'thread' : 'part of the map'}</h3>
+  <ul class="list">${newest(regs.flatMap(r => r.landmarks), 6).map(lmRow).join('')}</ul>`;
+}
+function panelFocus() {
+  const regs = focusColl.regions;
+  const head = `<p class="crumbs"><button type="button" data-go="world">World</button> › My focus</p><h2>My focus</h2>`;
+  if (!regs.length) return head + `<p class="lede">Nothing starred yet. Star (☆) any topic to add it here, or start from the viewpoint closest to yours and add its topics in one go.</p>
+    ${undoPins ? '<div class="picks"><button type="button" class="pick" data-act="undo-clear">Undo clear</button></div>' : ''}
+    <h3>Start from a viewpoint</h3>${collPicks(lenses)}`;
+  const fields = new Set(regs.map(r => r.field)), avg = regs.reduce((s, r) => s + r.activity, 0) / regs.length, mapAvg = allRegions.reduce((s, r) => s + r.activity, 0) / allRegions.length;
+  const lanes = routes.filter(rt => pins.has(rt.a.id) !== pins.has(rt.b.id)).map(rt => { const mine = pins.has(rt.a.id) ? rt.a : rt.b; return { mine, other: mine === rt.a ? rt.b : rt.a, label: rt.label }; });
+  const inner = routes.filter(rt => pins.has(rt.a.id) && pins.has(rt.b.id));
+  const near = []; regs.forEach(r => neighbours(r, 2).forEach(o => { if (!pins.has(o.id) && !near.includes(o) && !lanes.some(l => l.other === o)) near.push(o); }));
+  const others = D.fields.filter(f => !fields.has(f));
+  return head + `<p class="lede">You follow ${regs.length} topic${regs.length > 1 ? 's' : ''} in ${fields.size} of ${D.fields.length} fields. Their average activity is ${avg.toFixed(1)} out of 5; the map average is ${mapAvg.toFixed(1)}.</p>
+  ${groupByField(regs)}
+  ${inner.length ? `<h3>How your topics link up</h3><ul class="plain">${inner.map(rt => `<li><b>${esc(rt.a.name)}</b> and <b>${esc(rt.b.name)}</b>: ${esc(rt.label)}.</li>`).join('')}</ul>` : ''}
+  ${lanes.length ? `<h3>Where your focus leads</h3><p class="fine">Topics in other fields that feed, or are fed by, yours.</p><ul class="list">${lanes.map(l => regionRow(l.other, l.other.field.name + ' · from ' + l.mine.name + '. ' + l.label)).join('')}</ul>` : ''}
+  ${near.length ? `<h3>Next door</h3><p class="fine">Neighbouring topics you have not starred.</p><ul class="list">${near.slice(0, 6).map(o => regionRow(o, o.field.name + ' · ' + o.summary)).join('')}</ul>` : ''}
+  <h3>Latest in your focus</h3>
+  <ul class="list">${newest(regs.flatMap(r => r.landmarks), 6).map(lmRow).join('')}</ul>
+  ${others.length ? `<h3>Fields you are not following</h3><div class="picks">${others.map(f => `<button type="button" class="pick" data-field="${f.id}">${esc(f.name)}</button>`).join('')}</div>` : ''}
+  <div class="picks" style="margin-top:18px"><button type="button" class="pick" data-act="clear-pins">Clear my focus</button></div>`;
+}
+function updatePanel(keepScroll) {
+  const body = $('#panel-body'), top = body.scrollTop;
+  body.innerHTML = selRegion ? panelRegion(selRegion) : selField ? panelField(selField) : coll && showColl ? panelColl(coll) : panelWorld();
+  body.scrollTop = keepScroll ? top : 0;
+  $('#sheet-title').textContent = selRegion ? selRegion.name : selField ? selField.name : coll && showColl ? coll.name : 'Where AI work is happening';
+  if (selLm && !keepScroll) { const n = document.getElementById('lm-' + selLm.id.replace(/[^\w-]/g, '_')); if (n) n.scrollIntoView({ block: 'nearest' }); }
+  $('#banner').hidden = !coll; if (coll) $('#banner-text').textContent = COLLKIND[coll.type] === coll.name ? coll.name : COLLKIND[coll.type] + ': ' + coll.name;
+  $('#focus-btn').setAttribute('aria-pressed', String(!!coll && coll.type === 'focus'));
 }
 function highlight() {
-  D.fields.forEach(f => f.regions.forEach(r => { r.prov.classList.toggle('sel', r === selRegion); r.prov.classList.toggle('hover', r === hoverRegion && r !== selRegion); }));
-  routes.forEach(rt => { const on = selRegion ? (rt.a === selRegion || rt.b === selRegion) : selField ? (rt.a.field === selField || rt.b.field === selField) : false;
-    rt.path.classList.toggle('on', on); rt.path.classList.toggle('dim', !!(selRegion || selField) && !on); });
+  litSet = coll ? new Set(coll.regions) : null;
+  allRegions.forEach(r => { const c = r.prov.classList;
+    c.toggle('sel', r === selRegion); c.toggle('hover', r === hoverRegion && r !== selRegion);
+    c.toggle('lit', !!litSet && litSet.has(r)); c.toggle('veil', !!litSet && !litSet.has(r) && r !== selRegion); c.toggle('pinned', pins.has(r.id)); });
+  routes.forEach(rt => {
+    const on = selRegion ? (rt.a === selRegion || rt.b === selRegion) : selField ? (rt.a.field === selField || rt.b.field === selField)
+      : litSet ? (coll.type === 'focus' ? litSet.has(rt.a) || litSet.has(rt.b) : litSet.has(rt.a) && litSet.has(rt.b)) : false;
+    rt.path.classList.toggle('on', on); rt.path.classList.toggle('dim', !!(selRegion || selField || litSet) && !on); });
   render();
 }
-function setHash(h) { try { const want = h ? '#' + h : ' '; if (location.hash !== (h ? '#' + h : '')) history.replaceState(null, '', h ? '#' + h : location.pathname + location.search); } catch (e) {} }
+let currentHash = '';
+function setHash(h) { currentHash = h; try { if (location.hash !== (h ? '#' + h : '')) history.replaceState(null, '', h ? '#' + h : location.pathname + location.search); } catch (e) {} }
+function flyColl(c) {
+  if (!c.regions.length) { flyTo(W / 2, H / 2, 1); return; }
+  const xs = c.regions.map(r => r.x), ys = c.regions.map(r => r.y), a = mapArea();
+  const bw = Math.max(...xs) - Math.min(...xs) + 420, bh = Math.max(...ys) - Math.min(...ys) + 420;
+  flyTo((Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2, Math.max(1, Math.min(3, Math.min(a.w / (bw * k0), a.h / (bh * k0)) * 0.92)));
+}
 function go(target, fly) {
-  if (!target) { selField = selRegion = selLm = null; setHash(''); if (fly) flyTo(W / 2, H / 2, 1); }
-  else if (target.regions) { selField = target; selRegion = selLm = null; setHash(target.id);
-    if (fly) { const b = fieldBox(target), a = mapArea(); flyTo(b.x, b.y, Math.min(a.w / (b.w * k0), a.h / (b.h * k0)) * 0.9); } }
-  else if (target.landmarks) { selRegion = target; selField = target.field; selLm = null; setHash(target.id.replace('.', '-')); if (fly) flyTo(target.x, target.y, 6); }
-  else { selLm = target; selRegion = target.region; selField = selRegion.field; setHash(selRegion.id.replace('.', '-')); if (fly) flyTo(target.x, target.y, Math.max(6, rel())); }
+  if (!target) { selField = selRegion = selLm = null; coll = null; showColl = false; setHash(''); if (fly) flyTo(W / 2, H / 2, 1); }
+  else if (target.type) { coll = target; showColl = true; selField = selRegion = selLm = null; setHash(target.type === 'focus' ? 'focus' : target.type + '-' + target.id); if (fly) flyColl(target); }
+  else {
+    showColl = false;
+    if (target.regions) { selField = target; selRegion = selLm = null; setHash(target.id);
+      if (fly) { const b = fieldBox(target), a = mapArea(); flyTo(b.x, b.y, Math.min(a.w / (b.w * k0), a.h / (b.h * k0)) * 0.9); } }
+    else if (target.landmarks) { selRegion = target; selField = target.field; selLm = null; setHash(target.id.replace('.', '-')); if (fly) flyTo(target.x, target.y, 6); }
+    else { selLm = target; selRegion = target.region; selField = selRegion.field; setHash(selRegion.id.replace('.', '-')); if (fly) flyTo(target.x, target.y, Math.max(6, rel())); }
+  }
   updatePanel(); highlight();
   if (isPhone() && target) openSheet(true);
 }
+function collById(key) { if (key === 'focus') return focusColl; const i = key.indexOf('-'), type = key.slice(0, i), id = key.slice(i + 1); return (type === 'thread' ? themes : type === 'lens' ? lenses : []).find(c => c.id === id) || null; }
 function fromHash() {
   const h = decodeURIComponent(location.hash.slice(1)); if (!h) return null;
+  const c = collById(h); if (c) return c;
   if (fieldById[h]) return fieldById[h];
   const i = h.indexOf('-'); if (i > 0) return regionById[h.slice(0, i) + '.' + h.slice(i + 1)] || null;
   return null;
 }
 function openSheet(open) { const p = $('#panel'); p.classList.toggle('open', open); $('#sheet-handle').setAttribute('aria-expanded', String(open)); $('#sheet-tog').textContent = open ? 'Hide' : 'Show details'; }
+function togglePin(id) { if (pins.has(id)) pins.delete(id); else pins.add(id); undoPins = null; savePins(); syncFocus(); updatePanel(true); highlight(); }
+function clearColl() { coll = null; showColl = false; if (!selField && !selRegion) setHash(''); updatePanel(true); highlight(); }
 
 $('#panel').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.id === 'sheet-handle') { openSheet(!$('#panel').classList.contains('open')); requestAnimationFrame(() => setView(view)); return; }
-  if (b.dataset.go === 'world') go(null, true);
-  else if (b.dataset.field) go(fieldById[b.dataset.field], true);
-  else if (b.dataset.region) go(regionById[b.dataset.region], true);
-  else if (b.dataset.lm) go(landmarks.find(l => l.id === b.dataset.lm), true);
+  const d = b.dataset;
+  if (d.pin) togglePin(d.pin);
+  else if (d.go === 'world') go(null, true);
+  else if (d.coll) go(collById(d.coll), true);
+  else if (d.field) go(fieldById[d.field], true);
+  else if (d.region) go(regionById[d.region], true);
+  else if (d.lm) go(landmarks.find(l => l.id === d.lm), true);
+  else if (d.act === 'pin-all') { coll.regions.forEach(r => pins.add(r.id)); savePins(); syncFocus(); updatePanel(true); highlight(); }
+  else if (d.act === 'clear-coll') { go(null, true); }
+  else if (d.act === 'clear-pins') { undoPins = [...pins]; pins.clear(); savePins(); syncFocus(); updatePanel(); highlight(); }
+  else if (d.act === 'undo-clear' && undoPins) { undoPins.forEach(id => pins.add(id)); undoPins = null; savePins(); syncFocus(); updatePanel(); highlight(); }
 });
+$('#focus-btn').addEventListener('click', () => go(focusColl, true));
+$('#banner-clear').addEventListener('click', clearColl);
 
 /* ---------- pointer: pan, pinch, wheel, click, hover ---------- */
 const tip = $('#tip');
@@ -632,13 +790,14 @@ $('#zworld').addEventListener('click', () => go(null, true));
 document.addEventListener('keydown', e => {
   if (e.target.closest('input')) return;
   if (e.key === '+' || e.key === '=') zoomBy(1.4); else if (e.key === '-') zoomBy(1 / 1.4);
-  else if (e.key === 'Escape') { if (selRegion) go(selRegion.field, true); else if (selField) go(null, true); }
+  else if (e.key === 'Escape') { if (selRegion) go(selRegion.field, true); else if (selField) go(coll || null, true); else if (coll) go(null, true); }
 });
 
 /* ---------- search ---------- */
 const index = [].concat(
+  themes.concat(lenses).map(c => ({ t: c.name, s: COLLKIND[c.type], target: c, hay: (c.name + ' ' + c.blurb).toLowerCase() })),
   D.fields.map(f => ({ t: f.name, s: 'Field', target: f, hay: (f.name + ' ' + f.summary).toLowerCase() })),
-  Object.values(regionById).map(r => ({ t: r.name, s: r.field.name, target: r, hay: (r.name + ' ' + r.summary).toLowerCase() })),
+  Object.values(regionById).map(r => ({ t: r.name, s: r.field.name, target: r, hay: (r.name + ' ' + r.summary + ' ' + (r.whyItMatters || '') + ' ' + (r.openQuestion || '')).toLowerCase() })),
   landmarks.map(l => ({ t: l.name, s: l.region.field.name + ' › ' + l.region.name + ' · ' + fmtDate(l.date), target: l, hay: (l.name + ' ' + l.summary).toLowerCase() }))
 );
 const q = $('#q'), results = $('#results'); let hits = [], active = -1;
@@ -665,13 +824,12 @@ function resetBase() { k0 = fitK(); }
 resetBase();
 const a0 = mapArea();
 view = clampView({ k: k0, x: a0.w / 2 - W / 2 * k0, y: a0.h / 2 - H / 2 * k0 + (isPhone() ? 30 : 20) });
+syncFocus();
 const initial = fromHash();
-selField = initial && initial.regions ? initial : initial ? initial.field : null;
-selRegion = initial && initial.landmarks ? initial : null;
 updatePanel(); highlight();
 if (initial) go(initial, true);
 addEventListener('resize', () => { const [cx, cy] = toWorld(mapArea().w / 2, mapArea().h / 2), r = rel(); resetBase(); const a = mapArea(), k = k0 * r; setView({ k, x: a.w / 2 - cx * k, y: a.h / 2 - cy * k }); });
-addEventListener('hashchange', () => { const t = fromHash(); if (t !== selField && t !== selRegion) go(t, true); });
+addEventListener('hashchange', () => { if (decodeURIComponent(location.hash.slice(1)) !== currentHash) go(fromHash(), true); });
 })();
 </script>
 </body>

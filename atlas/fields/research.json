@@ -1,0 +1,470 @@
+{
+ "id": "research",
+ "name": "AI Research",
+ "summary": "Labs ship frontier models every month or two, driven by RL-trained reasoning, large compute buildouts and agents; safety, interpretability and evals work to keep up as benchmarks saturate.",
+ "regions": [
+  {
+   "id": "research.scaling",
+   "name": "Pretraining & scaling",
+   "summary": "Frontier labs keep growing training compute and ship new flagships every month or two, with the top tier often gated at first. Public training-compute data for closed models is sparse.",
+   "activity": 5,
+   "maturity": "established",
+   "landmarks": [
+    {
+     "name": "Grok 4: largest known training run",
+     "summary": "Epoch AI estimates xAI's Grok 4 used about 5e26 FLOP, the largest training run in its data, with wide uncertainty because the estimate rests on vague xAI statements.",
+     "date": "2025-07",
+     "kind": "research",
+     "source": "https://epoch.ai/data-insights/grok-4-training-resources",
+     "verified": true
+    },
+    {
+     "name": "Gemini 3.5 Flash at Google I/O",
+     "summary": "Google launched the Gemini 3.5 family with 3.5 Flash only; 3.5 Pro was promised for the following month and was still in partner testing in July.",
+     "date": "2026-05",
+     "kind": "product",
+     "source": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-5/",
+     "verified": true
+    },
+    {
+     "name": "OpenAI launches GPT-6 Astra",
+     "summary": "OpenAI's GPT-6 flagship went first to a limited set of organizations; lower-cost GPT-6 Sol and Luna followed on 22 September and a ChatGPT rollout in October.",
+     "date": "2026-09",
+     "kind": "product",
+     "source": "https://openai.com/index/gpt-6-astra/",
+     "verified": true
+    },
+    {
+     "name": "Claude Fable 5.2 and Mythos 5.2",
+     "summary": "Anthropic upgraded its top tier: one underlying model sold as Fable (broadly available, stricter cyber and bio safeguards) and Mythos (vetted organizations only).",
+     "date": "2026-11",
+     "kind": "product",
+     "source": "https://www.anthropic.com/claude-fable-and-mythos-5-2",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Training scale still sets the ceiling for every downstream capability, and it drives the industry's spending.",
+   "openQuestion": "Do returns to larger training runs hold, or do gains now come mostly from RL, data and inference-time compute?",
+   "deepDives": [
+    {
+     "title": "Training compute of frontier models grows 4-5x a year",
+     "url": "https://epoch.ai/publications/training-compute-of-frontier-ai-models-grows-by-4-5x-per-year",
+     "kind": "report",
+     "why": "Epoch AI's baseline analysis of how fast training runs have scaled since 2010."
+    },
+    {
+     "title": "Can AI scaling continue through 2030?",
+     "url": "https://epoch.ai/publications/can-ai-scaling-continue-through-2030",
+     "kind": "report",
+     "why": "Examines power, chips, data and latency as possible limits on further scaling."
+    },
+    {
+     "title": "Epoch AI model counts by compute threshold",
+     "url": "https://epoch.ai/tools/model-counts",
+     "kind": "tracker",
+     "why": "Live counts of models above given training-compute thresholds."
+    },
+    {
+     "title": "Frontier LLM training runs can't get much longer",
+     "url": "https://epoch.ai/data-insights/longest-training-run",
+     "kind": "overview",
+     "why": "Short data insight listing the largest known runs and why run length is capped."
+    }
+   ]
+  },
+  {
+   "id": "research.reasoning",
+   "name": "Reasoning & reinforcement learning",
+   "summary": "RL on verifiable tasks plus test-time compute is the main driver of capability gains. Open recipes now reach olympiad-level math with small active parameter counts.",
+   "activity": 5,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "DeepSeek-R1 paper revised",
+     "summary": "The paper that popularized pure-RL reasoning training was updated in January 2026, a reference point for open reasoning models.",
+     "date": "2026-01",
+     "kind": "research",
+     "source": "https://arxiv.org/abs/2501.12948",
+     "verified": true
+    },
+    {
+     "name": "SU-01 open olympiad recipe",
+     "summary": "A 30B-A3B model trained with SFT, 200 RL steps and test-time verification reaches the IMO 2025 gold line, showing gold-level math is now reproducible openly.",
+     "date": "2026-05",
+     "kind": "research",
+     "source": "https://arxiv.org/pdf/2605.13301",
+     "verified": true
+    },
+    {
+     "name": "Microsoft MAI-Thinking-1 report",
+     "summary": "Microsoft AI describes a 35B-active reasoning model trained with long RL runs on a STEM curriculum, a sign of in-house reasoning efforts beyond the top labs.",
+     "date": "2026-06",
+     "kind": "research",
+     "source": "https://microsoft.ai/wp-content/uploads/2026/06/main_20260602_2.pdf",
+     "verified": true
+    },
+    {
+     "name": "Nemotron claims IMO 2026 gold",
+     "summary": "An NVIDIA open recipe reportedly scored 30 of 42 at IMO 2026 with natural-language proofs; not checked against a primary source.",
+     "date": "2026-09",
+     "kind": "research",
+     "source": "https://huggingface.co/papers/2609.10712",
+     "verified": false,
+     "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+    }
+   ],
+   "whyItMatters": "RL on checkable tasks is the main source of recent capability gains and is now reproducible outside the top labs.",
+   "openQuestion": "How far does RL on verifiable tasks transfer to open-ended work with no automatic checker?"
+  },
+  {
+   "id": "research.interpretability",
+   "name": "Interpretability",
+   "summary": "Circuit tracing and sparse features now map parts of production models' internal reasoning. Work is shifting toward tools that let models report their own internal states.",
+   "activity": 3,
+   "maturity": "emerging",
+   "landmarks": [
+    {
+     "name": "Attribution graphs for Claude",
+     "summary": "Anthropic's circuit-tracing method traced multi-step reasoning inside Claude 3.5 Haiku, with caveats that the replacement model may differ from the real one.",
+     "date": "2025-03",
+     "kind": "research",
+     "source": "https://transformer-circuits.pub/2025/attribution-graphs/methods.html",
+     "verified": true
+    },
+    {
+     "name": "Emotion concepts in Sonnet 4.5",
+     "summary": "Anthropic reported internal representations of emotion concepts in Claude Sonnet 4.5 that causally influence outputs.",
+     "date": "2026-04",
+     "kind": "research",
+     "source": "https://rss-parrot.net/web/feeds/transformer-circuits.pub",
+     "verified": false,
+     "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+    },
+    {
+     "name": "Natural Language Autoencoders",
+     "summary": "Anthropic trained Claude to translate its own internal activations into natural language, a step toward readable model internals.",
+     "date": "2026-05",
+     "kind": "research",
+     "source": "https://rss-parrot.net/web/feeds/transformer-circuits.pub",
+     "verified": false,
+     "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+    },
+    {
+     "name": "Transformer Circuits May 2026 update",
+     "summary": "Shows how a feature's downstream connections help place it within circuits and separate look-alike features.",
+     "date": "2026-05",
+     "kind": "research",
+     "source": "https://transformer-circuits.pub/2026/may-update/index.html",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Reading a model's internals is one of the few ways to check what it is doing beyond its outputs.",
+   "openQuestion": "Can interpretability methods scale to give reliable, complete accounts of frontier model behavior?"
+  },
+  {
+   "id": "research.alignment",
+   "name": "Alignment & safety",
+   "summary": "Pre-deployment testing for scheming and dangerous capabilities is routine at top labs, but models increasingly recognize tests. Some capabilities are now gated rather than released.",
+   "activity": 4,
+   "maturity": "emerging",
+   "landmarks": [
+    {
+     "name": "International AI Safety Report 2026",
+     "summary": "Second edition chaired by Yoshua Bengio with 100+ experts; finds capabilities and agent autonomy rising while risk management stays uneven.",
+     "date": "2026-02",
+     "kind": "policy",
+     "source": "https://dfki.de/en/web/news/2026-international-ai-safety-report-published",
+     "verified": true
+    },
+    {
+     "name": "Claude Mythos Preview gated",
+     "summary": "Anthropic kept Claude Mythos Preview as a gated research preview for Project Glasswing partners after saying it found thousands of zero-day vulnerabilities.",
+     "date": "2026-04",
+     "kind": "policy",
+     "source": "https://www.anthropic.com/project/glasswing",
+     "verified": true
+    },
+    {
+     "name": "Apollo: a science of scheming",
+     "summary": "Apollo Research argues scheming needs a dedicated research field and reports rising evaluation awareness that complicates alignment testing.",
+     "date": "2026-01",
+     "kind": "debate",
+     "source": "https://apolloresearch.ai/science/science-of-scheming",
+     "verified": true
+    },
+    {
+     "name": "OpenAI and Apollo anti-scheming work",
+     "summary": "Joint evaluation environments and deliberative alignment training reduced covert actions in tests, while eval awareness limited conclusions.",
+     "date": "2025-09",
+     "kind": "research",
+     "source": "https://openai.com/index/detecting-and-reducing-scheming-in-ai-models/",
+     "verified": false,
+     "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+    }
+   ],
+   "whyItMatters": "Whether labs can detect and prevent misaligned behavior decides how safely more capable models can be deployed.",
+   "openQuestion": "Can evaluations stay informative once models reliably recognize when they are being tested?",
+   "deepDives": [
+    {
+     "title": "Anthropic research index",
+     "url": "https://www.anthropic.com/research",
+     "kind": "overview",
+     "why": "Running list of Anthropic alignment, interpretability and red-team publications."
+    },
+    {
+     "title": "OpenAI Deployment Safety Hub",
+     "url": "https://deploymentsafety.openai.com/gpt-6-october",
+     "kind": "report",
+     "why": "OpenAI's own pre-deployment safety write-ups for its current GPT-6 models."
+    },
+    {
+     "title": "Anthropic: an update on independent evaluators",
+     "url": "https://www.anthropic.com/news/an-update-on-independent-evaluators",
+     "kind": "report",
+     "why": "Describes tiered third-party access, including METR staff embedded inside the lab."
+    }
+   ]
+  },
+  {
+   "id": "research.evals",
+   "name": "Evals & benchmarks",
+   "summary": "Classic benchmarks saturate quickly. Attention has moved to long-horizon task measures and novel interactive tests where models still score near zero.",
+   "activity": 4,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "ARC-AGI-3 launches",
+     "summary": "Interactive game-like benchmark where humans solve all environments and frontier models scored under 1% at launch; methodology was disputed.",
+     "date": "2026-03",
+     "kind": "research",
+     "source": "https://arxiv.org/pdf/2603.24621",
+     "verified": true
+    },
+    {
+     "name": "METR time horizons v1.1",
+     "summary": "METR expanded its long-task suite from 14 to 31 tasks of 8+ hours as top models approached the limit of what the old suite could measure.",
+     "date": "2026-01",
+     "kind": "research",
+     "source": "https://metavert.io/metr-benchmarking",
+     "verified": true
+    },
+    {
+     "name": "Time-horizon saturation debate",
+     "summary": "Forecasters note top models' horizons with very wide confidence intervals (5 to 66 hours), raising doubts about measuring further progress.",
+     "date": "2026-03",
+     "kind": "debate",
+     "source": "https://forum.effectivealtruism.org/posts/h3zcCh49kLE6egrfz/i-underestimated-ai-capabilities-again",
+     "verified": false,
+     "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+    }
+   ],
+   "whyItMatters": "Benchmarks shape how progress is perceived, and saturated ones hide what models can and cannot do.",
+   "openQuestion": "How can long, open-ended task ability be measured once fixed task suites saturate?"
+  },
+  {
+   "id": "research.efficiency",
+   "name": "Efficiency, chips & inference",
+   "summary": "Inference demand from agents drives chip and data center spending. New GPU and TPU generations ship while open models cut long-context costs sharply.",
+   "activity": 5,
+   "maturity": "established",
+   "landmarks": [
+    {
+     "name": "Nvidia Vera Rubin ships",
+     "summary": "Nvidia's next platform reached full production and began shipping to cloud providers and labs, claiming about 5x Blackwell inference performance.",
+     "date": "2026-07",
+     "kind": "product",
+     "source": "https://gcn.com/?p=20421",
+     "verified": true
+    },
+    {
+     "name": "DeepSeek V4 open weights",
+     "summary": "1.6T-parameter MoE with 1M context and compressed attention that cuts KV cache by about 10x, released openly at low prices.",
+     "date": "2026-04",
+     "kind": "product",
+     "source": "https://www.theregister.com/2026/04/24/deepseek_v4/",
+     "verified": true
+    },
+    {
+     "name": "Anthropic and Google TPU deal",
+     "summary": "Anthropic said it would use up to one million Google Cloud TPUs, worth tens of billions of dollars, with well over a gigawatt of capacity coming online in 2026.",
+     "date": "2025-10",
+     "kind": "deal",
+     "source": "https://www.anthropic.com/news/expanding-our-use-of-google-cloud-tpus-and-services",
+     "verified": true
+    }
+   ],
+   "whyItMatters": "Compute supply and cost per token decide who can train frontier models and what agents are affordable to run.",
+   "openQuestion": "Will inference demand keep pace with the chip and data center capacity now being built?",
+   "deepDives": [
+    {
+     "title": "Epoch AI Frontier Data Centers Hub",
+     "url": "https://epoch.ai/latest/introducing-the-frontier-data-centers-hub",
+     "kind": "tracker",
+     "why": "Tracks the largest AI data centers, their power and their compute capacity."
+    },
+    {
+     "title": "Epoch AI chip users: methodology",
+     "url": "https://epoch.ai/data/ai-chip-users-documentation/methodology",
+     "kind": "report",
+     "why": "How Epoch estimates which companies hold how much AI compute."
+    }
+   ]
+  },
+  {
+   "id": "research.multimodal",
+   "name": "Multimodal & world models",
+   "summary": "Video models now generate synced audio, and interactive world models generate explorable environments used for simulation and robot training.",
+   "activity": 4,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "Project Genie opens to users",
+     "summary": "Google DeepMind released a prototype app built on Genie 3 that lets US AI Ultra subscribers create and explore interactive generated worlds.",
+     "date": "2026-01",
+     "kind": "product",
+     "source": "https://blog.google/innovation-and-ai/models-and-research/google-deepmind/project-genie/",
+     "verified": true
+    },
+    {
+     "name": "Waymo World Model from Genie 3",
+     "summary": "Waymo reportedly adopted a fine-tuned Genie 3 to simulate rare driving scenarios, an early industrial use of world models.",
+     "date": "2026-02",
+     "kind": "deal",
+     "source": "https://wikwiand-revamp.pages.dev/en/Genie_3",
+     "verified": false,
+     "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+    },
+    {
+     "name": "Sora 2 with synchronized audio",
+     "summary": "OpenAI's video model generates dialogue and sound with video and launched with a social app, pushing video generation to consumers.",
+     "date": "2025-09",
+     "kind": "product",
+     "source": "https://www.cined.com/openais-sora-2-brings-realistic-physics-audio-and-continuity-to-ai-videos-launches-app/",
+     "verified": false,
+     "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+    }
+   ],
+   "whyItMatters": "Video and world models extend AI from text to simulation, media and training data for robots.",
+   "openQuestion": "Do generated worlds stay consistent enough to train agents and robots that work in reality?"
+  },
+  {
+   "id": "research.agents",
+   "name": "Agent architectures, memory & tool use",
+   "summary": "Tool-use standards like MCP are now shared infrastructure under a neutral foundation. Persistent memory and continual learning for long-running agents remain open problems.",
+   "activity": 5,
+   "maturity": "adopting",
+   "landmarks": [
+    {
+     "name": "Agent Skills joins Agentic AI Foundation",
+     "summary": "Anthropic donated the Agent Skills standard to the Linux Foundation's Agentic AI Foundation, which it co-founded with Block and OpenAI in 2025 and which already hosts MCP.",
+     "date": "2026-10",
+     "kind": "policy",
+     "source": "https://www.anthropic.com/news/donating-agent-skills-to-the-agentic-ai-foundation",
+     "verified": true
+    },
+    {
+     "name": "MCP 2026-07-28 spec goes stateless",
+     "summary": "The Model Context Protocol dropped its session handshake for a stateless request/response core, so any request can hit any server instance behind a load balancer.",
+     "date": "2026-07",
+     "kind": "product",
+     "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
+     "verified": true
+    },
+    {
+     "name": "Memory-centric continual learning",
+     "summary": "Paper proposes judging agent memory by whether it improves future actions, with scaling laws for experience, storage and compute.",
+     "date": "2026-10",
+     "kind": "research",
+     "source": "https://papers.cool/arxiv/2610.29357",
+     "verified": false,
+     "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+    }
+   ],
+   "whyItMatters": "Shared protocols and memory decide whether agents can work across tools and improve over long tasks.",
+   "openQuestion": "How should long-running agents store and reuse experience without retraining the underlying model?",
+   "deepDives": [
+    {
+     "title": "Model Context Protocol blog",
+     "url": "https://blog.modelcontextprotocol.io/",
+     "kind": "newsletter",
+     "why": "Official posts on spec releases, SDKs and governance from the MCP maintainers."
+    },
+    {
+     "title": "The New MCP Roadmap",
+     "url": "https://blog.modelcontextprotocol.io/posts/mcp-roadmap/",
+     "kind": "overview",
+     "why": "Maintainers' stated priorities for upcoming versions of the protocol."
+    },
+    {
+     "title": "The 2026-07-28 MCP Specification",
+     "url": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
+     "kind": "report",
+     "why": "Walk-through of the stateless core, extensions and deprecations in the current spec."
+    }
+   ]
+  },
+  {
+   "id": "research.robotics",
+   "name": "Embodied AI & robotics",
+   "summary": "Vision-language-action models now control full humanoid bodies across robot types. Factories for home humanoids have opened, but real deployments remain small.",
+   "activity": 4,
+   "maturity": "emerging",
+   "landmarks": [
+    {
+     "name": "Gemini Robotics 2",
+     "summary": "Google DeepMind model with whole-body humanoid control that ran three robot embodiments from one checkpoint, including Apptronik Apollo.",
+     "date": "2026-07",
+     "kind": "product",
+     "source": "https://www.eweek.com/news/google-gemini-ai-controls-humanoid-robots/",
+     "verified": true
+    },
+    {
+     "name": "1X opens NEO humanoid factory",
+     "summary": "1X began production of its NEO home humanoid in Hayward, California, targeting 10,000 units in year one; customer delivery timing is unclear.",
+     "date": "2026-05",
+     "kind": "product",
+     "source": "https://thenextweb.com/news/1x-neo-humanoid-factory-hayward-10000-home-robots",
+     "verified": false,
+     "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+    },
+    {
+     "name": "Physical Intelligence raises $600M",
+     "summary": "Robot foundation model startup behind the cross-embodiment pi0.5 model raised a Series B at a reported $5.6B valuation.",
+     "date": "2025-11",
+     "kind": "deal",
+     "source": "https://www.evsint.com/?p=9165",
+     "verified": false,
+     "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+    }
+   ],
+   "whyItMatters": "Robotics tests whether foundation-model progress carries over to physical work.",
+   "openQuestion": "Can general robot models reach the reliability needed for unsupervised use in homes and factories?"
+  }
+ ],
+ "deepDives": [
+  {
+   "title": "Epoch AI: training compute trends",
+   "url": "https://epoch.ai/publications/training-compute-of-frontier-ai-models-grows-by-4-5x-per-year",
+   "kind": "report",
+   "why": "Data-driven account of how fast frontier training runs are growing."
+  },
+  {
+   "title": "Anthropic research index",
+   "url": "https://www.anthropic.com/research",
+   "kind": "overview",
+   "why": "Primary source for Anthropic's alignment, interpretability and science publications."
+  },
+  {
+   "title": "OpenAI research releases",
+   "url": "https://openai.com/research/index/release/",
+   "kind": "overview",
+   "why": "OpenAI's own list of model releases and accompanying research posts."
+  },
+  {
+   "title": "Google DeepMind model cards",
+   "url": "https://deepmind.google/models/model-cards/",
+   "kind": "tracker",
+   "why": "Official cards for current Gemini models, with intended use and evaluation results."
+  }
+ ]
+}

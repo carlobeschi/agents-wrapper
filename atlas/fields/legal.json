@@ -1,0 +1,478 @@
+{
+ "id": "legal",
+ "name": "Legal",
+ "summary": "Legal AI startups are raising at multibillion-dollar valuations, courts keep sanctioning fabricated citations, copyright rulings on training data are diverging, and AI-specific laws are being delayed or contested.",
+ "deepDives": [
+  {
+   "title": "AI Hallucination Cases database (Damien Charlotin)",
+   "url": "https://www.damiencharlotin.com/hallucinations/",
+   "kind": "tracker",
+   "why": "Live, searchable list of court decisions worldwide involving AI-fabricated citations."
+  },
+  {
+   "title": "Akin AI Law & Regulation Tracker",
+   "url": "https://www.akingump.com/en/insights/ai-law-and-regulation-tracker",
+   "kind": "tracker",
+   "why": "Running log of AI statutes, agency actions and court rulings, mostly US with some EU."
+  },
+  {
+   "title": "CMS AI and copyright case tracker",
+   "url": "https://cms.law/en/mar/publication/artificial-intelligence-and-copyright-case-tracker/united-kingdom-getty-images-us-inc-ors-v-stability-ai-ltd2",
+   "kind": "tracker",
+   "why": "Case-by-case summaries of AI copyright litigation across jurisdictions, with status updates."
+  },
+  {
+   "title": "LawNext (Bob Ambrogi)",
+   "url": "https://www.lawnext.com/",
+   "kind": "newsletter",
+   "why": "Long-running independent reporting on legal tech products, funding and courts' use of AI."
+  },
+  {
+   "title": "Artificial Lawyer",
+   "url": "https://www.artificiallawyer.com/",
+   "kind": "newsletter",
+   "why": "Daily trade coverage of legal AI vendors, law firm adoption and deals, with a UK and EU lens."
+  }
+ ],
+ "regions": [
+  {
+   "id": "legal.contracts",
+   "name": "Contract review & drafting",
+   "summary": "AI platforms for drafting, due diligence and document review are used by large firms and in-house teams. Harvey and Legora, the two best-funded startups, keep raising at higher valuations.",
+   "activity": 4,
+   "maturity": "adopting",
+   "whyItMatters": "Law is one of the clearest tests of whether vertical AI applications can build durable businesses on top of general models.",
+   "openQuestion": "Will specialist legal platforms hold their ground as general-purpose model providers ship their own legal tools?",
+   "landmarks": [
+    {
+     "name": "Harvey raises $550M at $15.5B",
+     "summary": "Harvey raised $550M co-led by Diffusion and Lightspeed, under six months after an $11B round, and bought Guardrails AI. It says 80% of the Am Law 100 use it.",
+     "date": "2026-09",
+     "kind": "deal",
+     "source": "https://www.harvey.ai/blog/harvey-raises-dollar550m-at-a-dollar155b-valuation-to-help-legal-teams-own-their-intelligence",
+     "verified": true
+    },
+    {
+     "name": "Legora Series E at $8.8B",
+     "summary": "Swedish-founded Legora raised a $550M Series E led by Atreides at an $8.8B post-money valuation, up from $5.6B in spring. It says the US is now its largest market.",
+     "date": "2026-10",
+     "kind": "deal",
+     "source": "https://artificiallawyer.com/2026/10/21/legora-raises-550m-at-8-8bn-valuation",
+     "verified": true
+    },
+    {
+     "name": "Harvey $11B round led by GIC and Sequoia",
+     "summary": "A $200M round valued Harvey at $11B and took total funding past $1B. The company reported 100,000 lawyers across 1,300 organisations and pitched agents for legal work.",
+     "date": "2026-03",
+     "kind": "deal",
+     "source": "https://www.harvey.ai/blog/harvey-raises-growth-round-at-dollar11-billion-valuation-co-led-by-gic-and-sequoia",
+     "verified": true
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "Artificial Lawyer",
+     "url": "https://www.artificiallawyer.com/",
+     "kind": "newsletter",
+     "why": "Tracks legal AI funding rounds, product launches and law firm rollouts as they happen."
+    },
+    {
+     "title": "Legal IT Insider: Harvey raises $550m",
+     "url": "https://legaltechnology.com/harvey-raises-550m-at-15-5bn-valuation/",
+     "kind": "overview",
+     "why": "Independent trade write-up that puts the Harvey round in context of the wider market."
+    },
+    {
+     "title": "ABA Journal: Harvey's latest round",
+     "url": "https://www.abajournal.com/news/article/harvey-raises-550-million-in-latest-round-of-funding",
+     "kind": "overview",
+     "why": "Profession-facing account of what the leading legal AI platform does and who uses it."
+    }
+   ]
+  },
+  {
+   "id": "legal.research",
+   "name": "Legal research & hallucinated citations",
+   "summary": "AI research tools are common, but fabricated citations in court filings keep growing. A public tracker lists well over 1,500 decisions worldwide, and sanctions are getting heavier.",
+   "activity": 4,
+   "maturity": "adopting",
+   "whyItMatters": "Courts are the most public place where the cost of unverified AI output is being measured and penalised.",
+   "openQuestion": "Do sanctions and verification rules reduce fabricated filings, or does growing AI use simply outpace them?",
+   "landmarks": [
+    {
+     "name": "Hallucination case tracker nears 1,600",
+     "summary": "Damien Charlotin's database of court decisions involving AI-fabricated content listed about 1,600 cases by June 2026; later reports put it near 2,000.",
+     "date": "2026-06",
+     "kind": "incident",
+     "source": "https://haqq.ai/blog/ai-legal-hallucination-audit.html",
+     "verified": true,
+     "note": "Count taken from a secondary audit of the database; live total changes daily."
+    },
+    {
+     "name": "$145K in sanctions in Q1 2026",
+     "summary": "A ComplexDiscovery tally found US courts imposed at least $145,000 in sanctions over AI-fabricated citations in Q1 2026, most of it in one Oregon case.",
+     "date": "2026-04",
+     "kind": "incident",
+     "source": "https://complexdiscovery.com/the-ai-sanction-wave-145k-in-q1-penalties-signals-courts-have-lost-patience-with-genai-filing-failures",
+     "verified": true
+    },
+    {
+     "name": "Three years of handling hallucinations",
+     "summary": "A UNC law library review looks back at how courts and the profession have responded to AI hallucinations in filings over the three years since the first cases.",
+     "date": "2026-06",
+     "kind": "debate",
+     "source": "https://library.law.unc.edu/2026/06/handling-hallucinations-a-reflection/",
+     "verified": true
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "AI Hallucination Cases database (Damien Charlotin)",
+     "url": "https://www.damiencharlotin.com/hallucinations/",
+     "kind": "tracker",
+     "why": "The reference dataset: each decision with court, party type, what was fabricated and the outcome."
+    },
+    {
+     "title": "UNC Law Library: Handling Hallucinations",
+     "url": "https://library.law.unc.edu/2026/06/handling-hallucinations-a-reflection/",
+     "kind": "overview",
+     "why": "Readable three-year retrospective from law librarians on how the problem and responses evolved."
+    },
+    {
+     "title": "UIC Law Library: Flood of AI-related sanctions persists",
+     "url": "https://library.law.uic.edu/news-stories/flood-of-ai-related-sanctions-persist/",
+     "kind": "overview",
+     "why": "Short guide to recent sanctions orders with pointers to the underlying cases."
+    },
+    {
+     "title": "Bloomberg Law: AI-faked cases irritate overworked judges",
+     "url": "https://news.bloombergtax.com/cannabis/ai-faked-cases-become-core-issue-irritating-overworked-judges",
+     "kind": "overview",
+     "why": "Reported feature on how judges are experiencing and responding to fabricated citations."
+    }
+   ]
+  },
+  {
+   "id": "legal.ediscovery",
+   "name": "E-discovery & litigation support",
+   "summary": "Generative AI document review is being folded into the standard price of major e-discovery platforms, shifting competition from AI add-ons to all-inclusive pricing.",
+   "activity": 3,
+   "maturity": "adopting",
+   "whyItMatters": "Document review is a large, measurable legal task where AI is already replacing billable human hours at scale.",
+   "openQuestion": "Will courts and opposing parties accept generative AI review with the same confidence as earlier predictive coding?",
+   "landmarks": [
+    {
+     "name": "Relativity makes aiR standard",
+     "summary": "At Relativity Fest, Relativity said aiR for Review and aiR for Privilege would move from paid add-ons into standard RelativityOne pricing in 2026.",
+     "date": "2025-10",
+     "kind": "product",
+     "source": "https://abovethelaw.com/2025/10/relativity-offers-key-ai-products-at-no-extra-charge-but-thats-not-the-most-important-thing",
+     "verified": true
+    },
+    {
+     "name": "DISCO all-inclusive AI platform",
+     "summary": "DISCO bundled e-discovery, Cecilia AI, deposition management and timelines into one platform priced per GB of processed data, with no separate AI charge.",
+     "date": "2026-02",
+     "kind": "product",
+     "source": "https://csdisco.com/pressrelease/disco-announces-all-inclusive-platform-for-ediscovery",
+     "verified": true
+    },
+    {
+     "name": "Relativity announces Clair assistant",
+     "summary": "Relativity announced Clair, a conversational AI assistant for lawyers, ahead of availability. aiR for Case Strategy remains a separately priced add-on.",
+     "date": "2026-08",
+     "kind": "product",
+     "source": "https://lawnext.com/2026/08/relativity-announces-clair-a-conversational-ai-for-lawyers-but-youll-have-to-wait-awhile-to-chat-with-it.html",
+     "verified": true
+    },
+    {
+     "name": "ILTACON e-discovery AI announcements",
+     "summary": "LawNext's ILTACON 2026 round-up covers new AI announcements from DISCO, Everlaw, Nuix, Relativity and Reveal.",
+     "date": "2026-09",
+     "kind": "product",
+     "source": "https://www.lawnext.com/2026/09/iltacon-news-round-up-part-1-e-discovery-disco-everlaw-nuix-relativity-reveal.html",
+     "verified": true
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "eDiscovery Today (Doug Austin)",
+     "url": "https://ediscoverytoday.com/",
+     "kind": "newsletter",
+     "why": "Daily practitioner blog on e-discovery case law, vendor news and AI trends."
+    },
+    {
+     "title": "EDRM",
+     "url": "https://edrm.net/",
+     "kind": "community",
+     "why": "Standards body behind the e-discovery reference model, with guidance and working groups on AI."
+    },
+    {
+     "title": "DWF: reflections from Relativity Fest 2025",
+     "url": "https://dwfgroup.com/it-it/news-and-insights/insights/2025/10/a-new-era-for-ediscovery-reflections-from-relativity-fest-2025",
+     "kind": "overview",
+     "why": "A law firm's view of what bundled generative AI review changes for practitioners."
+    },
+    {
+     "title": "ComplexDiscovery",
+     "url": "https://complexdiscovery.com/",
+     "kind": "newsletter",
+     "why": "Analysis of e-discovery markets, pricing and AI governance for litigation support teams."
+    }
+   ]
+  },
+  {
+   "id": "legal.compliance",
+   "name": "Regulatory compliance",
+   "summary": "Banks and firms use AI for regulatory change monitoring, KYC and AML, mostly with humans in the loop. US supervisors updated model risk guidance but left generative AI out of scope.",
+   "activity": 3,
+   "maturity": "adopting",
+   "whyItMatters": "Regulated industries show how far AI can go where every automated decision must be explainable to a supervisor.",
+   "openQuestion": "How will supervisors expect banks to validate and govern generative and agentic AI systems?",
+   "landmarks": [
+    {
+     "name": "US bank regulators issue SR 26-2",
+     "summary": "The Fed, OCC and FDIC replaced 2011 model risk guidance (SR 11-7) in April 2026 but excluded generative and agentic AI from scope, citing how new they are.",
+     "date": "2026-04",
+     "kind": "policy",
+     "source": "https://www.forvismazars.us/forsights/2026/06/implications-of-the-updated-interagency-mrm-guidance",
+     "verified": true
+    },
+    {
+     "name": "Few banks have a defined AI strategy",
+     "summary": "A Wolters Kluwer survey of 148 financial institutions found about 12% call their AI strategy well-defined and resourced, though about 61% are piloting or in production.",
+     "date": "2026-02",
+     "kind": "research",
+     "source": "https://www.wolterskluwer.com/en/expert-insights/wolters-kluwer-q1-2026-banking-compliance-ai-trend-report",
+     "verified": true
+    },
+    {
+     "name": "Vendor survey: execution is the bottleneck",
+     "summary": "Ascent's 2026 RegTech survey reports 57% of firms cite slow manual processes as their top challenge; 46% see AI as transformational, 41% find current tools underwhelming.",
+     "date": "2026-05",
+     "kind": "research",
+     "source": "https://fintech.global/2026/05/26/how-ai-is-fixing-regtechs-operationalisation-problem/",
+     "verified": true,
+     "note": "Vendor-run survey reported by a trade outlet; treat percentages as self-reported."
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "CRA: Model risk guidance SR 26-2 in the era of AI",
+     "url": "https://media.crai.com/wp-content/uploads/2026/07/09165122/FE-Insights-MRM-Guidance-SR-26-2-In-the-Era-of-AI-July2026.pdf",
+     "kind": "report",
+     "why": "Explains what the new guidance changes and what the generative AI carve-out leaves open."
+    },
+    {
+     "title": "Management Solutions: technical note on SR 26-2",
+     "url": "https://www.managementsolutions.com/en/publications-and-events/regulatory-notes/technical-notes-on-regulations/sr-26-2-revised-guide-model-risk-management",
+     "kind": "overview",
+     "why": "Section-by-section summary of the revised interagency model risk guidance."
+    },
+    {
+     "title": "Wolters Kluwer Q1 2026 Banking Compliance AI Trend Report",
+     "url": "https://www.wolterskluwer.com/en/expert-insights/wolters-kluwer-q1-2026-banking-compliance-ai-trend-report",
+     "kind": "report",
+     "why": "Survey data on where bank compliance teams are with AI adoption, governance and policies."
+    },
+    {
+     "title": "Wolters Kluwer AI Risk and Governance Index",
+     "url": "https://www.wolterskluwer.com/en/expert-insights/ai-risk-and-governance-index",
+     "kind": "report",
+     "why": "Follow-up benchmark on AI governance readiness among banking institutions."
+    }
+   ]
+  },
+  {
+   "id": "legal.ai-law",
+   "name": "Law of AI (EU AI Act, liability)",
+   "summary": "The EU has pushed high-risk AI Act obligations back to 2027-2028, while the US federal government is challenging state AI laws through an executive order and DOJ litigation.",
+   "activity": 4,
+   "maturity": "emerging",
+   "whyItMatters": "These rules decide what AI developers and deployers must document, test and disclose, and who is liable when systems fail.",
+   "openQuestion": "Will US state AI laws survive federal preemption efforts, and will the EU's delayed deadlines hold?",
+   "landmarks": [
+    {
+     "name": "EU adopts AI Omnibus delay",
+     "summary": "After a May deal and a Parliament vote, the Council approved changes moving standalone high-risk AI Act duties to 2 December 2027 and product-embedded AI to 2 August 2028.",
+     "date": "2026-06",
+     "kind": "policy",
+     "source": "https://www.scl.org/council-of-the-eu-approves-ai-omnibus-reforms/",
+     "verified": true
+    },
+    {
+     "name": "US executive order on state AI laws",
+     "summary": "EO 14365 of 11 December 2025 directed the Attorney General to form an AI Litigation Task Force to challenge state AI laws. It does not itself preempt any state law.",
+     "date": "2025-12",
+     "kind": "policy",
+     "source": "https://www.govinfo.gov/content/pkg/DCPD-202501186/html/DCPD-202501186.htm",
+     "verified": true
+    },
+    {
+     "name": "DOJ joins xAI suit over Colorado AI Act",
+     "summary": "xAI sued on 9 April 2026 to block the Colorado AI Act; the DOJ intervened on 24 April, reported as its first constitutional challenge to a state AI law.",
+     "date": "2026-04",
+     "kind": "debate",
+     "source": "https://www.jenner.com/en/news-insights/client-alerts/doj-joins-xai-in-lawsuit-challenging-colorado-ai-act",
+     "verified": true
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "Taylor Wessing: what the AI Omnibus deal means",
+     "url": "https://taylorwessing.com/en/insights-and-events/insights/2026/05/the-eu-digital-omnibus-on-ai-what-the-political-deal-means",
+     "kind": "overview",
+     "why": "Plain explanation of which AI Act deadlines moved, which did not, and what was added."
+    },
+    {
+     "title": "AGORA: AI governance document archive (ETO)",
+     "url": "https://agora.eto.tech/instrument/2720",
+     "kind": "tracker",
+     "why": "Searchable collection of AI laws and policies with full text; this entry is EO 14365."
+    },
+    {
+     "title": "Akin AI Law & Regulation Tracker",
+     "url": "https://www.akingump.com/en/insights/ai-law-and-regulation-tracker",
+     "kind": "tracker",
+     "why": "Ongoing entries on federal, state and international AI legal developments."
+    },
+    {
+     "title": "Proskauer: federal government intervenes in Colorado case",
+     "url": "https://www.proskauer.com/blog/federal-government-intervenes-in-case-seeking-to-invalidate-colorado-ai-law",
+     "kind": "overview",
+     "why": "Sets out the legal theories in the first federal challenge to a state AI statute."
+    }
+   ]
+  },
+  {
+   "id": "legal.copyright",
+   "name": "Copyright & training data",
+   "summary": "Courts are diverging on training with copyrighted works. A record US settlement, a first US appellate ruling, a German loss for OpenAI and a UK win for Stability AI point in different directions.",
+   "activity": 4,
+   "maturity": "emerging",
+   "whyItMatters": "The outcome sets what training data costs and whether model makers owe creators licences or damages.",
+   "openQuestion": "Is training a generative model on lawfully acquired copyrighted works fair use? No US appeals court has yet said.",
+   "landmarks": [
+    {
+     "name": "Bartz v Anthropic $1.5B settlement approved",
+     "summary": "A federal judge gave final approval in July 2026 to the $1.5B authors' class settlement over pirated books, announced in 2025 and described as the largest in US copyright.",
+     "date": "2026-07",
+     "kind": "deal",
+     "source": "https://www.jurist.org/news/2026/07/judge-approves-record-1-5-billion-settlement-involving-anthropic/",
+     "verified": true
+    },
+    {
+     "name": "Third Circuit rules in Thomson Reuters v Ross",
+     "summary": "In the first US appellate ruling on AI training and fair use, the court held Ross's copying of Westlaw headnotes for a non-generative research tool was not fair use.",
+     "date": "2026-09",
+     "kind": "policy",
+     "source": "https://ipwatchdog.com/2026/09/30/third-circuit-affirms-revised-fair-use-ruling-against-ross-ai-legal-research-platform-in-sealed-opinion/",
+     "verified": true
+    },
+    {
+     "name": "GEMA v OpenAI in Munich",
+     "summary": "Munich Regional Court held on 11 November 2025 that ChatGPT's memorisation and reproduction of song lyrics infringed copyright. Not final; OpenAI said it would appeal.",
+     "date": "2025-11",
+     "kind": "policy",
+     "source": "https://www.taylorwessing.com/de/insights-and-events/insights/2025/11/gema-v-openai",
+     "verified": true
+    },
+    {
+     "name": "Getty v Stability AI in UK High Court",
+     "summary": "The court held Stable Diffusion does not contain infringing copies, rejecting Getty's secondary infringement claim, with a narrow trade mark win on watermarks.",
+     "date": "2025-11",
+     "kind": "policy",
+     "source": "https://www.mishcon.com/news/getty-images-v-stability-ai-unpacking-the-high-courts-judgment?publication=7570",
+     "verified": true
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "CMS AI and copyright case tracker",
+     "url": "https://cms.law/en/mar/publication/artificial-intelligence-and-copyright-case-tracker/united-kingdom-getty-images-us-inc-ors-v-stability-ai-ltd2",
+     "kind": "tracker",
+     "why": "Country-by-country case pages with procedural history; this entry covers Getty v Stability."
+    },
+    {
+     "title": "Hogan Lovells AI litigation case law tracker",
+     "url": "https://digital-client-solutions.hoganlovells.com/resources/ai-litigation-case-law-tracker/case/gema-v-openai/decision/9",
+     "kind": "tracker",
+     "why": "Structured summaries of AI decisions by issue and court; this entry covers GEMA v OpenAI."
+    },
+    {
+     "title": "Osler: German and UK courts diverge on AI models",
+     "url": "https://www.osler.com/en/insights/updates/german-and-u-k-courts-diverge-on-whether-ai-models-infringe-copyright/?pdf=1",
+     "kind": "overview",
+     "why": "Side-by-side comparison of why Munich and London reached different answers on model memorisation."
+    },
+    {
+     "title": "ABA: Thomson Reuters v Ross, one year later",
+     "url": "https://www.americanbar.org/groups/business_law/resources/business-law-today/2026-september/thomson-reuters-v-ross-one-year-later/",
+     "kind": "overview",
+     "why": "Argues the Ross precedent is narrower than headlines suggest; useful for reading the appeal."
+    }
+   ]
+  },
+  {
+   "id": "legal.access",
+   "name": "Access to justice",
+   "summary": "Self-represented litigants increasingly use chatbots to draft filings, and a few courts are testing their own AI assistants. Filings are up, but there is little evidence outcomes have improved.",
+   "activity": 2,
+   "maturity": "emerging",
+   "whyItMatters": "Most people with legal problems cannot afford a lawyer, so this is where AI could widen access or just add court backlog.",
+   "openQuestion": "Does AI help unrepresented people win or settle cases, or mainly raise the volume of filings courts must process?",
+   "landmarks": [
+    {
+     "name": "Pro se filings rise with AI use",
+     "summary": "A preprint by Anand Shah and Joshua Levy finds the self-represented share of US federal civil cases rose from about 11% to 16.8% in FY2025, with more AI-flagged complaints.",
+     "date": "2026-03",
+     "kind": "research",
+     "source": "https://avshah1.github.io/assets/pdf/papers/pro-se/Pro_Se_Automation.pdf",
+     "verified": true
+    },
+    {
+     "name": "Courts cope with AI-generated lawsuits",
+     "summary": "MIT Technology Review reports on a rise in AI-drafted pro se lawsuits and on judges weighing what duties apply when chatbots stand in for lawyers.",
+     "date": "2026-06",
+     "kind": "debate",
+     "source": "https://www.technologyreview.com/2026/06/04/1138391/courts-coping-ai-lawsuits/",
+     "verified": true
+    },
+    {
+     "name": "Alaska courts release AVA probate chatbot",
+     "summary": "Alaska's court system released AVA, a probate self-help chatbot built with LawDroid, after more than a year of delays partly due to hallucinations found in testing.",
+     "date": "2026-01",
+     "kind": "experiment",
+     "source": "https://www.nbcnewyork.com/news/tech/alaska-court-system-ai-chatbot/6438569/",
+     "verified": true
+    }
+   ],
+   "deepDives": [
+    {
+     "title": "Shah & Levy: Access to Justice in the Age of AI",
+     "url": "https://avshah1.github.io/assets/pdf/papers/pro-se/Pro_Se_Automation.pdf",
+     "kind": "paper",
+     "why": "The main empirical study so far, using 4.5 million federal civil cases from FY2005 to FY2026."
+    },
+    {
+     "title": "Thomson Reuters Institute: chatbots for pro se litigants",
+     "url": "https://www.thomsonreuters.com/en-us/posts/ai-in-courts/chatbots-pro-se-litigants",
+     "kind": "overview",
+     "why": "Explains how court-run chatbots are designed, tested and limited to avoid giving legal advice."
+    },
+    {
+     "title": "Cyberjustice Lab: lessons from Beagle+ and AVA",
+     "url": "https://cyberjustice.openum.ca/s/23655",
+     "kind": "overview",
+     "why": "Takeaways from an NCSC webinar on two public-facing legal chatbots and how they were evaluated."
+    },
+    {
+     "title": "NYSBA: pro se advocacy in the AI era",
+     "url": "https://nysba.org/pro-se-advocacy-in-the-ai-era-benefits-challenges-and-ethical-implications/",
+     "kind": "overview",
+     "why": "Bar association survey of benefits, risks and ethics questions, including court tools."
+    }
+   ]
+  }
+ ]
+}
