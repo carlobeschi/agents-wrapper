@@ -105,3 +105,28 @@ test('study 7: the "think for yourself" line can be dropped, and the probes can 
   expect(u.export).toBe('convert');
   expect(fs.readFileSync(path.join(__dirname, '..', 'wrongnote.js'), 'utf8')).toContain("m[__FN__]||m.evaluate");
 });
+
+test('bench: named pairs of copies, a driver alone, and an output folder', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'wrongnote-home-'));
+  const fake = { headless: ['node', path.join(FIX, 'fake.js'), '{prompt}'] };
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'claude', label: 'Ann', ...fake }] }));
+  const cfg = path.join(home, 'wn.json');
+  fs.writeFileSync(cfg, JSON.stringify({
+    spec: 'Left to right.', nav_task: 'A calculator.', notes: ['N1', 'N2'], wrong_note: 'Right to left: 10 - 4 - 1 is 7.', conflict: 'Left to right.',
+    probes: [{ expr: '10 - 4 - 1', spec: 5, note: 7 }],
+    tests: path.join(FIX, 'hidden'), proof: ['node', 'hidden-tests/ok.js'], proof_wrap: ['env'],
+    agents: ['claude#1', 'claude#2'], pairs: [['claude#1', 'claude#2']], solo: ['claude'], judges: ['claude'], repeats: 1, max_turns: 4,
+  }));
+  const out = path.join(home, 'out');
+  execFileSync('node', [path.join(__dirname, '..', 'wrongnote.js'), cfg, `--out=${out}`],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8', timeout: 30000 });
+  const rows = JSON.parse(fs.readFileSync(path.join(out, 'results.json'), 'utf8'));
+  expect(rows.map(r => r.name)).toEqual(['claude-1-drives-claude-2-r1', 'claude-alone-r1']);
+  expect(rows[1]).toMatchObject({ navigator: null, final: 'spec', result: 'done: tests pass', judges: [] });
+  const p1 = fs.readFileSync(path.join(out, 'claude-1-drives-claude-2-r1', 'steps', '01-driver.prompt.md'), 'utf8');
+  expect(p1).toContain('Ann 2, an AI agent, is your navigator');
+  const solo = fs.readFileSync(path.join(out, 'claude-alone-r1', 'steps', '01-driver.prompt.md'), 'utf8');
+  expect(solo).toContain('## The product notes');
+  expect(solo).toContain('1. Right to left: 10 - 4 - 1 is 7.');
+  expect(fs.readFileSync(path.join(out, 'summary.md'), 'utf8')).toContain('(alone)');
+});

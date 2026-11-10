@@ -60,7 +60,13 @@
 //   generator revises its own draft with the other half, and the ranker picks
 //   the better version, which the judges see. The summary says who won, how
 //   alike the drafts were and how much a revision kept, and for every arm how
-//   alike its final pieces are across repeats.
+//   alike its final pieces are across repeats. "revise": false makes it a
+//   best of N: each generator makes the whole piece alone with its share of the
+//   moves, and the ranker picks one.
+// - Bench support: a variant may bring its own team ("agents": [specs]; the
+//   moves are shared so the total stays the same) and "not_judged_by": [judge
+//   ids] (a judge never scores a setup it played a part in); "repeat_offset"
+//   shifts who starts when each repeat is its own study.
 // Run folder: ~/.agent-dispatch/studies/<run>/: study.json, summary.md,
 // judge/ (pictures and prompts); each room run keeps its own folder.
 
@@ -111,7 +117,9 @@ function parseScores(text, letters) {
 async function judgeSet(dir, name, kind, brief, entries, judges) {
   const out = [];
   for (const j of judges) {
-    const order = shuffle(entries, `${name}-${j.id}`);
+    // A judge never scores a piece made by a setup it played a part in.
+    const order = shuffle(entries.filter(e => !(e.skip || []).includes(j.id)), `${name}-${j.id}`);
+    if (!order.length) continue;
     const pieces = order.map((e, i) => ({ ...e, letter: LETTERS[i] }));
     const jdir = path.join(dir, 'judge', `${name}-${j.id}`);
     fs.mkdirSync(jdir, { recursive: true });
@@ -278,12 +286,22 @@ async function main(file) {
     const piece = d => fs.readFileSync(path.join(d, t.kind === 'svg' ? 'final.svg' : 'final.txt'), 'utf8');
     const lines = d => (JSON.parse(fs.readFileSync(path.join(d, 'timeline.json'), 'utf8')).final || []).map(l => l.text);
     const drafts = [], revisions = [];
-    for (let i = 0; i < gens.length; i++) {
+    if (T.revise === false) {
+      // Best of N: each copy makes the whole piece alone with its share of the moves; the ranker picks one.
+      const each = Math.max(1, Math.round(total * agents.length / gens.length));
+      for (let i = 0; i < gens.length; i++) {
+        console.log(`  piece ${i + 1}: ${gens[i].label}`);
+        drafts.push(await roomRun(alone(i, { title: `${t.id} · ${v.label} · ${i + 1}`, moves: each, min_moves: Math.min(minOf(t), each) }), t));
+        save();
+      }
+      revisions.push(...drafts);
+    }
+    for (let i = 0; i < (T.revise === false ? 0 : gens.length); i++) {
       console.log(`  draft ${i + 1}: ${gens[i].label}`);
       drafts.push(await roomRun(alone(i, { title: `${t.id} · ${v.label} · draft ${i + 1}`, moves: half, min_moves: Math.min(minOf(t), half) }), t));
       save();
     }
-    for (let i = 0; i < gens.length; i++) {
+    for (let i = 0; i < (T.revise === false ? 0 : gens.length); i++) {
       const rdir = path.join(dir, 'review', `${tag}-${i + 1}`);
       fs.mkdirSync(rdir, { recursive: true });
       let critique = '';
@@ -304,8 +322,8 @@ async function main(file) {
     if (w < 0 && rk.pieces) w = Number([...rk.pieces].sort((a, b) => (b.score ?? -1) - (a.score ?? -1))[0].label.slice(1)) - 1;
     const rankFailed = w < 0; if (rankFailed) w = 0;
     return { ...revisions[w], starter: null, stats: null, process: null, tournament: {
-      generators: gens.map(g => g.id), reviewer: reviewer.id, ranker: ranker.id, winner: gens[w].id, rankFailed, rank: rk,
-      drafts: drafts.map((d, i) => ({ dir: d.dir, checks: d.checks, review: d.review, reviewError: d.reviewError || null, revision: revisions[i].dir, revisedChecks: revisions[i].checks,
+      generators: gens.map(g => g.id), reviewer: T.revise === false ? null : reviewer.id, ranker: ranker.id, winner: gens[w].id, rankFailed, rank: rk,
+      drafts: drafts.map((d, i) => ({ dir: d.dir, checks: d.checks, review: d.review || null, reviewError: d.reviewError || null, revision: revisions[i].dir, revisedChecks: revisions[i].checks,
         kept: alike(piece(d.dir), piece(revisions[i].dir)) })),
       draftsAlike: gens.length > 1 ? alike(piece(drafts[0].dir), piece(drafts[1].dir)) : null } };
   }
@@ -322,24 +340,34 @@ async function main(file) {
         console.log(`\n# ${t.id}, repeat ${r + 1} of ${repeats}`);
         for (const sp of cfg.solo || []) { const a = pick(sp); console.log(`- ${a.label} alone`); runs[`${a.id} alone`] = await roomRun(solo(t, a), t); save(); }
         // Rotate who moves first (and who holds which job) on every repeat.
-        const ids = agents.map(a => a.id), k = r % ids.length, order = ids.slice(k).concat(ids.slice(0, k));
+        const ids = agents.map(a => a.id), k = (r + (cfg.repeat_offset || 0)) % ids.length, order = ids.slice(k).concat(ids.slice(0, k));
         for (const v of cfg.variants) {
           if (v.only && !v.only.includes(t.id)) continue;
           if (v.tournament) { console.log(`- ${v.label} (tournament)`); runs[v.label] = await tournamentRun(t, v, r); save(); continue; }
-          const extra = { title: `${t.id} · ${v.label}`, ...(v.room || {}), agents: order.map(id => specs[id]) };
-          if (v.roles) {
-            extra.roles = Object.fromEntries(order.map((id, i) => [id, v.roles[Math.min(i, v.roles.length - 1)]]));
-            if (v.checker) extra.readonly = order.filter((id, i) => Math.min(i, v.roles.length - 1) === v.roles.length - 1);
+          let vorder = order, vspec = id => specs[id];
+          const extra = { title: `${t.id} · ${v.label}`, ...(v.room || {}) };
+          if (v.agents) {
+            // A team of its own (a trio, a mixed pair): same total moves as the main team.
+            const team = v.agents.map(pick), vs = Object.fromEntries(team.map((a, i) => [a.id, v.agents[i]]));
+            const kk = (r + (cfg.repeat_offset || 0)) % team.length;
+            vorder = team.map(a => a.id).slice(kk).concat(team.map(a => a.id).slice(0, kk)); vspec = id => vs[id];
+            extra.moves = Math.max(1, Math.round((t.moves ?? base.moves) * agents.length / team.length));
           }
-          console.log(`- ${v.label} (${order.join(' first, ')})`);
+          extra.agents = vorder.map(vspec);
+          if (v.roles) {
+            extra.roles = Object.fromEntries(vorder.map((id, i) => [id, v.roles[Math.min(i, v.roles.length - 1)]]));
+            if (v.checker) extra.readonly = vorder.filter((id, i) => Math.min(i, v.roles.length - 1) === v.roles.length - 1);
+          }
+          console.log(`- ${v.label} (${vorder.join(' first, ')})`);
           const got = await roomRun(together(t, extra), t);
-          got.starter = order[0];
+          got.starter = vorder[0];
           got.stats = JSON.parse(fs.readFileSync(path.join(got.dir, 'timeline.json'), 'utf8')).stats || null;
           got.process = await processLabels(got.dir, `${t.id}-${r + 1}-${v.label.replace(/\W+/g, '-')}`);
           runs[v.label] = got;
           save();
         }
-        task.repeats[r].judgings = t.judge === false ? [] : await judgeSet(dir, `${t.id}-${r + 1}`, t.kind, t.brief || asRoom(t).brief, Object.entries(runs).map(([label, x]) => ({ label, dir: x.dir })), judges);
+        task.repeats[r].judgings = t.judge === false ? [] : await judgeSet(dir, `${t.id}-${r + 1}`, t.kind, t.brief || asRoom(t).brief,
+          Object.entries(runs).map(([label, x]) => ({ label, dir: x.dir, skip: cfg.variants.find(v => v.label === label)?.not_judged_by || [] })), judges);
         save();
       }
       const labels = [...new Set(task.repeats.flatMap(x => Object.keys(x.runs)))];
