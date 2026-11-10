@@ -180,4 +180,8 @@ esac`, 'x', '{prompt}'];
   expect(t.process['a alone']).toBeNull();
   const md = fs.readFileSync(path.join(dir, 'summary.md'), 'utf8');
   expect(md).toContain('- plan first: changed 1 · caught 2 · passed 0 · built 4 · questions 4');
+  expect(t.byStarter.silent).toEqual({ 'a-1': { runs: 1, score: expect.any(Number), checks: 1 }, 'a-2': { runs: 1, score: expect.any(Number), checks: 1 } });
+  expect(md).toContain('By who moved first:');
+  expect(md).toContain('## Position check');
+  expect(t.repeats[0].runs.versions === undefined).toBe(true);
 });

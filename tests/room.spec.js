@@ -185,5 +185,6 @@ test('versions: changing someone else\'s line makes a proposal the author accept
   expect(t.moves[2].decisions).toEqual(['accepted V1', 'rejected V2']);
   expect(t.final.map(l => [l.text, l.by])).toEqual([['better-1', 'b'], ['line-a2', 'a'], ['line-b', 'b']]);
   expect(t.stats.proposals).toEqual({ accepted: 1, rejected: 1, stale: 0, pending: 0 });
+  expect(t.stats).toMatchObject({ lastMover: 'b', lastMoverShare: 67 });
   expect(fs.readFileSync(path.join(dir, 'steps', '04-b.prompt.md'), 'utf8')).toContain('A accepted your V1');
 });
