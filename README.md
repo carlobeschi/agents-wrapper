@@ -126,11 +126,19 @@ If the Mac is asleep at 18:00, launchd runs it at the next wake.
 
 `atlas/index.html` is a zoomable map of what is happening with AI across ten fields: AI research itself, software development, the agentic enterprise, legal, science, mind and theory, strategy and geopolitics, health, education, and creative work. It is a static page with no server and no dependencies, so you can open the file straight in a browser.
 
-Each field is a continent and each topic inside it is a province. Height and colour show how much is going on: each contour line is one activity point on a 1 to 5 scale. Hatching marks frontier research, and dotted lanes connect topics in different fields that feed each other. As you zoom, the labels go from fields to topics to landmarks (products, papers, experiments, rulings, debates). Clicking any of them opens the side panel with a summary and source links. You can search, and a link such as `#legal` or `#software-code-review` opens that place directly.
+Each field is a continent and each topic inside it is a province. Height and colour show how much is going on: each contour line is one activity point on a 1 to 5 scale. Hatching marks frontier research, and dotted lanes connect topics in different fields that feed each other. As you zoom, the labels go from fields to topics to landmarks (products, papers, experiments, rulings, debates). Clicking any of them opens the side panel.
 
-Landmarks drawn as hollow dots could not be confirmed against a source. Activity scores are judgement calls. Check the sources before quoting anything from the map.
+A topic's panel has a summary, why it matters, the main open question, its landmarks with source links, **Go deeper** links (surveys, key papers, trackers, newsletters), its lanes to other fields and its neighbours. Three things help a reader place their own interests on the map:
 
-The data lives in `atlas/fields/*.json`, one file per group of fields, written by research agents from public web sources in November 2026. `atlas/layout.json` holds where each continent sits and the lanes between topics. After editing either, run `node atlas/build.js` to regenerate `atlas/atlas-data.js`, which the page loads. The script also reports bad activity or maturity values and lanes that point to unknown topics.
+- **My focus.** Star any topic. Starred topics are outlined on the map at every zoom level, and the My focus panel shows how they link up, which topics in other fields they lead to, what is next door, and which fields you are not following. Stars are kept in the browser's local storage.
+- **Viewpoints.** Pick a role (software engineer, lawyer, educator and so on) to light up the topics that matter most to it, and add them all to My focus in one click.
+- **Threads.** Storylines that cut across fields, such as "Agents leave the lab" or "Who sets the rules".
+
+Search covers fields, topics, landmarks, threads and viewpoints. Links such as `#legal`, `#software-code-review`, `#thread-agents`, `#lens-engineer` and `#focus` open that view directly.
+
+Each landmark says how it was checked: compared with its source page, matched in a search result only, or not confirmed (drawn as a hollow dot). Activity scores are judgement calls. Follow the source links before quoting anything from the map.
+
+The data lives in `atlas/fields/<field>.json`, written and fact-checked by research agents from public web sources in November 2026. `atlas/layout.json` holds where each continent sits, the lanes, the threads and the viewpoints. After editing either, run `node atlas/build.js` to regenerate `atlas/atlas-data.js`, which the page loads; it reports bad values and references to unknown topics. `node atlas/check-links.js` tests every source and deep-dive link and lists the ones that no longer resolve.
 
 ## Dispatch (legacy)
 

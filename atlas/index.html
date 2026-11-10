@@ -156,6 +156,7 @@ button { font: inherit; color: inherit; }
 .lm p { margin: 0 !important; font-size: 13px; }
 .lm a { font: 400 11.5px var(--f-mono); color: var(--lane); word-break: break-all; }
 .unv-tag { color: var(--h5); }
+.ok-tag { color: var(--lane); }
 .tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .picks { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 4px; }
 .pick { font: 500 12px var(--f-body); padding: 5px 10px; border-radius: 999px; border: 1px solid var(--rule); background: var(--sea-shallow); cursor: pointer; text-align: left; }
@@ -549,6 +550,7 @@ const regionRow = (r, sub) => `<li class="row"><button type="button" data-region
 const lmRow = l => `<li><button type="button" data-lm="${esc(l.id)}"><span class="n">${esc(l.name)}</span><span class="date">${esc(fmtDate(l.date))}</span><span class="m">${esc(l.region.field.name)} › ${esc(l.region.name)}</span></button></li>`;
 const newest = (list, n) => list.filter(l => l.verified).sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, n);
 const collPicks = list => `<div class="picks">${list.map(c => `<button type="button" class="pick" data-coll="${c.type}-${c.id}">${esc(c.name)}</button>`).join('')}</div>`;
+const checkTag = l => !l.verified ? '<span class="unv-tag">Not confirmed</span>' : l.check === 'page' ? '<span class="ok-tag" title="The claim was compared with the linked source page">Checked on source</span>' : '<span title="Supported by a search result; the page itself was not read">Matched in search</span>';
 const DDKIND = { overview: 'Overview', paper: 'Paper', report: 'Report', tracker: 'Tracker', newsletter: 'Newsletter', course: 'Course', book: 'Book', community: 'Community' };
 function deepDives(list, title) {
   list = (list || []).filter(d => /^https?:\/\//.test(d.url || '')); if (!list.length) return '';
@@ -582,7 +584,7 @@ function panelWorld() {
   <ul class="list">${newest(landmarks, 6).map(lmRow).join('')}</ul>
   ${KEY_PHONE}
   <h3>About this edition</h3>
-  <p class="fine">Compiled ${esc(fmtDate(D.asOf))} from public sources and checked by research agents against primary or reputable sources. ${unv ? `${unv} of ${all} landmarks could not be confirmed and are drawn as hollow dots.` : `All ${all} landmarks were checked against a source.`} Activity scores are judgement calls, relative across all fields. Follow the source links before quoting anything.</p>`;
+  <p class="fine">Compiled ${esc(fmtDate(D.asOf))} from public sources by research agents. Of ${all} landmarks, ${landmarks.filter(l => l.verified && l.check === 'page').length} were compared with their source page, ${landmarks.filter(l => l.verified && l.check !== 'page').length} match a search result only${unv ? `, and ${unv} could not be confirmed and are drawn as hollow dots` : ''}. Each landmark says which. Activity scores are judgement calls, relative across all fields. Follow the source links before quoting anything.</p>`;
 }
 function panelField(f) {
   const regs = f.regions.slice().sort((a, b) => b.activity - a.activity);
@@ -617,7 +619,7 @@ function panelRegion(r) {
   <p class="fine">Busier than ${quieter} of the ${allRegions.length} topics on the map, level with ${same}.</p>
   <h3>Landmarks, newest first</h3>
   ${lms.map(l => `<article class="lm${l === selLm ? ' sel' : ''}" id="lm-${esc(l.id.replace(/[^\w-]/g, '_'))}">
-    <div class="lm-top"><span>${esc(fmtDate(l.date))}</span><span>${esc(KIND[l.kind] || l.kind)}</span>${l.verified ? '' : '<span class="unv-tag">Not confirmed</span>'}</div>
+    <div class="lm-top"><span>${esc(fmtDate(l.date))}</span><span>${esc(KIND[l.kind] || l.kind)}</span>${checkTag(l)}</div>
     <button type="button" class="lm-name" data-lm="${esc(l.id)}">${esc(l.name)}</button>
     <p>${esc(l.summary)}</p>
     ${!l.verified && l.note ? `<p class="fine">${esc(l.note)}</p>` : ''}
