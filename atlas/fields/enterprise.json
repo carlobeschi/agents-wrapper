@@ -12,49 +12,52 @@
    "landmarks": [
     {
      "name": "Sierra raises $950M at over $15B",
-     "summary": "Bret Taylor's customer experience agent company raised a Series E led by Tiger Global and GV; CNBC reported a $15.8B post-money valuation.",
+     "summary": "Bret Taylor's customer experience agent company raised $950M led by Tiger Global and GV, taking its post-money valuation above $15B.",
      "date": "2026-05",
      "kind": "deal",
      "source": "https://techcrunch.com/2026/05/04/sierra-raises-950m-as-the-race-to-own-enterprise-ai-gets-serious",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Decagon $250M at $4.5B",
-     "summary": "Support agent startup tripled its valuation from mid-2025 in a Series D led by Coatue and Index Ventures.",
+     "summary": "Support agent startup raised a Series D led by Coatue and Index Ventures, saying it tripled its valuation in under six months.",
      "date": "2026-01",
      "kind": "deal",
-     "source": "https://www.bloomberg.com/news/articles/2026-01-28/ai-customer-support-startup-decagon-valued-at-4-5-billion",
-     "verified": true
+     "source": "https://decagon.ai/blog/series-d-announcement",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Klarna brings human agents back",
-     "summary": "After saying its AI assistant did the work of 700 agents, Klarna's CEO said the cost focus lowered quality and the firm resumed hiring human support staff.",
+     "summary": "A year after saying its AI assistant did the work of 700 agents, Klarna's CEO said the cost focus had lowered quality and the firm began recruiting human support staff again.",
      "date": "2025-05",
      "kind": "debate",
-     "source": "https://dc.fortune.com/2025/05/09/klarna-ai-humans-return-on-investment/",
-     "verified": true
+     "source": "https://www.customerexperiencedive.com/news/klarna-reinvests-human-talent-customer-service-AI-chatbot/747586/",
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "Support is where agents first replaced human work at scale, so it shows early what works and what quality costs follow.",
    "openQuestion": "How much support can agents fully resolve before quality and customer trust suffer?",
    "deepDives": [
     {
-     "title": "CX Today: outcome-based pricing for service agents",
+     "title": "τ-bench leaderboards",
+     "url": "https://taubench.com/",
+     "kind": "tracker",
+     "why": "Scores for agents handling simulated support conversations under policy rules, in text and voice."
+    },
+    {
+     "title": "Generative AI at Work (Brynjolfsson, Li, Raymond)",
+     "url": "https://arxiv.org/abs/2304.11771",
+     "kind": "paper",
+     "why": "Field study of 5,172 support agents: AI assistance raised issues resolved per hour by 15% on average."
+    },
+    {
+     "title": "CX Today: HubSpot Bets Big on Outcome-Based AI Pricing",
      "url": "https://www.cxtoday.com/crm/hubspot-outcome-based-ai-pricing-breeze/",
      "kind": "overview",
-     "why": "How vendors are moving from seats to pay-per-resolution pricing for support agents."
-    },
-    {
-     "title": "Gartner survey: AI-driven frontline service layoffs",
-     "url": "https://www.gartner.com/en/newsroom/press-releases/2026-04-23-gartner-survey-finds-31-percent-of-service-and-support-leaders-have-implemented-or-are-planning-ai-driven-frontline-layoffs-through-1q27",
-     "kind": "report",
-     "why": "Survey data on how many service leaders are actually cutting staff because of AI."
-    },
-    {
-     "title": "eMarketer: Klarna backtracks on AI customer service",
-     "url": "https://www.emarketer.com/content/klarna-backtracks-ai-customer-service-plans",
-     "kind": "overview",
-     "why": "Short analysis of the best-known case of an AI-first support strategy being dialled back."
+     "why": "How Zendesk, Salesforce and HubSpot are moving from seats to pay-per-resolution pricing."
     }
    ]
   },
@@ -67,46 +70,49 @@
    "landmarks": [
     {
      "name": "Agentforce ARR reaches $800M",
-     "summary": "Salesforce reported Agentforce ARR up 169% year on year and over 29,000 deals since launch, in fiscal 2026 results.",
+     "summary": "Salesforce reported Agentforce ARR of $800M, up 169% year on year, and over 29,000 deals closed since launch, in fiscal 2026 fourth quarter results.",
      "date": "2026-02",
      "kind": "deal",
-     "source": "https://www.businesswire.com/news/home/20260225325122/en/Salesforce-Delivers-Record-Fourth-Quarter-Fiscal-2026-Results",
-     "verified": true
+     "source": "https://www.salesforce.com/news/press-releases/2026/02/25/fy26-q4-earnings/",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Agentforce ARR reaches $1.2B",
-     "summary": "Salesforce's first quarter fiscal 2027 results put Agentforce ARR at about $1.2B, up 205% year on year, against quarterly revenue of $11.1B.",
+     "summary": "Salesforce's first quarter fiscal 2027 results put Agentforce ARR at $1.2B, up 205% year on year, against quarterly revenue of $11.1B.",
      "date": "2026-05",
      "kind": "deal",
      "source": "https://www.salesforce.com/news/press-releases/2026/05/28/fy27-q1-earnings/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "HubSpot prices agents per outcome",
-     "summary": "HubSpot moved its Prospecting Agent to $1 per lead recommended for outreach and its Customer Agent to $0.50 per resolved conversation.",
+     "summary": "From 14 April HubSpot charges $1 per lead its Prospecting Agent recommends for outreach and $0.50 per conversation its Customer Agent resolves.",
      "date": "2026-04",
      "kind": "product",
      "source": "https://www.hubspot.com/company-news/hubspots-customer-agent-and-prospecting-agent-now-you-pay-when-the-task-is-complete",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "CRM vendors are the test of whether agents add revenue to incumbent software or only replace seat licences.",
    "openQuestion": "Will per-outcome pricing replace per-seat licences, and who decides what counts as an outcome?",
    "deepDives": [
     {
-     "title": "HubSpot: you pay when the task is complete",
-     "url": "https://www.hubspot.com/company-news/hubspots-customer-agent-and-prospecting-agent-now-you-pay-when-the-task-is-complete",
+     "title": "Bessemer: The AI pricing and monetization playbook",
+     "url": "https://www.bvp.com/atlas/the-ai-pricing-and-monetization-playbook",
      "kind": "overview",
-     "why": "The vendor's own definition of the billable outcome for sales and service agents."
+     "why": "Primer on consumption, workflow and outcome-based pricing models for AI products."
     },
     {
-     "title": "MarTech: HubSpot moves to outcome-based pricing",
+     "title": "MarTech: HubSpot moves to outcome-based pricing for some Breeze AI agents",
      "url": "https://martech.org/hubspot-moves-to-outcome-based-pricing-for-some-breeze-ai-agents/",
      "kind": "overview",
-     "why": "Independent trade analysis of what outcome pricing means for marketing and sales teams."
+     "why": "Independent trade coverage of what outcome pricing changes for marketing and sales teams."
     },
     {
-     "title": "Salesforce Q1 FY27 results",
+     "title": "Salesforce: Record First Quarter Fiscal 2027 Results",
      "url": "https://www.salesforce.com/news/press-releases/2026/05/28/fy27-q1-earnings/",
      "kind": "report",
      "why": "Primary numbers on Agentforce and Data 360 ARR relative to total Salesforce revenue."
@@ -122,50 +128,58 @@
    "landmarks": [
     {
      "name": "SAP Accounting Accruals Agent",
-     "summary": "Joule agent that reads accrual policies, pulls history and drafts journal entries for accountants to review, in restricted availability.",
-     "date": "2026-05",
+     "summary": "Joule agent that reads accrual policies, pulls history and drafts journal entries for accountants to review, released in restricted availability.",
+     "date": "2026-09",
      "kind": "product",
      "source": "https://erp.today/sap-accounting-accruals-agent-month-end-close/",
-     "verified": false,
-     "note": "Release confirmed by trade press; exact month not confirmed (search budget ran out)."
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Intuit Agentic Books Close",
-     "summary": "At Intuit Connect, Intuit announced an Accountant Suite add-on where agents run monthly close steps for review. It is in pilot with select firms.",
+     "summary": "At Intuit Connect, Intuit announced agents that work through a firm's monthly close steps for review. It is in pilot with a limited group of firms.",
      "date": "2026-10",
      "kind": "product",
      "source": "https://www.firmofthefuture.com/events/october-2026-intuit-connect-recap/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Intuit four mid-market finance agents",
      "summary": "Intuit launched finance, payments, accounting and project management agents in Intuit Enterprise Suite, its mid-market product.",
      "date": "2025-07",
      "kind": "product",
-     "source": "https://www.businesswire.com/news/home/20250722258162/en",
-     "verified": true
+     "source": "https://investors.intuit.com/news-events/press-releases/detail/1260/intuit-launches-new-agentic-ai-experiences-and-financial-management-capabilities-for-intuit-enterprise-suite-to-drive-mid-market-business-growth",
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "Finance needs audit trails and sign-off, so it tests whether agents can work under strict controls.",
    "openQuestion": "Will auditors and CFOs accept agent-prepared entries without line-by-line human review?",
    "deepDives": [
     {
-     "title": "SAPinsider: autonomous finance, GRC and CFO governance",
+     "title": "SAPinsider: SAP's Autonomous Finance push and the governance picture",
      "url": "https://sapinsider.org/blogs/sap-autonomous-finance-grc-cfo-governance/",
      "kind": "overview",
-     "why": "How finance agents fit with controls and governance in SAP estates."
+     "why": "How finance agents fit with audit evidence, controls and accountability in SAP estates."
     },
     {
-     "title": "QuickBooks blog: Intuit advances its intelligence platform",
-     "url": "https://quickbooks.intuit.com/r/news/intuit-advances-intelligence-platform/",
-     "kind": "overview",
-     "why": "Intuit's own description of its agent roadmap for accountants and businesses."
-    },
-    {
-     "title": "Futurum: Intuit Intelligence and the accountant channel",
-     "url": "https://futurumgroup.com/?p=97190",
+     "title": "Futurum: Intuit Intelligence Positions Accountants as Intuit's ERP Channel",
+     "url": "https://futurumgroup.com/insights/intuit-intelligence-positions-accountants-as-intuits-erp-channel/",
      "kind": "report",
      "why": "Analyst view on which Intuit agent features are live versus pilot or coming soon."
+    },
+    {
+     "title": "ICAEW: Artificial intelligence resources",
+     "url": "https://www.icaew.com/technical/technology/artificial-intelligence",
+     "kind": "community",
+     "why": "Accountancy body's hub of guidance and case studies on AI and agents in finance and audit."
+    },
+    {
+     "title": "FinanceBench: A New Benchmark for Financial Question Answering",
+     "url": "https://arxiv.org/abs/2311.11944",
+     "kind": "paper",
+     "why": "Benchmark paper testing how reliably language models answer questions on company filings."
     }
    ]
   },
@@ -178,27 +192,30 @@
    "landmarks": [
     {
      "name": "Workday completes Paradox acquisition",
-     "summary": "Workday bought the conversational hiring agent maker, reportedly for about $1B in cash, to pair with Workday Recruiting and HiredScore.",
+     "summary": "Workday closed its purchase of the conversational hiring agent maker, pairing it with Workday Recruiting and HiredScore.",
      "date": "2025-10",
      "kind": "deal",
-     "source": "https://newsroom.workday.com/2025-10-01-Workday-Completes-Acquisition-of-Paradox?asPDF=1",
-     "verified": true
+     "source": "https://newsroom.workday.com/2025-10-01-Workday-Completes-Acquisition-of-Paradox",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Mobley v. Workday advances",
-     "summary": "Judge Rita Lin largely denied Workday's bid to dismiss and let California-law bias claims proceed, after a 2025 collective certification on age claims.",
+     "summary": "Judge Rita Lin let California fair employment claims proceed while dismissing some others, after a May 2025 collective certification on age claims.",
      "date": "2026-06",
      "kind": "policy",
      "source": "https://news.bloomberglaw.com/daily-labor-report/workday-loses-bid-to-toss-ai-discrimination-suit-in-california",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Juicebox $80M Series B",
-     "summary": "AI outbound recruiting platform raised a round led by DST Global at an $850M valuation and says it has over 5,000 customers.",
+     "summary": "AI recruiting search platform raised a round led by DST Global at an $850M valuation and says more than 5,000 recruiting teams use it.",
      "date": "2026-03",
      "kind": "deal",
-     "source": "https://juicebox.ai/blog/juicebox-raises-80m-series-b",
-     "verified": true
+     "source": "https://juicebox.ai/blog/series-b",
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "Hiring is a high-stakes use of agents where discrimination law applies directly to automated decisions.",
@@ -208,25 +225,26 @@
      "title": "Akin AI law tracker: Mobley v. Workday",
      "url": "https://www.akingump.com/en/insights/ai-law-and-regulation-tracker/court-allows-discrimination-claims-against-ai-hiring-tool-to-proceed-or-mobley-v-workday-inc",
      "kind": "tracker",
-     "why": "Entry in a running tracker of AI law and regulation, with the case background."
+     "why": "Entry in a running tracker of AI law and regulation, with the case background.",
+     "unchecked": true
     },
     {
-     "title": "Fisher Phillips: Workday AI suit as a collective action",
-     "url": "https://www.fisherphillips.com/print/v2/content/41157/discrimination-lawsuit-over-workdays-ai-hiring-tools-can-proceed-as-class-action-6-things.pdf",
+     "title": "Fisher Phillips: Workday AI hiring suit can proceed as class action",
+     "url": "https://www.fisherphillips.com/en/insights/insights/discrimination-lawsuit-over-workdays-ai-hiring-tools-can-proceed-as-class-action-6-things",
      "kind": "overview",
-     "why": "Plain-language employer guide to the 2025 collective certification ruling."
+     "why": "Plain-language employer guide to the May 2025 collective certification ruling."
     },
     {
-     "title": "Duane Morris Class Action Defense blog",
+     "title": "Gender, Race, and Intersectional Bias in Resume Screening via Language Model Retrieval",
+     "url": "https://arxiv.org/abs/2407.20371",
+     "kind": "paper",
+     "why": "Study finding text embedding models favored White-associated names in 85% of resume screening tests."
+    },
+    {
+     "title": "Duane Morris Class Action Weekly Wire: Mobley v. Workday ruling",
      "url": "https://blogs.duanemorris.com/classactiondefense/2026/06/25/the-class-action-weekly-wire-episode-153-california-federal-court-grants-in-part-and-denies-in-part-motion-to-dismiss-in-algorithmic-bias-suit/",
      "kind": "newsletter",
      "why": "Regular legal commentary and podcast on algorithmic bias class actions."
-    },
-    {
-     "title": "CDF Labor Law: lessons from AI hiring litigation",
-     "url": "https://www.cdflaborlaw.com/blog/ai-hiring-litigation-key-lessons-for-employers",
-     "kind": "overview",
-     "why": "Summary of what recent cases mean for employers using AI screening tools."
     }
    ]
   },
@@ -239,49 +257,58 @@
    "landmarks": [
     {
      "name": "Glean passes $300M ARR",
-     "summary": "Enterprise search and agent vendor says it tripled ARR in 15 months. TechCrunch notes the figure is usage-based, so not strictly recurring.",
+     "summary": "Enterprise search and agent vendor says it tripled ARR in 15 months. TechCrunch notes part of it is consumption-based, so not strictly recurring.",
      "date": "2026-05",
      "kind": "deal",
-     "source": "https://glean.com/press/glean-surpasses-300m-arr-unrivaled-enterprise-context-fuels-ai-adoption",
-     "verified": true
+     "source": "https://www.glean.com/press/glean-surpasses-300m-arr-unrivaled-enterprise-context-fuels-ai-adoption",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Microsoft 365 E7 and Agent 365 ship",
-     "summary": "Microsoft made Agent 365, a control plane for agents, and the E7 suite bundling it with Copilot generally available, at $15 and $99 per user a month.",
+     "summary": "Microsoft made Agent 365, a control plane for agents, generally available at $15 per user a month, alongside the E7 suite bundling it with Copilot at $99.",
      "date": "2026-05",
      "kind": "product",
-     "source": "https://redmondmag.com/articles/2026/05/01/microsoft-agent-365-goes-live-as-company-unveils-e7-suite.aspx",
-     "verified": true
+     "source": "https://www.microsoft.com/en-us/security/blog/2026/05/01/microsoft-agent-365-now-generally-available-expands-capabilities-and-integrations/",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Glean valued at $7.2B",
      "summary": "Glean raised a $150M Series F led by Wellington Management, valuing the enterprise search company at $7.2B.",
      "date": "2025-06",
      "kind": "deal",
-     "source": "https://aimagazine.com/news/glean-enterprise-ai-search-and-ai-agents-pass-us-300m-in-ar",
-     "verified": true
+     "source": "https://www.glean.com/blog/glean-series-f-announcement",
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "Whoever holds company context across apps is positioned to become the default front end for work agents.",
    "openQuestion": "Will a neutral layer like Glean hold against assistants bundled into Microsoft and Google suites?",
    "deepDives": [
     {
-     "title": "Microsoft partner blog: Microsoft 365 E7 availability",
-     "url": "https://partner.microsoft.com/en-US/blog/article/microsoft-365-e7-general-availability",
-     "kind": "overview",
-     "why": "What the E7 bundle includes and how Microsoft packages Copilot with agent governance."
+     "title": "Retrieval-Augmented Generation for Large Language Models: A Survey",
+     "url": "https://arxiv.org/abs/2312.10997",
+     "kind": "paper",
+     "why": "Survey of the retrieval techniques that enterprise search assistants are built on."
     },
     {
-     "title": "Microsoft partner blog: Agent 365 announcement",
-     "url": "https://partner.microsoft.com/en-lb/blog/article/agent-365-announcement",
+     "title": "Microsoft Agent 365 documentation",
+     "url": "https://learn.microsoft.com/en-us/microsoft-agent-365/",
      "kind": "overview",
-     "why": "Microsoft's description of its registry and control plane for enterprise agents."
+     "why": "Reference for how one suite vendor registers, permissions and monitors enterprise agents."
+    },
+    {
+     "title": "Microsoft Work Trend Index",
+     "url": "https://www.microsoft.com/en-us/worklab/work-trend-index",
+     "kind": "report",
+     "why": "Annual survey and telemetry research on how AI and agents are changing knowledge work."
     },
     {
      "title": "TechCrunch: Glean's top line crosses $300M",
      "url": "https://techcrunch.com/2026/05/28/gleans-top-line-crosses-300m-as-ai-budget-cutting-becomes-its-major-selling-point/",
      "kind": "overview",
-     "why": "Explains consumption revenue and the token-cost argument for a context layer."
+     "why": "Explains consumption revenue and the token-cost argument for a neutral context layer."
     }
    ]
   },
@@ -298,58 +325,54 @@
      "date": "2025-12",
      "kind": "policy",
      "source": "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "OpenAI Frontier",
-     "summary": "Enterprise platform to build, deploy and manage agents, including third-party ones, with HP, Intuit, Oracle and Uber among early adopters.",
+     "summary": "Enterprise platform to run agents as digital coworkers, including third-party ones, with HP, Intuit, Oracle and Uber among early customers.",
      "date": "2026-02",
      "kind": "product",
-     "source": "https://openai.com/index/introducing-openai-frontier/",
-     "verified": true
+     "source": "https://futurumgroup.com/insights/openai-frontier-close-the-enterprise-ai-opportunity-gap-or-widen-it/",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "A2A joins the AAIF",
-     "summary": "Google's agent-to-agent protocol, at the Linux Foundation since 2025, moved into the AAIF, the same home as MCP.",
+     "summary": "Google's agent-to-agent protocol, at the Linux Foundation since 2025, was accepted as a growth stage project at the AAIF, the same home as MCP.",
      "date": "2026-08",
      "kind": "policy",
-     "source": "https://axios.com/2026/08/17/a2a-agentic-ai-foundation-open-ai-standards",
-     "verified": true
+     "source": "https://a2a-protocol.org/latest/blog/2026/08/27/a-new-chapter-for-a2a-joining-the-agentic-ai-foundation/",
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "Shared protocols decide whether enterprise agents interoperate or stay locked into one vendor's platform.",
    "openQuestion": "Will open protocols keep agent platforms interoperable, or will a few vendors control the layer?",
    "deepDives": [
     {
-     "title": "Linux Foundation: formation of the AAIF",
-     "url": "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation",
-     "kind": "overview",
-     "why": "Primary statement of the foundation's scope, founding projects and members."
-    },
-    {
-     "title": "WorkOS: the Linux Foundation launches the AAIF",
-     "url": "https://workos.com/blog/the-linux-foundation-launches-the-aaif",
-     "kind": "overview",
-     "why": "Developer-oriented explainer of MCP, goose and AGENTS.md and why governance moved."
-    },
-    {
-     "title": "OpenAI: introducing Frontier",
-     "url": "https://openai.com/index/introducing-openai-frontier/",
-     "kind": "overview",
-     "why": "How one lab frames the enterprise agent platform: identity, permissions, shared context."
-    },
-    {
-     "title": "Futurum: OpenAI Frontier analysis",
-     "url": "https://futurumgroup.com/insights/openai-frontier-close-the-enterprise-ai-opportunity-gap-or-widen-it/",
-     "kind": "report",
-     "why": "Analyst assessment of the platform play and its lock-in risks."
-    },
-    {
-     "title": "Model Context Protocol",
+     "title": "Model Context Protocol documentation",
      "url": "https://modelcontextprotocol.io/",
      "kind": "overview",
-     "why": "Specification and documentation for the protocol connecting models to tools.",
-     "unchecked": true
+     "why": "Specification and documentation for the protocol connecting models to tools."
+    },
+    {
+     "title": "A2A Protocol documentation",
+     "url": "https://a2a-protocol.org/latest/",
+     "kind": "overview",
+     "why": "Official specification, SDKs and tutorials for agent-to-agent communication."
+    },
+    {
+     "title": "Agentic AI Foundation",
+     "url": "https://aaif.io/",
+     "kind": "community",
+     "why": "Home of the foundation governing MCP, A2A, goose and AGENTS.md, with projects and members."
+    },
+    {
+     "title": "A survey of agent interoperability protocols: MCP, ACP, A2A and ANP",
+     "url": "https://arxiv.org/abs/2505.02279",
+     "kind": "paper",
+     "why": "Compares the main agent protocols and where each fits in a deployment."
     }
    ]
   },
@@ -362,126 +385,122 @@
    "landmarks": [
     {
      "name": "Okta Agent SSO generally available",
-     "summary": "Okta added agent identities with short-lived scoped access to core SSO, built on Cross App Access, now an MCP authorization extension.",
+     "summary": "Okta added agent identities with short-lived tokens to core SSO, built on Cross App Access, which is now an MCP authorization extension.",
      "date": "2026-08",
      "kind": "product",
-     "source": "https://okta.com/newsroom/press-releases/okta-brings-first-class-identity-to-ai-agents-with-agent-sso/",
-     "verified": true
+     "source": "https://www.okta.com/newsroom/press-releases/okta-brings-first-class-identity-to-ai-agents-with-agent-sso/",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "NIST AI Agent Standards Initiative",
      "summary": "NIST's CAISI launched work on agent interoperability, security and identity, with a request for information and an identity concept paper.",
      "date": "2026-02",
      "kind": "policy",
-     "source": "https://nist.gov/news-events/news/2026/02/announcing-ai-agent-standards-initiative-interoperable-and-secure",
-     "verified": true
+     "source": "https://www.nist.gov/news-events/news/2026/02/announcing-ai-agent-standards-initiative-interoperable-and-secure",
+     "verified": true,
+     "check": "page"
     },
     {
-     "name": "ShareLeak and PipeLeak disclosed",
-     "summary": "Capsule Security showed that text in public forms could make Copilot Studio and Agentforce agents leak data; Microsoft assigned CVE-2026-21520.",
+     "name": "Copilot Studio and Agentforce data leaks",
+     "summary": "Capsule Security showed that text in public forms could make Copilot Studio and Agentforce agents leak corporate data. Both vendors issued patches.",
      "date": "2026-04",
      "kind": "incident",
-     "source": "https://venturebeat.com/security/microsoft-salesforce-copilot-agentforce-prompt-injection-cve-agent-remediation-playbook",
-     "verified": true
+     "source": "https://oecd.ai/en/incidents/2026-04-15-d934",
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "Agents act with real credentials, so unsolved prompt injection turns ordinary inputs like web forms into attack paths.",
    "openQuestion": "Can prompt injection be contained well enough for agents to act on untrusted input with real permissions?",
    "deepDives": [
     {
-     "title": "NIST AI Agent Standards Initiative page",
+     "title": "NIST Agent Standards Initiative hub",
      "url": "https://www.nist.gov/caisi/ai-agent-standards-initiative",
      "kind": "tracker",
-     "why": "The official hub for NIST's agent security and identity deliverables as they appear."
+     "why": "Official hub for NIST's agent security, identity and interoperability work as it appears."
     },
     {
-     "title": "CSA research note: NIST agent standards and enterprise",
-     "url": "https://labs.cloudsecurityalliance.org/research/csa-research-note-nist-ai-agent-standards-initiative-2026040/",
+     "title": "OWASP Top 10 for Agentic Applications for 2026",
+     "url": "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/",
      "kind": "report",
-     "why": "Cloud Security Alliance reading of what the NIST work means for security teams."
+     "why": "Community-reviewed list of the main security risks for agentic applications."
     },
     {
-     "title": "OECD AI Incidents Monitor: Microsoft and Salesforce agents",
-     "url": "https://oecd.ai/en/incidents/2026-04-15-d934",
-     "kind": "tracker",
-     "why": "Entry in the OECD's running database of AI incidents, with linked coverage."
-    },
-    {
-     "title": "Pillsbury: NIST AI agent standards explained",
-     "url": "https://www.pillsburylaw.com/en/news-and-insights/nist-ai-agent-standards.html",
-     "kind": "overview",
-     "why": "Legal explainer of the initiative's pillars and comment opportunities."
-    },
-    {
-     "title": "OWASP GenAI Security Project",
-     "url": "https://genai.owasp.org/",
-     "kind": "report",
-     "why": "Top 10 risks for LLM and agentic applications, with mitigations.",
-     "unchecked": true
+     "title": "Design Patterns for Securing LLM Agents against Prompt Injections",
+     "url": "https://arxiv.org/abs/2506.08837",
+     "kind": "paper",
+     "why": "Proposes agent designs that limit what injected text can make an agent do."
     },
     {
      "title": "Simon Willison on prompt injection",
      "url": "https://simonwillison.net/tags/prompt-injection/",
      "kind": "newsletter",
-     "why": "Running commentary on the attack class behind most agent security incidents.",
-     "unchecked": true
+     "why": "Running commentary on the attack class behind most agent security incidents."
     }
    ]
   },
   {
    "id": "enterprise.browser",
    "name": "Computer-use & browser agents",
-   "summary": "Agents that click through websites and desktops are improving but still fail most long tasks. OpenAI retired its standalone browser and moved agent features into an extension and apps.",
+   "summary": "Agents that click through websites and desktops are improving but still fail most long tasks. OpenAI retired its standalone browser and moved agent features into its desktop app and extensions.",
    "activity": 3,
    "maturity": "emerging",
    "landmarks": [
     {
      "name": "ChatGPT Atlas launched",
-     "summary": "OpenAI released an AI browser for macOS with an agent mode that acts on web pages, challenging Chrome.",
+     "summary": "OpenAI released an AI browser for macOS with a preview agent mode that takes actions on web pages, challenging Chrome.",
      "date": "2025-10",
      "kind": "product",
      "source": "https://www.techradar.com/ai-platforms-assistants/chatgpt/openai-takes-on-chrome-with-chatgpt-atlas-browser-for-macos-and-windows-ios-and-android-are-coming-soon",
-     "verified": false,
-     "note": "Date fits shutdown coverage (nine months later); launch source not rechecked."
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "OpenAI retires Atlas",
-     "summary": "OpenAI said Atlas would shut down on 9 August, about nine months after launch, moving features to a Chrome extension, the desktop app and a cloud browser.",
+     "summary": "OpenAI said Atlas would stop working on 9 August, about ten months after launch, folding browsing into its ChatGPT desktop app and Chrome extensions.",
      "date": "2026-07",
      "kind": "incident",
-     "source": "https://techradar.com/pro/openai-shuts-down-its-atlas-browser-after-not-even-a-year",
-     "verified": true
+     "source": "https://www.techradar.com/pro/openai-shuts-down-its-atlas-browser-after-not-even-a-year",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "OSWorld 2.0 long-horizon results",
-     "summary": "A harder computer-use benchmark of 108 long tasks found the top setup, Claude Opus 4.8, fully completed about 21% of tasks with a 55% partial score.",
+     "summary": "A harder computer-use benchmark of 108 long tasks found the top setup, Claude Opus 4.8, fully completed 20.6% of tasks with a 54.8% partial score.",
      "date": "2026-06",
      "kind": "research",
-     "source": "https://snorkel.ai/research-paper/os-world-2/",
-     "verified": true
+     "source": "https://arxiv.org/abs/2606.29537",
+     "verified": true,
+     "check": "page"
     }
    ],
    "whyItMatters": "Computer use lets agents work in software that has no API, which is most enterprise software.",
    "openQuestion": "When will computer-use agents finish long multi-step tasks reliably enough to run unattended?",
    "deepDives": [
     {
-     "title": "Epoch AI: OSWorld 2.0 benchmark page",
+     "title": "Epoch AI: OSWorld 2.0",
      "url": "https://epoch.ai/benchmarks/osworld-2",
      "kind": "tracker",
      "why": "Tracked model scores on long-horizon computer-use tasks over time."
     },
     {
-     "title": "OSWorld 2.0 paper summary (Snorkel AI)",
-     "url": "https://snorkel.ai/research-paper/os-world-2/",
+     "title": "OSWorld 2.0: Benchmarking Computer Use Agents on Long-Horizon Real-World Tasks",
+     "url": "https://arxiv.org/abs/2606.29537",
      "kind": "paper",
-     "why": "Benchmark design, checkpoint grading and the failure modes agents show on long tasks."
+     "why": "Benchmark design and the failure modes agents show on tasks that take people over an hour."
     },
     {
-     "title": "OSWorld",
-     "url": "https://os-world.github.io/",
-     "kind": "tracker",
-     "why": "Benchmark of real computer tasks used to measure computer-use agents.",
-     "unchecked": true
+     "title": "OSWorld: Benchmarking Multimodal Agents in Real Computer Environments",
+     "url": "https://arxiv.org/abs/2404.07972",
+     "kind": "paper",
+     "why": "The original 369-task benchmark that became the standard measure for computer-use agents."
+    },
+    {
+     "title": "WebArena: A Realistic Web Environment for Building Autonomous Agents",
+     "url": "https://arxiv.org/abs/2307.13854",
+     "kind": "paper",
+     "why": "Widely used benchmark of web tasks on self-hosted sites, with a human baseline."
     }
    ]
   },
@@ -493,13 +512,13 @@
    "maturity": "adopting",
    "landmarks": [
     {
-     "name": "MIT NANDA: 95% of pilots show no return",
-     "summary": "The GenAI Divide report found most corporate generative AI pilots produced no measurable P&L impact; bought tools beat internal builds.",
+     "name": "MIT NANDA: 95% see no return on GenAI",
+     "summary": "The GenAI Divide report, based on 52 interviews and a 153-person survey, said 95% of organizations had seen zero return from generative AI efforts.",
      "date": "2025-08",
      "kind": "research",
-     "source": "https://fortune.com/2025/08/18/mit-report-95-percent-generative-ai-pilots-at-companies-failing-cfo/",
-     "verified": false,
-     "note": "Widely reported in Aug 2025; not rechecked this pass (search budget ran out)."
+     "source": "https://www.theregister.com/software/2025/08/18/generative-ai-does-nothing-for-95-percent-of-companies/1118115",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Gartner: 40% of agent projects to be cut",
@@ -507,7 +526,8 @@
      "date": "2025-06",
      "kind": "research",
      "source": "https://www.thestar.com.my/tech/tech-news/2025/06/25/over-40-of-agentic-ai-projects-will-be-scrapped-by-2027-gartner-says",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Gartner: half of AI service cuts reversed",
@@ -515,71 +535,80 @@
      "date": "2026-02",
      "kind": "research",
      "source": "https://www.gartner.com/en/newsroom/press-releases/2026-02-03-gartner-predicts-half-of-companies-that-cut-customer-service-staff-due-to-ai-will-rehire-by-2027",
-     "verified": true
+     "verified": true,
+     "check": "snippet"
     },
     {
      "name": "Gartner: job cuts not linked to AI ROI",
      "summary": "A Gartner survey of 350 executives at large firms reportedly found about 80% had cut headcount, with no correlation to higher returns on AI.",
      "date": "2026-05",
      "kind": "research",
-     "source": "https://dc.fortune.com/2026/05/11/ai-automation-layoffs-gartner-study-roi/",
-     "verified": true
+     "source": "https://fortune.com/2026/05/11/ai-automation-layoffs-gartner-study-roi/",
+     "verified": true,
+     "check": "snippet"
     }
    ],
    "whyItMatters": "Valuations and budgets assume agents pay off, and the evidence so far is mixed and often vendor-supplied.",
    "openQuestion": "Is weak measured ROI a deployment lag that will close, or a sign that agent value is overstated?",
    "deepDives": [
     {
-     "title": "Gartner: rehiring after AI service cuts",
-     "url": "https://www.gartner.com/en/newsroom/press-releases/2026-02-03-gartner-predicts-half-of-companies-that-cut-customer-service-staff-due-to-ai-will-rehire-by-2027",
+     "title": "Stanford HAI: AI Index",
+     "url": "https://hai.stanford.edu/ai-index",
      "kind": "report",
-     "why": "Analyst prediction and survey data on how far AI has actually reduced service staffing."
+     "why": "Annual independent data report on AI capability, investment and business adoption."
     },
     {
-     "title": "Gartner survey: AI-driven frontline layoffs",
-     "url": "https://www.gartner.com/en/newsroom/press-releases/2026-04-23-gartner-survey-finds-31-percent-of-service-and-support-leaders-have-implemented-or-are-planning-ai-driven-frontline-layoffs-through-1q27",
-     "kind": "report",
-     "why": "What service leaders say they have done or plan to do on AI-linked layoffs."
+     "title": "The Anthropic Economic Index",
+     "url": "https://www.anthropic.com/economic-index",
+     "kind": "tracker",
+     "why": "Recurring data on which work tasks people and firms use one lab's models for."
     },
     {
-     "title": "People Matters: employers regretting AI layoffs",
+     "title": "McKinsey: The state of AI",
+     "url": "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai",
+     "kind": "report",
+     "why": "Long-running global survey of how organizations use AI and whether they report value.",
+     "unchecked": true
+    },
+    {
+     "title": "People Matters: 55% of employers regret AI layoffs",
      "url": "https://www.peoplematters.in/news/business/55percent-of-employers-regret-ai-layoffs-gartner-predicts-more-rehires-by-2027-51167",
      "kind": "overview",
-     "why": "Pulls together Forrester and Gartner findings on AI layoffs and rehiring."
+     "why": "Pulls together Forrester, Gartner and other findings on AI layoffs and rehiring."
     }
    ]
   }
  ],
  "deepDives": [
   {
-   "title": "NIST AI Agent Standards Initiative page",
+   "title": "Model Context Protocol documentation",
+   "url": "https://modelcontextprotocol.io/",
+   "kind": "overview",
+   "why": "Specification for the protocol most enterprise agents use to reach tools and data."
+  },
+  {
+   "title": "NIST Agent Standards Initiative hub",
    "url": "https://www.nist.gov/caisi/ai-agent-standards-initiative",
    "kind": "tracker",
    "why": "Official hub for US standards work on agent security, identity and interoperability."
   },
   {
-   "title": "Linux Foundation: formation of the AAIF",
-   "url": "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation",
-   "kind": "overview",
-   "why": "Who governs MCP and related agent standards, and which companies back them."
-  },
-  {
-   "title": "Epoch AI: OSWorld 2.0 benchmark page",
+   "title": "Epoch AI: OSWorld 2.0",
    "url": "https://epoch.ai/benchmarks/osworld-2",
    "kind": "tracker",
    "why": "A live measure of how well agents complete long computer tasks."
   },
   {
-   "title": "OECD AI Incidents Monitor: enterprise agent leaks",
+   "title": "Stanford HAI: AI Index",
+   "url": "https://hai.stanford.edu/ai-index",
+   "kind": "report",
+   "why": "Annual independent data on AI adoption, investment and measured business impact."
+  },
+  {
+   "title": "OECD AI Incidents and Hazards Monitor: agent data leaks",
    "url": "https://oecd.ai/en/incidents/2026-04-15-d934",
    "kind": "tracker",
    "why": "Entry point to a public database of AI incidents, including agent data leaks."
-  },
-  {
-   "title": "Gartner: rehiring after AI service cuts",
-   "url": "https://www.gartner.com/en/newsroom/press-releases/2026-02-03-gartner-predicts-half-of-companies-that-cut-customer-service-staff-due-to-ai-will-rehire-by-2027",
-   "kind": "report",
-   "why": "Analyst evidence on the gap between AI staffing claims and outcomes."
   }
  ]
 }

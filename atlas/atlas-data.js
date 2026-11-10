@@ -57,48 +57,52 @@ window.ATLAS = {
     {
      "id": "research.scaling",
      "name": "Pretraining & scaling",
-     "summary": "Frontier labs keep growing training compute and ship new flagships every month or two, with the top tier often gated at first. Public training-compute data for closed models is sparse.",
+     "summary": "Frontier labs keep growing training compute and ship new flagships every month or two, with the most capable tiers often gated at first. Public training-compute data for closed models is sparse.",
      "activity": 5,
      "maturity": "established",
      "landmarks": [
       {
        "name": "Grok 4: largest known training run",
-       "summary": "Epoch AI estimates xAI's Grok 4 used about 5e26 FLOP, the largest training run in its data, with wide uncertainty because the estimate rests on vague xAI statements.",
+       "summary": "Epoch AI estimates xAI's Grok 4 used about 5e26 FLOP, the largest training run in its data, with significant uncertainty because the estimate rests on vague xAI statements.",
        "date": "2025-07",
        "kind": "research",
        "source": "https://epoch.ai/data-insights/grok-4-training-resources",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Gemini 3.5 Flash at Google I/O",
-       "summary": "Google launched the Gemini 3.5 family with 3.5 Flash only; 3.5 Pro was promised for the following month and was still in partner testing in July.",
-       "date": "2026-05",
-       "kind": "product",
-       "source": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-5/",
-       "verified": true
-      },
-      {
-       "name": "OpenAI launches GPT-6 Astra",
-       "summary": "OpenAI's GPT-6 flagship went first to a limited set of organizations; lower-cost GPT-6 Sol and Luna followed on 22 September and a ChatGPT rollout in October.",
+       "name": "OpenAI releases GPT-6 Astra",
+       "summary": "OpenAI's system card calls Astra its first model at the Critical cyber capability level. GPT-6 Sol and Luna followed in September and GPT-6 reached all ChatGPT users on 7 October.",
        "date": "2026-09",
        "kind": "product",
-       "source": "https://openai.com/index/gpt-6-astra/",
-       "verified": true
+       "source": "https://deploymentsafety.openai.com/gpt-6-astra",
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "Gemini 4 Argon and Carbon",
+       "summary": "Google announced Gemini 4 Argon on 30 September and Carbon on 28 October, each going first to trusted cyber defenders through its Fairwind Program before any broad release.",
+       "date": "2026-10",
+       "kind": "product",
+       "source": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-carbon/",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Claude Fable 5.2 and Mythos 5.2",
-       "summary": "Anthropic upgraded its top tier: one underlying model sold as Fable (broadly available, stricter cyber and bio safeguards) and Mythos (vetted organizations only).",
+       "summary": "Anthropic upgraded its top tier: one underlying model sold as Fable (available to all, with cyber and biology safeguards) and Mythos (vetted organizations only).",
        "date": "2026-11",
        "kind": "product",
        "source": "https://www.anthropic.com/claude-fable-and-mythos-5-2",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Training scale still sets the ceiling for every downstream capability, and it drives the industry's spending.",
      "openQuestion": "Do returns to larger training runs hold, or do gains now come mostly from RL, data and inference-time compute?",
      "deepDives": [
       {
-       "title": "Training compute of frontier models grows 4-5x a year",
+       "title": "Training compute of frontier AI models grows by 4-5x per year",
        "url": "https://epoch.ai/publications/training-compute-of-frontier-ai-models-grows-by-4-5x-per-year",
        "kind": "report",
        "why": "Epoch AI's baseline analysis of how fast training runs have scaled since 2010."
@@ -110,16 +114,16 @@ window.ATLAS = {
        "why": "Examines power, chips, data and latency as possible limits on further scaling."
       },
       {
-       "title": "Epoch AI model counts by compute threshold",
+       "title": "How many AI models will exceed compute thresholds?",
        "url": "https://epoch.ai/tools/model-counts",
        "kind": "tracker",
-       "why": "Live counts of models above given training-compute thresholds."
+       "why": "Epoch AI's counts and projections of models above given training-compute thresholds."
       },
       {
-       "title": "Frontier LLM training runs can't get much longer",
-       "url": "https://epoch.ai/data-insights/longest-training-run",
-       "kind": "overview",
-       "why": "Short data insight listing the largest known runs and why run length is capped."
+       "title": "Scaling Laws for Neural Language Models",
+       "url": "https://arxiv.org/abs/2001.08361",
+       "kind": "paper",
+       "why": "The 2020 paper relating loss to model size, data and compute that framed the scaling debate."
       }
      ]
     },
@@ -132,36 +136,40 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "DeepSeek-R1 paper revised",
-       "summary": "The paper that popularized pure-RL reasoning training was updated in January 2026, a reference point for open reasoning models.",
+       "summary": "The paper that popularized RL-trained reasoning in open models was revised on arXiv in January 2026 and remains a reference point for open reasoning models.",
        "date": "2026-01",
        "kind": "research",
        "source": "https://arxiv.org/abs/2501.12948",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "SU-01 open olympiad recipe",
-       "summary": "A 30B-A3B model trained with SFT, 200 RL steps and test-time verification reaches the IMO 2025 gold line, showing gold-level math is now reproducible openly.",
+       "summary": "A 30B-A3B model trained with SFT, 200 RL steps and test-time scaling reaches gold-medal level on IMO 2025 and USAMO 2026 problems, plus physics olympiads.",
        "date": "2026-05",
        "kind": "research",
-       "source": "https://arxiv.org/pdf/2605.13301",
-       "verified": true
+       "source": "https://arxiv.org/abs/2605.13301",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Microsoft MAI-Thinking-1 report",
-       "summary": "Microsoft AI describes a 35B-active reasoning model trained with long RL runs on a STEM curriculum, a sign of in-house reasoning efforts beyond the top labs.",
+       "summary": "Microsoft AI describes a 35B-active, 1T-total MoE reasoning model trained from scratch, with RL runs of many thousands of steps on STEM and agentic coding tasks.",
        "date": "2026-06",
        "kind": "research",
        "source": "https://microsoft.ai/wp-content/uploads/2026/06/main_20260602_2.pdf",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Nemotron claims IMO 2026 gold",
-       "summary": "An NVIDIA open recipe reportedly scored 30 of 42 at IMO 2026 with natural-language proofs; not checked against a primary source.",
+       "name": "Nemotron reaches IMO 2026 gold line",
+       "summary": "NVIDIA researchers report an open natural-language pipeline on Nemotron 3 Ultra scored 30 of 42 at IMO 2026, with checkpoints, data and code released.",
        "date": "2026-09",
        "kind": "research",
-       "source": "https://huggingface.co/papers/2609.10712",
-       "verified": false,
-       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+       "source": "https://arxiv.org/abs/2609.10712",
+       "verified": true,
+       "check": "page",
+       "note": "Self-reported score; abstract read via the Hugging Face paper page."
       }
      ],
      "whyItMatters": "RL on checkable tasks is the main source of recent capability gains and is now reproducible outside the top labs.",
@@ -171,83 +179,98 @@ window.ATLAS = {
        "title": "ARC Prize",
        "url": "https://arcprize.org/",
        "kind": "tracker",
-       "why": "Benchmark and leaderboard for novel reasoning tasks that models still find hard.",
-       "unchecked": true
+       "why": "Benchmarks and leaderboards for novel reasoning tasks that models still find hard."
       },
       {
        "title": "FrontierMath",
        "url": "https://epoch.ai/frontiermath",
        "kind": "tracker",
-       "why": "Epoch AI's benchmark of research-level mathematics problems.",
-       "unchecked": true
+       "why": "Epoch AI's benchmark of advanced and research-level mathematics problems."
+      },
+      {
+       "title": "DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning",
+       "url": "https://www.nature.com/articles/s41586-025-09422-z",
+       "kind": "paper",
+       "why": "Peer-reviewed version of the paper behind open RL-trained reasoning models."
+      },
+      {
+       "title": "Spinning Up in Deep RL",
+       "url": "https://spinningup.openai.com/en/latest/",
+       "kind": "course",
+       "why": "Free introduction to reinforcement learning concepts and core algorithms."
       }
      ]
     },
     {
      "id": "research.interpretability",
      "name": "Interpretability",
-     "summary": "Circuit tracing and sparse features now map parts of production models' internal reasoning. Work is shifting toward tools that let models report their own internal states.",
+     "summary": "Circuit tracing and sparse features now map parts of production models' internal computation. Work is shifting toward methods that put internal states into natural language, and toward open tooling.",
      "activity": 3,
      "maturity": "emerging",
      "landmarks": [
       {
-       "name": "Attribution graphs for Claude",
-       "summary": "Anthropic's circuit-tracing method traced multi-step reasoning inside Claude 3.5 Haiku, with caveats that the replacement model may differ from the real one.",
+       "name": "Circuit tracing with attribution graphs",
+       "summary": "Anthropic published a method for tracing step-by-step computation through a replacement model, with a companion study applying it to Claude 3.5 Haiku.",
        "date": "2025-03",
        "kind": "research",
        "source": "https://transformer-circuits.pub/2025/attribution-graphs/methods.html",
-       "verified": true
+       "verified": true,
+       "check": "page"
+      },
+      {
+       "name": "Gemma Scope 2 released",
+       "summary": "Google DeepMind released open interpretability tools for all Gemma 3 sizes from 270M to 27B parameters, which it called the largest open release of its kind by an AI lab.",
+       "date": "2025-12",
+       "kind": "research",
+       "source": "https://deepmind.google/blog/gemma-scope-2-helping-the-ai-safety-community-deepen-understanding-of-complex-language-model-behavior/",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Emotion concepts in Sonnet 4.5",
-       "summary": "Anthropic reported internal representations of emotion concepts in Claude Sonnet 4.5 that causally influence outputs.",
+       "summary": "Anthropic reported internal representations of emotion concepts in Claude Sonnet 4.5 that causally influence its outputs.",
        "date": "2026-04",
        "kind": "research",
-       "source": "https://rss-parrot.net/web/feeds/transformer-circuits.pub",
-       "verified": false,
-       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+       "source": "https://transformer-circuits.pub/2026/emotions/index.html",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Natural Language Autoencoders",
-       "summary": "Anthropic trained Claude to translate its own internal activations into natural language, a step toward readable model internals.",
+       "summary": "Anthropic introduced an unsupervised method in which Claude is trained to translate its internal activations into natural-language explanations.",
        "date": "2026-05",
        "kind": "research",
-       "source": "https://rss-parrot.net/web/feeds/transformer-circuits.pub",
-       "verified": false,
-       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
-      },
-      {
-       "name": "Transformer Circuits May 2026 update",
-       "summary": "Shows how a feature's downstream connections help place it within circuits and separate look-alike features.",
-       "date": "2026-05",
-       "kind": "research",
-       "source": "https://transformer-circuits.pub/2026/may-update/index.html",
-       "verified": true
+       "source": "https://transformer-circuits.pub/2026/nla/index.html",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Reading a model's internals is one of the few ways to check what it is doing beyond its outputs.",
      "openQuestion": "Can interpretability methods scale to give reliable, complete accounts of frontier model behavior?",
      "deepDives": [
       {
-       "title": "Transformer Circuits Thread",
-       "url": "https://transformer-circuits.pub/",
-       "kind": "community",
-       "why": "Anthropic's running series of interpretability papers and monthly updates.",
-       "unchecked": true
+       "title": "Open Problems in Mechanistic Interpretability",
+       "url": "https://arxiv.org/abs/2501.16496",
+       "kind": "overview",
+       "why": "Multi-lab 2025 review of what the field can and cannot yet do."
       },
       {
        "title": "Zoom In: An Introduction to Circuits",
        "url": "https://distill.pub/2020/circuits/zoom-in/",
        "kind": "paper",
-       "why": "The essay that set out the circuits approach to reading neural networks.",
-       "unchecked": true
+       "why": "The essay that set out the circuits approach to reading neural networks."
       },
       {
        "title": "Neuronpedia",
        "url": "https://www.neuronpedia.org/",
        "kind": "tracker",
-       "why": "Browse features and attribution graphs from published interpretability work.",
-       "unchecked": true
+       "why": "Open source platform to explore, visualize and steer model internals."
+      },
+      {
+       "title": "Transformer Circuits Thread",
+       "url": "https://transformer-circuits.pub/",
+       "kind": "community",
+       "why": "Anthropic's running series of interpretability papers and monthly updates."
       }
      ]
     },
@@ -260,58 +283,67 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "International AI Safety Report 2026",
-       "summary": "Second edition chaired by Yoshua Bengio with 100+ experts; finds capabilities and agent autonomy rising while risk management stays uneven.",
+       "summary": "Second edition, led by Yoshua Bengio and written by over 100 experts with backing from over 30 countries and bodies, reviews AI capabilities, risks and risk management.",
        "date": "2026-02",
        "kind": "policy",
-       "source": "https://dfki.de/en/web/news/2026-international-ai-safety-report-published",
-       "verified": true
+       "source": "https://internationalaisafetyreport.org/publication/international-ai-safety-report-2026",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Claude Mythos Preview gated",
-       "summary": "Anthropic kept Claude Mythos Preview as a gated research preview for Project Glasswing partners after saying it found thousands of zero-day vulnerabilities.",
+       "summary": "Anthropic kept Claude Mythos Preview as a gated research preview for Project Glasswing partners after saying it had identified thousands of zero-day vulnerabilities.",
        "date": "2026-04",
        "kind": "policy",
        "source": "https://www.anthropic.com/project/glasswing",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Apollo: a science of scheming",
-       "summary": "Apollo Research argues scheming needs a dedicated research field and reports rising evaluation awareness that complicates alignment testing.",
+       "summary": "Apollo Research argues scheming needs its own science of causes, and says the capabilities that enable evaluation, such as evaluation awareness, also make it harder.",
        "date": "2026-01",
        "kind": "debate",
        "source": "https://apolloresearch.ai/science/science-of-scheming",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "OpenAI and Apollo anti-scheming work",
-       "summary": "Joint evaluation environments and deliberative alignment training reduced covert actions in tests, while eval awareness limited conclusions.",
+       "summary": "Across 26 out-of-distribution evaluations, deliberative alignment cut o3's covert action rate from 13% to 0.4%, but awareness of being evaluated may explain part of the drop.",
        "date": "2025-09",
        "kind": "research",
-       "source": "https://openai.com/index/detecting-and-reducing-scheming-in-ai-models/",
-       "verified": false,
-       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+       "source": "https://arxiv.org/abs/2509.15541",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Whether labs can detect and prevent misaligned behavior decides how safely more capable models can be deployed.",
      "openQuestion": "Can evaluations stay informative once models reliably recognize when they are being tested?",
      "deepDives": [
       {
-       "title": "Anthropic research index",
-       "url": "https://www.anthropic.com/research",
-       "kind": "overview",
-       "why": "Running list of Anthropic alignment, interpretability and red-team publications."
+       "title": "Frontier AI Trends Report",
+       "url": "https://www.aisi.gov.uk/frontier-ai-trends-report",
+       "kind": "report",
+       "why": "UK AI Security Institute's evidence on frontier capabilities and safeguards from its testing."
       },
       {
        "title": "OpenAI Deployment Safety Hub",
-       "url": "https://deploymentsafety.openai.com/gpt-6-october",
-       "kind": "report",
-       "why": "OpenAI's own pre-deployment safety write-ups for its current GPT-6 models."
+       "url": "https://deploymentsafety.openai.com/",
+       "kind": "tracker",
+       "why": "OpenAI's system cards and addenda with safety evaluation results for each deployed model."
       },
       {
-       "title": "Anthropic: an update on independent evaluators",
-       "url": "https://www.anthropic.com/news/an-update-on-independent-evaluators",
-       "kind": "report",
-       "why": "Describes tiered third-party access, including METR staff embedded inside the lab."
+       "title": "Concrete Problems in AI Safety",
+       "url": "https://arxiv.org/abs/1606.06565",
+       "kind": "paper",
+       "why": "The 2016 paper that set out practical research problems such as reward hacking and safe exploration."
+      },
+      {
+       "title": "AI Alignment Forum",
+       "url": "https://www.alignmentforum.org/",
+       "kind": "community",
+       "why": "Where alignment researchers post and debate technical work."
       }
      ]
     },
@@ -324,46 +356,46 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "ARC-AGI-3 launches",
-       "summary": "Interactive game-like benchmark where humans solve all environments and frontier models scored under 1% at launch; methodology was disputed.",
+       "summary": "Interactive, turn-based benchmark in which humans solve 100% of environments while frontier AI systems scored below 1% as of March 2026.",
        "date": "2026-03",
        "kind": "research",
-       "source": "https://arxiv.org/pdf/2603.24621",
-       "verified": true
+       "source": "https://arxiv.org/abs/2603.24621",
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "METR time horizons v1.1",
-       "summary": "METR expanded its long-task suite from 14 to 31 tasks of 8+ hours as top models approached the limit of what the old suite could measure.",
+       "name": "METR Time Horizon 1.1",
+       "summary": "METR re-estimated model time horizons with a larger task suite, raising the number of tasks that take humans 8 or more hours from 14 to 31, and moved to the Inspect framework.",
        "date": "2026-01",
        "kind": "research",
-       "source": "https://metavert.io/metr-benchmarking",
-       "verified": true
+       "source": "https://metr.org/blog/2026-01-29-time-horizon-1-1/",
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Time-horizon saturation debate",
-       "summary": "Forecasters note top models' horizons with very wide confidence intervals (5 to 66 hours), raising doubts about measuring further progress.",
-       "date": "2026-03",
-       "kind": "debate",
-       "source": "https://forum.effectivealtruism.org/posts/h3zcCh49kLE6egrfz/i-underestimated-ai-capabilities-again",
-       "verified": false,
-       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+       "name": "METR time-horizon suite hits its ceiling",
+       "summary": "METR warned in May that measurements above 16 hours are unreliable with its current task suite, and in September said its time-horizons page is no longer actively updated.",
+       "date": "2026-09",
+       "kind": "research",
+       "source": "https://metr.org/time-horizons/",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Benchmarks shape how progress is perceived, and saturated ones hide what models can and cannot do.",
      "openQuestion": "How can long, open-ended task ability be measured once fixed task suites saturate?",
      "deepDives": [
       {
-       "title": "METR",
-       "url": "https://metr.org/",
-       "kind": "report",
-       "why": "Time-horizon measurements and evaluations of autonomous capabilities.",
-       "unchecked": true
+       "title": "Task-Completion Time Horizons of Frontier AI Models",
+       "url": "https://metr.org/time-horizons/",
+       "kind": "tracker",
+       "why": "METR's measurements of how long a task models can complete, with methods and caveats."
       },
       {
        "title": "SWE-bench",
        "url": "https://www.swebench.com/",
        "kind": "tracker",
-       "why": "Leaderboards for resolving real GitHub issues, the standard coding-agent test.",
-       "unchecked": true
+       "why": "Leaderboards for resolving real GitHub issues, a standard coding-agent test."
       },
       {
        "title": "LMArena",
@@ -373,36 +405,37 @@ window.ATLAS = {
        "unchecked": true
       },
       {
-       "title": "Stanford AI Index Report",
+       "title": "AI Index Report",
        "url": "https://aiindex.stanford.edu/report/",
        "kind": "report",
-       "why": "Annual reference on benchmark trends, investment and adoption.",
-       "unchecked": true
+       "why": "Stanford's annual reference on benchmark trends, investment and adoption."
       }
      ]
     },
     {
      "id": "research.efficiency",
      "name": "Efficiency, chips & inference",
-     "summary": "Inference demand from agents drives chip and data center spending. New GPU and TPU generations ship while open models cut long-context costs sharply.",
+     "summary": "Inference demand from agents drives chip and data center spending. New GPU and TPU generations are ramping while open models cut long-context memory costs sharply.",
      "activity": 5,
      "maturity": "established",
      "landmarks": [
       {
-       "name": "Nvidia Vera Rubin ships",
-       "summary": "Nvidia's next platform reached full production and began shipping to cloud providers and labs, claiming about 5x Blackwell inference performance.",
-       "date": "2026-07",
+       "name": "Nvidia Vera Rubin enters full production",
+       "summary": "Nvidia said at GTC Taipei that its Vera Rubin platform was ramping into full production, with shipments due from autumn and a claimed 10x agent throughput over Grace Blackwell.",
+       "date": "2026-05",
        "kind": "product",
-       "source": "https://gcn.com/?p=20421",
-       "verified": true
+       "source": "https://nvidianews.nvidia.com/news/vera-rubin-full-production-agentic-ai-factory",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "DeepSeek V4 open weights",
-       "summary": "1.6T-parameter MoE with 1M context and compressed attention that cuts KV cache by about 10x, released openly at low prices.",
+       "summary": "Open-weights preview with a 1.6T-parameter MoE Pro model, a 1M-token context and compressed attention that DeepSeek says cuts memory use about 10x versus V3.2, at low API prices.",
        "date": "2026-04",
        "kind": "product",
        "source": "https://www.theregister.com/2026/04/24/deepseek_v4/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Anthropic and Google TPU deal",
@@ -410,20 +443,33 @@ window.ATLAS = {
        "date": "2025-10",
        "kind": "deal",
        "source": "https://www.anthropic.com/news/expanding-our-use-of-google-cloud-tpus-and-services",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Compute supply and cost per token decide who can train frontier models and what agents are affordable to run.",
      "openQuestion": "Will inference demand keep pace with the chip and data center capacity now being built?",
      "deepDives": [
       {
-       "title": "Epoch AI Frontier Data Centers Hub",
+       "title": "Introducing the Frontier Data Centers Hub",
        "url": "https://epoch.ai/latest/introducing-the-frontier-data-centers-hub",
        "kind": "tracker",
-       "why": "Tracks the largest AI data centers, their power and their compute capacity."
+       "why": "Epoch AI's tracker of the largest AI data centers, their power and compute capacity."
       },
       {
-       "title": "Epoch AI chip users: methodology",
+       "title": "MLPerf Inference: Datacenter",
+       "url": "https://mlcommons.org/benchmarks/inference-datacenter/",
+       "kind": "tracker",
+       "why": "Industry-standard benchmark results for inference hardware and systems."
+      },
+      {
+       "title": "Data on machine learning hardware",
+       "url": "https://epoch.ai/data/machine-learning-hardware",
+       "kind": "tracker",
+       "why": "Epoch AI's dataset of AI chips with performance and price trends."
+      },
+      {
+       "title": "AI chip users documentation: Methodology",
        "url": "https://epoch.ai/data/ai-chip-users-documentation/methodology",
        "kind": "report",
        "why": "How Epoch estimates which companies hold how much AI compute."
@@ -439,40 +485,41 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Project Genie opens to users",
-       "summary": "Google DeepMind released a prototype app built on Genie 3 that lets US AI Ultra subscribers create and explore interactive generated worlds.",
+       "summary": "Google released an experimental prototype powered by Genie 3 that lets US Google AI Ultra subscribers create, explore and remix interactive generated worlds.",
        "date": "2026-01",
        "kind": "product",
        "source": "https://blog.google/innovation-and-ai/models-and-research/google-deepmind/project-genie/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Waymo World Model from Genie 3",
-       "summary": "Waymo reportedly adopted a fine-tuned Genie 3 to simulate rare driving scenarios, an early industrial use of world models.",
+       "name": "Waymo World Model built on Genie 3",
+       "summary": "Waymo described a driving simulator built on Genie 3 that generates rare events, such as a tornado, that are almost impossible to capture at scale in reality.",
        "date": "2026-02",
-       "kind": "deal",
-       "source": "https://wikwiand-revamp.pages.dev/en/Genie_3",
-       "verified": false,
-       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+       "kind": "research",
+       "source": "https://waymo.com/blog/2026/02/the-waymo-world-model-a-new-frontier-for-autonomous-driving-simulation",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Sora 2 with synchronized audio",
-       "summary": "OpenAI's video model generates dialogue and sound with video and launched with a social app, pushing video generation to consumers.",
+       "summary": "OpenAI's video model generates synchronized dialogue and sound with video and launched alongside a social iOS app built around user likeness cameos.",
        "date": "2025-09",
        "kind": "product",
        "source": "https://www.cined.com/openais-sora-2-brings-realistic-physics-audio-and-continuity-to-ai-videos-launches-app/",
-       "verified": false,
-       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+       "verified": true,
+       "check": "page",
+       "note": "Trade press report; OpenAI's own page blocks automated reading."
       }
      ],
      "whyItMatters": "Video and world models extend AI from text to simulation, media and training data for robots.",
      "openQuestion": "Do generated worlds stay consistent enough to train agents and robots that work in reality?",
      "deepDives": [
       {
-       "title": "World Models (Ha and Schmidhuber)",
+       "title": "World Models",
        "url": "https://arxiv.org/abs/1803.10122",
        "kind": "paper",
-       "why": "The 2018 paper that framed learning a compressed model of an environment.",
-       "unchecked": true
+       "why": "The 2018 Ha and Schmidhuber paper on learning a generative model of an environment."
       },
       {
        "title": "Video generation models as world simulators",
@@ -482,11 +529,16 @@ window.ATLAS = {
        "unchecked": true
       },
       {
+       "title": "Genie (Google DeepMind)",
+       "url": "https://deepmind.google/models/genie/",
+       "kind": "overview",
+       "why": "Lab page for the Genie world models, with capabilities and stated limitations."
+      },
+      {
        "title": "Artificial Analysis",
        "url": "https://artificialanalysis.ai/",
        "kind": "tracker",
-       "why": "Independent comparisons of language, image and video models.",
-       "unchecked": true
+       "why": "Independent comparisons of language, image, video and speech models."
       }
      ]
     },
@@ -503,134 +555,152 @@ window.ATLAS = {
        "date": "2026-10",
        "kind": "policy",
        "source": "https://www.anthropic.com/news/donating-agent-skills-to-the-agentic-ai-foundation",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "MCP 2026-07-28 spec goes stateless",
-       "summary": "The Model Context Protocol dropped its session handshake for a stateless request/response core, so any request can hit any server instance behind a load balancer.",
+       "summary": "The Model Context Protocol dropped its handshake and sessions for a stateless core, so any request can land on any server instance behind a plain load balancer.",
        "date": "2026-07",
        "kind": "product",
        "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Memory-centric continual learning",
-       "summary": "Paper proposes judging agent memory by whether it improves future actions, with scaling laws for experience, storage and compute.",
+       "summary": "Paper argues agent memory should be judged by whether it improves future actions, and models how performance scales with experience, storage and compute.",
        "date": "2026-10",
        "kind": "research",
-       "source": "https://papers.cool/arxiv/2610.29357",
-       "verified": false,
-       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+       "source": "https://arxiv.org/abs/2610.29357",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Shared protocols and memory decide whether agents can work across tools and improve over long tasks.",
      "openQuestion": "How should long-running agents store and reuse experience without retraining the underlying model?",
      "deepDives": [
       {
-       "title": "Model Context Protocol blog",
-       "url": "https://blog.modelcontextprotocol.io/",
-       "kind": "newsletter",
-       "why": "Official posts on spec releases, SDKs and governance from the MCP maintainers."
-      },
-      {
-       "title": "The New MCP Roadmap",
-       "url": "https://blog.modelcontextprotocol.io/posts/mcp-roadmap/",
+       "title": "Building effective agents",
+       "url": "https://www.anthropic.com/engineering/building-effective-agents",
        "kind": "overview",
-       "why": "Maintainers' stated priorities for upcoming versions of the protocol."
+       "why": "Practical guide to agent patterns and when simpler workflows are enough."
       },
       {
-       "title": "The 2026-07-28 MCP Specification",
-       "url": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
+       "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+       "url": "https://arxiv.org/abs/2210.03629",
+       "kind": "paper",
+       "why": "The 2022 paper behind the reason-then-act loop most tool-using agents follow."
+      },
+      {
+       "title": "Model Context Protocol specification",
+       "url": "https://modelcontextprotocol.io/specification/2026-07-28",
        "kind": "report",
-       "why": "Walk-through of the stateless core, extensions and deprecations in the current spec."
+       "why": "The current protocol text for connecting models to tools and data."
+      },
+      {
+       "title": "Agentic AI Foundation",
+       "url": "https://aaif.io/",
+       "kind": "community",
+       "why": "Linux Foundation home for MCP, Agent Skills and related open agent standards."
       }
      ]
     },
     {
      "id": "research.robotics",
      "name": "Embodied AI & robotics",
-     "summary": "Vision-language-action models now control full humanoid bodies across robot types. Factories for home humanoids have opened, but real deployments remain small.",
+     "summary": "Vision-language-action models now control full humanoid bodies and several robot types from one model. Factories for home humanoids have opened, but real deployments remain small.",
      "activity": 4,
      "maturity": "emerging",
      "landmarks": [
       {
        "name": "Gemini Robotics 2",
-       "summary": "Google DeepMind model with whole-body humanoid control that ran three robot embodiments from one checkpoint, including Apptronik Apollo.",
+       "summary": "Google DeepMind's model controls entire humanoid bodies and ran three embodiments from one checkpoint, including Apptronik's Apollo 2; it is limited to early-access partners.",
        "date": "2026-07",
        "kind": "product",
-       "source": "https://www.eweek.com/news/google-gemini-ai-controls-humanoid-robots/",
-       "verified": true
+       "source": "https://deepmind.google/blog/gemini-robotics-2-brings-whole-body-intelligence-to-robots/",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "1X opens NEO humanoid factory",
-       "summary": "1X began production of its NEO home humanoid in Hayward, California, targeting 10,000 units in year one; customer delivery timing is unclear.",
+       "summary": "1X opened a factory in Hayward, California for its NEO home humanoid with capacity for 10,000 units in year one; early units go to internal testing before customer deliveries.",
        "date": "2026-05",
        "kind": "product",
        "source": "https://thenextweb.com/news/1x-neo-humanoid-factory-hayward-10000-home-robots",
-       "verified": false,
-       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "Physical Intelligence raises $600M",
-       "summary": "Robot foundation model startup behind the cross-embodiment pi0.5 model raised a Series B at a reported $5.6B valuation.",
-       "date": "2025-11",
-       "kind": "deal",
-       "source": "https://www.evsint.com/?p=9165",
-       "verified": false,
-       "note": "Not re-checked: search budget ran out and source host was blocked in this pass."
+       "name": "Physical Intelligence opens API beta",
+       "summary": "The robot foundation model lab made its latest models available for fine-tuning and cloud-hosted inference on customers' own robots through a Pi API beta.",
+       "date": "2026-10",
+       "kind": "product",
+       "source": "https://www.physicalintelligence.company/blog/api-beta",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Robotics tests whether foundation-model progress carries over to physical work.",
      "openQuestion": "Can general robot models reach the reliability needed for unsupervised use in homes and factories?",
      "deepDives": [
       {
-       "title": "Open X-Embodiment",
+       "title": "Open X-Embodiment: Robotic Learning Datasets and RT-X Models",
        "url": "https://robotics-transformer-x.github.io/",
        "kind": "paper",
-       "why": "Cross-lab robot dataset and models that started the generalist-policy push.",
-       "unchecked": true
+       "why": "Cross-lab robot dataset and models that started the generalist-policy push."
       },
       {
        "title": "RT-2: Vision-Language-Action Models",
        "url": "https://arxiv.org/abs/2307.15818",
        "kind": "paper",
-       "why": "Showed web-scale vision-language models can output robot actions.",
-       "unchecked": true
+       "why": "Showed web-scale vision-language models can output robot actions."
+      },
+      {
+       "title": "Hugging Face Robotics Course",
+       "url": "https://huggingface.co/learn/robotics-course/unit0/1",
+       "kind": "course",
+       "why": "Free hands-on course on robot learning with open tools and datasets."
       },
       {
        "title": "Physical Intelligence blog",
        "url": "https://www.physicalintelligence.company/blog",
        "kind": "newsletter",
-       "why": "Research notes from one of the main generalist robot policy labs.",
-       "unchecked": true
+       "why": "Research notes from one of the main generalist robot policy labs."
       }
      ]
     }
    ],
    "deepDives": [
     {
-     "title": "Epoch AI: training compute trends",
+     "title": "Training compute of frontier AI models grows by 4-5x per year",
      "url": "https://epoch.ai/publications/training-compute-of-frontier-ai-models-grows-by-4-5x-per-year",
      "kind": "report",
      "why": "Data-driven account of how fast frontier training runs are growing."
     },
     {
-     "title": "Anthropic research index",
-     "url": "https://www.anthropic.com/research",
-     "kind": "overview",
-     "why": "Primary source for Anthropic's alignment, interpretability and science publications."
+     "title": "AI Index Report",
+     "url": "https://aiindex.stanford.edu/report/",
+     "kind": "report",
+     "why": "Stanford's annual reference on technical progress, investment and adoption."
     },
     {
-     "title": "OpenAI research releases",
-     "url": "https://openai.com/research/index/release/",
+     "title": "Import AI",
+     "url": "https://jack-clark.net/",
+     "kind": "newsletter",
+     "why": "Jack Clark's weekly newsletter summarizing notable AI research."
+    },
+    {
+     "title": "Anthropic research",
+     "url": "https://www.anthropic.com/research",
      "kind": "overview",
-     "why": "OpenAI's own list of model releases and accompanying research posts."
+     "why": "Primary source for Anthropic's alignment, interpretability and societal impact work."
     },
     {
      "title": "Google DeepMind model cards",
      "url": "https://deepmind.google/models/model-cards/",
      "kind": "tracker",
-     "why": "Official cards for current Gemini models, with intended use and evaluation results."
+     "why": "Official cards for current Google models, with intended use and evaluation results."
     }
    ]
   },
@@ -1321,49 +1391,52 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Sierra raises $950M at over $15B",
-       "summary": "Bret Taylor's customer experience agent company raised a Series E led by Tiger Global and GV; CNBC reported a $15.8B post-money valuation.",
+       "summary": "Bret Taylor's customer experience agent company raised $950M led by Tiger Global and GV, taking its post-money valuation above $15B.",
        "date": "2026-05",
        "kind": "deal",
        "source": "https://techcrunch.com/2026/05/04/sierra-raises-950m-as-the-race-to-own-enterprise-ai-gets-serious",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Decagon $250M at $4.5B",
-       "summary": "Support agent startup tripled its valuation from mid-2025 in a Series D led by Coatue and Index Ventures.",
+       "summary": "Support agent startup raised a Series D led by Coatue and Index Ventures, saying it tripled its valuation in under six months.",
        "date": "2026-01",
        "kind": "deal",
-       "source": "https://www.bloomberg.com/news/articles/2026-01-28/ai-customer-support-startup-decagon-valued-at-4-5-billion",
-       "verified": true
+       "source": "https://decagon.ai/blog/series-d-announcement",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Klarna brings human agents back",
-       "summary": "After saying its AI assistant did the work of 700 agents, Klarna's CEO said the cost focus lowered quality and the firm resumed hiring human support staff.",
+       "summary": "A year after saying its AI assistant did the work of 700 agents, Klarna's CEO said the cost focus had lowered quality and the firm began recruiting human support staff again.",
        "date": "2025-05",
        "kind": "debate",
-       "source": "https://dc.fortune.com/2025/05/09/klarna-ai-humans-return-on-investment/",
-       "verified": true
+       "source": "https://www.customerexperiencedive.com/news/klarna-reinvests-human-talent-customer-service-AI-chatbot/747586/",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Support is where agents first replaced human work at scale, so it shows early what works and what quality costs follow.",
      "openQuestion": "How much support can agents fully resolve before quality and customer trust suffer?",
      "deepDives": [
       {
-       "title": "CX Today: outcome-based pricing for service agents",
+       "title": "τ-bench leaderboards",
+       "url": "https://taubench.com/",
+       "kind": "tracker",
+       "why": "Scores for agents handling simulated support conversations under policy rules, in text and voice."
+      },
+      {
+       "title": "Generative AI at Work (Brynjolfsson, Li, Raymond)",
+       "url": "https://arxiv.org/abs/2304.11771",
+       "kind": "paper",
+       "why": "Field study of 5,172 support agents: AI assistance raised issues resolved per hour by 15% on average."
+      },
+      {
+       "title": "CX Today: HubSpot Bets Big on Outcome-Based AI Pricing",
        "url": "https://www.cxtoday.com/crm/hubspot-outcome-based-ai-pricing-breeze/",
        "kind": "overview",
-       "why": "How vendors are moving from seats to pay-per-resolution pricing for support agents."
-      },
-      {
-       "title": "Gartner survey: AI-driven frontline service layoffs",
-       "url": "https://www.gartner.com/en/newsroom/press-releases/2026-04-23-gartner-survey-finds-31-percent-of-service-and-support-leaders-have-implemented-or-are-planning-ai-driven-frontline-layoffs-through-1q27",
-       "kind": "report",
-       "why": "Survey data on how many service leaders are actually cutting staff because of AI."
-      },
-      {
-       "title": "eMarketer: Klarna backtracks on AI customer service",
-       "url": "https://www.emarketer.com/content/klarna-backtracks-ai-customer-service-plans",
-       "kind": "overview",
-       "why": "Short analysis of the best-known case of an AI-first support strategy being dialled back."
+       "why": "How Zendesk, Salesforce and HubSpot are moving from seats to pay-per-resolution pricing."
       }
      ]
     },
@@ -1376,46 +1449,49 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Agentforce ARR reaches $800M",
-       "summary": "Salesforce reported Agentforce ARR up 169% year on year and over 29,000 deals since launch, in fiscal 2026 results.",
+       "summary": "Salesforce reported Agentforce ARR of $800M, up 169% year on year, and over 29,000 deals closed since launch, in fiscal 2026 fourth quarter results.",
        "date": "2026-02",
        "kind": "deal",
-       "source": "https://www.businesswire.com/news/home/20260225325122/en/Salesforce-Delivers-Record-Fourth-Quarter-Fiscal-2026-Results",
-       "verified": true
+       "source": "https://www.salesforce.com/news/press-releases/2026/02/25/fy26-q4-earnings/",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Agentforce ARR reaches $1.2B",
-       "summary": "Salesforce's first quarter fiscal 2027 results put Agentforce ARR at about $1.2B, up 205% year on year, against quarterly revenue of $11.1B.",
+       "summary": "Salesforce's first quarter fiscal 2027 results put Agentforce ARR at $1.2B, up 205% year on year, against quarterly revenue of $11.1B.",
        "date": "2026-05",
        "kind": "deal",
        "source": "https://www.salesforce.com/news/press-releases/2026/05/28/fy27-q1-earnings/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "HubSpot prices agents per outcome",
-       "summary": "HubSpot moved its Prospecting Agent to $1 per lead recommended for outreach and its Customer Agent to $0.50 per resolved conversation.",
+       "summary": "From 14 April HubSpot charges $1 per lead its Prospecting Agent recommends for outreach and $0.50 per conversation its Customer Agent resolves.",
        "date": "2026-04",
        "kind": "product",
        "source": "https://www.hubspot.com/company-news/hubspots-customer-agent-and-prospecting-agent-now-you-pay-when-the-task-is-complete",
-       "verified": true
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "CRM vendors are the test of whether agents add revenue to incumbent software or only replace seat licences.",
      "openQuestion": "Will per-outcome pricing replace per-seat licences, and who decides what counts as an outcome?",
      "deepDives": [
       {
-       "title": "HubSpot: you pay when the task is complete",
-       "url": "https://www.hubspot.com/company-news/hubspots-customer-agent-and-prospecting-agent-now-you-pay-when-the-task-is-complete",
+       "title": "Bessemer: The AI pricing and monetization playbook",
+       "url": "https://www.bvp.com/atlas/the-ai-pricing-and-monetization-playbook",
        "kind": "overview",
-       "why": "The vendor's own definition of the billable outcome for sales and service agents."
+       "why": "Primer on consumption, workflow and outcome-based pricing models for AI products."
       },
       {
-       "title": "MarTech: HubSpot moves to outcome-based pricing",
+       "title": "MarTech: HubSpot moves to outcome-based pricing for some Breeze AI agents",
        "url": "https://martech.org/hubspot-moves-to-outcome-based-pricing-for-some-breeze-ai-agents/",
        "kind": "overview",
-       "why": "Independent trade analysis of what outcome pricing means for marketing and sales teams."
+       "why": "Independent trade coverage of what outcome pricing changes for marketing and sales teams."
       },
       {
-       "title": "Salesforce Q1 FY27 results",
+       "title": "Salesforce: Record First Quarter Fiscal 2027 Results",
        "url": "https://www.salesforce.com/news/press-releases/2026/05/28/fy27-q1-earnings/",
        "kind": "report",
        "why": "Primary numbers on Agentforce and Data 360 ARR relative to total Salesforce revenue."
@@ -1431,50 +1507,58 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "SAP Accounting Accruals Agent",
-       "summary": "Joule agent that reads accrual policies, pulls history and drafts journal entries for accountants to review, in restricted availability.",
-       "date": "2026-05",
+       "summary": "Joule agent that reads accrual policies, pulls history and drafts journal entries for accountants to review, released in restricted availability.",
+       "date": "2026-09",
        "kind": "product",
        "source": "https://erp.today/sap-accounting-accruals-agent-month-end-close/",
-       "verified": false,
-       "note": "Release confirmed by trade press; exact month not confirmed (search budget ran out)."
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Intuit Agentic Books Close",
-       "summary": "At Intuit Connect, Intuit announced an Accountant Suite add-on where agents run monthly close steps for review. It is in pilot with select firms.",
+       "summary": "At Intuit Connect, Intuit announced agents that work through a firm's monthly close steps for review. It is in pilot with a limited group of firms.",
        "date": "2026-10",
        "kind": "product",
        "source": "https://www.firmofthefuture.com/events/october-2026-intuit-connect-recap/",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Intuit four mid-market finance agents",
        "summary": "Intuit launched finance, payments, accounting and project management agents in Intuit Enterprise Suite, its mid-market product.",
        "date": "2025-07",
        "kind": "product",
-       "source": "https://www.businesswire.com/news/home/20250722258162/en",
-       "verified": true
+       "source": "https://investors.intuit.com/news-events/press-releases/detail/1260/intuit-launches-new-agentic-ai-experiences-and-financial-management-capabilities-for-intuit-enterprise-suite-to-drive-mid-market-business-growth",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Finance needs audit trails and sign-off, so it tests whether agents can work under strict controls.",
      "openQuestion": "Will auditors and CFOs accept agent-prepared entries without line-by-line human review?",
      "deepDives": [
       {
-       "title": "SAPinsider: autonomous finance, GRC and CFO governance",
+       "title": "SAPinsider: SAP's Autonomous Finance push and the governance picture",
        "url": "https://sapinsider.org/blogs/sap-autonomous-finance-grc-cfo-governance/",
        "kind": "overview",
-       "why": "How finance agents fit with controls and governance in SAP estates."
+       "why": "How finance agents fit with audit evidence, controls and accountability in SAP estates."
       },
       {
-       "title": "QuickBooks blog: Intuit advances its intelligence platform",
-       "url": "https://quickbooks.intuit.com/r/news/intuit-advances-intelligence-platform/",
-       "kind": "overview",
-       "why": "Intuit's own description of its agent roadmap for accountants and businesses."
-      },
-      {
-       "title": "Futurum: Intuit Intelligence and the accountant channel",
-       "url": "https://futurumgroup.com/?p=97190",
+       "title": "Futurum: Intuit Intelligence Positions Accountants as Intuit's ERP Channel",
+       "url": "https://futurumgroup.com/insights/intuit-intelligence-positions-accountants-as-intuits-erp-channel/",
        "kind": "report",
        "why": "Analyst view on which Intuit agent features are live versus pilot or coming soon."
+      },
+      {
+       "title": "ICAEW: Artificial intelligence resources",
+       "url": "https://www.icaew.com/technical/technology/artificial-intelligence",
+       "kind": "community",
+       "why": "Accountancy body's hub of guidance and case studies on AI and agents in finance and audit."
+      },
+      {
+       "title": "FinanceBench: A New Benchmark for Financial Question Answering",
+       "url": "https://arxiv.org/abs/2311.11944",
+       "kind": "paper",
+       "why": "Benchmark paper testing how reliably language models answer questions on company filings."
       }
      ]
     },
@@ -1487,27 +1571,30 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Workday completes Paradox acquisition",
-       "summary": "Workday bought the conversational hiring agent maker, reportedly for about $1B in cash, to pair with Workday Recruiting and HiredScore.",
+       "summary": "Workday closed its purchase of the conversational hiring agent maker, pairing it with Workday Recruiting and HiredScore.",
        "date": "2025-10",
        "kind": "deal",
-       "source": "https://newsroom.workday.com/2025-10-01-Workday-Completes-Acquisition-of-Paradox?asPDF=1",
-       "verified": true
+       "source": "https://newsroom.workday.com/2025-10-01-Workday-Completes-Acquisition-of-Paradox",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Mobley v. Workday advances",
-       "summary": "Judge Rita Lin largely denied Workday's bid to dismiss and let California-law bias claims proceed, after a 2025 collective certification on age claims.",
+       "summary": "Judge Rita Lin let California fair employment claims proceed while dismissing some others, after a May 2025 collective certification on age claims.",
        "date": "2026-06",
        "kind": "policy",
        "source": "https://news.bloomberglaw.com/daily-labor-report/workday-loses-bid-to-toss-ai-discrimination-suit-in-california",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Juicebox $80M Series B",
-       "summary": "AI outbound recruiting platform raised a round led by DST Global at an $850M valuation and says it has over 5,000 customers.",
+       "summary": "AI recruiting search platform raised a round led by DST Global at an $850M valuation and says more than 5,000 recruiting teams use it.",
        "date": "2026-03",
        "kind": "deal",
-       "source": "https://juicebox.ai/blog/juicebox-raises-80m-series-b",
-       "verified": true
+       "source": "https://juicebox.ai/blog/series-b",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Hiring is a high-stakes use of agents where discrimination law applies directly to automated decisions.",
@@ -1517,25 +1604,26 @@ window.ATLAS = {
        "title": "Akin AI law tracker: Mobley v. Workday",
        "url": "https://www.akingump.com/en/insights/ai-law-and-regulation-tracker/court-allows-discrimination-claims-against-ai-hiring-tool-to-proceed-or-mobley-v-workday-inc",
        "kind": "tracker",
-       "why": "Entry in a running tracker of AI law and regulation, with the case background."
+       "why": "Entry in a running tracker of AI law and regulation, with the case background.",
+       "unchecked": true
       },
       {
-       "title": "Fisher Phillips: Workday AI suit as a collective action",
-       "url": "https://www.fisherphillips.com/print/v2/content/41157/discrimination-lawsuit-over-workdays-ai-hiring-tools-can-proceed-as-class-action-6-things.pdf",
+       "title": "Fisher Phillips: Workday AI hiring suit can proceed as class action",
+       "url": "https://www.fisherphillips.com/en/insights/insights/discrimination-lawsuit-over-workdays-ai-hiring-tools-can-proceed-as-class-action-6-things",
        "kind": "overview",
-       "why": "Plain-language employer guide to the 2025 collective certification ruling."
+       "why": "Plain-language employer guide to the May 2025 collective certification ruling."
       },
       {
-       "title": "Duane Morris Class Action Defense blog",
+       "title": "Gender, Race, and Intersectional Bias in Resume Screening via Language Model Retrieval",
+       "url": "https://arxiv.org/abs/2407.20371",
+       "kind": "paper",
+       "why": "Study finding text embedding models favored White-associated names in 85% of resume screening tests."
+      },
+      {
+       "title": "Duane Morris Class Action Weekly Wire: Mobley v. Workday ruling",
        "url": "https://blogs.duanemorris.com/classactiondefense/2026/06/25/the-class-action-weekly-wire-episode-153-california-federal-court-grants-in-part-and-denies-in-part-motion-to-dismiss-in-algorithmic-bias-suit/",
        "kind": "newsletter",
        "why": "Regular legal commentary and podcast on algorithmic bias class actions."
-      },
-      {
-       "title": "CDF Labor Law: lessons from AI hiring litigation",
-       "url": "https://www.cdflaborlaw.com/blog/ai-hiring-litigation-key-lessons-for-employers",
-       "kind": "overview",
-       "why": "Summary of what recent cases mean for employers using AI screening tools."
       }
      ]
     },
@@ -1548,49 +1636,58 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Glean passes $300M ARR",
-       "summary": "Enterprise search and agent vendor says it tripled ARR in 15 months. TechCrunch notes the figure is usage-based, so not strictly recurring.",
+       "summary": "Enterprise search and agent vendor says it tripled ARR in 15 months. TechCrunch notes part of it is consumption-based, so not strictly recurring.",
        "date": "2026-05",
        "kind": "deal",
-       "source": "https://glean.com/press/glean-surpasses-300m-arr-unrivaled-enterprise-context-fuels-ai-adoption",
-       "verified": true
+       "source": "https://www.glean.com/press/glean-surpasses-300m-arr-unrivaled-enterprise-context-fuels-ai-adoption",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Microsoft 365 E7 and Agent 365 ship",
-       "summary": "Microsoft made Agent 365, a control plane for agents, and the E7 suite bundling it with Copilot generally available, at $15 and $99 per user a month.",
+       "summary": "Microsoft made Agent 365, a control plane for agents, generally available at $15 per user a month, alongside the E7 suite bundling it with Copilot at $99.",
        "date": "2026-05",
        "kind": "product",
-       "source": "https://redmondmag.com/articles/2026/05/01/microsoft-agent-365-goes-live-as-company-unveils-e7-suite.aspx",
-       "verified": true
+       "source": "https://www.microsoft.com/en-us/security/blog/2026/05/01/microsoft-agent-365-now-generally-available-expands-capabilities-and-integrations/",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Glean valued at $7.2B",
        "summary": "Glean raised a $150M Series F led by Wellington Management, valuing the enterprise search company at $7.2B.",
        "date": "2025-06",
        "kind": "deal",
-       "source": "https://aimagazine.com/news/glean-enterprise-ai-search-and-ai-agents-pass-us-300m-in-ar",
-       "verified": true
+       "source": "https://www.glean.com/blog/glean-series-f-announcement",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Whoever holds company context across apps is positioned to become the default front end for work agents.",
      "openQuestion": "Will a neutral layer like Glean hold against assistants bundled into Microsoft and Google suites?",
      "deepDives": [
       {
-       "title": "Microsoft partner blog: Microsoft 365 E7 availability",
-       "url": "https://partner.microsoft.com/en-US/blog/article/microsoft-365-e7-general-availability",
-       "kind": "overview",
-       "why": "What the E7 bundle includes and how Microsoft packages Copilot with agent governance."
+       "title": "Retrieval-Augmented Generation for Large Language Models: A Survey",
+       "url": "https://arxiv.org/abs/2312.10997",
+       "kind": "paper",
+       "why": "Survey of the retrieval techniques that enterprise search assistants are built on."
       },
       {
-       "title": "Microsoft partner blog: Agent 365 announcement",
-       "url": "https://partner.microsoft.com/en-lb/blog/article/agent-365-announcement",
+       "title": "Microsoft Agent 365 documentation",
+       "url": "https://learn.microsoft.com/en-us/microsoft-agent-365/",
        "kind": "overview",
-       "why": "Microsoft's description of its registry and control plane for enterprise agents."
+       "why": "Reference for how one suite vendor registers, permissions and monitors enterprise agents."
+      },
+      {
+       "title": "Microsoft Work Trend Index",
+       "url": "https://www.microsoft.com/en-us/worklab/work-trend-index",
+       "kind": "report",
+       "why": "Annual survey and telemetry research on how AI and agents are changing knowledge work."
       },
       {
        "title": "TechCrunch: Glean's top line crosses $300M",
        "url": "https://techcrunch.com/2026/05/28/gleans-top-line-crosses-300m-as-ai-budget-cutting-becomes-its-major-selling-point/",
        "kind": "overview",
-       "why": "Explains consumption revenue and the token-cost argument for a context layer."
+       "why": "Explains consumption revenue and the token-cost argument for a neutral context layer."
       }
      ]
     },
@@ -1607,58 +1704,54 @@ window.ATLAS = {
        "date": "2025-12",
        "kind": "policy",
        "source": "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "OpenAI Frontier",
-       "summary": "Enterprise platform to build, deploy and manage agents, including third-party ones, with HP, Intuit, Oracle and Uber among early adopters.",
+       "summary": "Enterprise platform to run agents as digital coworkers, including third-party ones, with HP, Intuit, Oracle and Uber among early customers.",
        "date": "2026-02",
        "kind": "product",
-       "source": "https://openai.com/index/introducing-openai-frontier/",
-       "verified": true
+       "source": "https://futurumgroup.com/insights/openai-frontier-close-the-enterprise-ai-opportunity-gap-or-widen-it/",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "A2A joins the AAIF",
-       "summary": "Google's agent-to-agent protocol, at the Linux Foundation since 2025, moved into the AAIF, the same home as MCP.",
+       "summary": "Google's agent-to-agent protocol, at the Linux Foundation since 2025, was accepted as a growth stage project at the AAIF, the same home as MCP.",
        "date": "2026-08",
        "kind": "policy",
-       "source": "https://axios.com/2026/08/17/a2a-agentic-ai-foundation-open-ai-standards",
-       "verified": true
+       "source": "https://a2a-protocol.org/latest/blog/2026/08/27/a-new-chapter-for-a2a-joining-the-agentic-ai-foundation/",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Shared protocols decide whether enterprise agents interoperate or stay locked into one vendor's platform.",
      "openQuestion": "Will open protocols keep agent platforms interoperable, or will a few vendors control the layer?",
      "deepDives": [
       {
-       "title": "Linux Foundation: formation of the AAIF",
-       "url": "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation",
-       "kind": "overview",
-       "why": "Primary statement of the foundation's scope, founding projects and members."
-      },
-      {
-       "title": "WorkOS: the Linux Foundation launches the AAIF",
-       "url": "https://workos.com/blog/the-linux-foundation-launches-the-aaif",
-       "kind": "overview",
-       "why": "Developer-oriented explainer of MCP, goose and AGENTS.md and why governance moved."
-      },
-      {
-       "title": "OpenAI: introducing Frontier",
-       "url": "https://openai.com/index/introducing-openai-frontier/",
-       "kind": "overview",
-       "why": "How one lab frames the enterprise agent platform: identity, permissions, shared context."
-      },
-      {
-       "title": "Futurum: OpenAI Frontier analysis",
-       "url": "https://futurumgroup.com/insights/openai-frontier-close-the-enterprise-ai-opportunity-gap-or-widen-it/",
-       "kind": "report",
-       "why": "Analyst assessment of the platform play and its lock-in risks."
-      },
-      {
-       "title": "Model Context Protocol",
+       "title": "Model Context Protocol documentation",
        "url": "https://modelcontextprotocol.io/",
        "kind": "overview",
-       "why": "Specification and documentation for the protocol connecting models to tools.",
-       "unchecked": true
+       "why": "Specification and documentation for the protocol connecting models to tools."
+      },
+      {
+       "title": "A2A Protocol documentation",
+       "url": "https://a2a-protocol.org/latest/",
+       "kind": "overview",
+       "why": "Official specification, SDKs and tutorials for agent-to-agent communication."
+      },
+      {
+       "title": "Agentic AI Foundation",
+       "url": "https://aaif.io/",
+       "kind": "community",
+       "why": "Home of the foundation governing MCP, A2A, goose and AGENTS.md, with projects and members."
+      },
+      {
+       "title": "A survey of agent interoperability protocols: MCP, ACP, A2A and ANP",
+       "url": "https://arxiv.org/abs/2505.02279",
+       "kind": "paper",
+       "why": "Compares the main agent protocols and where each fits in a deployment."
       }
      ]
     },
@@ -1671,126 +1764,122 @@ window.ATLAS = {
      "landmarks": [
       {
        "name": "Okta Agent SSO generally available",
-       "summary": "Okta added agent identities with short-lived scoped access to core SSO, built on Cross App Access, now an MCP authorization extension.",
+       "summary": "Okta added agent identities with short-lived tokens to core SSO, built on Cross App Access, which is now an MCP authorization extension.",
        "date": "2026-08",
        "kind": "product",
-       "source": "https://okta.com/newsroom/press-releases/okta-brings-first-class-identity-to-ai-agents-with-agent-sso/",
-       "verified": true
+       "source": "https://www.okta.com/newsroom/press-releases/okta-brings-first-class-identity-to-ai-agents-with-agent-sso/",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "NIST AI Agent Standards Initiative",
        "summary": "NIST's CAISI launched work on agent interoperability, security and identity, with a request for information and an identity concept paper.",
        "date": "2026-02",
        "kind": "policy",
-       "source": "https://nist.gov/news-events/news/2026/02/announcing-ai-agent-standards-initiative-interoperable-and-secure",
-       "verified": true
+       "source": "https://www.nist.gov/news-events/news/2026/02/announcing-ai-agent-standards-initiative-interoperable-and-secure",
+       "verified": true,
+       "check": "page"
       },
       {
-       "name": "ShareLeak and PipeLeak disclosed",
-       "summary": "Capsule Security showed that text in public forms could make Copilot Studio and Agentforce agents leak data; Microsoft assigned CVE-2026-21520.",
+       "name": "Copilot Studio and Agentforce data leaks",
+       "summary": "Capsule Security showed that text in public forms could make Copilot Studio and Agentforce agents leak corporate data. Both vendors issued patches.",
        "date": "2026-04",
        "kind": "incident",
-       "source": "https://venturebeat.com/security/microsoft-salesforce-copilot-agentforce-prompt-injection-cve-agent-remediation-playbook",
-       "verified": true
+       "source": "https://oecd.ai/en/incidents/2026-04-15-d934",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Agents act with real credentials, so unsolved prompt injection turns ordinary inputs like web forms into attack paths.",
      "openQuestion": "Can prompt injection be contained well enough for agents to act on untrusted input with real permissions?",
      "deepDives": [
       {
-       "title": "NIST AI Agent Standards Initiative page",
+       "title": "NIST Agent Standards Initiative hub",
        "url": "https://www.nist.gov/caisi/ai-agent-standards-initiative",
        "kind": "tracker",
-       "why": "The official hub for NIST's agent security and identity deliverables as they appear."
+       "why": "Official hub for NIST's agent security, identity and interoperability work as it appears."
       },
       {
-       "title": "CSA research note: NIST agent standards and enterprise",
-       "url": "https://labs.cloudsecurityalliance.org/research/csa-research-note-nist-ai-agent-standards-initiative-2026040/",
+       "title": "OWASP Top 10 for Agentic Applications for 2026",
+       "url": "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/",
        "kind": "report",
-       "why": "Cloud Security Alliance reading of what the NIST work means for security teams."
+       "why": "Community-reviewed list of the main security risks for agentic applications."
       },
       {
-       "title": "OECD AI Incidents Monitor: Microsoft and Salesforce agents",
-       "url": "https://oecd.ai/en/incidents/2026-04-15-d934",
-       "kind": "tracker",
-       "why": "Entry in the OECD's running database of AI incidents, with linked coverage."
-      },
-      {
-       "title": "Pillsbury: NIST AI agent standards explained",
-       "url": "https://www.pillsburylaw.com/en/news-and-insights/nist-ai-agent-standards.html",
-       "kind": "overview",
-       "why": "Legal explainer of the initiative's pillars and comment opportunities."
-      },
-      {
-       "title": "OWASP GenAI Security Project",
-       "url": "https://genai.owasp.org/",
-       "kind": "report",
-       "why": "Top 10 risks for LLM and agentic applications, with mitigations.",
-       "unchecked": true
+       "title": "Design Patterns for Securing LLM Agents against Prompt Injections",
+       "url": "https://arxiv.org/abs/2506.08837",
+       "kind": "paper",
+       "why": "Proposes agent designs that limit what injected text can make an agent do."
       },
       {
        "title": "Simon Willison on prompt injection",
        "url": "https://simonwillison.net/tags/prompt-injection/",
        "kind": "newsletter",
-       "why": "Running commentary on the attack class behind most agent security incidents.",
-       "unchecked": true
+       "why": "Running commentary on the attack class behind most agent security incidents."
       }
      ]
     },
     {
      "id": "enterprise.browser",
      "name": "Computer-use & browser agents",
-     "summary": "Agents that click through websites and desktops are improving but still fail most long tasks. OpenAI retired its standalone browser and moved agent features into an extension and apps.",
+     "summary": "Agents that click through websites and desktops are improving but still fail most long tasks. OpenAI retired its standalone browser and moved agent features into its desktop app and extensions.",
      "activity": 3,
      "maturity": "emerging",
      "landmarks": [
       {
        "name": "ChatGPT Atlas launched",
-       "summary": "OpenAI released an AI browser for macOS with an agent mode that acts on web pages, challenging Chrome.",
+       "summary": "OpenAI released an AI browser for macOS with a preview agent mode that takes actions on web pages, challenging Chrome.",
        "date": "2025-10",
        "kind": "product",
        "source": "https://www.techradar.com/ai-platforms-assistants/chatgpt/openai-takes-on-chrome-with-chatgpt-atlas-browser-for-macos-and-windows-ios-and-android-are-coming-soon",
-       "verified": false,
-       "note": "Date fits shutdown coverage (nine months later); launch source not rechecked."
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "OpenAI retires Atlas",
-       "summary": "OpenAI said Atlas would shut down on 9 August, about nine months after launch, moving features to a Chrome extension, the desktop app and a cloud browser.",
+       "summary": "OpenAI said Atlas would stop working on 9 August, about ten months after launch, folding browsing into its ChatGPT desktop app and Chrome extensions.",
        "date": "2026-07",
        "kind": "incident",
-       "source": "https://techradar.com/pro/openai-shuts-down-its-atlas-browser-after-not-even-a-year",
-       "verified": true
+       "source": "https://www.techradar.com/pro/openai-shuts-down-its-atlas-browser-after-not-even-a-year",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "OSWorld 2.0 long-horizon results",
-       "summary": "A harder computer-use benchmark of 108 long tasks found the top setup, Claude Opus 4.8, fully completed about 21% of tasks with a 55% partial score.",
+       "summary": "A harder computer-use benchmark of 108 long tasks found the top setup, Claude Opus 4.8, fully completed 20.6% of tasks with a 54.8% partial score.",
        "date": "2026-06",
        "kind": "research",
-       "source": "https://snorkel.ai/research-paper/os-world-2/",
-       "verified": true
+       "source": "https://arxiv.org/abs/2606.29537",
+       "verified": true,
+       "check": "page"
       }
      ],
      "whyItMatters": "Computer use lets agents work in software that has no API, which is most enterprise software.",
      "openQuestion": "When will computer-use agents finish long multi-step tasks reliably enough to run unattended?",
      "deepDives": [
       {
-       "title": "Epoch AI: OSWorld 2.0 benchmark page",
+       "title": "Epoch AI: OSWorld 2.0",
        "url": "https://epoch.ai/benchmarks/osworld-2",
        "kind": "tracker",
        "why": "Tracked model scores on long-horizon computer-use tasks over time."
       },
       {
-       "title": "OSWorld 2.0 paper summary (Snorkel AI)",
-       "url": "https://snorkel.ai/research-paper/os-world-2/",
+       "title": "OSWorld 2.0: Benchmarking Computer Use Agents on Long-Horizon Real-World Tasks",
+       "url": "https://arxiv.org/abs/2606.29537",
        "kind": "paper",
-       "why": "Benchmark design, checkpoint grading and the failure modes agents show on long tasks."
+       "why": "Benchmark design and the failure modes agents show on tasks that take people over an hour."
       },
       {
-       "title": "OSWorld",
-       "url": "https://os-world.github.io/",
-       "kind": "tracker",
-       "why": "Benchmark of real computer tasks used to measure computer-use agents.",
-       "unchecked": true
+       "title": "OSWorld: Benchmarking Multimodal Agents in Real Computer Environments",
+       "url": "https://arxiv.org/abs/2404.07972",
+       "kind": "paper",
+       "why": "The original 369-task benchmark that became the standard measure for computer-use agents."
+      },
+      {
+       "title": "WebArena: A Realistic Web Environment for Building Autonomous Agents",
+       "url": "https://arxiv.org/abs/2307.13854",
+       "kind": "paper",
+       "why": "Widely used benchmark of web tasks on self-hosted sites, with a human baseline."
       }
      ]
     },
@@ -1802,13 +1891,13 @@ window.ATLAS = {
      "maturity": "adopting",
      "landmarks": [
       {
-       "name": "MIT NANDA: 95% of pilots show no return",
-       "summary": "The GenAI Divide report found most corporate generative AI pilots produced no measurable P&L impact; bought tools beat internal builds.",
+       "name": "MIT NANDA: 95% see no return on GenAI",
+       "summary": "The GenAI Divide report, based on 52 interviews and a 153-person survey, said 95% of organizations had seen zero return from generative AI efforts.",
        "date": "2025-08",
        "kind": "research",
-       "source": "https://fortune.com/2025/08/18/mit-report-95-percent-generative-ai-pilots-at-companies-failing-cfo/",
-       "verified": false,
-       "note": "Widely reported in Aug 2025; not rechecked this pass (search budget ran out)."
+       "source": "https://www.theregister.com/software/2025/08/18/generative-ai-does-nothing-for-95-percent-of-companies/1118115",
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Gartner: 40% of agent projects to be cut",
@@ -1816,7 +1905,8 @@ window.ATLAS = {
        "date": "2025-06",
        "kind": "research",
        "source": "https://www.thestar.com.my/tech/tech-news/2025/06/25/over-40-of-agentic-ai-projects-will-be-scrapped-by-2027-gartner-says",
-       "verified": true
+       "verified": true,
+       "check": "page"
       },
       {
        "name": "Gartner: half of AI service cuts reversed",
@@ -1824,71 +1914,80 @@ window.ATLAS = {
        "date": "2026-02",
        "kind": "research",
        "source": "https://www.gartner.com/en/newsroom/press-releases/2026-02-03-gartner-predicts-half-of-companies-that-cut-customer-service-staff-due-to-ai-will-rehire-by-2027",
-       "verified": true
+       "verified": true,
+       "check": "snippet"
       },
       {
        "name": "Gartner: job cuts not linked to AI ROI",
        "summary": "A Gartner survey of 350 executives at large firms reportedly found about 80% had cut headcount, with no correlation to higher returns on AI.",
        "date": "2026-05",
        "kind": "research",
-       "source": "https://dc.fortune.com/2026/05/11/ai-automation-layoffs-gartner-study-roi/",
-       "verified": true
+       "source": "https://fortune.com/2026/05/11/ai-automation-layoffs-gartner-study-roi/",
+       "verified": true,
+       "check": "snippet"
       }
      ],
      "whyItMatters": "Valuations and budgets assume agents pay off, and the evidence so far is mixed and often vendor-supplied.",
      "openQuestion": "Is weak measured ROI a deployment lag that will close, or a sign that agent value is overstated?",
      "deepDives": [
       {
-       "title": "Gartner: rehiring after AI service cuts",
-       "url": "https://www.gartner.com/en/newsroom/press-releases/2026-02-03-gartner-predicts-half-of-companies-that-cut-customer-service-staff-due-to-ai-will-rehire-by-2027",
+       "title": "Stanford HAI: AI Index",
+       "url": "https://hai.stanford.edu/ai-index",
        "kind": "report",
-       "why": "Analyst prediction and survey data on how far AI has actually reduced service staffing."
+       "why": "Annual independent data report on AI capability, investment and business adoption."
       },
       {
-       "title": "Gartner survey: AI-driven frontline layoffs",
-       "url": "https://www.gartner.com/en/newsroom/press-releases/2026-04-23-gartner-survey-finds-31-percent-of-service-and-support-leaders-have-implemented-or-are-planning-ai-driven-frontline-layoffs-through-1q27",
-       "kind": "report",
-       "why": "What service leaders say they have done or plan to do on AI-linked layoffs."
+       "title": "The Anthropic Economic Index",
+       "url": "https://www.anthropic.com/economic-index",
+       "kind": "tracker",
+       "why": "Recurring data on which work tasks people and firms use one lab's models for."
       },
       {
-       "title": "People Matters: employers regretting AI layoffs",
+       "title": "McKinsey: The state of AI",
+       "url": "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai",
+       "kind": "report",
+       "why": "Long-running global survey of how organizations use AI and whether they report value.",
+       "unchecked": true
+      },
+      {
+       "title": "People Matters: 55% of employers regret AI layoffs",
        "url": "https://www.peoplematters.in/news/business/55percent-of-employers-regret-ai-layoffs-gartner-predicts-more-rehires-by-2027-51167",
        "kind": "overview",
-       "why": "Pulls together Forrester and Gartner findings on AI layoffs and rehiring."
+       "why": "Pulls together Forrester, Gartner and other findings on AI layoffs and rehiring."
       }
      ]
     }
    ],
    "deepDives": [
     {
-     "title": "NIST AI Agent Standards Initiative page",
+     "title": "Model Context Protocol documentation",
+     "url": "https://modelcontextprotocol.io/",
+     "kind": "overview",
+     "why": "Specification for the protocol most enterprise agents use to reach tools and data."
+    },
+    {
+     "title": "NIST Agent Standards Initiative hub",
      "url": "https://www.nist.gov/caisi/ai-agent-standards-initiative",
      "kind": "tracker",
      "why": "Official hub for US standards work on agent security, identity and interoperability."
     },
     {
-     "title": "Linux Foundation: formation of the AAIF",
-     "url": "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation",
-     "kind": "overview",
-     "why": "Who governs MCP and related agent standards, and which companies back them."
-    },
-    {
-     "title": "Epoch AI: OSWorld 2.0 benchmark page",
+     "title": "Epoch AI: OSWorld 2.0",
      "url": "https://epoch.ai/benchmarks/osworld-2",
      "kind": "tracker",
      "why": "A live measure of how well agents complete long computer tasks."
     },
     {
-     "title": "OECD AI Incidents Monitor: enterprise agent leaks",
+     "title": "Stanford HAI: AI Index",
+     "url": "https://hai.stanford.edu/ai-index",
+     "kind": "report",
+     "why": "Annual independent data on AI adoption, investment and measured business impact."
+    },
+    {
+     "title": "OECD AI Incidents and Hazards Monitor: agent data leaks",
      "url": "https://oecd.ai/en/incidents/2026-04-15-d934",
      "kind": "tracker",
      "why": "Entry point to a public database of AI incidents, including agent data leaks."
-    },
-    {
-     "title": "Gartner: rehiring after AI service cuts",
-     "url": "https://www.gartner.com/en/newsroom/press-releases/2026-02-03-gartner-predicts-half-of-companies-that-cut-customer-service-staff-due-to-ai-will-rehire-by-2027",
-     "kind": "report",
-     "why": "Analyst evidence on the gap between AI staffing claims and outcomes."
     }
    ]
   },
