@@ -4,8 +4,8 @@
 //
 // Each agent is given a side. Before the debate each writes, alone, what it
 // really thinks. Then they debate in a few short turns, each seeing its own
-// opening but not the other's, then a short closing statement each, the side
-// for the motion last. After it, each writes, alone, where it stands now. The other agent never sees either
+// opening but not the other's, then a short closing statement each, the
+// opener last. After it, each writes, alone, where it stands now. The other agent never sees either
 // private piece; both are published with the episode, and the agents are told so.
 //
 // Same headless commands as /talk and /story, so the agents get no permission
@@ -92,6 +92,17 @@ function closingPrompt(m, me, other, turns, tag) {
 function sidesFor(m) {
   if (Array.isArray(m.sides) && m.sides.length === 2 && m.sides.every(x => ['for', 'against'].includes(x)) && m.sides[0] !== m.sides[1]) return m.sides;
   return Number.isInteger(m.number) && m.number % 2 === 0 ? ['against', 'for'] : ['for', 'against'];
+}
+
+// Who opens is set apart from the sides, so order, side and model aren't
+// confounded: the first agent opens on motions 1-2, 5-6, 9-10..., the second
+// on 3-4, 7-8, 11-12.... Over four motions each agent opens once for and once
+// against. A motion file can set "opener" to an agent id. Without a number,
+// the side for the motion opens, as in a debating chamber.
+function openerFor(m, a, b) {
+  if (m.opener === a.id || m.opener === b.id) return m.opener === a.id ? a : b;
+  if (Number.isInteger(m.number) && m.number > 0) return Math.floor((m.number - 1) / 2) % 2 === 0 ? a : b;
+  return a.side === 'for' ? a : b;
 }
 
 // ---- Running one step ----
@@ -242,6 +253,7 @@ function frontMatter(m, st, summary, quote) {
     source: m.source ? { name: m.source_name || undefined, url: m.source } : undefined,
     brief: inertForSite(m.brief.trim()),
     sides: Object.fromEntries(st.agents.map(x => [key(x), x.side])),
+    opener: st.opener ? st.opener.replace(/#\d+$/, '') : undefined,
     before: Object.fromEntries(st.agents.map(x => [key(x), inertForSite(x.opening)])),
     debate: st.turns.map(t => ({ by: t.by.replace(/#\d+$/, ''), closing: t.closing || undefined, text: inertForSite(t.text) })),
     after: Object.fromEntries(st.agents.map(x => [key(x), inertForSite(x.closing)])),
@@ -334,13 +346,14 @@ async function runMotion(raw, { screen = false, local = false, name = 'motion' }
     return { dir, m, agents: agents.map(x => ({ id: x.id, label: x.label, side: x.side, opening: redact(x.opening) })) };
   }
   const turns = [];
-  // The side for the motion opens the debate, as in a debating chamber.
-  const order = a.side === 'for' ? [a, b] : [b, a];
+  const first = openerFor(m, a, b);
+  const order = first === a ? [a, b] : [b, a];
+  console.log(`  ▶ ${first.label} opens`);
   for (let i = 0; i < m.turns; i++) {
     const me = order[i % 2], other = order[(i + 1) % 2];
     turns.push({ by: me.id, label: me.label, text: await run(dir, `1-turn-${i + 1}-${me.slug}`, me, turnPrompt(m, me, other, turns, tag), meeting) });
   }
-  // Short closing statements, against first, so the side for the motion has the last word.
+  // Short closing statements, the second speaker first, so the opener has the last word.
   if (m.closings) for (const [me, other] of [[order[1], order[0]], [order[0], order[1]]]) {
     const n = turns.length + 1;
     turns.push({ by: me.id, label: me.label, closing: true, text: await run(dir, `1-turn-${n}-${me.slug}`, me, turnPrompt(m, me, other, turns, tag, true), meeting) });
@@ -349,7 +362,7 @@ async function runMotion(raw, { screen = false, local = false, name = 'motion' }
 
   const { redact, leaks } = redactor(m.redact);
   const st = {
-    motion: m.motion, source: m.source, turns: turns.map(t => ({ ...t, text: redact(t.text) })),
+    motion: m.motion, source: m.source, opener: first.id, turns: turns.map(t => ({ ...t, text: redact(t.text) })),
     agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, side: x.side, opening: redact(x.opening), closing: redact(x.closing) })),
   };
   st.words = st.turns.reduce((n, t) => n + words(t.text), 0) + st.agents.reduce((n, x) => n + words(x.opening) + words(x.closing), 0);
@@ -378,4 +391,4 @@ async function runMotion(raw, { screen = false, local = false, name = 'motion' }
 
 if (require.main === module) main().catch(e => { console.error(`motion: ${e.message}`); process.exit(1); });
 
-module.exports = { openingPrompt, turnPrompt, closingPrompt, sidesFor, frontMatter, editorQuote, runMotion, run, openPullRequest, git };
+module.exports = { openingPrompt, turnPrompt, closingPrompt, sidesFor, openerFor, frontMatter, editorQuote, runMotion, run, openPullRequest, git };

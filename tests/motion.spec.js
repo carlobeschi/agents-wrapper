@@ -60,7 +60,7 @@ test('runs openings, four turns, two closing statements and closings, each priva
   expect(md).toContain('# This house believes tests are optional.');
 });
 
-test('sides swap each week, and the side for the motion opens the debate', () => {
+test('sides swap each motion, and who opens is set apart from the sides', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-home-'));
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
     { id: 'a', label: 'Agent A', headless: fake('a') },
@@ -72,14 +72,31 @@ test('sides swap each week, and the side for the motion opens the debate', () =>
     { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
   const dir = out.match(/Run folder: (.+)/)[1].trim();
   const ep = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
-  // Motion 2: the first agent argues against, so the second opens.
+  // Motion 2: the first agent argues against, and opens; the second closes first, so the opener has the last word.
   expect(ep.agents.map(x => [x.id, x.side])).toEqual([['a', 'against'], ['b', 'for']]);
-  expect(ep.turns.map(t => t.by)).toEqual(['b', 'a', 'b', 'a', 'a', 'b']);
+  expect(ep.opener).toBe('a');
+  expect(ep.turns.map(t => t.by)).toEqual(['a', 'b', 'a', 'b', 'b', 'a']);
   const read = f => fs.readFileSync(path.join(dir, 'steps', f), 'utf8');
   expect(read('0-open-a.prompt.md')).toContain('You argue against the motion; Agent B argues for.');
-  expect(read('1-turn-2-a.prompt.md')).toContain('You argue against the motion');
+  expect(read('1-turn-3-a.prompt.md')).toContain('You argue against the motion');
   expect(read('2-close-a.prompt.md')).toContain('In the room you argued against the motion.');
   expect(fs.readFileSync(path.join(dir, 'episode.md'), 'utf8')).toContain('### Agent A (argues against)');
+});
+
+test('over four motions each agent opens once for and once against', () => {
+  const { sidesFor, openerFor } = require('../motion');
+  const seen = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(number => {
+    const a = { id: 'claude' }, b = { id: 'gemini' };
+    [a.side, b.side] = sidesFor({ number });
+    const o = openerFor({ number }, a, b);
+    return `${o.id}-${o.side}`;
+  });
+  expect(seen.slice(0, 4).sort()).toEqual(['claude-against', 'claude-for', 'gemini-against', 'gemini-for']);
+  expect(seen.slice(4, 8)).toEqual(seen.slice(0, 4));
+  expect(seen[9]).toBe('claude-against'); // Motion 10
+  const a = { id: 'x', side: 'against' }, b = { id: 'y', side: 'for' };
+  expect(openerFor({ opener: 'y', number: 1 }, a, b)).toBe(b);
+  expect(openerFor({}, a, b)).toBe(b); // no number: the side for opens
 });
 
 test('with a number, writes the episode file for the show site, with a summary from the editor', () => {
@@ -168,7 +185,7 @@ test('--quote also reads a published episode file, with its agent text as the ag
   expect(out).toContain('quote:\n  by: "antigravity"\n  where: "debate"\n  text: "Spaces are a <b>promise</b>."');
 });
 
-test('the side for the motion defines its terms first, and closings bring no new arguments', () => {
+test('the opener defines the motion\'s terms first, and closings bring no new arguments', () => {
   const { turnPrompt } = require('../motion');
   const m = { motion: 'This house believes x.', brief: 'b', turns: 4, words: 120, closings: true };
   const me = { label: 'A', side: 'for', opening: 'o' }, other = { label: 'B', side: 'against', opening: 'o' };
