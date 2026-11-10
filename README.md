@@ -136,7 +136,7 @@ A topic's panel has a summary, why it matters, the main open question, its landm
 
 Search covers fields, topics, landmarks, threads and viewpoints. Links such as `#legal`, `#software-code-review`, `#thread-agents`, `#lens-engineer` and `#focus` open that view directly.
 
-Each landmark says how it was checked: compared with its source page, matched in a search result only, or not confirmed (drawn as a hollow dot). Activity scores are judgement calls. Follow the source links before quoting anything from the map.
+Each landmark says how it was checked: compared with its source page (a filled dot), or matched in a search result only or not confirmed (a hollow dot). Activity scores are judgement calls. Follow the source links before quoting anything from the map.
 
 The data lives in `atlas/fields/<field>.json`, written and fact-checked by research agents from public web sources in November 2026. `atlas/layout.json` holds where each continent sits, the lanes, the threads and the viewpoints. After editing either, run `node atlas/build.js` to regenerate `atlas/atlas-data.js`, which the page loads; it reports bad values and references to unknown topics. `node atlas/check-links.js` tests every source and deep-dive link and lists the ones that no longer resolve.
 

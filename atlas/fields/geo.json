@@ -6,7 +6,7 @@
   {
    "id": "geo.compute",
    "name": "Compute, chips & export controls",
-   "summary": "The US opened case-by-case H200 sales to China in January 2026, yet shipments stalled; Blackwell stays barred and a May guidance tightened rules on Chinese firms' offshore units.",
+   "summary": "The US opened case-by-case H200 sales to China in January 2026, yet shipments stalled; Blackwell stays barred and May guidance extended licence rules to Chinese firms' offshore units.",
    "activity": 5,
    "maturity": "established",
    "whyItMatters": "Who can buy frontier chips shapes which countries and companies can train and run the largest models.",
@@ -14,11 +14,12 @@
    "landmarks": [
     {
      "name": "US opens case-by-case H200 sales to China",
-     "summary": "A BIS rule moved H200-class chips from presumed denial to case-by-case licence review for China, with volume caps and supply certifications, after Trump's offer tied to a 25% cut.",
+     "summary": "A BIS rule of 13 January moved H200-class chips to case-by-case licence review for China, with a 50% volume cap, US lab testing and certifications; a 25% chip tariff followed.",
      "date": "2026-01",
      "kind": "policy",
      "source": "https://www.cov.com/news-and-insights/insights/2026/01/us-commerce-department-revises-license-review-policy-for-exports-of-certain-advanced-computing-commodities-to-china-and-macau",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Export enforcer: zero H200s sold to China",
@@ -26,15 +27,18 @@
      "date": "2026-02",
      "kind": "debate",
      "source": "https://www.bloomberg.com/news/articles/2026-02-24/nvidia-has-sold-zero-h200s-to-china-top-us-export-enforcer-says",
-     "verified": true
+     "verified": true,
+     "check": "snippet",
+     "note": "Bloomberg page is closed to scripts; supported by search snippet only."
     },
     {
      "name": "BIS targets Chinese firms' offshore units",
-     "summary": "Guidance issued on 31 May says licence requirements for advanced chips apply to entities headquartered in China even when located abroad, per Reuters.",
+     "summary": "Guidance posted on 31 May says advanced-chip licence rules cover China-headquartered entities located abroad; BIS called it a clarification of 2023 requirements, per Reuters.",
      "date": "2026-05",
      "kind": "policy",
      "source": "https://www.thestar.com.my/business/business-news/2026/06/01/us-takes-step-to-halt-nvidia-ai-chip-shipments-to-chinese-firms-outside-china",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
@@ -42,68 +46,100 @@
      "title": "CNAS Insights: Unpacking the H200 Export Policy",
      "url": "https://www.cnas.org/publications/cnas-insights/cnas-insights-unpacking-the-h200-export-policy",
      "kind": "report",
-     "why": "Think-tank analysis of what the January 2026 rule allows, its caps and its weak points."
+     "why": "Think-tank analysis of what the January 2026 rule allows, its 50% cap and its weak points."
     },
     {
-     "title": "Mayer Brown: advanced AI chip policies codified",
-     "url": "https://www.mayerbrown.com/en/insights/publications/2026/01/administration-policies-on-advanced-ai-chips-codified",
-     "kind": "overview",
-     "why": "Legal explainer of the BIS rule and the related 25% chip tariff proclamation."
+     "title": "Epoch AI: data on AI chip sales",
+     "url": "https://epoch.ai/data/ai-chip-sales",
+     "kind": "tracker",
+     "why": "Open estimates of AI chip sales, compute and spending by chip type, updated regularly."
+    },
+    {
+     "title": "ETO Supply Chain Explorer: Advanced Chips",
+     "url": "https://chipexplorer.eto.tech/",
+     "kind": "tracker",
+     "why": "Interactive map of who supplies each step of advanced chip production, from Georgetown's CSET."
+    },
+    {
+     "title": "CSET: AI Chips: What They Are and Why They Matter",
+     "url": "https://cset.georgetown.edu/publication/ai-chips-what-they-are-and-why-they-matter/",
+     "kind": "report",
+     "why": "Standard primer on why leading-edge chips matter for AI and for export control policy."
     }
    ]
   },
   {
    "id": "geo.us-china",
    "name": "US-China competition",
-   "summary": "China is building a domestic AI stack on Huawei Ascend chips and open models, while the May 2026 Trump-Xi summit brought warm words but no settlement on chips or rare earths.",
+   "summary": "China is building a domestic AI stack on local chips and open models. The May summit settled little, but Xi's September US visit extended the trade truce to January 2027 and set up an AI dialogue.",
    "activity": 5,
    "maturity": "established",
    "whyItMatters": "The two countries set the pace of frontier AI, and their rivalry drives chip rules, supply chains and model access worldwide.",
    "openQuestion": "Can China's domestic chips sustain frontier training without Nvidia hardware?",
    "landmarks": [
     {
-     "name": "DeepSeek V4 adapted for Huawei chips",
-     "summary": "DeepSeek previewed V4-Pro and V4-Flash on 24 April; Huawei said V4 is supported on Ascend 950 clusters and that its chips were used for part of V4-Flash's training, per Reuters.",
+     "name": "DeepSeek V4 tuned for Chinese chips",
+     "summary": "DeepSeek previewed V4-Pro and V4-Flash on 24 April; it reportedly optimised V4 for Huawei and Cambricon chips and gave Nvidia and AMD no early access.",
      "date": "2026-04",
      "kind": "product",
-     "source": "https://finance.yahoo.com/sectors/technology/articles/chinas-deepseek-returns-model-viral-031101388.html",
-     "verified": true
+     "source": "https://thenextweb.com/news/deepseek-v4-pro-flash-launch-open-source",
+     "verified": true,
+     "check": "page",
+     "note": "Chip detail is TNW relaying Reuters and The Information, not a DeepSeek statement."
     },
     {
      "name": "Trump-Xi Beijing summit",
-     "summary": "The 14-15 May summit ended with warm words and few firm deals: no confirmed rare-earth fix, top Nvidia chips still restricted, and no extension of the trade truce, per Reuters.",
+     "summary": "Trump left Beijing on 15 May after two days with few firm deals: no H200 breakthrough, no rare-earth resolution and no decision on extending the trade truce, per Reuters.",
      "date": "2026-05",
      "kind": "policy",
      "source": "https://www.thestandard.com.hk/world/article/332095/Trump-leaves-Beijing-with-few-wins-but-warm-words-for-Xi",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "China's 15th Five-Year Plan elevates AI+",
-     "summary": "Approved by the National People's Congress in March 2026, the 2026-2030 plan mentions AI more than 50 times and stresses AI+ integration and technological self-reliance.",
+     "summary": "The draft 2026-2030 plan sent to the National People's Congress in March mentions AI 52 times, up from 11, and makes the AI Plus initiative a top national priority.",
      "date": "2026-03",
      "kind": "policy",
      "source": "https://www.thestar.com.my/aseanplus/aseanplus-news/2026/03/05/chinas-five-year-plan-emphasises-orderly-ai-development-amid-global-tech-volatility",
-     "verified": true
+     "verified": true,
+     "check": "page"
+    },
+    {
+     "name": "Xi's US visit: truce extended, AI dialogue",
+     "summary": "During Xi's 23-25 September state visit the two sides extended their trade truce to 10 January 2027 and agreed to set up a China-US dialogue on AI risks and benefits.",
+     "date": "2026-09",
+     "kind": "policy",
+     "source": "https://en.wikipedia.org/wiki/2026_state_visit_by_Xi_Jinping_to_the_United_States",
+     "verified": true,
+     "check": "page",
+     "note": "Wikipedia summary citing Reuters and FT; the original reports are closed to scripts."
     }
    ],
    "deepDives": [
     {
-     "title": "ASPI Strategist: key takeaways from China's Two Sessions",
+     "title": "ASPI Strategist: Key takeaways from China's Two Sessions",
      "url": "https://www.aspistrategist.org.au/key-takeaways-from-chinas-new-five-year-plan/",
      "kind": "overview",
      "why": "Short analytical read on what the new five-year plan signals for technology and security."
     },
     {
-     "title": "ORF: reading the Trump-Xi summit",
-     "url": "https://www.orfonline.org/expert-speak/selective-cooperation-enduring-rivalry-reading-the-trump-xi-summit",
-     "kind": "overview",
-     "why": "Outside-view assessment of what the May 2026 summit did and did not change."
+     "title": "DigiChina (Stanford)",
+     "url": "https://digichina.stanford.edu/",
+     "kind": "community",
+     "why": "Translations and expert readings of Chinese technology policy documents and speeches."
     },
     {
-     "title": "China Briefing: what the summit agreed, and what not",
-     "url": "https://www.china-briefing.com/news/xi-trump-beijing-summit-what-was-agreed/",
+     "title": "ChinaTalk",
+     "url": "https://www.chinatalk.media/",
+     "kind": "newsletter",
+     "why": "Regular analysis and interviews on China, US technology policy and export controls."
+    },
+    {
+     "title": "Wikipedia: China-United States trade war",
+     "url": "https://en.wikipedia.org/wiki/China%E2%80%93United_States_trade_war",
      "kind": "overview",
-     "why": "Itemised list of summit outcomes and the gaps between US and Chinese readouts."
+     "why": "Dated timeline of tariffs, truces and export measures, with links to the news reports."
     }
    ]
   },
@@ -118,27 +154,30 @@
    "landmarks": [
     {
      "name": "Canada's 'AI for All' strategy",
-     "summary": "Launched by Mark Carney and AI minister Evan Solomon on 4 June, the six-pillar strategy includes building a sovereign AI foundation and reportedly more than C$2bn in spending.",
+     "summary": "Announced by Prime Minister Mark Carney on 4 June, the six-pillar strategy includes a sovereign AI foundation and continues more than C$2bn of existing compute investment.",
      "date": "2026-06",
      "kind": "policy",
      "source": "https://www.canada.ca/en/innovation-science-economic-development/news/2026/06/minister-solomon-highlights-canadas-national-artificial-intelligence.html",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "EU AI gigafactories tender",
-     "summary": "EuroHPC opened a tender on 30 July for up to seven AI gigafactories backed by up to EUR 10bn of EU and national funds; bids are due 3 December 2026 and 4 February 2027 by lot.",
+     "summary": "EuroHPC opened a call on 30 July to select consortia to build and run AI gigafactories; bids are due 3 December 2026 for Lot 2 and, after an extension, 4 February 2027 for Lot 1.",
      "date": "2026-07",
      "kind": "policy",
      "source": "https://www.eurohpc-ju.europa.eu/call-tenders-selection-artificial-intelligence-gigafactory-consortia-and-establishment-ai_en",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Saudi Humain expands Nvidia deal",
-     "summary": "PIF-owned Humain announced up to 84MW of Nvidia compute, about 27,000 GPUs, in two phases through 2027; the later Vera Rubin phase is subject to final agreements.",
+     "summary": "PIF-owned Humain announced 84MW of Nvidia capacity, about 27,000 GPUs, in two phases; the 70MW Vera Rubin phase planned from mid-2027 is subject to final agreements.",
      "date": "2026-10",
      "kind": "deal",
      "source": "https://www.thenationalnews.com/future/technology/2026/10/22/saudi-arabias-humain-expands-nvidia-deal-with-84mw-ai-computing-plan/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "US Genesis Mission for AI in science",
@@ -146,27 +185,34 @@
      "date": "2025-11",
      "kind": "policy",
      "source": "https://www.govinfo.gov/content/pkg/FR-2025-11-28/html/2025-21665.htm",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
-     "title": "Canada's national AI strategy (full text)",
+     "title": "Canada's National Artificial Intelligence Strategy: AI for All",
      "url": "https://ised-isde.canada.ca/site/ised/sites/default/files/documents/ai-strategy-en.pdf",
      "kind": "report",
-     "why": "The primary document: six pillars, funding lines and the build-partner-buy approach."
+     "why": "The primary document: six pillars, targets and the sovereign compute plans."
     },
     {
-     "title": "European Commission: AI gigafactories",
+     "title": "European Commission: AI Gigafactories",
      "url": "https://commission.europa.eu/topics/competitiveness/competitiveness-coordination-tool-projects/ai-gigafactories_en",
      "kind": "overview",
-     "why": "Official page with the programme's aims, timeline and the 2025 expressions of interest."
+     "why": "Official page on the programme's aims, funding approach and timeline."
     },
     {
-     "title": "MoFo: the Genesis Mission executive order explained",
-     "url": "https://www.mofo.com/resources/insights/251211-executive-order-establishes-genesis-mission",
-     "kind": "overview",
-     "why": "Plain summary of what the order requires of DOE and by when."
+     "title": "Stanford AI Index 2026: Policy and Governance chapter",
+     "url": "https://hai.stanford.edu/ai-index/2026-ai-index-report/policy-and-governance",
+     "kind": "report",
+     "why": "Yearly data on AI laws, public investment and national strategies across countries."
+    },
+    {
+     "title": "OECD.AI: national AI policies",
+     "url": "https://oecd.ai/en/dashboards/overview",
+     "kind": "tracker",
+     "why": "Searchable database of AI strategies and policy initiatives by country."
     }
    ]
   },
@@ -181,19 +227,21 @@
    "landmarks": [
     {
      "name": "International AI Safety Report 2026",
-     "summary": "Published 3 February and chaired by Yoshua Bengio, the second report finds continued capability gains and a widening gap between safety testing and real-world behaviour.",
+     "summary": "The second report, published in February and led by Yoshua Bengio with over 100 experts, finds pre-deployment tests often fail to predict how AI systems behave in real use.",
      "date": "2026-02",
      "kind": "research",
-     "source": "https://www.globalpolicywatch.com/2026/02/international-ai-safety-report-2026-examines-ai-capabilities-risks-and-safeguards/",
-     "verified": true
+     "source": "https://internationalaisafetyreport.org/publication/international-ai-safety-report-2026",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "New Delhi Declaration at AI Impact Summit",
-     "summary": "Eighty-six countries and two international organisations, including the US, UK, EU and China, endorsed a voluntary, nonbinding declaration on collaborative and inclusive AI.",
+     "summary": "The summit closed on 21 February with a declaration endorsed by 88 countries and organisations, including the US, UK, EU, China and Russia, built around voluntary frameworks.",
      "date": "2026-02",
      "kind": "policy",
      "source": "https://theprint.in/tech/ai-summit-ends-with-88-nations-adopting-new-delhi-declaration-calls-for-cooperation-sovereignty/2860446",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "First UN Global Dialogue on AI Governance",
@@ -201,7 +249,9 @@
      "date": "2026-07",
      "kind": "policy",
      "source": "https://www.un.org/global-dialogue-ai-governance/en/faq",
-     "verified": true
+     "verified": true,
+     "check": "snippet",
+     "note": "UN page is closed to scripts; dates rest on a search snippet from the earlier pass."
     }
    ],
    "deepDives": [
@@ -209,26 +259,33 @@
      "title": "International AI Safety Report 2026: extended summary",
      "url": "https://internationalaisafetyreport.org/publication/2026-report-extended-summary-policymakers",
      "kind": "report",
-     "why": "The report's own policymaker summary of capabilities, risks and safeguards."
+     "why": "The report's own 20-page policymaker summary of capabilities, risks and safeguards."
     },
     {
      "title": "UN Global Dialogue on AI Governance: FAQ",
      "url": "https://www.un.org/global-dialogue-ai-governance/en/faq",
      "kind": "overview",
-     "why": "How the Dialogue and the scientific panel work, who takes part and what comes next."
+     "why": "How the Dialogue and the scientific panel work, who takes part and what comes next.",
+     "unchecked": true
     },
     {
-     "title": "Covington: what the 2026 safety report covers",
-     "url": "https://www.insideprivacy.com/artificial-intelligence/international-ai-safety-report-2026-examines-ai-capabilities-risks-and-safeguards/",
+     "title": "Wikipedia: Independent International Scientific Panel on AI",
+     "url": "https://en.wikipedia.org/wiki/Independent_International_Scientific_Panel_on_AI",
      "kind": "overview",
-     "why": "Lawyer's digest of the report's main findings for readers short on time."
+     "why": "Background on the UN panel's mandate, origins and reporting duties, with source links."
+    },
+    {
+     "title": "GovAI: research",
+     "url": "https://www.governance.ai/research",
+     "kind": "community",
+     "why": "Research centre publishing papers on international AI governance and frontier regulation."
     }
    ]
   },
   {
    "id": "geo.defense",
    "name": "Defense & military AI",
-   "summary": "The Pentagon adopted an AI-first strategy and fought Anthropic in court over a supply chain risk label, while Ukraine pushes battlefield AI but says full integration is years away.",
+   "summary": "The Pentagon adopted an AI-first strategy and lost a first court ruling over its supply chain risk label for Anthropic, while Ukraine pushes battlefield AI but says full integration is years away.",
    "activity": 5,
    "maturity": "adopting",
    "whyItMatters": "Militaries are becoming major AI customers, and the terms they set test how far labs can restrict use of their models.",
@@ -236,47 +293,51 @@
    "landmarks": [
     {
      "name": "Pentagon AI Acceleration Strategy",
-     "summary": "Hegseth's January strategy aims for an 'AI-first' warfighting force, sets seven pace-setting projects and wants frontier models deployed within 30 days of public release.",
+     "summary": "Hegseth's January strategy aims for an 'AI-first' warfighting force, names seven pace-setting projects and orders 'any lawful use' language in AI contracts within 180 days.",
      "date": "2026-01",
      "kind": "policy",
      "source": "https://defensescoop.com/2026/01/13/hegseth-ai-tech-hubs-reorganization-dod-dow/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Court rules Anthropic risk label unlawful",
-     "summary": "A California federal judge ruled on 27 August that the Pentagon's supply chain risk label for Anthropic was unlawful; a separate DC case went the other way.",
+     "summary": "A California federal judge ruled on 27 August that the Pentagon's supply chain risk label for Anthropic was unlawful retaliation; a second suit in Washington DC is still pending.",
      "date": "2026-08",
      "kind": "incident",
      "source": "https://techcrunch.com/2026/08/28/anthropic-gets-its-first-court-win-over-the-pentagons-supply-chain-risk-label/",
-     "verified": true
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Ukraine bets on battlefield AI",
-     "summary": "Defense AI Center head Danylo Tsvok told AP that AI is a matter of national survival and that full battlefield integration may take three to five years.",
+     "summary": "Defense AI Center head Danylo Tsvok told AP that AI is 'about our survival' and that a networked, AI-coordinated battlefield could arrive within three to five years.",
      "date": "2026-04",
      "kind": "experiment",
      "source": "https://wtop.com/russia-ukraine-war-news/2026/04/the-ap-interview-ukraine-bets-on-battlefield-ai-as-the-race-for-weapons-autonomy-intensifies/",
-     "verified": true
+     "verified": true,
+     "check": "page",
+     "note": "AP interview read on a member station's copy; AP's own site is closed to scripts."
     }
    ],
    "deepDives": [
     {
      "title": "Release of the War Department's AI Acceleration Strategy",
-     "url": "https://www.cto.mil/?p=13655",
+     "url": "https://www.cto.mil/release-of-the-war-departments-ai-acceleration-strategy/",
      "kind": "report",
-     "why": "The department's own release of the strategy, for reading the text rather than coverage."
+     "why": "The department's own release: three pillars and seven pace-setting projects."
     },
     {
-     "title": "Nextgov: DOD's AI acceleration strategy",
-     "url": "https://nextgov.com/ideas/2026/02/dods-ai-acceleration-strategy/411135",
-     "kind": "overview",
-     "why": "Commentary on what the strategy changes in practice and where it may fall short."
+     "title": "CSIS: Ukraine's Future Vision and Current Capabilities for Waging AI-Enabled Autonomous Warfare",
+     "url": "https://www.csis.org/analysis/ukraines-future-vision-and-current-capabilities-waging-ai-enabled-autonomous-warfare",
+     "kind": "report",
+     "why": "Detailed think-tank study of how Ukraine builds and fields military AI and autonomy."
     },
     {
-     "title": "Small Wars Journal: Ukraine bets on AI",
-     "url": "https://smallwarsjournal.com/2026/05/03/ukraine-bets-on-ai/",
-     "kind": "overview",
-     "why": "Practitioner-oriented take on Ukraine's battlefield AI programme."
+     "title": "SIPRI: Artificial intelligence",
+     "url": "https://www.sipri.org/research/armament-and-disarmament/emerging-military-and-security-technologies/artificial-intelligence",
+     "kind": "community",
+     "why": "Research programme on military AI, autonomy and arms control, with reports and data."
     }
    ]
   },
@@ -295,34 +356,60 @@
      "date": "2026-06",
      "kind": "research",
      "source": "https://www.gartner.com/en/newsroom/press-releases/2026-06-10-gartner-says-data-center-electricity-demand-to-grow-26-percent-in-2026",
-     "verified": true
+     "verified": true,
+     "check": "snippet",
+     "note": "Gartner page is closed to scripts; figures rest on a search snippet."
     },
     {
      "name": "Meta backs up to 6.6GW of nuclear power",
-     "summary": "Deals announced on 9 January with Vistra, Oklo and TerraPower cover existing plants and planned advanced reactors; Meta says they could support up to 6.6GW by 2035.",
+     "summary": "Agreements announced on 9 January with Vistra, TerraPower and Oklo cover existing plants and planned advanced reactors; Meta says they support up to 6.6GW by 2035.",
      "date": "2026-01",
      "kind": "deal",
-     "source": "https://www.axios.com/2026/01/09/meta-nuclear-deal-vistra-terrapower-oklo",
-     "verified": true
+     "source": "https://about.fb.com/news/2026/01/meta-nuclear-energy-projects-power-american-ai-leadership/",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "BNEF: data centres a fifth of US power by 2035",
-     "summary": "BloombergNEF projects data centres at about 20% of US electricity use by 2035, up from about 6% now, with the share in the PJM grid reported at roughly a third.",
+     "summary": "BloombergNEF projects data centres at about 20% of US electricity use in 2035, up from 5.9% today and 12% in 2030, with above-average shares in the PJM and Texas grids.",
      "date": "2026-07",
      "kind": "research",
      "source": "https://news.bloomberglaw.com/business-and-practice/data-centers-on-track-to-suck-up-a-fifth-of-us-power-use-by-2035",
-     "verified": true
+     "verified": true,
+     "check": "page"
+    },
+    {
+     "name": "Epoch AI maps the largest AI data centres",
+     "summary": "Epoch AI's satellite and permit-based database, updated 6 November, covers 96 AI data centre sites with an estimated 15.1GW of IT power.",
+     "date": "2026-11",
+     "kind": "research",
+     "source": "https://epoch.ai/data/ai-data-centers",
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
-     "title": "Gartner: data centre electricity forecast 2026",
-     "url": "https://www.gartner.com/en/newsroom/press-releases/2026-06-10-gartner-says-data-center-electricity-demand-to-grow-26-percent-in-2026",
+     "title": "IEA: Energy and AI",
+     "url": "https://www.iea.org/reports/energy-and-ai",
      "kind": "report",
-     "why": "Headline TWh and GW forecasts to 2030 and the split between AI and conventional servers."
+     "why": "The reference international study of data centre electricity demand and supply options.",
+     "unchecked": true
     },
     {
-     "title": "World Nuclear News: Meta's nuclear agreements",
+     "title": "Epoch AI: data on AI data centres",
+     "url": "https://epoch.ai/data/ai-data-centers",
+     "kind": "tracker",
+     "why": "Open database of the largest AI data centres: power, compute and cost estimates per site."
+    },
+    {
+     "title": "US DOE: report on electricity demand from data centres",
+     "url": "https://www.energy.gov/articles/doe-releases-new-report-evaluating-increase-electricity-demand-data-centers",
+     "kind": "report",
+     "why": "Government summary of the Berkeley Lab study projecting US data centre load to 2028."
+    },
+    {
+     "title": "World Nuclear News: Meta announces agreements for new nuclear",
      "url": "https://world-nuclear-news.org/articles/meta-announces-landmark-agreements-for-new-nuclear",
      "kind": "overview",
      "why": "Industry-press detail on each deal: plants, megawatts and target dates."
@@ -340,54 +427,64 @@
    "landmarks": [
     {
      "name": "AI-generated ads in US midterms",
-     "summary": "The Wesleyan Media Project tracked well over $100m of spending on AI-generated or AI-enhanced political ads in 2026 races; only about 27% carried an AI disclaimer.",
+     "summary": "The Wesleyan Media Project counted 220 AI-generated ads with over $137m of spending by mid-October, 27% carrying a disclaimer; two weeks later it tracked 289 ads and $187m.",
      "date": "2026-10",
      "kind": "incident",
-     "source": "https://gizmodo.com/137-million-has-been-spent-on-ai-generated-ads-ahead-of-midterms-only-27-included-a-disclaimer-2000827138",
-     "verified": true
+     "source": "https://mediaproject.wesleyan.edu/releases-101526/",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "State AI ad laws fail to ensure disclosure",
-     "summary": "AP reported that AI ads were popular in the midterms while state labelling laws, reportedly in 31 states, had not stopped a lack of disclosure; there is no federal rule.",
+     "summary": "AP reported that AI attack ads were common in the midterms and that candidates at times disregarded a patchwork of state disclosure laws.",
      "date": "2026-09",
      "kind": "policy",
      "source": "https://www.ajc.com/news/2026/09/ai-ads-are-popular-in-the-2026-midterms-but-state-laws-havent-stopped-a-lack-of-disclosure/",
-     "verified": true
+     "verified": true,
+     "check": "page",
+     "note": "AP story read on a member newspaper's copy; AP's own site is closed to scripts."
     },
     {
      "name": "Few voters use chatbots for election info",
-     "summary": "A Pew survey of 5,273 US adults in October found 8% using AI chatbots for 2026 election information, rising to 11% of those under 50.",
+     "summary": "A Pew survey of 5,273 US adults on 12-18 October found 8% using AI chatbots for 2026 election information: 11% of those under 50 and 4% of those older.",
      "date": "2026-10",
      "kind": "research",
      "source": "https://www.pewresearch.org/short-reads/2026/10/23/few-americans-say-they-are-asking-ai-chatbots-for-2026-election-information",
-     "verified": true
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
-     "title": "Wesleyan Media Project: AI in political ads",
-     "url": "https://mediaproject.wesleyan.edu/?p=56458",
+     "title": "Wesleyan Media Project: 2026 election releases",
+     "url": "https://mediaproject.wesleyan.edu/category/releases/2026-elections/",
      "kind": "tracker",
-     "why": "The research group's own running counts of AI ad spending, sponsors and disclaimers."
+     "why": "Running reports on political ad spending, including counts of AI-generated ads."
     },
     {
-     "title": "Pew: chatbots and 2026 election information",
-     "url": "https://www.pewresearch.org/short-reads/2026/10/23/few-americans-say-they-are-asking-ai-chatbots-for-2026-election-information",
-     "kind": "report",
-     "why": "Survey data on who asks chatbots about elections and what they ask for."
-    },
-    {
-     "title": "States United: how well AI answers voter questions",
+     "title": "States United: How Well Do AI Platforms Answer Voter Questions?",
      "url": "https://statesunited.org/resources/ai-and-elections/",
      "kind": "report",
-     "why": "Tests of AI platforms' answers to practical voting questions."
+     "why": "Tests of AI platforms' answers to practical voting questions before the midterms."
+    },
+    {
+     "title": "Public Citizen: Tracker of State Legislation on Deepfakes in Elections",
+     "url": "https://www.citizen.org/article/tracker-legislation-on-deepfakes-in-elections/",
+     "kind": "tracker",
+     "why": "State-by-state status of laws on deepfakes and AI disclosure in campaigns."
+    },
+    {
+     "title": "Knight Institute: We Looked at 78 Election Deepfakes",
+     "url": "https://knightcolumbia.org/blog/we-looked-at-78-election-deepfakes-political-misinformation-is-not-an-ai-problem",
+     "kind": "paper",
+     "why": "Sceptical analysis arguing that election misinformation is mostly not an AI problem."
     }
    ]
   },
   {
    "id": "geo.open-weights",
    "name": "Open vs closed models",
-   "summary": "Chinese labs keep releasing strong open-weight models and are reported to lead open-model usage, while Meta moved its newest frontier model to closed weights.",
+   "summary": "Chinese labs keep releasing strong open-weight models and are reported to lead open-model usage; Meta launched its Muse Spark model closed in April, then released a smaller open model in August.",
    "activity": 4,
    "maturity": "established",
    "whyItMatters": "Open weights decide who can run and adapt capable models without permission, including outside the US.",
@@ -395,98 +492,142 @@
    "landmarks": [
     {
      "name": "Meta launches closed Muse Spark",
-     "summary": "The first model from Meta Superintelligence Labs shipped on 8 April with no public weights, a break from Llama; Meta said future versions may be open-sourced.",
+     "summary": "The first model from Meta Superintelligence Labs launched on 8 April through meta.ai and a private API preview, with no downloadable weights, a break from the Llama line.",
      "date": "2026-04",
      "kind": "product",
-     "source": "https://www.bloomberg.com/news/articles/2026-04-08/meta-debuts-first-ai-model-from-prized-superintelligence-group",
-     "verified": true
+     "source": "https://ai.meta.com/blog/introducing-muse-spark-msl/",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "DeepSeek V4 released as open weights",
-     "summary": "DeepSeek posted V4-Pro and V4-Flash on Hugging Face on 24 April, keeping its flagship models openly downloadable a year after its first breakout release.",
+     "summary": "DeepSeek released V4-Pro (1.6 trillion parameters) and V4-Flash as open weights on Hugging Face on 24 April, both with a one-million-token context window.",
      "date": "2026-04",
      "kind": "product",
-     "source": "https://thenextweb.com/news/deepseek-v4-pro-flash-launch-open-source",
-     "verified": true
+     "source": "https://api-docs.deepseek.com/news/news260424",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "Chinese models dominate open-weight usage",
-     "summary": "Analyses of OpenRouter data put Chinese open-weight models at roughly 61% of routed tokens by May 2026, led by Qwen, DeepSeek, GLM and Kimi.",
+     "summary": "A Wing VC analysis of OpenRouter data puts Chinese open-weight models at about 61% of routed tokens by May 2026, with four of the five most-used models Chinese.",
      "date": "2026-05",
      "kind": "research",
      "source": "https://www.wing.vc/content/chinas-open-weight-takeover",
-     "verified": false,
-     "note": "Single VC analysis; figure not re-checked this pass (search budget ran out)."
+     "verified": true,
+     "check": "page",
+     "note": "Single VC analysis of OpenRouter data, not an official OpenRouter figure."
     },
     {
-     "name": "MIT Tech Review on China's open-source lead",
-     "summary": "Reporting examines how Chinese open models overtook US ones in downloads and why US policymakers now see open weights as a strategic issue.",
+     "name": "MIT Tech Review on China's open-source bet",
+     "summary": "The article says Chinese labs win developers by making top models free, citing a study that put China at 17.1% of model downloads against 15.86% for the US.",
      "date": "2026-04",
      "kind": "debate",
      "source": "https://www.technologyreview.com/2026/04/21/1135658/china-open-source-models-ai-artificial-intelligence/",
-     "verified": false,
-     "note": "Plausible and important; article could not be opened or searched this pass."
+     "verified": true,
+     "check": "page"
+    },
+    {
+     "name": "Meta releases open-weight Muse Glimmer",
+     "summary": "On 10 August Meta put the weights of Muse Glimmer, a smaller model based on its closed Spark 1.2, on Hugging Face for free; it can run on a single GPU.",
+     "date": "2026-08",
+     "kind": "product",
+     "source": "https://www.engadget.com/2233312/metas-open-source-muse-glimmer-model-can-run-on-a-single-computer/",
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
-     "title": "Open Source AI Definition",
+     "title": "Open Source Initiative: The Open Source AI Definition",
      "url": "https://opensource.org/ai",
      "kind": "overview",
-     "why": "The OSI's definition of what counts as open source AI, and why weights alone do not.",
-     "unchecked": true
+     "why": "The OSI's definition of what counts as open source AI, and why weights alone do not."
     },
     {
-     "title": "Hugging Face model hub",
+     "title": "Hugging Face: Models",
      "url": "https://huggingface.co/models",
      "kind": "tracker",
-     "why": "Where open-weight models are published; sort by trending to see what is being used.",
-     "unchecked": true
+     "why": "Where open-weight models are published; sort by trending to see what is being used."
+    },
+    {
+     "title": "NTIA: Dual-Use Foundation Models with Widely Available Model Weights",
+     "url": "https://www.ntia.gov/programs-and-initiatives/artificial-intelligence/open-model-weights-report",
+     "kind": "report",
+     "why": "US government report weighing the risks and benefits of open model weights."
+    },
+    {
+     "title": "Interconnects AI",
+     "url": "https://www.interconnects.ai/",
+     "kind": "newsletter",
+     "why": "Nathan Lambert's newsletter, with regular coverage of open models and their adoption."
     }
    ]
   },
   {
    "id": "geo.regulation",
    "name": "Domestic AI regulation",
-   "summary": "The EU delayed AI Act high-risk rules to 2027-28 via a digital omnibus, and the US White House moved to preempt state AI laws through litigation and funding conditions.",
+   "summary": "The EU's AI Omnibus pushed high-risk rules to 2027-28, while the White House moved to preempt state AI laws through litigation, funding conditions and a proposed federal framework.",
    "activity": 4,
    "maturity": "adopting",
    "whyItMatters": "These rules set the compliance burden for anyone building or deploying AI in the two largest Western markets.",
    "openQuestion": "Will delay and preemption produce simpler rules, or a long gap with few binding rules at all?",
    "landmarks": [
     {
-     "name": "EU agrees AI Act omnibus delay",
-     "summary": "Provisional deal moves high-risk obligations to December 2027 and August 2028 and adds a ban on nudification apps.",
-     "date": "2026-05",
+     "name": "EU AI Omnibus delays high-risk rules",
+     "summary": "Agreed on 7 May and in force from 27 July, the AI Omnibus moves high-risk obligations to 2 December 2027 and 2 August 2028 and bans AI nudification apps from December 2026.",
+     "date": "2026-07",
      "kind": "policy",
-     "source": "https://www.euronews.com/2026/05/07/eu-reaches-tentative-deal-to-simplify-ai-rules",
-     "verified": false,
-     "note": "Not re-checked this pass (search budget ran out); marked verified by the earlier pass."
+     "source": "https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai",
+     "verified": true,
+     "check": "page"
     },
     {
      "name": "US order targets state AI laws",
-     "summary": "A December 2025 executive order created a DOJ AI Litigation Task Force, formed in January 2026, and tied broadband funds to state AI rules; its legality is contested.",
+     "summary": "Executive Order 14365 of 11 December 2025 orders a DOJ AI Litigation Task Force to challenge state AI laws and ties remaining BEAD broadband funds to states' AI rules.",
      "date": "2025-12",
      "kind": "policy",
-     "source": "https://axios.com/2025/12/11/trump-signs-executive-order-state-ai-laws",
-     "verified": false,
-     "note": "Not re-checked this pass (search budget ran out); marked verified by the earlier pass."
+     "source": "https://www.govinfo.gov/content/pkg/FR-2025-12-16/html/2025-23092.htm",
+     "verified": true,
+     "check": "page"
+    },
+    {
+     "name": "White House AI legislative framework",
+     "summary": "Released on 20 March, the framework asks Congress to act in seven areas, including preempting state AI laws it calls unduly burdensome while keeping child-protection laws.",
+     "date": "2026-03",
+     "kind": "policy",
+     "source": "https://www.nga.org/updates/in-summary-the-white-house-national-legislative-policy-framework-for-artificial-intelligence/",
+     "verified": true,
+     "check": "page"
+    },
+    {
+     "name": "US order on frontier model security",
+     "summary": "Executive Order 14409 of 2 June sets up an AI cybersecurity clearinghouse and provides for government access to covered frontier models up to 30 days before wider release.",
+     "date": "2026-06",
+     "kind": "policy",
+     "source": "https://www.govinfo.gov/content/pkg/FR-2026-06-05/html/2026-11415.htm",
+     "verified": true,
+     "check": "page"
     }
    ],
    "deepDives": [
     {
-     "title": "EU AI Act Explorer",
-     "url": "https://artificialintelligenceact.eu/",
-     "kind": "overview",
-     "why": "Searchable text of the Act with timelines and summaries.",
-     "unchecked": true
-    },
-    {
-     "title": "European Commission: AI regulatory framework",
+     "title": "European Commission: AI Act",
      "url": "https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai",
      "kind": "overview",
-     "why": "The Commission's own page on the Act, its codes and guidance.",
-     "unchecked": true
+     "why": "The Commission's own page on the Act, the Omnibus changes, codes and guidance."
+    },
+    {
+     "title": "EU AI Act: Implementation Timeline",
+     "url": "https://artificialintelligenceact.eu/implementation-timeline/",
+     "kind": "tracker",
+     "why": "Dated list of when each part of the Act applies, linked to the article text."
+    },
+    {
+     "title": "IAPP: Global AI Law and Policy Tracker",
+     "url": "https://iapp.org/resources/article/global-ai-legislation-tracker/",
+     "kind": "tracker",
+     "why": "Country-by-country summary of AI laws and policy, updated several times a year."
     },
     {
      "title": "NCSL: AI legislation in the US states",
@@ -506,22 +647,28 @@
    "why": "Shared evidence base on capabilities and risks that governments cite in AI diplomacy."
   },
   {
-   "title": "CNAS Insights: Unpacking the H200 Export Policy",
-   "url": "https://www.cnas.org/publications/cnas-insights/cnas-insights-unpacking-the-h200-export-policy",
+   "title": "Stanford HAI: The 2026 AI Index Report",
+   "url": "https://hai.stanford.edu/ai-index/2026-ai-index-report",
    "kind": "report",
-   "why": "Clear analysis of the chip export rules at the centre of US-China AI competition."
+   "why": "Yearly reference data on AI investment, policy and national standing."
   },
   {
-   "title": "UN Global Dialogue on AI Governance: FAQ",
-   "url": "https://www.un.org/global-dialogue-ai-governance/en/faq",
-   "kind": "overview",
-   "why": "How the new UN dialogue and scientific panel are meant to work."
+   "title": "Emerging Technology Observatory (CSET)",
+   "url": "https://eto.tech/",
+   "kind": "tracker",
+   "why": "Open datasets on chips, research and country comparisons from Georgetown's CSET."
   },
   {
-   "title": "Gartner: data centre electricity forecast 2026",
-   "url": "https://www.gartner.com/en/newsroom/press-releases/2026-06-10-gartner-says-data-center-electricity-demand-to-grow-26-percent-in-2026",
-   "kind": "report",
-   "why": "Reference numbers for the energy side of the AI buildout."
+   "title": "Epoch AI: data on AI data centres",
+   "url": "https://epoch.ai/data/ai-data-centers",
+   "kind": "tracker",
+   "why": "Site-level estimates of the compute and power behind the AI buildout."
+  },
+  {
+   "title": "Import AI",
+   "url": "https://importai.substack.com/",
+   "kind": "newsletter",
+   "why": "Jack Clark's weekly newsletter linking AI research to policy and geopolitics."
   }
  ]
 }

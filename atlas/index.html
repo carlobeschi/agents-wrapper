@@ -238,7 +238,7 @@ button { font: inherit; color: inherit; }
     <div class="ramp-labels"><span>quiet</span><span>contour = 1 point</span><span>busiest</span></div>
     <div class="key-row"><svg width="22" height="14" aria-hidden="true"><rect width="22" height="14" fill="url(#hatch)" stroke="var(--border)" stroke-dasharray="3 3"></rect></svg>Hatched: frontier research</div>
     <div class="key-row"><svg width="22" height="14" aria-hidden="true"><path d="M1 10 Q11 0 21 10" fill="none" stroke="var(--lane)" stroke-width="1.6" stroke-dasharray="2 4" stroke-linecap="round"></path></svg>Lane: fields feeding each other</div>
-    <div class="key-row"><svg width="22" height="14" aria-hidden="true"><circle cx="6" cy="7" r="4" class="dot"></circle><circle cx="16" cy="7" r="4" class="dot unv"></circle></svg>Landmark: source checked / not confirmed</div>
+    <div class="key-row"><svg width="22" height="14" aria-hidden="true"><circle cx="6" cy="7" r="4" class="dot"></circle><circle cx="16" cy="7" r="4" class="dot unv"></circle></svg>Landmark: checked on its source page / not</div>
   </aside>
 
   <div id="zoom" class="card" role="group" aria-label="Zoom">
@@ -426,7 +426,7 @@ D.fields.forEach(f => f.regions.forEach(r => {
   r.landmarks.forEach((l, i) => {
     const th = i * 2.4 + r.x * 0.01, rad = 30 + 11 * i;
     l.x = r.x + Math.cos(th) * rad; l.y = r.y + 16 + Math.sin(th) * rad * 0.75;
-    const c = el('circle', { class: 'dot' + (l.verified ? '' : ' unv'), r: 4.2 }, overlay);
+    const c = el('circle', { class: 'dot' + (l.verified && l.check === 'page' ? '' : ' unv'), r: 4.2 }, overlay);
     const t2 = el('text', { class: 'lab-lm' }, overlay); t2.textContent = l.name;
     items.push({ kind: 'lm', el: t2, dot: c, x: l.x, y: l.y, w: l.name.length * 5.7 + 10, h: 14, pri: 10 + (l.verified ? 5 : 0) + (l.date || '').localeCompare('2025') * 0, lm: l });
   });
@@ -560,7 +560,7 @@ function groupByField(regs, sub) {
   return D.fields.filter(f => regs.some(r => r.field === f)).map(f => `<h3>${esc(f.name)}</h3><ul class="list">${regs.filter(r => r.field === f).sort((a, b) => b.activity - a.activity).map(r => regionRow(r, sub ? sub(r) : MATURITY[r.maturity] + ' · ' + r.summary)).join('')}</ul>`).join('');
 }
 const neighbours = (r, n) => r.field.regions.filter(o => o !== r).sort((a, b) => Math.hypot(a.x - r.x, a.y - r.y) - Math.hypot(b.x - r.x, b.y - r.y)).slice(0, n);
-const KEY_PHONE = `<div class="phone-only"><h3>How to read the map</h3><p class="fine">Higher, redder ground means more activity; each contour line is one point on a 1 to 5 scale. Hatching marks frontier research. Dotted lanes join topics in different fields that feed each other. A filled dot is a landmark checked against its source; a hollow dot could not be confirmed.</p></div>`;
+const KEY_PHONE = `<div class="phone-only"><h3>How to read the map</h3><p class="fine">Higher, redder ground means more activity; each contour line is one point on a 1 to 5 scale. Hatching marks frontier research. Dotted lanes join topics in different fields that feed each other. A filled dot is a landmark compared with its source page; a hollow dot was not.</p></div>`;
 
 function panelWorld() {
   const all = landmarks.length, unv = landmarks.filter(l => !l.verified).length;
@@ -584,7 +584,7 @@ function panelWorld() {
   <ul class="list">${newest(landmarks, 6).map(lmRow).join('')}</ul>
   ${KEY_PHONE}
   <h3>About this edition</h3>
-  <p class="fine">Compiled ${esc(fmtDate(D.asOf))} from public sources by research agents. Of ${all} landmarks, ${landmarks.filter(l => l.verified && l.check === 'page').length} were compared with their source page, ${landmarks.filter(l => l.verified && l.check !== 'page').length} match a search result only${unv ? `, and ${unv} could not be confirmed and are drawn as hollow dots` : ''}. Each landmark says which. Activity scores are judgement calls, relative across all fields. Follow the source links before quoting anything.</p>`;
+  <p class="fine">Compiled ${esc(fmtDate(D.asOf))} from public sources by research agents. Of ${all} landmarks, ${landmarks.filter(l => l.verified && l.check === 'page').length} were compared with their source page, ${landmarks.filter(l => l.verified && l.check !== 'page').length} match a search result only${unv ? `, and ${unv} could not be confirmed` : ''}. Those not compared with a source page are drawn as hollow dots, and each landmark says how it was checked. Activity scores are judgement calls, relative across all fields. Follow the source links before quoting anything.</p>`;
 }
 function panelField(f) {
   const regs = f.regions.slice().sort((a, b) => b.activity - a.activity);
