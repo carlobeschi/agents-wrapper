@@ -115,3 +115,12 @@ test('maths markup and one pair of outer brackets around an answer are ignored',
   expect(same('\\text{TTHHTHHH}', 'tthhthhh')).toBe(true);
   expect(same('(1, 2)', '(2, 1)')).toBe(false);
 });
+
+test('maths in agent text reaches the page as TeX: kramdown makes no table, emphasis or lost backslash of it', () => {
+  const { inertForSite } = require('../frontmatter');
+  const tex = 'edges when $|u-v| \\in \\{1, 3\\}$, paths $A^3_{u,v}$ and $B_{u,v}$, digits \\(0,\\ldots,9\\), and **bold** <b>';
+  expect(inertForSite(tex, { math: true })).toBe(
+    'edges when \\$\\|u\\-v\\| \\\\in \\\\\\{1, 3\\\\\\}\\$, paths \\$A^3\\_\\{u,v\\}\\$ and \\$B\\_\\{u,v\\}\\$, digits \\\\\\(0,\\\\ldots,9\\\\\\), and **bold** \\<b>');
+  // Without the option, text is escaped as before (the Motion and other shows).
+  expect(inertForSite('$5 and $10 <b>')).toBe('$5 and $10 \\<b>');
+});
