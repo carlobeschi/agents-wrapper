@@ -1,0 +1,62 @@
+{
+ "title": "Study 3d: Claude trio (three copies) on the drawing",
+ "agents": [
+  "claude#1",
+  "claude#2",
+  "claude#3"
+ ],
+ "judges": [
+  "claude",
+  "codex",
+  "antigravity"
+ ],
+ "room": {
+  "silent": true,
+  "turns": true,
+  "moves": 8,
+  "min_moves": 3,
+  "lines_per_move": 4,
+  "max_minutes": 6,
+  "words": 25,
+  "safe_word": {
+   "word": "STUCK",
+   "uses": 1
+  }
+ },
+ "tasks": [
+  {
+   "id": "cat",
+   "kind": "svg",
+   "start": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 400\">",
+    "</svg>"
+   ],
+   "brief": "Draw this scene on this 400 by 400 canvas: a lighthouse keeper\u2019s cat watching a storm from the window. Use simple shapes (no text, letters or digits anywhere). Someone who knows nothing will be shown the picture and asked what it shows.",
+   "guess": {
+    "agent": "claude",
+    "answers": [
+     [
+      "cat"
+     ],
+     [
+      "lighthouse"
+     ],
+     [
+      "storm",
+      "rain",
+      "lightning",
+      "waves"
+     ]
+    ]
+   },
+   "checks": [
+    {
+     "say": "No text in the drawing.",
+     "type": "every",
+     "pattern": "^(?!.*<text)"
+    }
+   ]
+  }
+ ],
+ "repeats": 3
+}
