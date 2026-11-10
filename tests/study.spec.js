@@ -185,3 +185,49 @@ esac`, 'x', '{prompt}'];
   expect(md).toContain('## Position check');
   expect(t.repeats[0].runs.versions === undefined).toBe(true);
 });
+
+test('tournament: drafts made alone, reviewed, revised as new versions, the better one picked; judged against a conversation', () => {
+  const { alike } = require('../study');
+  expect(alike('the same words here', 'the same words here')).toBe(100);
+  expect(alike('abcdefgh', 'zyxwvuts')).toBe(0);
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'study8-home-'));
+  const fk = ['sh', '-c', `case "$1" in
+  *"Score each from 1 to 10"*) printf 'A: 5\\nB: 7\\nBEST: B\\n';;
+  *"Review this draft"*) printf 'BRIEF: say flour twice\\n1. add flour\\n';;
+  *"Count, from the record only"*) printf 'CHANGED: 0\\nCAUGHT: 0\\nPASSED: 0\\nBUILT: 0\\n';;
+  *"just finished"*) printf 'ok\\n';;
+  *"A reviewer read it"*) printf 'INSERT AFTER 1\\nflour again\\nEND\\nSTATUS: done\\n';;
+  *) printf 'INSERT AFTER 0\\nflour\\nEND\\nSTATUS: done\\n';;
+esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: fk }, { id: 'b', label: 'B', headless: fk }] }));
+  const file = path.join(home, 's.json');
+  fs.writeFileSync(file, JSON.stringify({ title: 'T8', agents: ['a#1', 'a#2'], judges: ['a'], solo: ['a'],
+    room: { moves: 2, min_moves: 0, turns: true }, repeats: 2,
+    variants: [{ label: 'talk', room: { silent: false } }, { label: 'tournament', tournament: { generate: ['a#1', 'a#2'], review: 'b', rank: 'a' } }],
+    tasks: [{ id: 'bake', kind: 'poem', brief: 'a poem', checks: [{ say: 'Says flour twice.', type: 'contains', word: 'flour', min: 2 }] }] }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'study.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Study folder: (.+)/)[1].trim();
+  const t = JSON.parse(fs.readFileSync(path.join(dir, 'study.json'), 'utf8')).tasks[0];
+  expect(Object.keys(t.repeats[0].runs)).toEqual(['a alone', 'talk', 'tournament']);
+  const run = t.repeats[0].runs.tournament;
+  // The ranker picked letter B (the order is shuffled); that version is the arm's piece.
+  const w = Number(run.tournament.rank.pieces.find(p => p.letter === 'B').label.slice(1)) - 1;
+  expect(run.tournament).toMatchObject({ generators: ['a-1', 'a-2'], reviewer: 'b', ranker: 'a', winner: `a-${w + 1}`, rankFailed: false });
+  expect(run.dir).toBe(run.tournament.drafts[w].revision);
+  // The reviewer saw the draft and the check; the generator got the review as a secret and kept its draft as the start.
+  const rp = fs.readFileSync(path.join(dir, 'steps', 'review-bake-1-tournament-1.prompt.md'), 'utf8');
+  expect(rp).toContain('- Says flour twice.');
+  expect(rp).toContain('--- draft ---\nflour');
+  expect(run.tournament.drafts[0]).toMatchObject({ checks: { passed: 0 }, revisedChecks: { passed: 1 }, review: expect.stringContaining('add flour') });
+  expect(fs.readFileSync(path.join(run.dir, 'final.txt'), 'utf8')).toBe('flour\nflour again\n');
+  // The generators never talk: drafts and revisions are rooms of one.
+  expect(JSON.parse(fs.readFileSync(path.join(run.dir, 'timeline.json'), 'utf8')).agents.map(a => a.id)).toEqual([`a-${w + 1}`]);
+  expect(t.tournament.tournament).toMatchObject({ runs: 2, draftsAlike: 100, draftChecks: 0, revisedChecks: 1 });
+  expect(Object.values(t.tournament.tournament.wins).reduce((x, y) => x + y)).toBe(2);
+  expect(t.tournament.talk).toBeNull();
+  expect(t.alike.tournament).toBe(100);
+  const md = fs.readFileSync(path.join(dir, 'summary.md'), 'utf8');
+  expect(md).toMatch(/- tournament: winner .* of 2 · the two drafts alike 100% · a revision kept \d+% of its draft · checks 0 in drafts, 1 after revision/);
+  expect(md).toContain('How alike the final pieces of each arm are across repeats');
+});
