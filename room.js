@@ -67,8 +67,11 @@ const capWords = (s, n) => { const w = String(s).match(/\S+/g) || []; return w.l
 // "claude" or "claude#2": the second is another agent of the same model.
 function resolveAgent(all, spec) {
   const [base, n] = String(spec).split('#');
-  // "openrouter:<model>": a text-only agent through OpenRouter (openrouter.js).
-  const a = base.startsWith('openrouter:') ? require('./openrouter').agentFor(base.slice('openrouter:'.length)) : all.find(x => x.id === base && x.headless);
+  // "openrouter:<model>": a text-only agent through OpenRouter (openrouter.js);
+  // "local:<model>": the same, with a model Ollama runs on this computer.
+  const a = base.startsWith('openrouter:') ? require('./openrouter').agentFor(base.slice('openrouter:'.length))
+    : base.startsWith('local:') ? require('./openrouter').agentFor(base.slice('local:'.length), true)
+    : all.find(x => x.id === base && x.headless);
   if (!a) throw new Error(`no headless agent "${base}" in agents.json`);
   return n ? { ...a, id: `${a.id}-${n}`, base, label: `${a.label} ${n}` } : { ...a, base };
 }

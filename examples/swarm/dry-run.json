@@ -1,0 +1,12 @@
+{
+ "title": "Study 10 dry run: 4 agents, 1 repeat, local only",
+ "run": "swarm-dry",
+ "small": ["local:qwen3:8b"],
+ "strong": "local:qwen3:8b",
+ "budget": 12,
+ "swarm": 4,
+ "repeats": 1,
+ "seed": 99,
+ "map": { "regions": 20, "area": 5 },
+ "nest": { "sites": 12, "inspect": 2 }
+}
