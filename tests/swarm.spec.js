@@ -8,11 +8,17 @@ const fs = require('fs');
 const http = require('http');
 const os = require('os');
 const path = require('path');
-const { makeMap, makeNest, conflicts, mapScore, nestScore, parseMap } = require('../swarm');
+const { makeMap, makeNest, makeGather, conflicts, mapScore, nestScore, gatherScore, parseMap, parseGather } = require('../swarm');
 
 const COLOURS = ['red', 'green', 'blue', 'yellow'];
 
 function play(prompt) {
+  if (/hand in one list/.test(prompt)) {
+    const mine = prompt.match(/Your private number is (\d+)/)[1];
+    const board = (prompt.match(/^Board: (.*)$/m) || [])[1];
+    const xs = board && !/empty/.test(board) ? board.split(', ') : [];
+    return [`POST ${mine}`, xs.length ? `SUBMIT ${[...new Set([...xs, mine].map(Number))].sort((a, b) => a - b).join(', ')}` : null].filter(Boolean).join('\n');
+  }
   if (/You lead \d+ workers/.test(prompt) && /new home/.test(prompt)) {
     const reports = [...prompt.matchAll(/on site (\d+): quality (-?\d+)/g)];
     if (reports.length >= 3) return `DECIDE ${reports.sort((a, b) => Number(b[2]) - Number(a[2]))[0][1]}`;
@@ -69,6 +75,11 @@ test('map and nest generators: solvable map, one best site, scores 0-100', () =>
     expect(nestScore(n, null)).toBe(0);
   }
   expect(parseMap('**SET 3 blue**\nMARK area 2 3 help here\nGO 4').set).toEqual([{ i: 2, c: 2 }]);
+  const g = makeGather(1, 12);
+  expect(new Set(g).size).toBe(12);
+  expect(gatherScore(g, [...g].sort((a, b) => a - b))).toBe(100);
+  expect(gatherScore(g, null)).toBe(0);
+  expect(parseGather('POST 42\nSUBMIT: 1, 2, 42')).toEqual({ post: 42, submit: [1, 2, 42] });
 });
 
 test('a whole swarm study runs on local stand-in models and writes bench cells', async () => {
@@ -177,6 +188,39 @@ test('symmetry arms: everyone starts in one place, specialisation per agent, a k
     const nest = read('nest', 'swarm-marks-same').observations;
     expect(Object.values(nest.areas_by_agent).every(v => v.length <= 2)).toBe(true);
     expect(read('nest', 'swarm-no-marks-same').score).toBeGreaterThanOrEqual(0);
+  } finally { server.close(); }
+});
+
+test('gather task and the "self" incentive arm', async () => {
+  const prompts = [];
+  const server = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      const p = JSON.parse(body).messages[0].content;
+      prompts.push(p);
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ choices: [{ message: { content: play(p) } }] }));
+    });
+  });
+  await new Promise(r => server.listen(0, '127.0.0.1', () => r(null)));
+  try {
+    const port = /** @type {any} */ (server.address()).port;
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'swarm-gather-'));
+    fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [] }));
+    const file = path.join(home, 's.json');
+    fs.writeFileSync(file, JSON.stringify({ run: 'g', small: ['local:fake-a'], strong: 'local:fake-a', tasks: ['gather', 'map'], incentive: true,
+      budget: 12, swarm: 4, scale: [6], repeats: 1, seed: 2, map: { regions: 40, area: 5 } }));
+    const env = { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0', OLLAMA_BASE: `http://127.0.0.1:${port}` };
+    await promisify(execFile)('node', [path.join(__dirname, '..', 'swarm.js'), file, '--arms', 'swarm-marks,swarm-no-marks,swarm-marks-6,swarm-marks-self'], { env, encoding: 'utf8', maxBuffer: 1 << 24 });
+    const read = (t, a) => JSON.parse(fs.readFileSync(path.join(home, 'bench', 'g', 'cells', t, a, 'r1.json'), 'utf8'));
+    expect(read('gather', 'swarm-marks').score).toBe(100);
+    expect(read('gather', 'swarm-marks-6').observations.right.length).toBe(6);
+    expect(read('gather', 'swarm-no-marks').score).toBeLessThan(100);
+    expect(read('map', 'swarm-marks-self').calls).toBe(12);
+    expect(prompts.some(p => /You are scored only on the conflicts you fix yourself/.test(p))).toBe(true);
+    expect(prompts.some(p => /The whole team is scored together, on the conflicts left/.test(p))).toBe(true);
+    expect(prompts.filter(p => /hand in one list/.test(p) && /Board:/.test(p)).length).toBeGreaterThan(0);
   } finally { server.close(); }
 });
 

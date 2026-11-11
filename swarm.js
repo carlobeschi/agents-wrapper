@@ -31,6 +31,16 @@
 // entropy of the areas each agent worked in), spread_by_round and, with a
 // knockout, spread before and after it. Read them run by run: a split that
 // goes a different way each run averages out to nothing.
+//
+// From s3 (Jha et al., design section 12):
+//  - "tasks": [..., "gather"]: every agent holds a private number and the team
+//    must hand in the full sorted list, through a board (swarm-marks) or with
+//    no channel (swarm-no-marks). A gauge for the 4/12/24 scale curve.
+//  - "incentive": true adds swarm-marks-self: one sentence in the prompt says
+//    the agent is scored on its own part, instead of the team's (default).
+//  - nest cells report inspection_overlap (share of inspected sites seen by
+//    more than one scout), so results can be split by the best site's place
+//    in the list (obs.best): spread out vs piled up.
 // One small model family per repeat (repeat 1 the first, repeat 2 the second,
 // ...), so a 16 GB laptop holds one local model at a time and every family
 // plays every arm. The map and sites are the same for every arm of a repeat.
@@ -103,6 +113,13 @@ const conflicts = (m, col) => m.edges.filter(([a, b]) => col[a] === col[b]).leng
 const areaConflicts = (m, col, z) => m.edges.filter(([a, b]) => col[a] === col[b] && (m.areaOf[a] === z || m.areaOf[b] === z)).length;
 const mapScore = (m, col) => Math.max(0, 100 * (1 - conflicts(m, col) / Math.max(1, conflicts(m, m.start))));
 const regionLine = (m, col, i) => `region ${i + 1} (${COLOURS[col[i]]}): touches ${m.adj[i].map(j => `${j + 1} (${COLOURS[col[j]]})${col[j] === col[i] ? ' CONFLICT' : ''}`).join(', ')}`;
+// Design section 12 (s3): one sentence on how the agent is scored, the same
+// for every model. "team" is the default; "self" is the weak-Pista variant.
+const INCENTIVE = {
+  map: { team: 'The whole team is scored together, on the conflicts left on the whole map.', self: 'You are scored only on the conflicts you fix yourself.' },
+  nest: { team: 'The whole colony is scored together, on the quality of the site it moves to.', self: 'You are scored only on the quality of the site you vote for.' },
+  gather: { team: 'The whole team is scored together, on the final list.', self: 'You are scored only on whether your own number ends up in the final list.' },
+};
 const MAP_RULES = m => `A map has ${m.n} regions. Each region has one of 4 colours: red, green, blue, yellow. Two regions that touch must not have the same colour: that is a conflict. The goal is a map with no conflicts.`;
 
 function parseMap(text) {
@@ -150,6 +167,64 @@ function parseNest(text) {
     else if ((m = l.match(/^\W*W(\d+)\s*:?\s+(?:INSPECT\s+)?(?:site\s+)?(\d+)/i))) out.orders.push({ w: Number(m[1]) - 1, i: Number(m[2]) - 1 });
   }
   return out;
+}
+
+// ---- Gather (s3's aggregation task, a gauge for the scale curve) ----
+// Every agent holds one private number; the team must hand in the full list,
+// sorted. The only channel is a board everyone can write a number on (hidden
+// in swarm-no-marks). Score = 100 x |right numbers handed in| / |union of
+// handed-in and right numbers| (100 = exactly the list).
+
+function makeGather(seed, k) {
+  const r = rng(seed * 13 + k);
+  const nums = new Set();
+  while (nums.size < k) nums.add(10 + Math.floor(r() * 990));
+  return [...nums];
+}
+const gatherScore = (truth, list) => {
+  if (!list) return 0;
+  const t = new Set(truth), l = new Set(list);
+  const hit = [...l].filter(x => t.has(x)).length;
+  const sorted = list.every((x, i) => i === 0 || list[i - 1] <= x);
+  return 100 * hit / new Set([...t, ...l]).size * (sorted ? 1 : 0.9);
+};
+function parseGather(text) {
+  const out = { post: null, submit: null };
+  for (const l of String(text).split('\n')) {
+    let m;
+    if ((m = l.match(/^\W*POST\s+(\d+)/i))) out.post ??= Number(m[1]);
+    else if ((m = l.match(/^\W*SUBMIT\s*:?\s*(.*)$/i))) { const xs = (m[1].match(/\d+/g) || []).map(Number); if (xs.length) out.submit = xs; }
+  }
+  return out;
+}
+
+async function gatherSwarm(nums, agents, rounds, boardOn, call, r, obs, opts = {}) {
+  const board = [];
+  let last = null, starter = null;
+  Object.assign(obs, { posts: 0, wrong_posts: 0, submissions: 0, agreeing_submissions: 0 });
+  const subs = [];
+  for (let t = 0; t < rounds; t++) {
+    const prompts = agents.map((a, k) => [
+      `A team of ${agents.length} agents must hand in one list: every agent's private number, each once, sorted from smallest to largest. Nobody is in charge and there is no chat.${boardOn ? ' There is a board where any agent can write a number; everyone sees it.' : ''} ${INCENTIVE.gather[opts.incentive || 'team']}`, '',
+      `Round ${t + 1} of ${rounds}. Your private number is ${nums[k]}.`,
+      boardOn ? `Board: ${board.length ? board.join(', ') : '(empty)'}` : null, '',
+      'Reply with these lines only (each one optional):',
+      boardOn ? 'POST <number>   (write a number on the board)' : null,
+      'SUBMIT <numbers, comma separated>   (hand in the team list; the last list handed in counts)'].filter(x => x != null).join('\n'));
+    const replies = await pool(agents, PARALLEL(), (a, k) => call(a, `t${t + 1}-${a.id}`, prompts[k]));
+    const order = shuffle(agents.map((_, k) => k), r);
+    if (t === 0) starter = agents[order[0]].id;
+    for (const k of order) {
+      const p = parseGather(replies[k]);
+      if (boardOn && p.post != null && !board.includes(p.post)) { board.push(p.post); obs.posts++; if (p.post !== nums[k] && !nums.includes(p.post)) obs.wrong_posts++; }
+      if (p.submit) { last = p.submit; subs.push(p.submit.join(',')); obs.submissions++; }
+    }
+  }
+  const counts = {}; for (const x of subs) counts[x] = (counts[x] || 0) + 1;
+  obs.agreeing_submissions = Math.max(0, ...Object.values(counts));
+  obs.board_size = board.length;
+  obs.quotes = [];
+  return { list: last, starter };
 }
 
 // ---- One call, counted ----
@@ -241,7 +316,7 @@ async function mapSwarm(m, agents, rounds, marksOn, call, r, obs, opts = {}) {
     const prompts = agents.map((a, k) => {
       const z = where[k];
       return [MAP_RULES(m), '',
-        `You are one of ${agents.length} agents working on this map at the same time. Nobody is in charge and there is no chat. You only see the area you are in.${marksOn ? ' Agents leave marks on areas for each other: a mark has a strength (it fades every round unless renewed) and a few words.' : ''}`, '',
+        `You are one of ${agents.length} agents working on this map at the same time. Nobody is in charge and there is no chat. You only see the area you are in.${marksOn ? ' Agents leave marks on areas for each other: a mark has a strength (it fades every round unless renewed) and a few words.' : ''} ${INCENTIVE.map[opts.incentive || 'team']}`, '',
         `Round ${t + 1} of ${rounds}. You are in area ${z + 1}. Conflicts touching your area: ${areaConflicts(m, col, z)}.`,
         'Regions in your area:', ...m.areas[z].map(i => regionLine(m, col, i)), '',
         marksOn ? `Marks on your area: ${markLine(z)}` : null,
@@ -376,7 +451,7 @@ async function nestSwarm(nest, agents, rounds, mode, inspectBudget, call, r, obs
     const prompts = agents.map((ag, a) => {
       const left = canInspect[a] ? inspectBudget - seen[a].length : 0;
       return [NEST_RULES(nest), '',
-        `You are one of ${k} scouts. Nobody is in charge and there is no chat.${mode !== 'no-marks' ? ' Scouts advertise sites on a dance board; a dance fades every round unless renewed.' : ''} The colony moves as soon as ${quorum} scouts vote for the same site in the same round.`, '',
+        `You are one of ${k} scouts. Nobody is in charge and there is no chat.${mode !== 'no-marks' ? ' Scouts advertise sites on a dance board; a dance fades every round unless renewed.' : ''} The colony moves as soon as ${quorum} scouts vote for the same site in the same round. ${INCENTIVE.nest[opts.incentive || 'team']}`, '',
         `Round ${t + 1} of ${rounds}.${canInspect[a] ? ` Inspections left: ${left}.` : ' You cannot inspect sites: you can only follow the dances.'}`,
         'Sites you have inspected:', ...(seen[a].length ? seen[a].map(i => siteLine(nest, i)) : ['(none)']),
         vote[a] != null ? `Your current vote: site ${vote[a] + 1}.` : null, '',
@@ -413,6 +488,12 @@ async function nestSwarm(nest, agents, rounds, mode, inspectBudget, call, r, obs
     chosen = top ? Number(top[0]) : null;
   }
   obs.wrong_cascade = obs.quorum && chosen !== nest.bestSite;
+  // Pile-up (s3): of the sites anyone inspected, the share seen by more than one scout.
+  const seenBy = {}; seen.forEach(xs => xs.forEach(i => { seenBy[i] = (seenBy[i] || 0) + 1; }));
+  const distinct = Object.keys(seenBy).length;
+  obs.inspection_overlap = distinct ? r1(100 * Object.values(seenBy).filter(n => n > 1).length / distinct) : null;
+  obs.distinct_sites_inspected = distinct;
+  obs.best_seen = !!seenBy[nest.bestSite];
   symmetry(obs, agents, visits, spread, nest.n, koAt);
   obs.spread_by_round_means = 'distinct sites voted for';
   return { chosen, starter };
@@ -453,6 +534,12 @@ async function nestBoss(nest, boss, workers, rounds, inspectBudget, call, r, obs
 
 function arms(cfg, task) {
   const k = cfg.swarm;
+  if (task === 'gather') return [
+    { id: 'swarm-marks', kind: 'swarm', mode: 'marks', k },
+    { id: 'swarm-no-marks', kind: 'swarm', mode: 'no-marks', k },
+    ...(cfg.scale || []).map(n => ({ id: `swarm-marks-${n}`, kind: 'swarm', mode: 'marks', k: n })),
+    ...(cfg.incentive ? [{ id: 'swarm-marks-self', kind: 'swarm', mode: 'marks', k, incentive: 'self' }] : []),
+  ];
   const list = [
     { id: 'solo-strong', kind: 'solo', strong: true },
     { id: 'solo-small', kind: 'solo' },
@@ -468,6 +555,8 @@ function arms(cfg, task) {
       { id: 'swarm-no-marks-same', kind: 'swarm', mode: 'no-marks', k, start: 'same' },
       { id: 'swarm-marks-same-knockout', kind: 'swarm', mode: 'marks', k, start: 'same', knockout: true },
     ] : []),
+    // Team or individual score, in the prompt only (design section 12; a weak Pista).
+    ...(cfg.incentive ? [{ id: 'swarm-marks-self', kind: 'swarm', mode: 'marks', k, incentive: 'self' }] : []),
   ];
   return list;
 }
@@ -516,6 +605,14 @@ async function runCell(cfg, all, task, arm, rep) {
     obs.conflicts_end = conflicts(m, col);
     score = mapScore(m, col);
     history = { start: m.start, final: col, hidden: m.hidden, areas: m.areas };
+  } else if (task === 'gather') {
+    const ags = smalls(arm.k);
+    const nums = makeGather(seed, arm.k);
+    const out = await gatherSwarm(nums, ags, rounds(arm.k), arm.mode === 'marks', call, r, obs, arm);
+    starter = out.starter; models = [ags[0].model];
+    obs.handed_in = out.list; obs.right = [...nums].sort((a, b) => a - b);
+    score = gatherScore(nums, out.list);
+    history = { nums };
   } else {
     const nest = makeNest(seed, cfg.nest.sites);
     const insp = cfg.nest.inspect;
@@ -570,7 +667,7 @@ async function main(file, opts = {}) {
   return cells;
 }
 
-module.exports = { makeMap, makeNest, conflicts, mapScore, nestScore, parseMap, parseNest, arms, main };
+module.exports = { makeMap, makeNest, makeGather, conflicts, mapScore, nestScore, gatherScore, parseMap, parseNest, parseGather, arms, main };
 
 if (require.main === module) {
   const argv = process.argv.slice(2);
