@@ -231,3 +231,30 @@ esac`, 'x', '{prompt}'];
   expect(md).toMatch(/- tournament: winner .* of 2 · the two drafts alike 100% · a revision kept \d+% of its draft · checks 0 in drafts, 1 after revision/);
   expect(md).toContain('How alike the final pieces of each arm are across repeats');
 });
+
+test('tournament labels: the reviewer is told who made the draft, the reviser who reviewed it (study 11)', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'study11-home-'));
+  const fk = ['sh', '-c', `case "$1" in
+  *"Score each from 1 to 10"*) printf 'A: 5\\nB: 7\\nBEST: B\\n';;
+  *"Review this draft"*) printf '1. add flour\\n';;
+  *"Count, from the record only"*) printf 'CHANGED: 0\\nCAUGHT: 0\\nPASSED: 0\\nBUILT: 0\\n';;
+  *"just finished"*) printf 'ok\\n';;
+  *"read it and said"*) printf 'INSERT AFTER 1\\nflour again\\nEND\\nSTATUS: done\\n';;
+  *) printf 'INSERT AFTER 0\\nflour\\nEND\\nSTATUS: done\\n';;
+esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: fk }] }));
+  const file = path.join(home, 's.json');
+  fs.writeFileSync(file, JSON.stringify({ title: 'T11', agents: ['a#1', 'a#2'], judges: ['a'], solo: [], room: { moves: 2, min_moves: 0, turns: true }, repeats: 1,
+    variants: [{ label: 'called other', tournament: { generate: ['a#1', 'a#2'], review: 'a', rank: 'a', reviewer_as: 'Gemini, from Google', author_as: 'a model from Anthropic' } }],
+    tasks: [{ id: 'bake', kind: 'poem', brief: 'a poem' }] }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'study.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Study folder: (.+)/)[1].trim();
+  expect(fs.readFileSync(path.join(dir, 'steps', 'review-bake-1-called-other-1.prompt.md'), 'utf8')).toMatch(/^This draft was made by a model from Anthropic\./);
+  const steps = fs.readdirSync(path.join(dir, 'steps'), { recursive: true }).map(String);
+  const run = JSON.parse(fs.readFileSync(path.join(dir, 'study.json'), 'utf8')).tasks[0].repeats[0].runs['called other'];
+  const rev = fs.readdirSync(run.tournament.drafts[0].revision, { recursive: true }).map(String).filter(f => f.endsWith('.prompt.md'))
+    .map(f => fs.readFileSync(path.join(run.tournament.drafts[0].revision, f), 'utf8')).join('\n');
+  expect(rev).toContain('A reviewer (Gemini, from Google) read it and said:');
+  expect(steps.length).toBeGreaterThan(0);
+});
