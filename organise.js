@@ -11,6 +11,21 @@
 //          (with solo and L0 beside them), writes what it found, and proposes a
 //          revised organisation, which runs too (round 2).
 // (L2, reorganising halfway, is not in this pilot.)
+//   kata - after Rother's "Kata in the Classroom" (the Improvement Kata): the
+//          same proposer improves an organisation over several rounds, each on
+//          a NEW instance of the task (so nobody can carry an answer over).
+//          Round 1 is our L0 design (the starting point, shared by every
+//          chain of a repeat). Arms: "fixed" (L0 again every round: how much
+//          the instances alone move the score), "free" (change anything),
+//          "kata" (target, then each round: what did the last round teach
+//          you, the obstacle now, change ONE setting, predict), "coach" (as
+//          kata, but a coach of another vendor reads the draft and asks at most
+//          3 questions; it never proposes settings). Measured by the app:
+//          score by round, prediction error by round, how many settings each
+//          round changed (one at a time or several), and whether a change that
+//          made the score drop was kept or undone. Config "kata": { "rounds": 5,
+//          "arms": [...], "coach": "other" (the next proposer) or an agent id,
+//          "drop": 10 }.
 //
 // Safety and fairness: agents never run anything. A proposer only writes an
 // organisation as JSON (the spec below); the app checks it against the budget
@@ -271,9 +286,165 @@ function parseQuality(text) {
   return m ? Math.min(10, Number(m[1])) : null;
 }
 
+// ---- Kata ----
+
+// One setting of a step, normalised so a missing switch equals "off" and a
+// missing "turns" equals true (the defaults execute() uses).
+const KATA_IGNORE = new Set(['id', 'name', 'why', 'prediction']);
+function settingOf(k, v) {
+  if (k === 'turns') return v === false ? 'false' : 'true';
+  if (v == null || v === false || v === '') return 'off';
+  return JSON.stringify(v);
+}
+
+// Which settings changed from one organisation to the next:
+// "+step c", "-step b", "a.agents", "final". Steps are matched by id.
+function specChanges(a, b) {
+  const sa = new Map((a?.steps || []).map(s => [s.id, s])), sb = new Map((b?.steps || []).map(s => [s.id, s]));
+  const out = [];
+  for (const id of sb.keys()) if (!sa.has(id)) out.push(`+step ${id}`);
+  for (const id of sa.keys()) if (!sb.has(id)) out.push(`-step ${id}`);
+  for (const [id, x] of sb) {
+    const y = sa.get(id); if (!y) continue;
+    for (const k of new Set([...Object.keys(x), ...Object.keys(y)])) if (!KATA_IGNORE.has(k) && settingOf(k, x[k]) !== settingOf(k, y[k])) out.push(`${id}.${k}`);
+  }
+  const fin = s => s?.final ?? s?.steps?.[s.steps.length - 1]?.id;
+  if (fin(a) !== fin(b)) out.push('final');
+  return out;
+}
+
+// The changes that count as experiments: moves adjusted to stay in the budget
+// and a "final" that only follows an added or removed step do not count.
+function coreChanges(list) {
+  const steps = list.some(x => /^[+-]step /.test(x));
+  return list.filter(x => !/\.moves$/.test(x) && !(steps && x === 'final'));
+}
+
+// After round k scored at least `drop` below round k-1, did round k+1 keep
+// round k's changes ("kept"), undo at least one of them ("undone"), or do
+// something else ("other")? null when it does not apply.
+function afterDrop(prev, cur, next, drop = 10) {
+  if (!prev || !cur || !next || prev.score == null || cur.score == null || !next.spec || !cur.spec || !prev.spec) return null;
+  if (cur.score > prev.score - drop) return null;
+  const changed = specChanges(prev.spec, cur.spec);
+  if (!changed.length) return null;
+  const step = (sp, id) => (sp.steps || []).find(s => s.id === id);
+  let undone = false, kept = true;
+  for (const c of changed) {
+    const m = c.match(/^([+-])step (.+)$/);
+    if (m) { const inNext = !!step(next.spec, m[2]); if (m[1] === '+' ? !inNext : inNext) undone = true; continue; }
+    if (c === 'final') { const f = s => s.final ?? s.steps?.[s.steps.length - 1]?.id; if (f(next.spec) === f(prev.spec)) undone = true; else if (f(next.spec) !== f(cur.spec)) kept = false; continue; }
+    const [id, k] = [c.slice(0, c.indexOf('.')), c.slice(c.indexOf('.') + 1)];
+    const v = sp => settingOf(k, step(sp, id)?.[k]);
+    if (v(next.spec) === v(prev.spec)) undone = true;
+    else if (v(next.spec) !== v(cur.spec)) kept = false;
+  }
+  return undone ? 'undone' : kept ? 'kept' : 'other';
+}
+
+const field = (text, name) => ((String(text).match(new RegExp(`^\\W*${name}\\s*:\\s*(.+)$`, 'im')) || [])[1] || '').trim().slice(0, 400) || null;
+
+function historyLines(hist) {
+  return hist.map(h => h.round === 1
+    ? `- Round 1 (the starting point, our design): ${h.desc}. Scored ${h.score ?? 'failed'}${h.failed?.length ? `; ${h.failed.length} checks failed` : ''}.`
+    : h.invalid ? `- Round ${h.round}: your organisation broke the rules, so nothing ran this round (${h.error}).`
+      : `- Round ${h.round}: ${h.desc}. You expected ${h.prediction ?? '?'}, it scored ${h.score ?? 'failed'}${h.failed?.length ? `; ${h.failed.length} checks failed` : ''}.${h.learned ? ` Before it you said you had learned: "${h.learned}"` : ''}`);
+}
+
+function kataPrompt(c, task, budget, arm, hist, k, K, target) {
+  const last = [...hist].reverse().find(h => h.spec && !h.invalid);
+  return [
+    'You are improving how a group of AI agents works on a task, round by round. Each round the app runs your organisation on a NEW instance of the same kind of task (so no answer carries over) and shows you the score. You will not do the task yourself.',
+    ...goalLines(c, task, budget),
+    '', 'The challenge: 100 (every check passed). You do not have to reach it in these rounds.',
+    '', 'Rounds so far (each on a new instance; differences under about 10 points may be chance):', ...historyLines(hist),
+    ...(target != null ? [`Your target for round ${K}: ${target}.`] : []),
+    '', `The last organisation that ran, as JSON:\n\`\`\`json\n${JSON.stringify(last.spec, null, 1)}\n\`\`\``,
+    '', `This is round ${k} of ${K}.`,
+    ...(arm === 'free' ? [
+      'Propose the organisation for this round. You may change anything.',
+      'Reply exactly in this shape:', 'LEARNED: one sentence: what did the rounds so far teach you?',
+      'Then the organisation as JSON in one ```json block, with "prediction" = the score you expect this round.',
+    ] : [
+      'Work like this, in this order:',
+      ...(target == null ? [`TARGET: the score you aim for by round ${K} (one number), chosen from the rounds so far, not out of the air.`] : []),
+      'LEARNED: compare what you expected with what happened in the last round. What did it teach you?',
+      'OBSTACLE: the one obstacle you are working on now.',
+      'CHANGE: change exactly ONE setting of the last organisation, to test against that obstacle (you may also adjust "moves" to stay in the budget). Say which setting.',
+      'Then the organisation as JSON in one ```json block, with "prediction" = the score you expect this round.',
+    ]),
+    UNATTENDED(),
+  ].join('\n');
+}
+
+const coachPrompt = (task, hist, draft) => [
+  'You are a coach. Someone is improving, round by round, how a group of AI agents works on a task. You never propose solutions or settings yourself: you only ask questions.',
+  `The task: ${task.short}`,
+  '', 'Rounds so far (each on a new instance; differences under about 10 points may be chance):', ...historyLines(hist),
+  '', `--- their draft for the next round ---\n${String(draft).trim()}`, '',
+  'Ask at most 3 short questions that make them check: is it really one change? Does it follow from what the rounds so far showed, or from a single noisy number? What exactly do they expect, and why?',
+  'Reply with "QUESTIONS:" and then the questions, one per line, and nothing else.',
+  UNATTENDED(),
+].join('\n');
+
+const afterCoach = (prompt, draft, questions) => [
+  prompt, '', `--- your first draft ---\n${String(draft).trim()}`, '',
+  `A coach read your draft and asked:\n${questions}`, '',
+  'First answer each question in one line, after "ANSWERS:". Then reply again in the same shape as above; you may keep your draft or change it.',
+].join('\n');
+
+function kataMd(c, runs) {
+  const kr = runs.filter(r => r.level === 'kata');
+  if (!kr.length) return '';
+  const K = c.kata?.rounds || 5, drop = c.kata?.drop ?? 10;
+  const L = ['## Kata (round by round, a new instance every round)', '',
+    `Round 1 is our design in every chain. "fixed" runs our design again every round: its spread is the noise the other arms must beat. Changes = settings changed from the round before (moves adjusted to fit the budget not counted). After a drop = a round that scored ${drop}+ below the one before: did the next round keep the change, undo it, or do something else?`, ''];
+  for (const t of [...new Set(kr.map(r => r.task))]) {
+    const tr = kr.filter(r => r.task === t);
+    const chains = new Map();
+    for (const r of tr) { const id = `${r.arm}|${r.proposer || '-'}|${r.repeat}`; if (!chains.has(id)) chains.set(id, []); chains.get(id).push(r); }
+    const start = rep => tr.find(r => r.arm === 'fixed' && r.round === 1 && r.repeat === rep);
+    L.push(`### ${t}`, '', `| arm | proposer | ${Array.from({ length: K }, (_, i) => `round ${i + 1}`).join(' | ')} | chains |`, `|---|---|${'---|'.repeat(K)}---|`);
+    const groups = new Map();
+    for (const [id, rs] of chains) { const [arm, p] = id.split('|'); const g = `${arm}|${p}`; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(rs); }
+    for (const [g, cs] of groups) {
+      const [arm, p] = g.split('|');
+      const cell = k => { const v = cs.map(rs => k === 1 && arm !== 'fixed' ? start(rs[0].repeat)?.score : rs.find(r => r.round === k)?.score).filter(x => x != null); return v.length ? `${r1(mean(v))}` : '-'; };
+      L.push(`| ${arm} | ${p} | ${Array.from({ length: K }, (_, i) => cell(i + 1)).join(' | ')} | ${cs.length} |`);
+    }
+    L.push('', 'Chain by chain (score, and the prediction in brackets):', '');
+    for (const [id, rs] of chains) {
+      const [arm, p, rep] = id.split('|');
+      const seq = [...rs].sort((a, b) => a.round - b.round);
+      const s0 = arm === 'fixed' ? null : start(Number(rep));
+      L.push(`- ${arm} · ${p} · repeat ${rep}: ${[...(s0 ? [`r1 ${s0.score ?? '-'}`] : []), ...seq.map(r => `r${r.round} ${r.invalid ? 'rejected' : r.score ?? '-'}${r.spec?.prediction != null && arm !== 'fixed' ? ` (${r.spec.prediction})` : ''}${r.changes ? ` [${coreChanges(r.changes).length} change${coreChanges(r.changes).length === 1 ? '' : 's'}]` : ''}`)].join(' → ')}${seq.find(r => r.target != null) ? ` · target ${seq.find(r => r.target != null).target}` : ''}`);
+    }
+    L.push('', '| arm | proposer | mean abs prediction error, round 2 → last | changes per round: none / one / several | after a drop: kept / undone / other |', '|---|---|---|---|---|');
+    for (const [g, cs] of groups) {
+      const [arm, p] = g.split('|');
+      if (arm === 'fixed') continue;
+      const rows = cs.flat().filter(r => !r.invalid && r.score != null);
+      const err = k => { const v = rows.filter(r => r.round === k && Number.isFinite(Number(r.spec?.prediction))).map(r => Math.abs(Number(r.spec.prediction) - r.score)); return v.length ? r1(mean(v)) : '-'; };
+      const ch = rows.filter(r => r.changes).map(r => coreChanges(r.changes).length);
+      const after = { kept: 0, undone: 0, other: 0 };
+      for (const rs of cs) {
+        const s0 = start(rs[0].repeat);
+        const seq = [s0, ...[...rs].sort((a, b) => a.round - b.round)].filter(Boolean);
+        for (let i = 1; i + 1 < seq.length; i++) { const a = afterDrop(seq[i - 1], seq[i], seq[i + 1], drop); if (a) after[a]++; }
+      }
+      L.push(`| ${arm} | ${p} | ${err(2)} → ${err(K)} | ${ch.filter(n => n === 0).length} / ${ch.filter(n => n === 1).length} / ${ch.filter(n => n > 1).length} | ${after.kept} / ${after.undone} / ${after.other} |`);
+    }
+    const fx = tr.filter(r => r.arm === 'fixed' && r.score != null).map(r => r.score);
+    if (fx.length > 1) { const m = mean(fx); L.push('', `Our design run again every round ("fixed"): mean ${r1(m)}, spread (SD) ${r1(Math.sqrt(mean(fx.map(x => (x - m) ** 2))))} over ${fx.length} runs.`); }
+    L.push('');
+  }
+  return L.join('\n');
+}
+
 // ---- Summary ----
 
-function summaryMd(c, runs, labels) {
+function summaryMd(c, allRuns, labels) {
+  const runs = allRuns.filter(r => r.level !== 'kata');
   const L = [`# ${c.title}`, '', `Workers: ${c.worker}. Budget: ${c.budget.moves} moves, ${c.budget.calls} calls, at most ${c.budget.max_agents} agents per step; time box per task (${c.tasks.map(t => `${t.id} ${t.budget?.minutes ?? c.budget.minutes} min`).join(', ')}). Scores 0-100 from the app's checks${runs.some(r => r.quality != null) ? '; for the poem, half checks and half quality (blind judges, never the proposer)' : ''}.`, ''];
   for (const t of [...new Set(runs.map(r => r.task))]) {
     const tr = runs.filter(r => r.task === t);
@@ -300,7 +471,7 @@ function summaryMd(c, runs, labels) {
     const bad = tr.filter(r => r.invalid);
     if (bad.length) L.push(`Specs rejected after one correction: ${bad.map(r => `${r.proposer} (${r.level})`).join(', ')}.`, '');
   }
-  return L.join('\n');
+  return L.join('\n') + (allRuns.some(r => r.level === 'kata') ? '\n' + kataMd(c, allRuns) : '');
 }
 
 // ---- Main ----
@@ -343,7 +514,7 @@ async function main() {
       text = await ask(`${name}-fix`, `${prompt}\n\nYour previous reply broke these rules:\n${why.map(e => `- ${e}`).join('\n')}\nReply again, corrected, in the same format.`, agent(p));
       specs = parseSpecs(text); v = check();
     }
-    return specs.map((s, i) => ({ spec: s, ok: v[i]?.ok, errors: v[i]?.errors || [] }));
+    return specs.map((s, i) => ({ spec: s, ok: v[i]?.ok, errors: v[i]?.errors || [], text }));
   }
 
   async function runOrg(key, base, spec, task, label) {
@@ -423,13 +594,70 @@ async function main() {
     }
   }
 
+  // Kata: round by round, a new instance every round (see the top of the file).
+  if (c.levels.includes('kata')) {
+    const kc = { rounds: 5, arms: ['fixed', 'free', 'kata', 'coach'], coach: 'other', drop: 10, ...(c.kata || {}) };
+    c.kata = kc;
+    const K = kc.rounds;
+    const coachOf = p => kc.coach === 'other' ? c.proposers[(c.proposers.indexOf(p) + 1) % c.proposers.length] : kc.coach;
+    for (const tdef of c.tasks.filter(t => !onlyTasks || onlyTasks.includes(t.id))) {
+      c.budget = { ...budget0, ...(tdef.budget || {}) };
+      if (!tdef.l0) { console.error(`  ✗ kata ${tdef.id}: needs an "l0" design as round 1`); continue; }
+      for (let r = 0; r < c.repeats; r++) {
+        const tag = `${tdef.id}-r${r + 1}`;
+        const inst = k => taskFor(tdef, `${r + 1}-k${k}`); // a new instance every round, the same for every chain of this repeat
+        console.log(`\n== ${tag} kata`);
+        for (let k = 1; k <= K; k++) if (k === 1 || kc.arms.includes('fixed'))
+          await runOrg(`${tag}-kata-fixed-k${k}`, { task: tdef.id, repeat: r + 1, level: 'kata', arm: 'fixed', round: k }, tdef.l0, inst(k), `${tag} kata fixed k${k}`);
+        const start = runs.find(x => x.key === `${tag}-kata-fixed-k1`);
+        const histOf = row => ({ round: row.round, spec: row.spec, desc: row.desc, score: row.invalid ? null : row.score, failed: row.failed, prediction: row.spec?.prediction, learned: row.learned, invalid: row.invalid, error: row.error });
+        for (const p of c.proposers) for (const arm of kc.arms.filter(a => a !== 'fixed')) {
+          const pid = agent(p).id, chain = `${tag}-kata-${arm}-${pid}`;
+          const hist = [histOf({ ...start, round: 1 })];
+          let target = null;
+          for (let k = 2; k <= K; k++) {
+            const key = `${chain}-k${k}`;
+            const had = runs.find(x => x.key === key && !(x.error && !x.invalid));
+            if (had) { hist.push(histOf(had)); target ??= had.target ?? null; continue; }
+            const task = inst(k);
+            const prompt = kataPrompt(c, task, c.budget, arm, hist, k, K, target);
+            const base = { task: tdef.id, repeat: r + 1, level: 'kata', arm, round: k, proposer: p };
+            let got, questions = null, answers = null;
+            try {
+              if (arm === 'coach') {
+                const coach = coachOf(p);
+                const draft = await ask(`kata-${key}-draft`, prompt, agent(p));
+                questions = (String(await ask(`kata-${key}-coach`, coachPrompt(task, hist, draft), agent(coach))).split(/QUESTIONS\s*:/i).pop() || '').trim().split('\n').filter(l => l.trim()).slice(0, 3).join('\n');
+                base.coach = coach;
+                got = (await propose(p, `kata-${key}`, afterCoach(prompt, draft, questions), false))[0];
+                answers = got ? (String(got.text).match(/ANSWERS\s*:\s*([\s\S]*?)(?:\n\s*(?:TARGET|LEARNED)\s*:|$)/i) || [])[1]?.trim().slice(0, 600) || null : null;
+              } else got = (await propose(p, `kata-${key}`, prompt, false))[0];
+            } catch (e) { got = { errors: [e.message.split('\n')[0]] }; }
+            const text = got?.text || '';
+            const notes = { learned: field(text, 'LEARNED'), obstacle: field(text, 'OBSTACLE'), change: field(text, 'CHANGE'), questions, answers };
+            if (target == null && arm !== 'free') { const t = Number((field(text, 'TARGET') || '').match(/\d+(?:\.\d+)?/)?.[0]); if (Number.isFinite(t)) target = t; }
+            const prev = [...hist].reverse().find(h => h.spec && !h.invalid);
+            if (!got?.ok) {
+              const row = { key, ...base, ...notes, target, spec: got?.spec || null, invalid: true, error: (got?.errors || ['no spec']).join(' ') };
+              const i = runs.findIndex(x => x.key === key); if (i >= 0) runs.splice(i, 1, row); else runs.push(row);
+              save(); hist.push(histOf(row)); continue;
+            }
+            const row = await runOrg(key, { ...base, ...notes, target, changes: specChanges(prev.spec, got.spec) }, got.spec, task, `${tag} kata ${arm} ${p} k${k}`);
+            hist.push(histOf(row));
+          }
+        }
+      }
+    }
+    c.budget = budget0;
+  }
+
   // How human the chosen organisations look: the same blind labels as ideate.js.
   let labels = null;
   if (c.label_with) {
     try {
       const ideate = require('./ideate');
       const ic = JSON.parse(fs.readFileSync(path.resolve(path.dirname(file), c.label_with), 'utf8'));
-      const chosen = runs.filter(r => r.spec && r.proposer);
+      const chosen = runs.filter(r => r.spec && r.proposer && r.level !== 'kata');
       const items = chosen.map((r, i) => ({ n: i + 1, idea: r.spec.name || 'unnamed', mechanism: r.desc || '', not_human: r.spec.why || '' }));
       const got = ideate.parseLabels(await ask('label-orgs', ideate.labelPrompt(ic, items), agent(c.judges[0])));
       labels = Object.fromEntries(chosen.map((r, i) => [r.key, got[i + 1]?.human || null]));
@@ -442,6 +670,7 @@ async function main() {
   console.log(`\n${path.join(out, 'summary.md')}`);
 }
 
-module.exports = { parseSpecs, validate, describe, execute, checkScore, taskFor, summaryMd, l1Prompt, l3Prompt, reportPrompt, parseQuality };
+module.exports = { parseSpecs, validate, describe, execute, checkScore, taskFor, summaryMd, l1Prompt, l3Prompt, reportPrompt, parseQuality,
+  specChanges, coreChanges, afterDrop, kataPrompt, coachPrompt, kataMd };
 
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
