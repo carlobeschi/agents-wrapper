@@ -122,6 +122,10 @@ If the Mac is asleep at 18:00, launchd runs it at the next wake.
 
 `node relay.js <relay.json>` runs one episode of a team puzzle for three agents (`agents`, `names`; Claude, Antigravity and Codex by default). The app sets the puzzle: five houses, each with a person, a colour and a pet, and a set of clues with one answer where no clue can be dropped (`seed` repeats a puzzle). The clues are dealt between the agents, so no agent, and no pair, can solve it alone. Each writes, alone, what it thinks the others hold. Then `rounds` rounds (3 by default): each agent in turn sends one message, which the app cuts at `words` words (40 by default); with `"rotate": true`, each round starts one speaker later. Each then answers alone with its confidence, and the app checks the order of the five names. All three right is a team win. Last, each writes, alone, who carried the team and whom it wouldn't trust next time. The episode is written to `~/.agent-dispatch/relays/<id>/` as `episode.md`, `episode.json` and `puzzle.json`, redacted as above. Each step may take up to `timeout_min` minutes (15 by default). Nothing is published from here.
 
+## Night queue
+
+`sh scripts/night.sh` runs the studies in `examples/night/queue.json` one after the other (night.js) while the laptop is left alone, and stops at 07:15, before The Motion. It starts with `git pull --ff-only`, so a merged change to the queue takes effect that night. A job that finishes is not run again; a job that fails, is stopped at the stop time or goes over its `max_minutes` runs again the next night, and bench.js, swarm.js and ideate.js keep the work already done. Jobs that need Ollama are skipped if it doesn't answer. `node night.js --list` shows what is done and what is left. In the morning: `pbcopy < ~/.agent-dispatch/night/last-summary.md`. Keep the laptop plugged in with the lid open (caffeinate stops idle sleep, not lid sleep).
+
 ## Dispatch (legacy)
 
 `/dispatch` is the first page this repo had: one prompt sent to several agents at once, to compare them. It still works but is no longer developed.

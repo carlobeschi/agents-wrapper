@@ -1,0 +1,203 @@
+#!/usr/bin/env node
+// The night queue: `node night.js [queue.json] [--stop HH:MM] [--stop-at ISO] [--list] [--no-pull]`.
+//
+// Runs the studies one after the other while the laptop is left alone, and
+// stops in time for the morning (The Motion runs at 08:00). Each job is an
+// ordinary command (bench.js, swarm.js, ideate.js, study.js...) run from this
+// folder; nothing here changes what a job may do.
+//
+// - The queue is examples/night/queue.json unless another file is given, so a
+//   merged pull request changes what runs next (the night starts with
+//   `git pull --ff-only`, skipped with --no-pull).
+// - A job that ends with exit 0 is marked done in ~/.agent-dispatch/night/
+//   state.json and never runs again. A job that fails or is stopped runs again
+//   next night; bench.js, swarm.js and ideate.js (with --out) keep the work
+//   already done, so a long job is simply spread over several nights.
+// - No job starts less than "min_minutes" before the stop time; a job still
+//   running at the stop time is stopped (SIGTERM, then SIGKILL after 30 s).
+//   "max_minutes" on a job stops it earlier, so one stuck job can't take the
+//   whole night.
+// - A job with "needs": ["ollama"] is skipped if Ollama doesn't answer.
+// - "enabled": false keeps a job in the list without running it.
+// - On a Mac, caffeinate keeps the computer from idle sleep while this runs
+//   (closing the lid still sends it to sleep).
+// Out: ~/.agent-dispatch/night/<stamp>/ with one log per job and summary.md,
+// rewritten after every job; ~/.agent-dispatch/night/last-summary.md is a copy.
+//
+// Queue: { "stop": "07:15", "min_minutes": 20,
+//          "jobs": [ { "name": "bench-v1", "cmd": ["node", "bench.js", "..."],
+//                      "needs": [], "enabled": true, "max_minutes": 90, "note": "..." } ] }
+// "~/" at the start of an argument (or after "=") is the home folder.
+
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const http = require('http');
+const { spawn, spawnSync } = require('child_process');
+const { HOME_DIR, stamp } = require('./config');
+
+const NIGHT_DIR = path.join(HOME_DIR, 'night');
+const STATE = path.join(NIGHT_DIR, 'state.json');
+
+const expandHome = s => String(s).replace(/(^|=)~\//, (_, pre) => pre + os.homedir() + '/');
+
+// The next time it is HH:MM, from `now` (today if still ahead, else tomorrow).
+function nextStop(hhmm, now = new Date()) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm || ''));
+  if (!m) throw new Error(`stop time "${hhmm}" is not HH:MM`);
+  const t = new Date(now);
+  t.setHours(Number(m[1]), Number(m[2]), 0, 0);
+  if (t <= now) t.setDate(t.getDate() + 1);
+  return t;
+}
+
+function loadQueue(file) {
+  const q = JSON.parse(fs.readFileSync(file, 'utf8'));
+  if (!Array.isArray(q.jobs)) throw new Error(`${file}: "jobs" must be an array`);
+  const names = new Set();
+  for (const j of q.jobs) {
+    if (typeof j.name !== 'string' || !/^[\w.-]+$/.test(j.name)) throw new Error(`${file}: job name "${j.name}" must be letters, digits, - _ .`);
+    if (names.has(j.name)) throw new Error(`${file}: job "${j.name}" appears twice`);
+    names.add(j.name);
+    if (!Array.isArray(j.cmd) || !j.cmd.length || j.cmd.some(a => typeof a !== 'string')) throw new Error(`${file}: job "${j.name}" needs "cmd" as a list of strings`);
+  }
+  return q;
+}
+
+const readState = () => { try { return JSON.parse(fs.readFileSync(STATE, 'utf8')); } catch { return { done: {} }; } };
+const writeState = s => fs.writeFileSync(STATE, JSON.stringify(s, null, 2) + '\n');
+
+function ollamaUp(timeoutMs = 5000) {
+  return new Promise(resolve => {
+    const req = http.get('http://127.0.0.1:11434/api/tags', res => { res.resume(); resolve(res.statusCode === 200); });
+    req.setTimeout(timeoutMs, () => { req.destroy(); resolve(false); });
+    req.on('error', () => resolve(false));
+  });
+}
+
+const fmtTime = d => d.toTimeString().slice(0, 5);
+const fmtDur = ms => { const m = Math.round(ms / 60000); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`; };
+const tail = (file, n = 15) => { try { return fs.readFileSync(file, 'utf8').trimEnd().split('\n').slice(-n).join('\n'); } catch { return ''; } };
+
+// The job running now, stopped too if this script is stopped (Ctrl-C).
+let current = null;
+for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+  process.on(sig, () => { if (current) current('SIGTERM'); process.exit(130); });
+}
+
+// Runs one job, its output to `log`, until it ends or `stopAt`.
+function runJob(job, log, stopAt, cwd) {
+  return new Promise(resolve => {
+    const out = fs.openSync(log, 'a');
+    fs.writeSync(out, `---- ${new Date().toString()}\n$ ${job.cmd.join(' ')}\n`);
+    const [bin, ...args] = job.cmd.map(expandHome);
+    const child = spawn(bin === 'node' ? process.execPath : bin, args, { cwd, stdio: ['ignore', out, out], detached: true });
+    let stopped = false, killTimer = null;
+    const kill = sig => { try { process.kill(-child.pid, sig); } catch { try { child.kill(sig); } catch {} } };
+    current = kill;
+    const stopTimer = setTimeout(() => {
+      stopped = true;
+      fs.writeSync(out, `\n---- time is up, stopping\n`);
+      kill('SIGTERM');
+      killTimer = setTimeout(() => kill('SIGKILL'), 30000);
+    }, Math.max(0, stopAt - Date.now()));
+    const end = (code, err) => {
+      clearTimeout(stopTimer); clearTimeout(killTimer); current = null;
+      if (err) fs.writeSync(out, `\n---- could not start: ${err.message}\n`);
+      fs.closeSync(out);
+      resolve({ code, stopped, error: err ? err.message : null });
+    };
+    child.on('error', err => end(null, err));
+    child.on('exit', code => end(code, null));
+  });
+}
+
+function writeSummary(dir, info, rows) {
+  const lines = [
+    `# Night run ${info.stamp}`,
+    '',
+    `Started ${info.start.toString()} · stop time ${info.stopAt.toString()} · queue ${info.queue}`,
+    info.pull ? `git pull: ${info.pull}` : '',
+    '',
+    '| Job | Result | Time | Note |',
+    '|---|---|---|---|',
+    ...rows.map(r => `| ${r.name} | ${r.result} | ${r.ms != null ? fmtDur(r.ms) : ''} | ${r.note || ''} |`),
+    '',
+  ];
+  for (const r of rows.filter(r => r.log)) {
+    lines.push(`## ${r.name}: last lines`, '', '```', tail(r.log), '```', '');
+  }
+  const text = lines.filter((l, i) => l !== '' || lines[i - 1] !== '').join('\n') + '\n';
+  fs.writeFileSync(path.join(dir, 'summary.md'), text);
+  fs.writeFileSync(path.join(NIGHT_DIR, 'last-summary.md'), text);
+}
+
+async function main(argv) {
+  const opt = n => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : null; };
+  const file = path.resolve(argv.find(a => a.endsWith('.json')) || path.join(__dirname, 'examples', 'night', 'queue.json'));
+  const cwd = __dirname;
+  fs.mkdirSync(NIGHT_DIR, { recursive: true });
+
+  let pull = null;
+  if (!argv.includes('--no-pull') && !argv.includes('--list')) {
+    const r = spawnSync('git', ['pull', '--ff-only', '--quiet'], { cwd, encoding: 'utf8' });
+    pull = r.status === 0 ? 'ok' : `failed, running the code as it is (${(r.stderr || r.error?.message || '').trim().split('\n')[0]})`;
+  }
+
+  const q = loadQueue(file);
+  const state = readState();
+  const start = new Date();
+  const stopAt = opt('--stop-at') ? new Date(opt('--stop-at')) : nextStop(opt('--stop') || q.stop || '07:15', start);
+  if (isNaN(stopAt)) throw new Error('--stop-at is not a date');
+  const minMs = (q.min_minutes ?? 20) * 60000;
+
+  if (argv.includes('--list')) {
+    for (const j of q.jobs) {
+      const s = state.done[j.name] ? `done ${state.done[j.name]}` : j.enabled === false ? 'off' : 'to run';
+      console.log(`${j.name.padEnd(16)} ${s.padEnd(22)} ${j.note || ''}`);
+    }
+    console.log(`stop time ${stopAt.toString()}`);
+    return;
+  }
+
+  if (process.platform === 'darwin') {
+    try { spawn('caffeinate', ['-i', '-w', String(process.pid)], { stdio: 'ignore', detached: true }).on('error', () => {}).unref(); } catch {}
+  }
+
+  const st = stamp();
+  const dir = path.join(NIGHT_DIR, st);
+  fs.mkdirSync(dir, { recursive: true });
+  const info = { stamp: st, start, stopAt, queue: path.relative(cwd, file) || file, pull };
+  const rows = [];
+  console.log(`night run ${st}: until ${stopAt.toString()}, log in ${dir}`);
+
+  for (const [k, job] of q.jobs.entries()) {
+    const row = { name: job.name, note: job.note || '' };
+    rows.push(row);
+    if (state.done[job.name]) { row.result = 'done before'; row.note = `finished ${state.done[job.name]}`; writeSummary(dir, info, rows); continue; }
+    if (job.enabled === false) { row.result = 'off'; writeSummary(dir, info, rows); continue; }
+    if (stopAt - Date.now() < minMs) { row.result = 'not started'; row.note = 'too close to the stop time, next night'; writeSummary(dir, info, rows); continue; }
+    if ((job.needs || []).includes('ollama') && !(await ollamaUp())) { row.result = 'skipped'; row.note = 'Ollama does not answer: open the Ollama app'; writeSummary(dir, info, rows); continue; }
+
+    row.log = path.join(dir, `${String(k + 1).padStart(2, '0')}-${job.name}.log`);
+    console.log(`${fmtTime(new Date())} ${job.name}: started`);
+    const t0 = Date.now();
+    const jobStop = job.max_minutes ? new Date(Math.min(stopAt, t0 + job.max_minutes * 60000)) : stopAt;
+    const res = await runJob(job, row.log, jobStop, cwd);
+    row.ms = Date.now() - t0;
+    if (res.error) { row.result = 'could not start'; row.note = res.error; }
+    else if (res.stopped) { row.result = 'stopped'; row.note = jobStop < stopAt ? `over its ${job.max_minutes} min; runs again next night` : 'stop time reached; it carries on next night'; }
+    else if (res.code === 0) { row.result = 'ok'; state.done[job.name] = new Date().toISOString().slice(0, 16).replace('T', ' '); writeState(state); }
+    else { row.result = `failed (exit ${res.code})`; row.note = 'runs again next night; see the log'; }
+    console.log(`${fmtTime(new Date())} ${job.name}: ${row.result}`);
+    writeSummary(dir, info, rows);
+  }
+  writeSummary(dir, info, rows);
+  console.log(`summary: ${path.join(dir, 'summary.md')}`);
+}
+
+if (require.main === module) {
+  main(process.argv.slice(2)).catch(e => { console.error(e.message); process.exit(1); });
+}
+
+module.exports = { nextStop, loadQueue, expandHome };
