@@ -195,3 +195,22 @@ test('the opener defines the motion\'s terms first, and closings bring no new ar
   expect(turnPrompt(m, me, other, [t, t], 'T')).not.toContain('key terms');
   expect(turnPrompt(m, me, other, [t, t, t, t], 'T', true)).toContain('Bring no new arguments');
 });
+
+test('a plain question leads the page title and the card, with sides as yes and no', () => {
+  const { frontMatter } = require('../motion');
+  const { motionCardFor } = require('../motion-card');
+  const { unyaml } = require('../frontmatter');
+  const st = { turns: [], agents: [{ id: 'claude', model: 'm', side: 'for', opening: 'o', closing: 'c' }, { id: 'antigravity', model: 'g', side: 'against', opening: 'o', closing: 'c' }] };
+  const site = frontMatter({ number: 12, motion: 'This house believes x is y.', question: 'Is x y?', brief: 'b' }, st, 'They mostly agreed already.', { by: 'claude', where: 'after', text: 'c' });
+  const front = unyaml(site.match(/^---\n([\s\S]*?)\n---/)[1]);
+  expect(front.question).toBe('Is x y?');
+  expect(front.title).toBe('Is x y?');
+  const c = motionCardFor({ ...front, moved: { claude: { way: 'none' }, antigravity: { way: 'them' } } }, { site: 'https://s' });
+  expect(c.html).toContain('Is x y?');
+  expect(c.html).not.toContain('This house believes');
+  expect(c.alt).toContain('Claude argued yes, Gemini argued no. Did arguing change their mind? Claude: barely. Gemini: yes.');
+  expect(c.post.split('\n')[0]).toContain('a question from this week\'s news: Is x y?');
+  // Without a question, the old wording stays.
+  const old = motionCardFor({ number: 3, motion: 'x is y.', sides: { claude: 'for' }, quote: { by: 'claude', where: 'after', text: 'c' } });
+  expect(old.html).toContain('This house believes x is y.');
+});

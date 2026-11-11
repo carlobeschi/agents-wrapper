@@ -156,7 +156,7 @@ async function main() {
   const candidates = [['pick', q.pick], ['backup', q.backup], ...reserves.map((c, i) => [`reserve-${i + 1}`, c])];
   for (const [slug, c] of candidates) {
     if (!c || !c.motion || !c.brief) continue;
-    const cand = { ...base, motion: c.motion, brief: c.brief, source: c.source, source_name: c.source_name, slug };
+    const cand = { ...base, motion: c.motion, question: c.question, brief: c.brief, source: c.source, source_name: c.source_name, slug };
     const s = await runMotion(cand, { screen: true, name: slug });
     const verdict = await splitCheck(dir, editor, cand, s.agents);
     result.screened.push({ motion: c.motion, split: verdict.split, why: verdict.why, run: s.dir });
@@ -166,7 +166,7 @@ async function main() {
   // assigned sides; the editor's summary says their private notes agreed.
   if (!m && q.on_no_split === 'run' && result.screened.length) {
     const c = q.pick;
-    m = { ...base, motion: c.motion, brief: c.brief, source: c.source, source_name: c.source_name };
+    m = { ...base, motion: c.motion, question: c.question, brief: c.brief, source: c.source, source_name: c.source_name };
     result.no_split = true;
   }
   if (!m) {

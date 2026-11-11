@@ -173,9 +173,9 @@ function markdown(m, st) {
 async function editorSummary(dir, editor, m, st) {
   const lines = [
     `You are the editor of a weekly show in which two AI agents, ${st.agents.map(x => x.label).join(' and ')}, debate a motion. Below is this week's episode.`,
-    'Write a summary for a reader with thirty seconds: two or three plain sentences, under 80 words.',
-    'Name the one point they actually split on. If their private notes before the debate already agreed, say so plainly. Then say how far each moved, from its notes before to its notes after, and what each wrote alone that it did not say in the room. If both said the same evidence was missing, name it.',
-    'No praise, no quotes, no verdict on who won, no stock phrases such as "the debate turned on".',
+    'Write a summary for a reader who is not an engineer and has ten seconds: two short sentences, under 40 words in all, in everyday words.',
+    'First sentence: what they argued about, in plain terms. If their notes before the debate already agreed, say "They mostly agreed already" or similar. Second sentence: who changed their mind and how much, in plain words such as "Gemini changed its mind more than Claude".',
+    'No jargon, no technical terms the brief does not need, no quotes, no verdict on who won, no stock phrases such as "the debate turned on", no words like "moved", "conceded", "private notes", "gotcha" or "filler".',
     'Reply with the summary only.', '',
     `## This house believes ${m.motion.replace(/^this house believes\s*/i, '')}`, '',
     ...st.agents.map(x => `[before, alone, ${x.label}, who argues ${x.side}] ${x.opening}\n`),
@@ -185,7 +185,7 @@ async function editorSummary(dir, editor, m, st) {
   try {
     const text = (await run(dir, '3-editor', editor, lines.join('\n'), dir)).replace(/\s+/g, ' ').trim();
     // A summary that runs long is dropped; the page shows the division without one.
-    return text.length <= 600 ? text : undefined;
+    return text.length <= 320 ? text : undefined;
   } catch (e) {
     console.warn(`No summary: ${e.message.split('\n')[0]}`);
     return undefined;
@@ -245,7 +245,8 @@ function frontMatter(m, st, summary, quote) {
   const key = x => x.id.replace(/#\d+$/, '');
 
   const front = {
-    number: m.number, motion, title: `This house believes ${motion}`,
+    number: m.number, motion, question: m.question ? plain(m.question.trim()) : undefined,
+    title: m.question ? plain(m.question.trim()) : `This house believes ${motion}`,
     date: `${today.getFullYear()}-${p(today.getMonth() + 1)}-${p(today.getDate())}`,
     summary: summary && plain(summary),
     quote: quote && { by: quote.by, where: quote.where, text: plain(quote.text) },
