@@ -90,7 +90,7 @@ test('a whole swarm study runs on local stand-in models and writes bench cells',
     req.on('end', () => {
       const j = JSON.parse(body);
       const p = j.messages[0].content;
-      prompts.push({ model: j.model, prompt: p, auth: req.headers.authorization });
+      prompts.push({ model: j.model, prompt: p, auth: req.headers.authorization, url: req.url, think: j.think, ctx: j.options?.num_ctx });
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({ model: j.model, choices: [{ message: { content: `<think>hmm</think>\n${play(p)}` } }], usage: { prompt_tokens: 10, completion_tokens: 5 } }));
     });
@@ -141,6 +141,7 @@ test('a whole swarm study runs on local stand-in models and writes bench cells',
     expect(noMarks.every(p => !/Marks on your area/.test(p.prompt))).toBe(true);
     expect(prompts.some(p => /You cannot inspect sites/.test(p.prompt))).toBe(true);
     expect(prompts.every(p => p.auth === undefined)).toBe(true);
+    expect(prompts.every(p => p.url === '/api/chat' && p.think === false && p.ctx === 8192)).toBe(true);
     // Agents work in an empty folder; usage goes to the local log.
     const dir = read('map', 'swarm-marks', 1).source;
     expect(fs.readdirSync(path.join(dir, 'cwd'))).toEqual([]);
