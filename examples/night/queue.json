@@ -30,7 +30,8 @@
       "cmd": ["node", "swarm.js", "examples/swarm/study-10.json"],
       "needs": ["ollama"],
       "enabled": false,
-      "note": "Swarm, full run (local, £0). Off until the swarm thread has read the dry run and merged its changes"
+      "max_minutes": 480,
+      "note": "Swarm, full run (local, £0, ~8-9k calls: several nights, keeps finished cells). Off until the swarm thread has read the dry run and merged its changes"
     }
   ]
 }
