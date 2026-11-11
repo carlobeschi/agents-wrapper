@@ -14,9 +14,9 @@
 //
 // Local models: "local:<model>" (e.g. "local:qwen3:8b") is the same text-only
 // agent talking to Ollama on this computer (OLLAMA_BASE, default
-// http://127.0.0.1:11434/v1, which speaks the same protocol). No key, no cost;
-// calls are logged to local-usage.jsonl. A model's <think>...</think> block is
-// dropped from the reply. `node openrouter.js --local --list` lists the models
+// http://127.0.0.1:11434/v1; calls go to Ollama's own /api/chat, with
+// thinking off). No key, no cost; calls are logged to local-usage.jsonl. A
+// model's <think>...</think> block is dropped from the reply. `node openrouter.js --local --list` lists the models
 // Ollama has.
 
 const fs = require('fs');
@@ -37,26 +37,55 @@ async function list(filter, local) {
 }
 
 async function ask(model, prompt, local = false) {
-  const key = local ? 'ollama' : process.env.OPENROUTER_API_KEY;
+  if (local) return askLocal(model, prompt);
+  const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error('OPENROUTER_API_KEY is not set');
-  const url = `${local ? LOCAL_BASE : BASE}/chat/completions`;
+  const url = `${BASE}/chat/completions`;
   const r = await fetch(url, {
     method: 'POST',
-    // Ollama gets a plain request: no key, no OpenRouter-only fields.
-    headers: local ? { 'Content-Type': 'application/json' } : { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'X-Title': 'agents-wrapper' },
-    body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], ...(local ? {} : { usage: { include: true } }) }),
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'X-Title': 'agents-wrapper' },
+    body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], usage: { include: true } }),
     signal: AbortSignal.timeout(Number(process.env.OPENROUTER_TIMEOUT_MS || 600000)),
   }).catch(e => { throw new Error(`${url}: ${e.message}${e.cause ? ` (${e.cause.code || e.cause.message || e.cause})` : ''}`); });
   const body = await r.text();
   let j; try { j = JSON.parse(body); } catch { throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`); }
   if (!r.ok || j.error) throw new Error(`HTTP ${r.status}: ${j.error?.message || body.slice(0, 200)}`);
   const u = j.usage || {};
+  log('openrouter-usage.jsonl', { model: j.model || model, prompt_tokens: u.prompt_tokens ?? null, completion_tokens: u.completion_tokens ?? null, cost: u.cost ?? null });
+  const text = dropThinking(j.choices?.[0]?.message?.content || '');
+  if (!text) throw new Error('empty reply');
+  return text;
+}
+
+function log(file, row) {
   try {
     fs.mkdirSync(HOME_DIR, { recursive: true });
-    fs.appendFileSync(path.join(HOME_DIR, local ? 'local-usage.jsonl' : 'openrouter-usage.jsonl'), JSON.stringify({ at: new Date().toISOString(), model: j.model || model,
-      prompt_tokens: u.prompt_tokens ?? null, completion_tokens: u.completion_tokens ?? null, cost: u.cost ?? null }) + '\n');
+    fs.appendFileSync(path.join(HOME_DIR, file), JSON.stringify({ at: new Date().toISOString(), ...row }) + '\n');
   } catch {}
-  const text = dropThinking(j.choices?.[0]?.message?.content || '');
+}
+
+// Ollama's own chat API, so thinking can be turned off: a thinking model
+// (qwen3) left to think can spend more than 10 minutes on one map move.
+// Thinking is off for every local model unless OLLAMA_THINK=1; the reply is
+// capped (OLLAMA_NUM_PREDICT, default 1024 tokens) and the context set to
+// OLLAMA_NUM_CTX (default 8192) so long prompts are not cut silently.
+async function askLocal(model, prompt) {
+  const url = `${LOCAL_BASE.replace(/\/v1\/?$/, '')}/api/chat`;
+  const think = process.env.OLLAMA_THINK === '1';
+  const send = withThink => fetch(url, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], stream: false, ...(withThink ? { think } : {}),
+      options: { num_ctx: Number(process.env.OLLAMA_NUM_CTX || 8192), num_predict: Number(process.env.OLLAMA_NUM_PREDICT || 1024) } }),
+    signal: AbortSignal.timeout(Number(process.env.OPENROUTER_TIMEOUT_MS || 600000)),
+  }).catch(e => { throw new Error(`${url}: ${e.message}${e.cause ? ` (${e.cause.code || e.cause.message || e.cause})` : ''}`); });
+  let r = await send(true), body = await r.text();
+  // A model without thinking may refuse the "think" field: ask again without it.
+  if (!r.ok && /think/i.test(body)) { r = await send(false); body = await r.text(); }
+  let j; try { j = JSON.parse(body); } catch { throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`); }
+  if (!r.ok || j.error) throw new Error(`HTTP ${r.status}: ${j.error?.message || j.error || body.slice(0, 200)}`);
+  log('local-usage.jsonl', { model: j.model || model, prompt_tokens: j.prompt_eval_count ?? null, completion_tokens: j.eval_count ?? null, think,
+    seconds: j.total_duration ? Math.round(j.total_duration / 1e7) / 100 : null });
+  const text = dropThinking(j.message?.content ?? j.choices?.[0]?.message?.content ?? '');
   if (!text) throw new Error('empty reply');
   return text;
 }
@@ -66,7 +95,7 @@ async function ask(model, prompt, local = false) {
 const agentFor = (model, local = false) => ({ id: `${local ? 'local' : 'openrouter'}-${model.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()}`,
   label: model.split('/').pop(), model, local,
   headless: [process.execPath, path.join(__dirname, 'openrouter.js'), ...(local ? ['--local'] : []), '--model', '{model}'], stdin: true,
-  env: local ? ['OLLAMA_BASE', 'AGENT_DISPATCH_HOME'] : ['OPENROUTER_API_KEY', 'OPENROUTER_BASE', 'AGENT_DISPATCH_HOME'] });
+  env: local ? ['OLLAMA_BASE', 'OLLAMA_THINK', 'OLLAMA_NUM_CTX', 'OLLAMA_NUM_PREDICT', 'OPENROUTER_TIMEOUT_MS', 'AGENT_DISPATCH_HOME'] : ['OPENROUTER_API_KEY', 'OPENROUTER_BASE', 'AGENT_DISPATCH_HOME'] });
 
 // Total reported cost in the usage log, optionally since a time.
 function spent(since) {
