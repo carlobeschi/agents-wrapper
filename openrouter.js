@@ -39,12 +39,14 @@ async function list(filter, local) {
 async function ask(model, prompt, local = false) {
   const key = local ? 'ollama' : process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error('OPENROUTER_API_KEY is not set');
-  const r = await fetch(`${local ? LOCAL_BASE : BASE}/chat/completions`, {
+  const url = `${local ? LOCAL_BASE : BASE}/chat/completions`;
+  const r = await fetch(url, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'X-Title': 'agents-wrapper' },
-    body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], usage: { include: true } }),
+    // Ollama gets a plain request: no key, no OpenRouter-only fields.
+    headers: local ? { 'Content-Type': 'application/json' } : { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'X-Title': 'agents-wrapper' },
+    body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], ...(local ? {} : { usage: { include: true } }) }),
     signal: AbortSignal.timeout(Number(process.env.OPENROUTER_TIMEOUT_MS || 600000)),
-  });
+  }).catch(e => { throw new Error(`${url}: ${e.message}${e.cause ? ` (${e.cause.code || e.cause.message || e.cause})` : ''}`); });
   const body = await r.text();
   let j; try { j = JSON.parse(body); } catch { throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`); }
   if (!r.ok || j.error) throw new Error(`HTTP ${r.status}: ${j.error?.message || body.slice(0, 200)}`);
