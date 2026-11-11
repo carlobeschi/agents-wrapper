@@ -1,0 +1,126 @@
+{
+ "title": "Pilot: the agents choose how to work together (L0, L1, L3; Claude workers, proposers from four vendors)",
+ "worker": "claude",
+ "worker_desc": "Claude, a capable general model",
+ "proposers": [
+  "claude",
+  "antigravity",
+  "codex",
+  "openrouter:deepseek/deepseek-v4-pro-0813"
+ ],
+ "judges": [
+  "claude",
+  "codex"
+ ],
+ "repeats": 2,
+ "levels": [
+  "solo",
+  "L0",
+  "L1",
+  "L3"
+ ],
+ "l3": {
+  "n": 3
+ },
+ "budget": {
+  "moves": 16,
+  "calls": 20,
+  "minutes": 10,
+  "max_agents": 4,
+  "max_steps": 8
+ },
+ "room": {
+  "lines_per_move": 4,
+  "words": 30
+ },
+ "label_with": "../ideate/ideate.json",
+ "tasks": [
+  {
+   "id": "bank",
+   "short": "60 six-digit code puzzles to solve against the clock (each has exactly one answer)",
+   "bank": {
+    "count": 60,
+    "size": 6
+   },
+   "budget": {
+    "minutes": 5
+   },
+   "l0": {
+    "name": "four copies at once, talking (study 4)",
+    "steps": [
+     {
+      "id": "a",
+      "do": "work",
+      "agents": 4,
+      "moves": 4,
+      "talk": true,
+      "turns": false
+     }
+    ],
+    "final": "a"
+   }
+  },
+  {
+   "id": "boat",
+   "kind": "poem",
+   "brief": "A twelve-line poem about two people repairing an old rowing boat together. Make it good enough to read aloud.",
+   "checks": [
+    {
+     "say": "The poem is exactly 12 lines.",
+     "type": "lines",
+     "min": 12,
+     "max": 12
+    },
+    {
+     "say": "Every line has exactly 8 words (a word is anything between spaces).",
+     "type": "every",
+     "pattern": "^\\s*\\S+(\\s+\\S+){7}\\s*$"
+    },
+    {
+     "say": "The first letters of the lines spell TOGETHERNESS, in order.",
+     "type": "acrostic",
+     "word": "TOGETHERNESS"
+    },
+    {
+     "say": "Every line names a colour: red, blue, green, gold, grey, white, black, silver or amber.",
+     "type": "every",
+     "pattern": "\\b(red|blue|green|gold|grey|white|black|silver|amber)\\b"
+    },
+    {
+     "say": "The letter \"u\" never appears.",
+     "type": "every",
+     "pattern": "^[^u]*$"
+    },
+    {
+     "say": "The word \"boat\" never appears.",
+     "type": "every",
+     "pattern": "^(?!.*\\bboat\\b)"
+    },
+    {
+     "say": "The last line ends with a question mark.",
+     "type": "last",
+     "pattern": "\\?\\s*$"
+    }
+   ],
+   "short": "a 12-line poem about two people repairing an old rowing boat, with 7 rules the app checks",
+   "budget": {
+    "minutes": 12
+   },
+   "l0": {
+    "name": "versions pair (study 5)",
+    "steps": [
+     {
+      "id": "a",
+      "do": "work",
+      "agents": 2,
+      "moves": 8,
+      "talk": true,
+      "turns": true,
+      "versions": true
+     }
+    ],
+    "final": "a"
+   }
+  }
+ ]
+}

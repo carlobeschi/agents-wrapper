@@ -5,33 +5,69 @@
   "jobs": [
     {
       "name": "swarm-dry",
-      "cmd": ["node", "swarm.js", "examples/swarm/dry-run.json", "--force"],
-      "needs": ["ollama"],
+      "cmd": [
+        "node",
+        "swarm.js",
+        "examples/swarm/dry-run.json",
+        "--force"
+      ],
+      "needs": [
+        "ollama"
+      ],
       "max_minutes": 90,
       "note": "Swarm dry run again, after the timeout fix (local, £0); at most 90 min"
     },
     {
       "name": "ideate",
-      "cmd": ["node", "ideate.js", "examples/ideate/ideate.json", "--out=~/.agent-dispatch/ideate/night"],
+      "cmd": [
+        "node",
+        "ideate.js",
+        "examples/ideate/ideate.json",
+        "--out=~/.agent-dispatch/ideate/night"
+      ],
       "note": "Ask the agents for non-human ways of working together (~£0.15 Gemini + cents of DeepSeek)"
     },
     {
       "name": "study-11",
-      "cmd": ["node", "study.js", "examples/room/study-11.json"],
+      "cmd": [
+        "node",
+        "study.js",
+        "examples/room/study-11.json"
+      ],
       "note": "Other by label (~£0.45 Gemini)"
     },
     {
       "name": "bench-v1",
-      "cmd": ["node", "bench.js", "examples/bench/bench-v1.json"],
+      "cmd": [
+        "node",
+        "bench.js",
+        "examples/bench/bench-v1.json"
+      ],
       "note": "Collaboration bench, first pass (~12-15 h over two nights, ~£5-7 Gemini); keeps finished cells"
     },
     {
       "name": "study-10",
-      "cmd": ["node", "swarm.js", "examples/swarm/study-10.json"],
-      "needs": ["ollama"],
+      "cmd": [
+        "node",
+        "swarm.js",
+        "examples/swarm/study-10.json"
+      ],
+      "needs": [
+        "ollama"
+      ],
       "enabled": false,
       "max_minutes": 480,
       "note": "Swarm, full run (local, £0, ~8-9k calls: several nights, keeps finished cells). Off until the swarm thread has read the dry run and merged its changes"
+    },
+    {
+      "name": "organise-pilot",
+      "cmd": [
+        "node",
+        "organise.js",
+        "examples/organise/pilot.json",
+        "--out=~/.agent-dispatch/organise/pilot"
+      ],
+      "note": "The agents choose how to work together: solo, ours, L1, L3 with proposers Claude/Gemini/Codex/DeepSeek, Claude workers (~£0.35 Gemini proposer calls + cents of DeepSeek; ~10 h, keeps finished runs, may take two nights)"
     }
   ]
 }
