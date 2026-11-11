@@ -1,0 +1,13 @@
+{
+ "title": "Study 10: a swarm of small models, with marks and no boss",
+ "run": "bench-v1",
+ "small": ["local:qwen3:8b", "local:gemma3:12b"],
+ "strong": "claude",
+ "budget": 60,
+ "swarm": 12,
+ "repeats": 4,
+ "seed": 10,
+ "scale": [4, 24],
+ "map": { "regions": 60, "area": 5 },
+ "nest": { "sites": 30, "inspect": 2 }
+}
