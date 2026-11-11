@@ -129,7 +129,7 @@ test('a whole swarm study runs on local stand-in models and writes bench cells',
     expect(noMarks.length).toBeGreaterThan(0);
     expect(noMarks.every(p => !/Marks on your area/.test(p.prompt))).toBe(true);
     expect(prompts.some(p => /You cannot inspect sites/.test(p.prompt))).toBe(true);
-    expect(prompts.every(p => p.auth === 'Bearer ollama')).toBe(true);
+    expect(prompts.every(p => p.auth === undefined)).toBe(true);
     // Agents work in an empty folder; usage goes to the local log.
     const dir = read('map', 'swarm-marks', 1).source;
     expect(fs.readdirSync(path.join(dir, 'cwd'))).toEqual([]);
