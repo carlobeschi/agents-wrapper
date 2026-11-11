@@ -22,7 +22,15 @@
 // Config:
 // { "run": "bench-v1", "small": ["local:qwen3:8b", "local:gemma3:12b"], "strong": "claude",
 //   "budget": 60, "swarm": 12, "repeats": 4, "seed": 10, "scale": [4, 24],
-//   "map": { "regions": 60, "area": 5 }, "nest": { "sites": 30, "inspect": 2 } }
+//   "map": { "regions": 60, "area": 5 }, "nest": { "sites": 30, "inspect": 2 }, "symmetry": false }
+// "symmetry": true adds three arms in which every agent starts in the same
+// place (same map area; no site seen yet), so the app breaks no symmetry:
+// swarm-marks-same, swarm-no-marks-same and swarm-marks-same-knockout (one
+// agent is removed halfway, to see whether the split holds: "rigidity").
+// Their cells report areas_by_agent, specialisation_by_agent (1 - normalised
+// entropy of the areas each agent worked in), spread_by_round and, with a
+// knockout, spread before and after it. Read them run by run: a split that
+// goes a different way each run averages out to nothing.
 // One small model family per repeat (repeat 1 the first, repeat 2 the second,
 // ...), so a 16 GB laptop holds one local model at a time and every family
 // plays every arm. The map and sites are the same for every arm of a repeat.
@@ -183,18 +191,53 @@ async function mapSolo(m, agent, budget, call, tag = 'solo') {
   return { col, moves: used };
 }
 
-async function mapSwarm(m, agents, rounds, marksOn, call, r, obs) {
+// Specialisation of one agent: 1 - normalised entropy of the areas it worked
+// in (1 = always the same area, 0 = spread evenly over all areas).
+function specialisation(visits, n) {
+  if (!visits.length || n < 2) return null;
+  const c = {}; for (const v of visits) c[v] = (c[v] || 0) + 1;
+  const h = Object.values(c).reduce((a, x) => { const p = x / visits.length; return a - p * Math.log(p); }, 0);
+  return r1(100 * (1 - h / Math.log(Math.min(n, visits.length) || 2))) / 100;
+}
+const hub = m => m.areaAdj.reduce((best, a, z) => a.length > m.areaAdj[best].length ? z : best, 0);
+
+// What the symmetry-breaking variant reports, per run (never only averaged):
+// where each agent worked, how specialised each one is, and how spread out
+// the swarm is round by round (before and after a knockout).
+function symmetry(obs, agents, visits, spread, n, koAt) {
+  obs.areas_by_agent = Object.fromEntries(agents.map((a, k) => [a.id, visits[k].map(v => v + 1)]));
+  obs.specialisation_by_agent = Object.fromEntries(agents.map((a, k) => [a.id, specialisation(visits[k], n)]));
+  const sp = Object.values(obs.specialisation_by_agent).filter(x => x != null);
+  obs.mean_specialisation = sp.length ? r1(100 * sp.reduce((a, b) => a + b, 0) / sp.length) / 100 : null;
+  obs.spread_by_round = spread;
+  if (koAt != null) {
+    const avg = xs => xs.length ? r1(xs.reduce((a, b) => a + b, 0) / xs.length) : null;
+    obs.spread_before_knockout = avg(spread.slice(0, koAt));
+    obs.spread_after_knockout = avg(spread.slice(koAt));
+  }
+}
+
+async function mapSwarm(m, agents, rounds, marksOn, call, r, obs, opts = {}) {
   const col = [...m.start];
   const setBy = new Array(m.n).fill(null);
   const zones = m.areas.length;
   const marks = m.areas.map(() => []); // { s, text, by }
-  const where = agents.map((a, k) => k % zones);
+  // start "same": everyone begins in one area (the most connected), so any
+  // division of the map has to come from the agents, not from the app.
+  const where = agents.map((a, k) => opts.start === 'same' ? hub(m) : k % zones);
+  const active = agents.map(() => true);
+  const visits = agents.map(() => []);
+  const spread = [];
+  const koAt = opts.knockout && rounds >= 2 ? Math.floor(rounds / 2) : null;
   const madeBy = new Map(); // edge key -> created by a move
   let starter = null, solvedAt = null;
   Object.assign(obs, { marks_left: 0, marks_followed: 0, converged_agents: 0, converged_at_tick: null, reuse: 0, conflicts_undone: 0, overwrites_of_others: 0, out_of_area: 0 });
   const quotes = [];
   const markLine = z => marks[z].length ? marks[z].map(x => `${x.s.toFixed(1)} "${x.text}"`).join('; ') : 'no marks';
   for (let t = 0; t < rounds; t++) {
+    if (t === koAt) { active[0] = false; obs.knockout = { round: t + 1, agent: agents[0].id }; }
+    agents.forEach((a, k) => { if (active[k]) visits[k].push(where[k]); });
+    spread.push(new Set(where.filter((_, k) => active[k])).size);
     const prompts = agents.map((a, k) => {
       const z = where[k];
       return [MAP_RULES(m), '',
@@ -208,8 +251,8 @@ async function mapSwarm(m, agents, rounds, marksOn, call, r, obs) {
         marksOn ? 'MARK <area> <1-3> <up to 8 words>   (0 or 1 line: your area or one next to it)' : null,
         'GO <area>   (where you will be next round: your area or one next to it)'].filter(x => x != null).join('\n');
     });
-    const replies = await pool(agents, PARALLEL(), (a, k) => call(a, `t${t + 1}-${a.id}`, prompts[k]));
-    const order = shuffle(agents.map((_, k) => k), r);
+    const replies = await pool(agents, PARALLEL(), (a, k) => active[k] ? call(a, `t${t + 1}-${a.id}`, prompts[k]) : '');
+    const order = shuffle(agents.map((_, k) => k), r).filter(k => active[k]);
     if (t === 0) starter = agents[order[0]].id;
     for (const k of order) {
       const p = parseMap(replies[k]);
@@ -245,13 +288,14 @@ async function mapSwarm(m, agents, rounds, marksOn, call, r, obs) {
       }
     }
     for (const list of marks) { for (const x of list) x.s *= 0.6; list.splice(0, list.length, ...list.filter(x => x.s >= 0.3)); }
-    const counts = {}; for (const z of where) counts[z] = (counts[z] || 0) + 1;
+    const counts = {}; where.forEach((z, k) => { if (active[k]) counts[z] = (counts[z] || 0) + 1; });
     obs.converged_agents = Math.max(obs.converged_agents, ...Object.values(counts));
     if (solvedAt == null && conflicts(m, col) === 0) solvedAt = t + 1;
     if (solvedAt != null) break;
   }
   obs.converged_at_tick = solvedAt;
   obs.quotes = quotes;
+  symmetry(obs, agents, visits, spread, zones, koAt);
   return { col, starter };
 }
 
@@ -308,12 +352,17 @@ async function nestSolo(nest, agent, budget, inspectBudget, call, r) {
   return { chosen: final, moves: used, inspections: seen.length };
 }
 
-async function nestSwarm(nest, agents, rounds, mode, inspectBudget, call, r, obs) {
+async function nestSwarm(nest, agents, rounds, mode, inspectBudget, call, r, obs, opts = {}) {
   // mode: 'marks' | 'no-marks' | 'imitation'
   const k = agents.length, quorum = Math.ceil(k / 2);
   const firstSites = shuffle([...Array(nest.n).keys()], r);
   const canInspect = agents.map((_, a) => mode !== 'imitation' || a < 2);
-  const seen = agents.map((_, a) => canInspect[a] ? [firstSites[a % nest.n]] : []);
+  // start "same": no scout has seen any site yet.
+  const seen = agents.map((_, a) => canInspect[a] && opts.start !== 'same' ? [firstSites[a % nest.n]] : []);
+  const active = agents.map(() => true);
+  const visits = agents.map(() => []);
+  const spread = [];
+  const koAt = opts.knockout && rounds >= 2 ? Math.floor(rounds / 2) : null;
   const pending = agents.map(() => null);
   const board = {}; // site -> { s, said: [] }
   const vote = agents.map(() => null);
@@ -322,7 +371,8 @@ async function nestSwarm(nest, agents, rounds, mode, inspectBudget, call, r, obs
   const boardLines = () => { const rows = Object.entries(board).filter(([, b]) => b.s >= 0.3).sort((a, b) => b[1].s - a[1].s);
     return rows.length ? rows.map(([i, b]) => `site ${Number(i) + 1}: strength ${b.s.toFixed(1)}, scores said ${b.said.slice(-3).join(', ')}`) : ['(no dances yet)']; };
   for (let t = 0; t < rounds && chosen == null; t++) {
-    for (let a = 0; a < k; a++) if (pending[a] != null) { seen[a].push(pending[a]); pending[a] = null; }
+    for (let a = 0; a < k; a++) if (pending[a] != null) { seen[a].push(pending[a]); visits[a].push(pending[a]); pending[a] = null; }
+    if (t === koAt) { active[0] = false; vote[0] = null; obs.knockout = { round: t + 1, agent: agents[0].id }; }
     const prompts = agents.map((ag, a) => {
       const left = canInspect[a] ? inspectBudget - seen[a].length : 0;
       return [NEST_RULES(nest), '',
@@ -336,8 +386,8 @@ async function nestSwarm(nest, agents, rounds, mode, inspectBudget, call, r, obs
         mode !== 'no-marks' ? 'DANCE <site> <quality you computed>' : null,
         'VOTE <site>   (the site you back now)'].filter(x => x != null).join('\n');
     });
-    const replies = await pool(agents, PARALLEL(), (ag, a) => call(ag, `t${t + 1}-${ag.id}`, prompts[a]));
-    const order = shuffle(agents.map((_, a) => a), r);
+    const replies = await pool(agents, PARALLEL(), (ag, a) => active[a] ? call(ag, `t${t + 1}-${ag.id}`, prompts[a]) : '');
+    const order = shuffle(agents.map((_, a) => a), r).filter(a => active[a]);
     if (t === 0) starter = agents[order[0]].id;
     for (const b of Object.values(board)) b.s *= 0.6;
     for (const a of order) {
@@ -354,6 +404,7 @@ async function nestSwarm(nest, agents, rounds, mode, inspectBudget, call, r, obs
     const tally = {}; for (const v of vote) if (v != null) tally[v] = (tally[v] || 0) + 1;
     const top = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
     if (top) obs.converged_agents = Math.max(obs.converged_agents, top[1]);
+    spread.push(new Set(vote.filter((v, a) => active[a] && v != null)).size);
     if (top && top[1] >= quorum) { chosen = Number(top[0]); obs.quorum = true; obs.converged_at_tick = t + 1; }
   }
   if (chosen == null) { // no quorum: the most backed site, if any
@@ -362,6 +413,8 @@ async function nestSwarm(nest, agents, rounds, mode, inspectBudget, call, r, obs
     chosen = top ? Number(top[0]) : null;
   }
   obs.wrong_cascade = obs.quorum && chosen !== nest.bestSite;
+  symmetry(obs, agents, visits, spread, nest.n, koAt);
+  obs.spread_by_round_means = 'distinct sites voted for';
   return { chosen, starter };
 }
 
@@ -409,6 +462,12 @@ function arms(cfg, task) {
     ...(task === 'nest' ? [{ id: 'swarm-imitation-only', kind: 'swarm', mode: 'imitation', k }] : []),
     { id: 'boss-workers', kind: 'boss', k },
     ...(cfg.scale || []).map(n => ({ id: `swarm-marks-${n}`, kind: 'swarm', mode: 'marks', k: n })),
+    // Symmetry breaking (design section 11): everyone starts in the same place.
+    ...(cfg.symmetry ? [
+      { id: 'swarm-marks-same', kind: 'swarm', mode: 'marks', k, start: 'same' },
+      { id: 'swarm-no-marks-same', kind: 'swarm', mode: 'no-marks', k, start: 'same' },
+      { id: 'swarm-marks-same-knockout', kind: 'swarm', mode: 'marks', k, start: 'same', knockout: true },
+    ] : []),
   ];
   return list;
 }
@@ -447,7 +506,7 @@ async function runCell(cfg, all, task, arm, rep) {
       models = [ags[0].model];
     } else if (arm.kind === 'swarm') {
       const ags = smalls(arm.k);
-      const out = await mapSwarm(m, ags, rounds(arm.k), arm.mode === 'marks', call, r, obs);
+      const out = await mapSwarm(m, ags, rounds(arm.k), arm.mode === 'marks', call, r, obs, arm);
       col = out.col; starter = out.starter; models = [ags[0].model];
     } else {
       const ags = smalls(arm.k);
@@ -467,7 +526,7 @@ async function runCell(cfg, all, task, arm, rep) {
       chosen = out.chosen; Object.assign(obs, { moves: out.moves, inspections: out.inspections, quotes: [] }); models = [agent.model || agent.id];
     } else if (arm.kind === 'swarm') {
       const ags = smalls(arm.k);
-      const out = await nestSwarm(nest, ags, rounds(arm.k), arm.mode, insp, call, r, obs);
+      const out = await nestSwarm(nest, ags, rounds(arm.k), arm.mode, insp, call, r, obs, arm);
       chosen = out.chosen; starter = out.starter; models = [ags[0].model];
       obs.quotes ??= [];
     } else {

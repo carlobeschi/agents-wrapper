@@ -8,6 +8,7 @@
  "repeats": 4,
  "seed": 10,
  "scale": [4, 24],
+ "symmetry": true,
  "map": { "regions": 60, "area": 5 },
  "nest": { "sites": 30, "inspect": 2 }
 }

@@ -141,3 +141,42 @@ test('a whole swarm study runs on local stand-in models and writes bench cells',
     expect(stdout).toContain('kept');
   } finally { server.close(); }
 });
+
+test('symmetry arms: everyone starts in one place, specialisation per agent, a knockout halfway', async () => {
+  const server = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      const p = JSON.parse(body).messages[0].content;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ choices: [{ message: { content: play(p) } }] }));
+    });
+  });
+  await new Promise(r => server.listen(0, '127.0.0.1', () => r(null)));
+  try {
+    const port = /** @type {any} */ (server.address()).port;
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'swarm-sym-'));
+    fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [] }));
+    const file = path.join(home, 's.json');
+    fs.writeFileSync(file, JSON.stringify({ run: 'sym', small: ['local:fake-a'], strong: 'local:fake-a', symmetry: true,
+      budget: 16, swarm: 4, repeats: 1, seed: 5, map: { regions: 40, area: 5 }, nest: { sites: 20, inspect: 2 } }));
+    const env = { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0', OLLAMA_BASE: `http://127.0.0.1:${port}` };
+    await promisify(execFile)('node', [path.join(__dirname, '..', 'swarm.js'), file, '--arms', 'swarm-marks,swarm-marks-same,swarm-no-marks-same,swarm-marks-same-knockout'], { env, encoding: 'utf8', maxBuffer: 1 << 24 });
+    const read = (t, a) => JSON.parse(fs.readFileSync(path.join(home, 'bench', 'sym', 'cells', t, a, 'r1.json'), 'utf8'));
+    const same = read('map', 'swarm-marks-same').observations;
+    const firsts = Object.values(same.areas_by_agent).map(v => v[0]);
+    expect(new Set(firsts).size).toBe(1);
+    expect(same.spread_by_round[0]).toBe(1);
+    expect(Object.keys(same.specialisation_by_agent).length).toBe(4);
+    const spread = read('map', 'swarm-marks').observations;
+    expect(new Set(Object.values(spread.areas_by_agent).map(v => v[0])).size).toBe(4);
+    const ko = read('map', 'swarm-marks-same-knockout');
+    expect(ko.observations.knockout.round).toBe(3);
+    expect(ko.calls).toBe(4 * 2 + 3 * 2);
+    expect(ko.observations.spread_before_knockout).not.toBeNull();
+    const nest = read('nest', 'swarm-marks-same').observations;
+    expect(Object.values(nest.areas_by_agent).every(v => v.length <= 2)).toBe(true);
+    expect(read('nest', 'swarm-no-marks-same').score).toBeGreaterThanOrEqual(0);
+  } finally { server.close(); }
+});
+
