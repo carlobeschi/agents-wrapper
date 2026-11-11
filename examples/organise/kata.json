@@ -1,0 +1,25 @@
+{
+ "title": "Kata pilot: improving an organisation round by round (after Kata in the Classroom); Claude workers, Claude and Codex proposers, each the other's coach",
+ "worker": "claude",
+ "worker_desc": "Claude, a capable general model",
+ "proposers": ["claude", "codex"],
+ "judges": ["claude", "codex"],
+ "repeats": 3,
+ "levels": ["kata"],
+ "kata": { "rounds": 5, "arms": ["fixed", "free", "kata", "coach"], "coach": "other", "drop": 10 },
+ "budget": { "moves": 16, "calls": 20, "minutes": 10, "max_agents": 4, "max_steps": 8 },
+ "room": { "lines_per_move": 4, "words": 30 },
+ "tasks": [
+  {
+   "id": "bank",
+   "short": "60 six-digit code puzzles to solve against the clock (each has exactly one answer)",
+   "bank": { "count": 60, "size": 6 },
+   "budget": { "minutes": 5 },
+   "l0": {
+    "name": "four copies at once, talking (study 4)",
+    "steps": [{ "id": "a", "do": "work", "agents": 4, "moves": 4, "talk": true, "turns": false }],
+    "final": "a"
+   }
+  }
+ ]
+}

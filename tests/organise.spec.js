@@ -85,3 +85,66 @@ esac`, 'x', '{prompt}'];
   expect(md).toMatch(/Prediction minus score/);
   expect(fs.readFileSync(path.join(dir, 'steps', 'report-bake-r1-L3-p.prompt.md'), 'utf8')).toContain('one agent alone (ours, for comparison)');
 });
+
+test('kata: what changed between rounds, and what happened after a drop', () => {
+  const { specChanges, coreChanges, afterDrop } = require('../organise');
+  const a = { steps: [{ id: 'a', do: 'work', agents: 2, moves: 4, talk: true }], final: 'a' };
+  const b = { steps: [{ id: 'a', do: 'work', agents: 4, moves: 2, talk: true, turns: true }], final: 'a' };
+  expect(specChanges(a, b)).toEqual(['a.agents', 'a.moves']); // turns: true is the default
+  expect(coreChanges(specChanges(a, b))).toEqual(['a.agents']); // moves adjusted to fit the budget do not count
+  const c = { steps: [{ id: 'a', do: 'work', agents: 2, moves: 4, talk: false, versions: true }, { id: 'r', do: 'review', from: 'a' }], final: 'r' };
+  expect(specChanges(a, c)).toEqual(['+step r', 'a.talk', 'a.versions', 'final']);
+  expect(coreChanges(specChanges(a, c))).toEqual(['+step r', 'a.talk', 'a.versions']);
+  expect(specChanges(a, a)).toEqual([]);
+  const row = (spec, score) => ({ spec, score });
+  expect(afterDrop(row(a, 60), row(b, 40), row(a, 50))).toBe('undone');
+  expect(afterDrop(row(a, 60), row(b, 40), row(b, 50))).toBe('kept');
+  expect(afterDrop(row(a, 60), row(b, 55), row(b, 50))).toBe(null); // not a drop
+  expect(afterDrop(row(a, 60), row(c, 30), row({ steps: [{ id: 'a', do: 'work', agents: 2, moves: 4, talk: false, versions: true }], final: 'a' }, 50))).toBe('undone');
+});
+
+test('kata: a fixed arm, a free arm, a kata arm and a coached arm run round by round', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'organise-kata-'));
+  const one = { name: 'one agent', prediction: 70, steps: [{ id: 'a', do: 'work', agents: 1, moves: 2 }], final: 'a' };
+  fs.writeFileSync(path.join(home, 'kata.txt'), 'TARGET: 90\nLEARNED: two was noisy\nOBSTACLE: clashes\nCHANGE: agents 2 to 1\n```json\n' + JSON.stringify(one) + '\n```');
+  fs.writeFileSync(path.join(home, 'after.txt'), 'ANSWERS: yes, one change\nTARGET: 80\nLEARNED: after coach\nOBSTACLE: clashes\nCHANGE: agents\n```json\n' + JSON.stringify(one) + '\n```');
+  const fk = ['sh', '-c', `case "$1" in
+  *"A coach read your draft"*) cat "${home}/after.txt";;
+  *"You are a coach"*) printf 'QUESTIONS:\\nIs it one change?\\nWhy 70?\\n';;
+  *"round by round"*) cat "${home}/kata.txt";;
+  *"just finished"*) printf 'ok\\n';;
+  *) printf 'INSERT AFTER 0\\nflour\\nEND\\nSTATUS: done\\n';;
+esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: ['w', 'p', 'q'].map(id => ({ id, label: id.toUpperCase(), headless: fk })) }));
+  const file = path.join(home, 'k.json');
+  fs.writeFileSync(file, JSON.stringify({ title: 'K', worker: 'w', proposers: ['p', 'q'], judges: ['p'], repeats: 1, levels: ['kata'], kata: { rounds: 3 },
+    budget: { moves: 8, calls: 12, minutes: 3 }, room: { lines_per_move: 4 },
+    tasks: [{ id: 'bake', kind: 'poem', judge: false, brief: 'a poem', short: 'a poem about flour', checks: [{ say: 'Says flour.', type: 'contains', word: 'flour' }, { say: 'Two lines.', type: 'lines', min: 2, max: 2 }],
+      l0: { name: 'ours', steps: [{ id: 'a', do: 'work', agents: 2, moves: 2, talk: true }], final: 'a' } }] }));
+  const out = execFileSync('node', [path.join(__dirname, '..', 'organise.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  const dir = out.match(/Organise: (.+)/)[1].trim();
+  const runs = JSON.parse(fs.readFileSync(path.join(dir, 'runs.json'), 'utf8'));
+  expect(runs.filter(r => r.arm === 'fixed').map(r => r.round)).toEqual([1, 2, 3]);
+  expect(runs.filter(r => r.arm !== 'fixed').map(r => r.key)).toEqual([
+    'bake-r1-kata-free-p-k2', 'bake-r1-kata-free-p-k3', 'bake-r1-kata-kata-p-k2', 'bake-r1-kata-kata-p-k3', 'bake-r1-kata-coach-p-k2', 'bake-r1-kata-coach-p-k3',
+    'bake-r1-kata-free-q-k2', 'bake-r1-kata-free-q-k3', 'bake-r1-kata-kata-q-k2', 'bake-r1-kata-kata-q-k3', 'bake-r1-kata-coach-q-k2', 'bake-r1-kata-coach-q-k3']);
+  expect(runs.every(r => !r.error)).toBe(true);
+  const k2 = runs.find(r => r.key === 'bake-r1-kata-kata-p-k2'), k3 = runs.find(r => r.key === 'bake-r1-kata-kata-p-k3');
+  expect(k2).toMatchObject({ target: 90, learned: 'two was noisy', obstacle: 'clashes', changes: ['a.agents', 'a.talk'], checks: 50 });
+  expect(k3.changes).toEqual([]); // the same organisation again
+  expect(runs.find(r => r.key === 'bake-r1-kata-free-p-k2').target).toBe(null); // the free arm sets no target
+  const coached = runs.find(r => r.key === 'bake-r1-kata-coach-p-k2');
+  expect(coached).toMatchObject({ coach: 'q', target: 80, answers: 'yes, one change', questions: 'Is it one change?\nWhy 70?' });
+  expect(runs.find(r => r.key === 'bake-r1-kata-coach-q-k2').coach).toBe('p'); // the coach is the other proposer
+  const k3prompt = fs.readFileSync(path.join(dir, 'steps', 'kata-bake-r1-kata-kata-p-k3.prompt.md'), 'utf8');
+  expect(k3prompt).toContain('Round 1 (the starting point, our design)');
+  expect(k3prompt).toContain('You expected 70, it scored 50');
+  expect(k3prompt).toContain('Your target for round 3: 90.');
+  expect(k3prompt).not.toContain('TARGET:');
+  const md = fs.readFileSync(path.join(dir, 'summary.md'), 'utf8');
+  expect(md).toContain('## Kata');
+  expect(md).toContain('| fixed | - | 50 | 50 | 50 | 1 |');
+  expect(md).toMatch(/kata · p · repeat 1: r1 50 → r2 50 \(70\) \[2 changes\] → r3 50 \(70\) \[0 changes\] · target 90/);
+  expect(md).not.toContain('| solo |');
+});
