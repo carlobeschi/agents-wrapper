@@ -1,0 +1,130 @@
+{
+ "title": "Study 11: other by label (the study 8 tournament, labels true or false)",
+ "agents": [
+  "claude#1",
+  "claude#2"
+ ],
+ "judges": [
+  "claude",
+  "codex",
+  "antigravity"
+ ],
+ "solo": [
+  "claude"
+ ],
+ "room": {
+  "silent": true,
+  "turns": true,
+  "moves": 8,
+  "min_moves": 3,
+  "lines_per_move": 4,
+  "max_minutes": 8,
+  "words": 30,
+  "self_review": true
+ },
+ "variants": [
+  {
+   "label": "tournament, Claude, no label",
+   "tournament": {
+    "generate": [
+     "claude#1",
+     "claude#2"
+    ],
+    "review": "claude",
+    "rank": "claude"
+   }
+  },
+  {
+   "label": "tournament, Claude, called other",
+   "tournament": {
+    "generate": [
+     "claude#1",
+     "claude#2"
+    ],
+    "review": "claude",
+    "rank": "claude",
+    "reviewer_as": "Gemini, a model made by Google, trained differently from you",
+    "author_as": "Claude, a model made by Anthropic, trained differently from you"
+   }
+  },
+  {
+   "label": "tournament, Claude, called self",
+   "tournament": {
+    "generate": [
+     "claude#1",
+     "claude#2"
+    ],
+    "review": "claude",
+    "rank": "claude",
+    "reviewer_as": "another copy of you, the same model with the same training",
+    "author_as": "another copy of you, the same model with the same training"
+   }
+  },
+  {
+   "label": "tournament, Gemini reviews, no label",
+   "tournament": {
+    "generate": [
+     "claude#1",
+     "claude#2"
+    ],
+    "review": "antigravity",
+    "rank": "claude"
+   },
+   "not_judged_by": [
+    "antigravity"
+   ]
+  },
+  {
+   "label": "tournament, Gemini reviews, called self",
+   "tournament": {
+    "generate": [
+     "claude#1",
+     "claude#2"
+    ],
+    "review": "antigravity",
+    "rank": "claude",
+    "reviewer_as": "another copy of you, the same model with the same training",
+    "author_as": "another copy of you, the same model with the same training"
+   },
+   "not_judged_by": [
+    "antigravity"
+   ]
+  }
+ ],
+ "tasks": [
+  {
+   "id": "cat",
+   "kind": "svg",
+   "start": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 400\">",
+    "</svg>"
+   ],
+   "brief": "Draw this scene on this 400 by 400 canvas: a lighthouse keeper’s cat watching a storm from the window. Use simple shapes (no text, letters or digits anywhere). Someone who knows nothing will be shown the picture and asked what it shows.",
+   "guess": {
+    "agent": "claude",
+    "answers": [
+     [
+      "cat"
+     ],
+     [
+      "lighthouse"
+     ],
+     [
+      "storm",
+      "rain",
+      "lightning",
+      "waves"
+     ]
+    ]
+   },
+   "checks": [
+    {
+     "say": "No text in the drawing.",
+     "type": "every",
+     "pattern": "^(?!.*<text)"
+    }
+   ]
+  }
+ ],
+ "repeats": 3
+}

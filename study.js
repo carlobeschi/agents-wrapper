@@ -62,7 +62,11 @@
 //   alike the drafts were and how much a revision kept, and for every arm how
 //   alike its final pieces are across repeats. "revise": false makes it a
 //   best of N: each generator makes the whole piece alone with its share of the
-//   moves, and the ranker picks one.
+//   moves, and the ranker picks one. "reviewer_as": text tells each reviser
+//   who reviewed its draft ("Gemini, a model from another company"), and
+//   "author_as" tells the reviewer who made the draft: labels that may be
+//   false, to test whether "the other" works by being different or by being
+//   called different (study 11).
 // - Bench support: a variant may bring its own team ("agents": [specs]; the
 //   moves are shared so the total stays the same) and "not_judged_by": [judge
 //   ids] (a judge never scores a setup it played a part in); "repeat_offset"
@@ -187,7 +191,8 @@ function parseProcess(text) {
   return out;
 }
 
-const reviewPrompt = (kind, brief, checks, text) => [
+const reviewPrompt = (kind, brief, checks, text, authorAs) => [
+  ...(authorAs ? [`This draft was made by ${authorAs}.`] : []),
   'Review this draft. It was made for this brief:', '', brief, ...(checks.length ? ['', 'The app also checks at the end:', ...checks.map(c => `- ${c}`)] : []), '',
   kind === 'svg' ? 'The draft is the picture draft.png in your current folder. Look at it.' : `--- draft ---\n${String(text).trim()}`, '',
   'Review it in three passes: (1) BRIEF: what the brief or the checks ask for that is missing, wrong or hard to see; (2) READER: what someone meeting it for the first time would misread or stumble on; (3) CRAFT: what would make it better made.',
@@ -307,12 +312,12 @@ async function main(file) {
       let critique = '';
       try {
         if (t.kind === 'svg' && !await room.render(piece(drafts[i].dir), path.join(rdir, 'draft.png'))) throw new Error('could not render the draft');
-        critique = (await run(dir, `review-${tag}-${i + 1}`, reviewer, reviewPrompt(t.kind, rt.brief, (rt.checks || []).map(c => c.say), t.kind === 'svg' ? null : piece(drafts[i].dir)), rdir)).trim();
+        critique = (await run(dir, `review-${tag}-${i + 1}`, reviewer, reviewPrompt(t.kind, rt.brief, (rt.checks || []).map(c => c.say), t.kind === 'svg' ? null : piece(drafts[i].dir), T.author_as), rdir)).trim();
       } catch (e) { drafts[i].reviewError = e.message.split('\n')[0]; }
       drafts[i].review = critique;
       console.log(`  revision ${i + 1}: ${gens[i].label}`);
       revisions.push(await roomRun(alone(i, { title: `${t.id} · ${v.label} · revision ${i + 1}`, start: lines(drafts[i].dir), moves: total - half, min_moves: 1,
-        secrets: { [gens[i].id]: critique ? `The document is your own first draft. A reviewer read it and said:\n${critique}\nRevise it: keep what works, act on what the review gets right, ignore what it gets wrong.`
+        secrets: { [gens[i].id]: critique ? `The document is your own first draft. A reviewer${T.reviewer_as ? ` (${T.reviewer_as})` : ''} read it and said:\n${critique}\nRevise it: keep what works, act on what the review gets right, ignore what it gets wrong.`
           : 'The document is your own first draft. Read it again and make it better.' } }), t));
       save();
     }
