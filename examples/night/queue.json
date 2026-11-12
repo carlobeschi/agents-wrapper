@@ -87,6 +87,15 @@
         "--out=~/.agent-dispatch/organise/kata"
       ],
       "note": "Kata (study 14): improving an organisation round by round, new instance each round; arms fixed/free/kata/coach, Claude and Codex proposers, Claude workers (~£0, subscriptions; ~87 runs of ~5-6 min = ~8 h, keeps finished runs, may take two nights)"
+    },
+    {
+      "name": "study-11b",
+      "cmd": [
+        "node",
+        "study.js",
+        "examples/room/study-11b.json"
+      ],
+      "note": "Other by label, split: reviewer told / reviser told / both / neither, 3 repeats (~£0.10-0.20 Gemini judge)"
     }
   ]
 }

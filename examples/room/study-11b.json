@@ -1,0 +1,111 @@
+{
+ "title": "Study 11b: where does the label act? (reviewer told, reviser told, both, neither)",
+ "agents": [
+  "claude#1",
+  "claude#2"
+ ],
+ "judges": [
+  "claude",
+  "codex",
+  "antigravity"
+ ],
+ "solo": [
+  "claude"
+ ],
+ "room": {
+  "silent": true,
+  "turns": true,
+  "moves": 8,
+  "min_moves": 3,
+  "lines_per_move": 4,
+  "max_minutes": 8,
+  "words": 30,
+  "self_review": true
+ },
+ "variants": [
+  {
+   "label": "tournament, Claude, no label",
+   "tournament": {
+    "generate": [
+     "claude#1",
+     "claude#2"
+    ],
+    "review": "claude",
+    "rank": "claude"
+   }
+  },
+  {
+   "label": "tournament, Claude, reviewer told author is other",
+   "tournament": {
+    "generate": [
+     "claude#1",
+     "claude#2"
+    ],
+    "review": "claude",
+    "rank": "claude",
+    "author_as": "Claude, a model made by Anthropic, trained differently from you"
+   }
+  },
+  {
+   "label": "tournament, Claude, reviser told reviewer is Gemini",
+   "tournament": {
+    "generate": [
+     "claude#1",
+     "claude#2"
+    ],
+    "review": "claude",
+    "rank": "claude",
+    "reviewer_as": "Gemini, a model made by Google, trained differently from you"
+   }
+  },
+  {
+   "label": "tournament, Claude, called other",
+   "tournament": {
+    "generate": [
+     "claude#1",
+     "claude#2"
+    ],
+    "review": "claude",
+    "rank": "claude",
+    "reviewer_as": "Gemini, a model made by Google, trained differently from you",
+    "author_as": "Claude, a model made by Anthropic, trained differently from you"
+   }
+  }
+ ],
+ "tasks": [
+  {
+   "id": "cat",
+   "kind": "svg",
+   "start": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 400\">",
+    "</svg>"
+   ],
+   "brief": "Draw this scene on this 400 by 400 canvas: a lighthouse keeper’s cat watching a storm from the window. Use simple shapes (no text, letters or digits anywhere). Someone who knows nothing will be shown the picture and asked what it shows.",
+   "guess": {
+    "agent": "claude",
+    "answers": [
+     [
+      "cat"
+     ],
+     [
+      "lighthouse"
+     ],
+     [
+      "storm",
+      "rain",
+      "lightning",
+      "waves"
+     ]
+    ]
+   },
+   "checks": [
+    {
+     "say": "No text in the drawing.",
+     "type": "every",
+     "pattern": "^(?!.*<text)"
+    }
+   ]
+  }
+ ],
+ "repeats": 3
+}
