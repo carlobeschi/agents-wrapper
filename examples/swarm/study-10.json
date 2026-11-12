@@ -28,5 +28,6 @@
   "nest",
   "gather"
  ],
- "incentive": true
+ "incentive": true,
+ "chat": true
 }

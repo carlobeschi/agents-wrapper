@@ -42,6 +42,7 @@ function play(prompt) {
     if (best && /DANCE </.test(prompt)) out.push(`DANCE ${best.i} ${best.q}`);
     const pick = best ? best.i : danced ? Number(danced[1]) : null;
     if (pick && !/FINAL </.test(prompt)) out.push(`VOTE ${pick}`);
+    if (/SAY </.test(prompt) && best) out.push(`SAY site ${best.i} has quality ${best.q}`);
     return out.join('\n') || 'nothing';
   }
   // Map: fix the first conflicting region in view with a colour none of its neighbours has.
@@ -56,6 +57,7 @@ function play(prompt) {
   if (!out.length && /DONE/.test(prompt) && !/CONFLICT/.test(prompt)) return 'DONE';
   const area = prompt.match(/You are in area (\d+)/);
   if (area && /MARK </.test(prompt)) out.push(`MARK ${area[1]} 2 still some conflicts here, come help`);
+  if (area && /SAY </.test(prompt)) out.push(`SAY area ${area[1]} still has conflicts`);
   if (area) out.push(`GO ${area[1]}`);
   if (/REPORT </.test(prompt)) out.push('REPORT fixed one region');
   return out.join('\n') || 'nothing to do';
@@ -88,6 +90,7 @@ test('a whole swarm study runs on local stand-in models and writes bench cells',
     let body = '';
     req.on('data', c => { body += c; });
     req.on('end', () => {
+      if (req.url === '/api/tags') return res.end(JSON.stringify({ models: ['fake-a', 'fake-b', 'fake-strong'].map(name => ({ name })) }));
       const j = JSON.parse(body);
       const p = j.messages[0].content;
       prompts.push({ model: j.model, prompt: p, auth: req.headers.authorization, url: req.url, think: j.think, ctx: j.options?.num_ctx });
@@ -159,6 +162,7 @@ test('symmetry arms: everyone starts in one place, specialisation per agent, a k
     let body = '';
     req.on('data', c => { body += c; });
     req.on('end', () => {
+      if (req.url === '/api/tags') return res.end(JSON.stringify({ models: ['fake-a', 'fake-b', 'fake-strong'].map(name => ({ name })) }));
       const p = JSON.parse(body).messages[0].content;
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({ choices: [{ message: { content: play(p) } }] }));
@@ -198,6 +202,7 @@ test('gather task and the "self" incentive arm', async () => {
     let body = '';
     req.on('data', c => { body += c; });
     req.on('end', () => {
+      if (req.url === '/api/tags') return res.end(JSON.stringify({ models: ['fake-a', 'fake-b', 'fake-strong'].map(name => ({ name })) }));
       const p = JSON.parse(body).messages[0].content;
       prompts.push(p);
       res.setHeader('Content-Type', 'application/json');
@@ -222,6 +227,74 @@ test('gather task and the "self" incentive arm', async () => {
     expect(prompts.some(p => /You are scored only on the conflicts you fix yourself/.test(p))).toBe(true);
     expect(prompts.some(p => /The whole team is scored together, on the conflicts left/.test(p))).toBe(true);
     expect(prompts.filter(p => /hand in one list/.test(p) && /Board:/.test(p)).length).toBeGreaterThan(0);
+  } finally { server.close(); }
+});
+
+test('chat arms post messages everyone sees; scouts back only sites they inspected', async () => {
+  const prompts = [];
+  const server = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      if (req.url === '/api/tags') return res.end(JSON.stringify({ models: ['fake-a', 'fake-b', 'fake-strong'].map(name => ({ name })) }));
+      const p = JSON.parse(body).messages[0].content;
+      prompts.push(p);
+      // A scout that always votes for site 1, seen or not.
+      const text = /new home/.test(p) && !/sent you/.test(p) && !/You lead/.test(p) ? `VOTE 1\n${play(p)}` : play(p);
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ choices: [{ message: { content: text } }] }));
+    });
+  });
+  await new Promise(r => server.listen(0, '127.0.0.1', () => r(null)));
+  try {
+    const port = /** @type {any} */ (server.address()).port;
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'swarm-chat-'));
+    fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [] }));
+    const file = path.join(home, 's.json');
+    fs.writeFileSync(file, JSON.stringify({ run: 'c', small: ['local:fake-a'], strong: 'local:fake-a', chat: true, scale: [6],
+      budget: 12, swarm: 4, repeats: 1, seed: 4, map: { regions: 40, area: 5 }, nest: { sites: 20, inspect: 2 } }));
+    const env = { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0', OLLAMA_BASE: `http://127.0.0.1:${port}` };
+    await promisify(execFile)('node', [path.join(__dirname, '..', 'swarm.js'), file, '--arms', 'swarm-chat,swarm-chat-6,swarm-marks'], { env, encoding: 'utf8', maxBuffer: 1 << 24 });
+    const read = (t, a) => JSON.parse(fs.readFileSync(path.join(home, 'bench', 'c', 'cells', t, a, 'r1.json'), 'utf8'));
+    expect(read('map', 'swarm-chat').observations.messages).toBeGreaterThan(0);
+    expect(read('map', 'swarm-chat-6').observations.messages).toBeGreaterThan(0);
+    expect(prompts.some(p => /Messages \(newest last\):\nagent \d/.test(p))).toBe(true);
+    expect(read('nest', 'swarm-chat').observations.messages).toBeGreaterThan(0);
+    const marks = read('nest', 'swarm-marks').observations;
+    expect(marks.unseen_ignored).toBeGreaterThan(0);
+    expect(prompts.some(p => /vote only for sites you have inspected yourself/.test(p))).toBe(true);
+  } finally { server.close(); }
+});
+
+test('a local model Ollama lacks: its repeats are skipped; a cell with mostly failed calls is not kept', async () => {
+  let fail = true;
+  const server = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      if (req.url === '/api/tags') return res.end(JSON.stringify({ models: [{ name: 'fake-a' }] }));
+      if (fail) { res.statusCode = 500; return res.end(JSON.stringify({ error: 'boom' })); }
+      res.end(JSON.stringify({ choices: [{ message: { content: play(JSON.parse(body).messages[0].content) } }] }));
+    });
+  });
+  await new Promise(r => server.listen(0, '127.0.0.1', () => r(null)));
+  try {
+    const port = /** @type {any} */ (server.address()).port;
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'swarm-miss-'));
+    fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [] }));
+    const file = path.join(home, 's.json');
+    fs.writeFileSync(file, JSON.stringify({ run: 'm', small: ['local:fake-a', 'local:not-pulled'], strong: 'local:fake-a',
+      budget: 8, swarm: 4, repeats: 2, seed: 4, tasks: ['map'], map: { regions: 40, area: 5 } }));
+    const env = { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0', OLLAMA_BASE: `http://127.0.0.1:${port}` };
+    const node = () => promisify(execFile)('node', [path.join(__dirname, '..', 'swarm.js'), file, '--arms', 'swarm-marks'], { env, encoding: 'utf8', maxBuffer: 1 << 24 });
+    const { stderr } = await node();
+    expect(stderr).toContain('local:not-pulled is not in Ollama');
+    const cell = r => path.join(home, 'bench', 'm', 'cells', 'map', 'swarm-marks', `r${r}.json`);
+    expect(fs.existsSync(cell(1))).toBe(false);
+    fail = false;
+    await node();
+    expect(fs.existsSync(cell(1))).toBe(true);
+    expect(fs.existsSync(cell(2))).toBe(false);
   } finally { server.close(); }
 });
 

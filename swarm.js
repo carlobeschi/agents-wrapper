@@ -38,6 +38,11 @@
 //    no channel (swarm-no-marks). A gauge for the 4/12/24 scale curve.
 //  - "incentive": true adds swarm-marks-self: one sentence in the prompt says
 //    the agent is scored on its own part, instead of the team's (default).
+//  - "chat": true adds swarm-chat (and swarm-chat-N for every scale size above
+//    "swarm"): the same swarm with a message line everyone sees instead of
+//    marks or dances, to test whether marks hold up better than chat (P7).
+//  - In the nest, a scout dances and votes only for sites it inspected itself
+//    (List, Elsholtz and Seeley); only the imitators may back a site unseen.
 //  - nest cells report inspection_overlap (share of inspected sites seen by
 //    more than one scout), so results can be split by the best site's place
 //    in the list (obs.best): spread out vs piled up.
@@ -123,7 +128,7 @@ const INCENTIVE = {
 const MAP_RULES = m => `A map has ${m.n} regions. Each region has one of 4 colours: red, green, blue, yellow. Two regions that touch must not have the same colour: that is a conflict. The goal is a map with no conflicts.`;
 
 function parseMap(text) {
-  const out = { set: [], mark: null, go: null, report: '', orders: [], done: false };
+  const out = { set: [], mark: null, go: null, report: '', orders: [], done: false, say: '' };
   for (const l of String(text).split('\n')) {
     let m;
     if ((m = l.match(/^\W*SET\s+(?:region\s+)?(\d+)\s+(?:to\s+)?(red|green|blue|yellow)\b/i))) out.set.push({ i: Number(m[1]) - 1, c: COLOURS.indexOf(m[2].toLowerCase()) });
@@ -132,6 +137,7 @@ function parseMap(text) {
     else if ((m = l.match(/^\W*REPORT\s*:?\s*(.*)$/i))) out.report = clip(m[1], 12);
     else if ((m = l.match(/^\W*W(\d+)\s*:?\s+(?:area\s+)?(\d+)\s*:?\s*(.*)$/i))) out.orders.push({ w: Number(m[1]) - 1, z: Number(m[2]) - 1, text: clip(m[3], 12) });
     else if (/^\W*DONE\b/i.test(l)) out.done = true;
+    else if ((m = l.match(/^\W*SAY\s*:?\s*(.+)$/i))) out.say ||= clip(m[1], 15);
   }
   return out;
 }
@@ -155,7 +161,7 @@ const siteLine = (nest, i) => { const s = nest.sites[i]; return `site ${i + 1}: 
 const NEST_RULES = nest => `A colony must choose one new home among ${nest.n} sites (numbered 1 to ${nest.n}). A site's quality = size + 2 x dryness + height - distance. Higher is better. Only an agent that inspects a site sees its four numbers.`;
 
 function parseNest(text) {
-  const out = { inspect: null, dance: null, vote: null, final: null, report: null, orders: [], decide: null };
+  const out = { inspect: null, dance: null, vote: null, final: null, report: null, orders: [], decide: null, say: '' };
   for (const l of String(text).split('\n')) {
     let m;
     if ((m = l.match(/^\W*INSPECT\s+(?:site\s+)?(\d+)/i))) out.inspect ??= Number(m[1]) - 1;
@@ -165,6 +171,7 @@ function parseNest(text) {
     else if ((m = l.match(/^\W*DECIDE\s+(?:site\s+)?(\d+)/i))) out.decide ??= Number(m[1]) - 1;
     else if ((m = l.match(/^\W*REPORT\s*:?\s*(?:score\s*)?(-?\d+)\s*(.*)$/i))) out.report ??= { q: Number(m[1]), text: clip(m[2], 12) };
     else if ((m = l.match(/^\W*W(\d+)\s*:?\s+(?:INSPECT\s+)?(?:site\s+)?(\d+)/i))) out.orders.push({ w: Number(m[1]) - 1, i: Number(m[2]) - 1 });
+    else if ((m = l.match(/^\W*SAY\s*:?\s*(.+)$/i))) out.say ||= clip(m[1], 15);
   }
   return out;
 }
@@ -308,6 +315,10 @@ async function mapSwarm(m, agents, rounds, marksOn, call, r, obs, opts = {}) {
   let starter = null, solvedAt = null;
   Object.assign(obs, { marks_left: 0, marks_followed: 0, converged_agents: 0, converged_at_tick: null, reuse: 0, conflicts_undone: 0, overwrites_of_others: 0, out_of_area: 0 });
   const quotes = [];
+  // mode "chat" (design P7): instead of marks, a message line every agent sees.
+  const chatOn = opts.mode === 'chat';
+  const chat = [];
+  if (chatOn) Object.assign(obs, { messages: 0 });
   const markLine = z => marks[z].length ? marks[z].map(x => `${x.s.toFixed(1)} "${x.text}"`).join('; ') : 'no marks';
   for (let t = 0; t < rounds; t++) {
     if (t === koAt) { active[0] = false; obs.knockout = { round: t + 1, agent: agents[0].id }; }
@@ -316,14 +327,16 @@ async function mapSwarm(m, agents, rounds, marksOn, call, r, obs, opts = {}) {
     const prompts = agents.map((a, k) => {
       const z = where[k];
       return [MAP_RULES(m), '',
-        `You are one of ${agents.length} agents working on this map at the same time. Nobody is in charge and there is no chat. You only see the area you are in.${marksOn ? ' Agents leave marks on areas for each other: a mark has a strength (it fades every round unless renewed) and a few words.' : ''} ${INCENTIVE.map[opts.incentive || 'team']}`, '',
+        `You are one of ${agents.length} agents working on this map at the same time. Nobody is in charge${chatOn ? ', and every agent can post a short message that all the others see' : ' and there is no chat'}. You only see the area you are in.${marksOn ? ' Agents leave marks on areas for each other: a mark has a strength (it fades every round unless renewed) and a few words.' : ''} ${INCENTIVE.map[opts.incentive || 'team']}`, '',
         `Round ${t + 1} of ${rounds}. You are in area ${z + 1}. Conflicts touching your area: ${areaConflicts(m, col, z)}.`,
         'Regions in your area:', ...m.areas[z].map(i => regionLine(m, col, i)), '',
         marksOn ? `Marks on your area: ${markLine(z)}` : null,
+        chatOn ? `Messages (newest last):\n${chat.length ? chat.slice(-12).join('\n') : '(none yet)'}` : null,
         `Areas next to yours: ${m.areaAdj[z].map(y => marksOn ? `${y + 1} (${markLine(y)})` : `${y + 1}`).join(', ') || 'none'}`, '',
         'Reply with these lines only:',
         'SET <region> <colour>   (0 to 2 lines, regions in your area only)',
         marksOn ? 'MARK <area> <1-3> <up to 8 words>   (0 or 1 line: your area or one next to it)' : null,
+        chatOn ? 'SAY <message, up to 15 words>   (0 or 1 line: everyone sees it)' : null,
         'GO <area>   (where you will be next round: your area or one next to it)'].filter(x => x != null).join('\n');
     });
     const replies = await pool(agents, PARALLEL(), (a, k) => active[k] ? call(a, `t${t + 1}-${a.id}`, prompts[k]) : '');
@@ -357,6 +370,7 @@ async function mapSwarm(m, agents, rounds, marksOn, call, r, obs, opts = {}) {
         obs.marks_left++;
         if (quotes.length < 2 && p.mark.text.split(' ').length >= 3) quotes.push(p.mark.text);
       }
+      if (chatOn && p.say) { chat.push(`agent ${k + 1} (area ${z + 1}): ${p.say}`); obs.messages++; if (quotes.length < 2 && p.say.split(' ').length >= 3) quotes.push(p.say); }
       if (p.go != null && (p.go === z || m.areaAdj[z].includes(p.go))) {
         if (marksOn && p.go !== z && marks[p.go].length) obs.marks_followed++;
         where[k] = p.go;
@@ -442,7 +456,15 @@ async function nestSwarm(nest, agents, rounds, mode, inspectBudget, call, r, obs
   const board = {}; // site -> { s, said: [] }
   const vote = agents.map(() => null);
   let chosen = null, starter = null;
-  Object.assign(obs, { dances: 0, dances_followed: 0, converged_agents: 0, converged_at_tick: null, quorum: false, inspections: 0 });
+  Object.assign(obs, { dances: 0, dances_followed: 0, converged_agents: 0, converged_at_tick: null, quorum: false, inspections: 0, unseen_ignored: 0 });
+  // As with bees (List, Elsholtz and Seeley 2009), a scout dances and votes
+  // only for sites it has inspected itself: the board tells it where to look.
+  // Only the imitators of swarm-imitation-only may back a site unseen.
+  const ownOnly = a => mode !== 'imitation' || canInspect[a];
+  const chatOn = mode === 'chat', boardOn = mode === 'marks' || mode === 'imitation';
+  const chat = [];
+  const nquotes = [];
+  if (chatOn) obs.messages = 0;
   const boardLines = () => { const rows = Object.entries(board).filter(([, b]) => b.s >= 0.3).sort((a, b) => b[1].s - a[1].s);
     return rows.length ? rows.map(([i, b]) => `site ${Number(i) + 1}: strength ${b.s.toFixed(1)}, scores said ${b.said.slice(-3).join(', ')}`) : ['(no dances yet)']; };
   for (let t = 0; t < rounds && chosen == null; t++) {
@@ -451,14 +473,17 @@ async function nestSwarm(nest, agents, rounds, mode, inspectBudget, call, r, obs
     const prompts = agents.map((ag, a) => {
       const left = canInspect[a] ? inspectBudget - seen[a].length : 0;
       return [NEST_RULES(nest), '',
-        `You are one of ${k} scouts. Nobody is in charge and there is no chat.${mode !== 'no-marks' ? ' Scouts advertise sites on a dance board; a dance fades every round unless renewed.' : ''} The colony moves as soon as ${quorum} scouts vote for the same site in the same round. ${INCENTIVE.nest[opts.incentive || 'team']}`, '',
+        `You are one of ${k} scouts. Nobody is in charge${chatOn ? ', and every scout can post a short message that all the others see' : ' and there is no chat'}.${boardOn ? ' Scouts advertise sites on a dance board; a dance fades every round unless renewed.' : ''} The colony moves as soon as ${quorum} scouts vote for the same site in the same round. ${INCENTIVE.nest[opts.incentive || 'team']}`,
+        ownOnly(a) ? 'You can dance and vote only for sites you have inspected yourself: to back a site someone else found, inspect it first.' : null, '',
         `Round ${t + 1} of ${rounds}.${canInspect[a] ? ` Inspections left: ${left}.` : ' You cannot inspect sites: you can only follow the dances.'}`,
         'Sites you have inspected:', ...(seen[a].length ? seen[a].map(i => siteLine(nest, i)) : ['(none)']),
         vote[a] != null ? `Your current vote: site ${vote[a] + 1}.` : null, '',
-        mode !== 'no-marks' ? 'Dance board:' : null, ...(mode !== 'no-marks' ? boardLines() : []), '',
+        boardOn ? 'Dance board:' : null, ...(boardOn ? boardLines() : []),
+        chatOn ? `Messages (newest last):\n${chat.length ? chat.slice(-12).join('\n') : '(none yet)'}` : null, '',
         'Reply with these lines only (each one optional):',
         left > 0 ? 'INSPECT <site>   (you see its numbers next round)' : null,
-        mode !== 'no-marks' ? 'DANCE <site> <quality you computed>' : null,
+        boardOn ? 'DANCE <site> <quality you computed>' : null,
+        chatOn ? 'SAY <message, up to 15 words>   (everyone sees it)' : null,
         'VOTE <site>   (the site you back now)'].filter(x => x != null).join('\n');
     });
     const replies = await pool(agents, PARALLEL(), (ag, a) => active[a] ? call(ag, `t${t + 1}-${ag.id}`, prompts[a]) : '');
@@ -469,12 +494,15 @@ async function nestSwarm(nest, agents, rounds, mode, inspectBudget, call, r, obs
       const p = parseNest(replies[a]);
       const left = canInspect[a] ? inspectBudget - seen[a].length : 0;
       if (p.inspect != null && nest.sites[p.inspect] && left > 0 && !seen[a].includes(p.inspect)) { pending[a] = p.inspect; obs.inspections++; }
-      if (mode !== 'no-marks' && p.dance && nest.sites[p.dance.i]) {
+      if (ownOnly(a) && p.dance && !seen[a].includes(p.dance.i)) { obs.unseen_ignored++; p.dance = null; }
+      if (ownOnly(a) && p.vote != null && !seen[a].includes(p.vote)) { obs.unseen_ignored++; p.vote = null; }
+      if (chatOn && p.say) { chat.push(`scout ${a + 1}: ${p.say}`); obs.messages++; if (nquotes.length < 2 && p.say.split(' ').length >= 3) nquotes.push(p.say); }
+      if (boardOn && p.dance && nest.sites[p.dance.i]) {
         const b = board[p.dance.i] ??= { s: 0, said: [] };
         b.s += 1; b.said.push(p.dance.q); obs.dances++;
         if (!seen[a].includes(p.dance.i)) obs.dances_followed++;
       }
-      if (p.vote != null && nest.sites[p.vote]) { vote[a] = p.vote; if (!seen[a].includes(p.vote) && mode !== 'no-marks') obs.dances_followed++; }
+      if (p.vote != null && nest.sites[p.vote]) { vote[a] = p.vote; if (!seen[a].includes(p.vote) && boardOn) obs.dances_followed++; }
     }
     const tally = {}; for (const v of vote) if (v != null) tally[v] = (tally[v] || 0) + 1;
     const top = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
@@ -496,6 +524,7 @@ async function nestSwarm(nest, agents, rounds, mode, inspectBudget, call, r, obs
   obs.best_seen = !!seenBy[nest.bestSite];
   symmetry(obs, agents, visits, spread, nest.n, koAt);
   obs.spread_by_round_means = 'distinct sites voted for';
+  obs.quotes = nquotes;
   return { chosen, starter };
 }
 
@@ -546,6 +575,8 @@ function arms(cfg, task) {
     ...(task === 'map' ? [{ id: `best-of-${k}-isolated`, kind: 'isolated', k }] : []),
     { id: 'swarm-marks', kind: 'swarm', mode: 'marks', k },
     { id: 'swarm-no-marks', kind: 'swarm', mode: 'no-marks', k },
+    // Chat instead of marks (P7): the same swarm, talking to everyone.
+    ...(cfg.chat ? [{ id: 'swarm-chat', kind: 'swarm', mode: 'chat', k }, ...(cfg.scale || []).filter(n => n > k).map(n => ({ id: `swarm-chat-${n}`, kind: 'swarm', mode: 'chat', k: n }))] : []),
     ...(task === 'nest' ? [{ id: 'swarm-imitation-only', kind: 'swarm', mode: 'imitation', k }] : []),
     { id: 'boss-workers', kind: 'boss', k },
     ...(cfg.scale || []).map(n => ({ id: `swarm-marks-${n}`, kind: 'swarm', mode: 'marks', k: n })),
@@ -637,6 +668,13 @@ async function runCell(cfg, all, task, arm, rep) {
   }
   obs.failures = stats.failures;
   obs.quotes ??= [];
+  // A cell where most calls failed says nothing about the arm: don't keep it,
+  // so the next run tries it again.
+  if (stats.failures > stats.calls / 2) {
+    console.warn(`  ✗ ${task}/${arm.id}/r${rep}: ${stats.failures} of ${stats.calls} calls failed, cell not kept`);
+    fs.writeFileSync(path.join(dir, 'failed.json'), JSON.stringify({ calls: stats.calls, failures: stats.failures, at: new Date().toISOString() }));
+    return null;
+  }
   const usesOR = !arm.strong && cfg.small.some(s => s.startsWith('openrouter:'));
   let cost = null;
   if (!arm.strong && family.startsWith('local:')) cost = 0;
@@ -650,6 +688,17 @@ async function runCell(cfg, all, task, arm, rep) {
   return cell;
 }
 
+async function missingLocal(specs) {
+  const local = [...new Set(specs.filter(x => String(x).startsWith('local:')))];
+  if (!local.length) return [];
+  const base = (process.env.OLLAMA_BASE || 'http://127.0.0.1:11434/v1').replace(/\/v1\/?$/, '');
+  let names;
+  try { names = ((await (await fetch(`${base}/api/tags`)).json()).models || []).map(m => m.name || m.model); }
+  catch (e) { throw new Error(`Ollama is not answering at ${base} (${e.message}): is it running?`); }
+  const has = x => names.some(n => n === x || n === `${x}:latest`);
+  return local.filter(x => !has(x.slice('local:'.length)));
+}
+
 async function main(file, opts = {}) {
   const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
   const cfg = { run: 'bench-v1', budget: 60, swarm: 12, repeats: 4, seed: 10, scale: [], ...raw, force: !!opts.force };
@@ -658,11 +707,17 @@ async function main(file, opts = {}) {
   if (!Array.isArray(cfg.small) || !cfg.small.length) throw new Error('"small": [model, ...] is required');
   const all = loadConfig().agents;
   const tasks = opts.tasks || cfg.tasks || ['map', 'nest'];
+  // Local models Ollama doesn't have: their repeats are skipped, not failed.
+  const missing = await missingLocal([...cfg.small, cfg.strong]);
+  for (const x of missing) console.warn(`! ${x} is not in Ollama (ollama pull ${x.slice('local:'.length)}): its repeats are skipped`);
   const cells = [];
-  for (let rep = 1; rep <= cfg.repeats; rep++)
+  for (let rep = 1; rep <= cfg.repeats; rep++) {
+    const family = cfg.small[(rep - 1) % cfg.small.length];
+    if (missing.includes(family) || missing.includes(cfg.strong)) continue;
     for (const task of tasks)
       for (const arm of arms(cfg, task))
         if (!opts.arms || opts.arms.includes(arm.id)) cells.push(await runCell(cfg, all, task, arm, rep));
+  }
   console.log(`Cells: ${path.join(HOME_DIR, 'bench', cfg.run, 'cells')}`);
   return cells;
 }
