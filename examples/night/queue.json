@@ -64,9 +64,9 @@
       "needs": [
         "ollama"
       ],
-      "enabled": false,
+      "enabled": true,
       "max_minutes": 480,
-      "note": "Swarm, full run (local, £0, ~8-9k calls: several nights, keeps finished cells). Off until the swarm thread has read the dry run and merged its changes"
+      "note": "Swarm, full run (study 10, local, £0; solo-strong uses Claude on the subscription). ~8k calls over several nights, keeps finished cells; repeats of a model Ollama lacks are skipped (pull gemma3:12b)"
     },
     {
       "name": "organise-pilot",
