@@ -54,6 +54,10 @@ function interval(groups, draws = 2000) {
 }
 
 function cellFile(run, task, row, repeat) { return path.join(run, 'cells', task, row, `r${repeat}.json`); }
+// A cell that exists and isn't broken: work that is done.
+function cellDone(run, task, row, repeat) {
+  try { return !JSON.parse(fs.readFileSync(cellFile(run, task, row, repeat), 'utf8')).broken; } catch { return false; }
+}
 function writeCell(run, cell) {
   const f = cellFile(run, cell.task, cell.config, cell.repeat);
   fs.mkdirSync(path.dirname(f), { recursive: true });
@@ -113,7 +117,21 @@ function roomCell(b, task, row, r, study, studyDir) {
   if (run.guess) obs.guessed = run.guess;
   if (run.checks) obs.rules = `${run.checks.passed}/${run.checks.of}`;
   obs.quotes = (run.process || []).flatMap(p => ['changed', 'caught', 'passed', 'built'].map(k => p[k]?.example ? `${k}: ${p[k].example}` : null)).filter(Boolean).slice(0, 2);
+  // A cell is broken, not a result, when a part of it never happened: a team
+  // member that never made a move (its calls failed), a judge that gave no
+  // score, a review or a ranking that failed. Broken cells stay on disk, are
+  // left out of the report and run again next time.
+  const broken = [];
+  if (!run.tournament && (tl.agents || []).length > 1) for (const a of tl.agents) if (!(tl.moves || []).some(m => m.agent === a.id)) broken.push(`${a.id} never moved`);
+  for (const d of run.tournament ? dirs : []) if (!moveCount(d)) broken.push(`a tournament room had no moves (${path.basename(d)})`);
+  if (task.judge !== false && task.id !== 'puzzle') for (const j of (b.judges || []).filter(j => !skip.includes(j))) if (perJudge[j] == null) {
+    const err = (rep.judgings || []).find(x => x.judge === j)?.error;
+    broken.push(`judge ${j} gave no score${err ? ` (${err})` : ''}`);
+  }
+  for (const d of run.tournament?.drafts || []) if (d.reviewError) broken.push(`review failed: ${d.reviewError}`);
+  if (run.tournament?.rankFailed) broken.push('ranking failed');
   return {
+    ...(broken.length ? { broken } : {}),
     task: task.id, config: row.id, repeat: r + 1, score: r1(score), per_judge: scoreBy || (Object.keys(perJudge).length ? perJudge : null),
     calls: dirs.reduce((n, d) => n + moveCount(d), 0) + (run.tournament ? (run.tournament.reviewer ? run.tournament.drafts.length : 0) + 1 : 0),
     seconds: dirs.reduce((n, d) => n + (timeline(d)?.seconds || 0), 0) || run.seconds || null,
@@ -130,19 +148,34 @@ function wrongnoteCells(b, task, rows, run, only) {
     const name = path.basename(cfgPath, '.json');
     const out = path.join(run, 'wrongnote', name);
     const plan = rows.filter(x => x.wrongnote);
-    const want = b.repeats * plan.reduce((n, x) => n + (x.wrongnote.pairs || []).length + (x.wrongnote.solo || []).length, 0);
-    let results = [];
-    try { results = JSON.parse(fs.readFileSync(path.join(out, 'results.json'), 'utf8')); } catch {}
-    if (results.length < want && only) {
+    // A session that errored or wrote no code is run again (into a "-redo-" folder next to the first run); the newest good one counts.
+    const readRes = d => { try { return JSON.parse(fs.readFileSync(path.join(d, 'results.json'), 'utf8')); } catch { return []; } };
+    const key = x => `${idOf(x.driver)}|${x.navigator == null ? '' : idOf(x.navigator)}|${x.repeat}`;
+    const merged = () => {
+      const redo = fs.existsSync(path.dirname(out)) ? fs.readdirSync(path.dirname(out)).filter(n => n.startsWith(`${name}-redo-`)).sort().map(n => path.join(path.dirname(out), n)) : [];
+      const m = new Map();
+      for (const d of [out, ...redo]) for (const x of readRes(d)) if (!m.has(key(x)) || !failedSession(x)) m.set(key(x), x);
+      return [...m.values()];
+    };
+    let results = merged();
+    const sessions = [];
+    for (let r = 1; r <= b.repeats; r++) for (const x of plan) {
+      for (const [d, n] of x.wrongnote.pairs || []) sessions.push({ key: `${idOf(d)}|${idOf(n)}|${r}`, name: `${idOf(d)}-drives-${idOf(n)}-r${r}` });
+      for (const d of x.wrongnote.solo || []) sessions.push({ key: `${idOf(d)}||${r}`, name: `${idOf(d)}-alone-r${r}` });
+    }
+    const todo = sessions.filter(x => { const got = results.find(y => key(y) === x.key); return !got || failedSession(got); });
+    if (todo.length && only) {
       const raw = JSON.parse(fs.readFileSync(path.resolve(cfgPath), 'utf8'));
       const cfg = { ...raw, tests: path.resolve(path.dirname(path.resolve(cfgPath)), raw.tests), repeats: b.repeats,
         agents: [...new Set(plan.flatMap(x => [...(x.wrongnote.pairs || []).flat(), ...(x.wrongnote.solo || [])]))],
         pairs: plan.flatMap(x => x.wrongnote.pairs || []), solo: plan.flatMap(x => x.wrongnote.solo || []) };
-      fs.mkdirSync(out, { recursive: true });
-      const file = path.join(out, 'bench-config.json');
+      const first = !fs.existsSync(path.join(out, 'results.json'));
+      const dest = first ? out : `${out}-redo-${new Date().toISOString().replace(/[:.]/g, '-')}`;
+      fs.mkdirSync(dest, { recursive: true });
+      const file = path.join(dest, 'bench-config.json');
       fs.writeFileSync(file, JSON.stringify(cfg, null, 1));
-      execFileSync('node', [path.join(__dirname, 'wrongnote.js'), file, `--out=${out}`], { stdio: 'inherit', env: process.env });
-      results = JSON.parse(fs.readFileSync(path.join(out, 'results.json'), 'utf8'));
+      execFileSync('node', [path.join(__dirname, 'wrongnote.js'), file, `--out=${dest}`, ...(first ? [] : [`--sessions=${todo.map(x => x.name).join(',')}`])], { stdio: 'inherit', env: process.env });
+      results = merged();
     }
     for (const res of results) {
       const row = plan.find(x => res.navigator == null ? (x.wrongnote.solo || []).length : (x.wrongnote.pairs || []).some(([d, n]) => idOf(d) === res.driver && idOf(n) === res.navigator));
@@ -155,7 +188,9 @@ function wrongnoteCells(b, task, rows, run, only) {
     const rs = cells.filter(c => c.row === row && c.res.repeat === r).map(c => c.res);
     if (!rs.length) continue;
     const agree = (x, k, v) => (x.judges || []).length && x.judges.every(j => j[k] === v);
-    out.push({ task: 'wrongnote', config: row.id, repeat: r, score: r1(100 * rs.filter(x => x.final === 'spec').length / rs.length), per_judge: null,
+    const bad = rs.filter(failedSession);
+    out.push({ ...(bad.length ? { broken: bad.map(x => `${x.driver} drives ${x.navigator || 'alone'}: ${x.final}${x.error ? ` (${String(x.error).split('\n')[0]})` : ''}`) } : {}),
+      task: 'wrongnote', config: row.id, repeat: r, score: r1(100 * rs.filter(x => x.final === 'spec').length / rs.length), per_judge: null,
       calls: rs.reduce((n, x) => n + (x.turns || 0), 0), seconds: null, gemini_calls: null,
       models: [...new Set(rs.flatMap(x => [x.driver, x.navigator].filter(Boolean)))], starter: rs[0].driver,
       observations: { sessions: rs.length, first_code_follows_note: rs.filter(x => x.first === 'note').length, final_follows_note: rs.filter(x => x.final === 'note').length,
@@ -166,6 +201,7 @@ function wrongnoteCells(b, task, rows, run, only) {
   }
   return out;
 }
+const failedSession = x => x.final === 'error' || x.final === 'no code';
 // "claude#2" -> "claude-2", the id wrongnote.js gives that copy.
 const idOf = spec => { const [b, n] = String(spec).split('#'); return n ? `${b}-${n}` : b; };
 
@@ -208,9 +244,11 @@ function report(b, cells, run) {
   const rowIds = [...b.rows.map(x => x.id), ...[...new Set(cells.map(c => c.config))].filter(id => !b.rows.some(x => x.id === id))];
   const label = id => b.rows.find(x => x.id === id)?.label || id;
   const tasks = [...b.tasks.map(t => t.id), ...[...new Set(cells.map(c => c.task))].filter(t => !b.tasks.some(x => x.id === t))];
+  const brokenCells = cells.filter(c => c.broken);
+  cells = cells.filter(c => !c.broken);
   const L = [`# ${b.title}`, '', `Rows keep a fixed order. Scores 0-100; gain = row minus "${label(baseRow)}" in the same repeat, judge by judge; [95% interval from resampling repeats]. A gain counts only when its interval is clear of zero; otherwise it is a lead.`, ''];
   const gem = cells.reduce((n, c) => n + (c.gemini_calls || 0), 0);
-  L.push(`Cells: ${cells.length}. Gemini calls as players, reviewers or rankers: ${gem} (≈ £${(gem * GEMINI_GBP).toFixed(2)}, estimate; judging calls not counted here).`, '');
+  L.push(`Cells: ${cells.length}${brokenCells.length ? ` (and ${brokenCells.length} broken, left out: see the end)` : ''}. Gemini calls as players, reviewers or rankers: ${gem} (≈ £${(gem * GEMINI_GBP).toFixed(2)}, estimate; judging calls not counted here).`, '');
   const summary = {};
   for (const t of tasks) {
     const tc = cells.filter(c => c.task === t);
@@ -254,9 +292,58 @@ function report(b, cells, run) {
     }
     L.push('');
   }
+  if (brokenCells.length) {
+    L.push('## Broken cells (left out; they run again next time)', '');
+    for (const c of brokenCells) L.push(`- ${c.task} · ${label(c.config)} · repeat ${c.repeat}: ${[...new Set(c.broken)].join('; ')}`);
+    L.push('');
+  }
   const text = L.join('\n');
   if (run) fs.writeFileSync(path.join(run, 'report.md'), text);
   return text;
+}
+
+// Cells written before broken cells were looked for (bench v1's first night):
+// look again from the study each came from, and mark the broken ones.
+function recheck(b, run) {
+  let n = 0;
+  for (const task of b.tasks) {
+    if (task.wrongnote) {
+      for (const c of wrongnoteCells(b, task, b.rows.filter(x => !(x.skip || []).includes(task.id)), run, false)) if (c.broken) { writeCell(run, c); n++; }
+      continue;
+    }
+    for (const row of b.rows) for (let r = 1; r <= b.repeats; r++) {
+      let c;
+      try { c = JSON.parse(fs.readFileSync(cellFile(run, task.id, row.id, r), 'utf8')); } catch { continue; }
+      if (c.broken || !c.source) continue;
+      let s;
+      try { s = JSON.parse(fs.readFileSync(path.join(c.source, 'study.json'), 'utf8')); } catch { continue; }
+      const again = roomCell(b, task, row, r - 1, s, c.source);
+      if (again?.broken) { writeCell(run, again); n++; }
+    }
+  }
+  if (n) console.log(`${n} cells found broken on a second look: they run again.`);
+}
+
+// Before a night of work, one short call to every model the bench uses: if
+// one doesn't answer (credit gone, signed out), stop here with exit 3 and run
+// nothing, rather than fill hours of cells that come out broken.
+// On when the bench file says "ping": true.
+async function ping(b) {
+  const { loadConfig } = require('./config');
+  const { resolveAgent } = require('./room');
+  const { run } = require('./motion');
+  const specs = [...(b.judges || []), ...(b.process_judges || []), ...(b.team || []), b.solo,
+    ...b.rows.flatMap(x => [...(x.variant?.agents || []), ...Object.values(x.variant?.tournament || {}).flat(), ...(x.wrongnote?.pairs || []).flat(), ...(x.wrongnote?.solo || [])])]
+    .filter(x => typeof x === 'string');
+  const all = loadConfig().agents;
+  const bases = [...new Set(specs.map(x => x.split('#')[0]).filter(x => { try { resolveAgent(all, x); return true; } catch { return false; } }))];
+  const dir = path.join(HOME_DIR, 'bench', 'ping', new Date().toISOString().replace(/[:.]/g, '-'));
+  const dead = [];
+  for (const id of bases) {
+    try { await run(dir, `ping-${id.replace(/[^\w-]/g, '_')}`, resolveAgent(all, id), 'Reply with the single word OK.', dir); }
+    catch (e) { dead.push(`${id}: ${e.message.split('\n').slice(0, 2).join(' ')}`); }
+  }
+  return dead;
 }
 
 // ---- Main ----
@@ -271,13 +358,18 @@ async function main() {
   fs.mkdirSync(run, { recursive: true });
   console.log(`Bench folder: ${run}`);
   const onlyTasks = val('--tasks'), onlyRows = val('--rows');
+  recheck(b, run);
+  if (!args.includes('--report') && b.ping) {
+    const dead = await ping(b);
+    if (dead.length) { console.error(`Not running: these models do not answer.\n${dead.map(x => `- ${x}`).join('\n')}`); report(b, readCells(run, b), run); process.exit(3); }
+  }
   if (!args.includes('--report')) {
     const study = require('./study');
     for (const task of b.tasks.filter(t => !onlyTasks || onlyTasks.includes(t.id))) {
       const rows = b.rows.filter(x => !(x.skip || []).includes(task.id) && (!onlyRows || onlyRows.includes(x.id) || x.id === (b.base_row || 'solo')));
       if (task.wrongnote) { for (const c of wrongnoteCells(b, task, rows, run, true)) writeCell(run, c); continue; }
       for (let r = 0; r < b.repeats; r++) {
-        const todo = rows.filter(x => !fs.existsSync(cellFile(run, task.id, x.id, r + 1)));
+        const todo = rows.filter(x => !cellDone(run, task.id, x.id, r + 1));
         if (!todo.length) { console.log(`- ${task.id} repeat ${r + 1}: done already`); continue; }
         // The base row always runs with the others, so they share judges and a repeat.
         const inSet = todo.some(x => x.id === (b.base_row || 'solo')) ? todo : [rows.find(x => x.id === (b.base_row || 'solo')), ...todo].filter(Boolean);
@@ -288,8 +380,8 @@ async function main() {
         console.log(`\n=== ${task.id}, repeat ${r + 1}: ${inSet.map(x => x.id).join(', ')}`);
         const { dir, study: s } = await study.main(cfgFile);
         for (const row of inSet) {
-          // A base-row cell that already exists is kept: this repeat's new base is only for judging alongside.
-          if (fs.existsSync(cellFile(run, task.id, row.id, r + 1))) continue;
+          // A base-row cell that is done is kept: this repeat's new base is only for judging alongside.
+          if (cellDone(run, task.id, row.id, r + 1)) continue;
           const c = roomCell(b, task, row, r, s, dir);
           if (c) writeCell(run, c);
         }
@@ -300,5 +392,5 @@ async function main() {
   console.log(`Report: ${path.join(run, 'report.md')}`);
 }
 
-module.exports = { interval, gains, report, readCells, roomCell, studyConfig, idOf };
+module.exports = { interval, gains, report, readCells, roomCell, studyConfig, idOf, recheck };
 if (require.main === module) main().catch(e => { console.error(`bench: ${e.message}`); process.exit(1); });

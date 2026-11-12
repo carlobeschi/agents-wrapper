@@ -16,6 +16,7 @@
  ],
  "solo": "claude",
  "repeats": 3,
+ "ping": true,
  "room": {
   "silent": true,
   "turns": true,

@@ -46,6 +46,15 @@
       "note": "Collaboration bench, first pass (~12-15 h over two nights, ~£5-7 Gemini); keeps finished cells"
     },
     {
+      "name": "bench-v1-redo",
+      "cmd": [
+        "node",
+        "bench.js",
+        "examples/bench/bench-v1.json"
+      ],
+      "note": "Bench v1 again: only the broken cells of the first night (Gemini never answered as player from drawing repeat 2, nor as poem judge). Stops at once (exit 3) if a model doesn't answer; ~2-4 h, ~£1-2 Gemini"
+    },
+    {
       "name": "study-10",
       "cmd": [
         "node",

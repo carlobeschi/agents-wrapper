@@ -80,3 +80,77 @@ test('a small bench: cells per row and repeat, resumable, and a report in fixed 
   fs.writeFileSync(path.join(run, 'cells', 'map', 'solo-strong', 'r1.json'), JSON.stringify({ task: 'map', config: 'solo-strong', repeat: 1, score: 70, observations: {} }));
   expect(execFileSync('node', [path.join(__dirname, '..', 'bench.js'), file, '--report'], { env, encoding: 'utf8' })).toContain('| swarm-marks | 1 | 80 | 10 |');
 });
+
+test('a cell where a part never happened is broken: left out of the report and run again', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'bench-broken-'));
+  const fake = ['node', path.join(__dirname, 'fixtures', 'bench-fake.js'), '{prompt}'];
+  // "g" fails every call, as an agent whose CLI is out of credit would.
+  const dead = ['node', '-e', 'process.exit(1)'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: fake }, { id: 'g', label: 'G', headless: dead }] }));
+  const file = path.join(home, 'tiny.json');
+  fs.writeFileSync(file, JSON.stringify({ title: 'Broken bench', judges: ['a', 'g'], process_judges: ['a'], team: ['a#1', 'a#2'], solo: 'a', repeats: 1,
+    room: { moves: 2, min_moves: 0, turns: true, silent: false },
+    rows: [
+      { id: 'solo', label: 'Alone', solo: true },
+      { id: 'mixed', label: 'Mixed', variant: { agents: ['a', 'g'], room: {} } },
+    ],
+    tasks: [{ id: 'poem', instances: [{ kind: 'poem', brief: 'a poem', checks: [{ say: 'Says flour twice.', type: 'contains', word: 'flour', min: 2 }] }] }] }));
+  const env = { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' };
+  const out = execFileSync('node', [path.join(__dirname, '..', 'bench.js'), file], { env, encoding: 'utf8', timeout: 60000 });
+  const run = out.match(/Bench folder: (.+)/)[1].trim();
+  const cell = r => JSON.parse(fs.readFileSync(path.join(run, 'cells', 'poem', r, 'r1.json'), 'utf8'));
+  expect(cell('mixed').broken).toEqual(expect.arrayContaining(['g never moved', expect.stringMatching(/^judge g gave no score/)]));
+  expect(cell('solo').broken).toEqual([expect.stringMatching(/^judge g gave no score/)]);
+  const md = fs.readFileSync(path.join(run, 'report.md'), 'utf8');
+  expect(md).toContain('## Broken cells');
+  expect(md).toContain('poem · Mixed · repeat 1: g never moved');
+  expect(md).not.toContain('| Mixed |');
+  // A cell written before this check (no "broken" field) is looked at again from its study.
+  const f = path.join(run, 'cells', 'poem', 'mixed', 'r1.json');
+  const { broken, ...old } = cell('mixed');
+  fs.writeFileSync(f, JSON.stringify(old));
+  const rep = execFileSync('node', [path.join(__dirname, '..', 'bench.js'), file, '--report'], { env, encoding: 'utf8' });
+  expect(rep).toContain('broken on a second look');
+  expect(cell('mixed').broken).toContain('g never moved');
+  // With "ping": true a model that doesn't answer stops the run before anything starts.
+  const pinged = path.join(home, 'pinged.json');
+  fs.writeFileSync(pinged, JSON.stringify({ ...JSON.parse(fs.readFileSync(file, 'utf8')), ping: true }));
+  let failed = null;
+  try { execFileSync('node', [path.join(__dirname, '..', 'bench.js'), pinged], { env, encoding: 'utf8', stdio: 'pipe', timeout: 60000 }); } catch (e) { failed = e; }
+  expect(failed?.status).toBe(3);
+  expect(String(failed?.stderr)).toContain('- g:');
+  // The next run does them again instead of keeping them.
+  const again = execFileSync('node', [path.join(__dirname, '..', 'bench.js'), file], { env, encoding: 'utf8', timeout: 60000 });
+  expect(again).not.toContain('done already');
+});
+
+test('wrong note: a session that errored runs again on its own, and the new one counts', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'bench-wn-'));
+  const fake = ['node', path.join(__dirname, 'fixtures', 'bench-fake.js'), '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: fake }] }));
+  const wn = path.join(home, 'wn.json');
+  fs.writeFileSync(wn, JSON.stringify({ spec: 'Left to right.', nav_task: 'A calculator.', notes: ['N1'], wrong_note: 'Right to left.', conflict: 'Left to right.',
+    probes: [{ expr: '10 - 4 - 1', spec: 5, note: 7 }], tests: path.join(__dirname, 'fixtures', 'wrongnote', 'hidden'), proof: ['node', 'hidden-tests/ok.js'], proof_wrap: ['env'],
+    judges: ['a'], max_turns: 4 }));
+  const file = path.join(home, 'wn-bench.json');
+  fs.writeFileSync(file, JSON.stringify({ title: 'WN bench', judges: ['a'], team: ['a#1', 'a#2'], solo: 'a', repeats: 1, room: {},
+    rows: [{ id: 'solo', label: 'Alone', solo: true, wrongnote: { solo: ['a'] } }, { id: 'pair', label: 'Pair', variant: {}, wrongnote: { pairs: [['a#1', 'a#2']] } }],
+    tasks: [{ id: 'wrongnote', wrongnote: [wn] }] }));
+  const env = { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' };
+  const bench = () => execFileSync('node', [path.join(__dirname, '..', 'bench.js'), file], { env, encoding: 'utf8', timeout: 60000 });
+  const run = bench().match(/Bench folder: (.+)/)[1].trim();
+  const res = path.join(run, 'wrongnote', 'wn', 'results.json');
+  const rows = JSON.parse(fs.readFileSync(res, 'utf8'));
+  const i = rows.findIndex(x => x.navigator);
+  rows[i] = { ...rows[i], first: 'error', final: 'error', error: 'exit 1' };
+  fs.writeFileSync(res, JSON.stringify(rows));
+  bench();
+  // Marked broken on the second look, then run again into a redo folder.
+  const redo = fs.readdirSync(path.join(run, 'wrongnote')).filter(n => n.startsWith('wn-redo-'));
+  expect(redo).toHaveLength(1);
+  const again = JSON.parse(fs.readFileSync(path.join(run, 'wrongnote', redo[0], 'results.json'), 'utf8'));
+  expect(again.map(x => x.name)).toEqual(['a-1-drives-a-2-r1']);
+  const cell = JSON.parse(fs.readFileSync(path.join(run, 'cells', 'wrongnote', 'pair', 'r1.json'), 'utf8'));
+  expect(cell.broken).toBeUndefined();
+  expect(cell.score).toBe(100);
+});
