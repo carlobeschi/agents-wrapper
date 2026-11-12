@@ -42,6 +42,7 @@ const bench = {
   team: ['claude#1', 'claude#2'],
   solo: 'claude',
   repeats: 3,
+  ping: true, // one short call to each model before a run: a model that doesn't answer stops it (bench.js)
   room: { silent: true, turns: true, moves: 8, min_moves: 3, lines_per_move: 4, max_minutes: 8, words: 30, self_review: true },
   rows: [
     { id: 'solo', label: 'Claude alone', solo: true, wrongnote: { solo: ['claude'] } },
