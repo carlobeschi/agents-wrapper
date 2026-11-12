@@ -126,6 +126,10 @@ If the Mac is asleep at 18:00, launchd runs it at the next wake.
 
 `sh scripts/night.sh` runs the studies in `examples/night/queue.json` one after the other (night.js) while the laptop is left alone, and stops at 07:15, before The Motion. It starts with `git pull --ff-only`, so a merged change to the queue takes effect that night. A job that finishes is not run again; a job that fails, is stopped at the stop time or goes over its `max_minutes` runs again the next night, and bench.js, swarm.js and ideate.js keep the work already done. Jobs that need Ollama are skipped if it doesn't answer. `node night.js --list` shows what is done and what is left. In the morning: `pbcopy < ~/.agent-dispatch/night/last-summary.md`. Keep the laptop plugged in with the lid open (caffeinate stops idle sleep, not lid sleep).
 
+## Moving to a new laptop
+
+`sh scripts/backup-laptop.sh` packs what lives only on the Mac (`~/.agent-dispatch`, the launchd jobs, the book logs) into `~/studio-backup-<date>.tgz`, with no secrets. On the new Mac, `sh scripts/setup-mac.sh` checks tools, sign-ins, Keychain items, settings and models and sets up what is safe (`--models`, `--schedule`). The checklist, in Italian: [docs/nuovo-portatile.md](docs/nuovo-portatile.md). The shows' agents.json (Codex pinned to its model) is in `examples/setup/agents.shows.json`.
+
 ## Dispatch (legacy)
 
 `/dispatch` is the first page this repo had: one prompt sent to several agents at once, to compare them. It still works but is no longer developed.
