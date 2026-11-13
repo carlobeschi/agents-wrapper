@@ -2,7 +2,7 @@
 # Set up a new Mac for the studio, after cloning this repo to ~/agents-wrapper:
 #   sh ~/agents-wrapper/scripts/setup-mac.sh                check, and set up what is safe to set up
 #   sh ~/agents-wrapper/scripts/setup-mac.sh --models       also pull the Ollama models (~13 GB)
-#   sh ~/agents-wrapper/scripts/setup-mac.sh --schedule     also install the launchd jobs (Motion, Trap)
+#   sh ~/agents-wrapper/scripts/setup-mac.sh --schedule     also install the launchd jobs (Motion, Trap, night queue at 21:00)
 # Install the schedule only once the old laptop's jobs are unloaded, or The Motion runs twice.
 # It never reads a Keychain secret (it only checks the item exists), never loosens an
 # agent's permissions and never overwrites a file that is already there.
@@ -59,7 +59,7 @@ if command -v ollama >/dev/null; then
 fi
 
 echo "Schedule (launchd)"
-for job in motion-daily trap-weekly; do
+for job in motion-daily trap-weekly night; do
   P="$HOME/Library/LaunchAgents/com.agents-wrapper.$job.plist"
   if [ -f "$P" ]; then ok "$job installed"
   elif [ "$1" = "--schedule" ] || [ "$2" = "--schedule" ]; then
@@ -67,6 +67,8 @@ for job in motion-daily trap-weekly; do
     sed "s#HOME_DIR/agents-wrapper#$REPO#; s#HOME_DIR#$HOME#g" "scripts/$job.plist" > "$P" && launchctl load "$P" && ok "$job installed"
   else todo "$job not scheduled (rerun with --schedule once the old laptop's job is unloaded)"; fi
 done
+if [ -d "$HOME/.agent-dispatch/night-reports/.git" ]; then ok "night reports clone"
+else todo "night reports clone (private repo, see docs/nuovo-portatile.md)"; fi
 echo "  the Mac must wake for The Motion: sudo pmset repeat wakeorpoweron MTWRF 07:55:00"
 
 echo

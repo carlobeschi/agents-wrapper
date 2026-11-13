@@ -50,6 +50,7 @@ Checklist per spostare tutto quello che gira sul Mac (The Motion del mattino, Th
    - `sh scripts/setup-mac.sh --models` scarica `qwen3:8b` e `gemma3:12b` (circa 13 GB; senza `gemma3:12b` lo studio 10 salta le sue ripetizioni);
    - `sh scripts/setup-mac.sh --schedule` installa The Motion (feriali 08:00) e The Trap (martedì 18:00), solo dopo il passo 1.2 sul vecchio;
    - `sudo pmset repeat wakeorpoweron MTWRF 07:55:00` sveglia il Mac per The Motion.
+   - Coda notturna da sola: vedi sotto, "Coda notturna da sola".
 6. Prova: `node motion-daily.js --dry-run` (si ferma prima del merge) e `node night.js --list` (deve mostrare i job già fatti).
 7. Claude desktop: accedi, collega il nuovo computer a questo progetto e approva di nuovo le cartelle `~/agents-wrapper` e `~/.agent-dispatch/studies`. Per i post Ko-fi serve Claude in Chrome con l'accesso a Ko-fi.
 
@@ -59,3 +60,22 @@ Checklist per spostare tutto quello che gira sul Mac (The Motion del mattino, Th
 - **The Trap** (martedì 18:00, episodio il mercoledì): salta se il passaggio cade di martedì.
 - **Coda notturna** (studio 10 e il resto): riparte dove era rimasta solo se `~/.agent-dispatch/night/state.json` e le cartelle dei risultati arrivano dal backup.
 - **Post Ko-fi** e lavoro dei thread sul Mac (Remote Control, cartelle approvate): fermi finché il nuovo computer non è collegato.
+
+## Coda notturna da sola
+
+La coda notturna parte ogni sera alle 21:00 (launchd, `com.agents-wrapper.night`) e si ferma alle 07:15.
+
+- Il Mac deve stare **in carica** con il coperchio aperto. A batteria il Mac va comunque in stop (12-13 novembre: stop d'emergenza termico alle 23:27, tutte le chiamate locali scadute). Se alle 21:00 è a batteria, aspetta il caricatore fino a 30 minuti, poi salta la notte e lo scrive nel resoconto.
+- `sudo pmset -c sleep 0`: in carica il Mac non va in stop da solo (lo schermo si può spegnere).
+- Una sola notte alla volta: se ne parte una seconda (a mano o da launchd) esce subito.
+- Il resoconto va nel repository **privato** `carlobeschi/night-reports` (clonato in `~/.agent-dispatch/night-reports`): `latest.md` e `runs/<data>.md`, aggiornati all'inizio, dopo ogni job e alla fine, senza cartella home né nome. Lo leggono i thread nel cloud: niente più copia e incolla.
+
+```sh
+gh repo create carlobeschi/night-reports --private --add-readme
+gh repo clone carlobeschi/night-reports ~/.agent-dispatch/night-reports
+gh auth setup-git
+sh ~/agents-wrapper/scripts/install-night.sh
+sudo pmset -c sleep 0
+```
+
+Toglierla: `sh ~/agents-wrapper/scripts/install-night.sh --remove`.

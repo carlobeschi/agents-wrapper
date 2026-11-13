@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- The night queue, every evening at 21:00 (stops at 07:15). Install: sh scripts/install-night.sh -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.agents-wrapper.night</string>
+  <key>ProgramArguments</key>
+  <array><string>/bin/sh</string><string>HOME_DIR/agents-wrapper/scripts/night.sh</string><string>--scheduled</string></array>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>21</integer><key>Minute</key><integer>0</integer></dict>
+  <key>ProcessType</key><string>Standard</string>
+  <key>StandardOutPath</key><string>HOME_DIR/.agent-dispatch/night/launchd.log</string>
+  <key>StandardErrorPath</key><string>HOME_DIR/.agent-dispatch/night/launchd.log</string>
+</dict>
+</plist>

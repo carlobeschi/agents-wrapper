@@ -23,6 +23,9 @@
 //   (closing the lid still sends it to sleep).
 // Out: ~/.agent-dispatch/night/<stamp>/ with one log per job and summary.md,
 // rewritten after every job; ~/.agent-dispatch/night/last-summary.md is a copy.
+// - If ~/.agent-dispatch/night-reports is a clone of a private repository,
+//   night-report.js pushes the summary there at the start, after every job
+//   and at the end, so the cloud threads can read it in the morning.
 //
 // Queue: { "stop": "07:15", "min_minutes": 20,
 //          "jobs": [ { "name": "bench-v1", "cmd": ["node", "bench.js", "..."],
@@ -132,6 +135,14 @@ function writeSummary(dir, info, rows) {
   fs.writeFileSync(path.join(NIGHT_DIR, 'last-summary.md'), text);
 }
 
+// Pushes the summary to the private reports clone, if there is one. Never stops the night.
+function report() {
+  if (!fs.existsSync(path.join(process.env.NIGHT_REPORTS_DIR || path.join(HOME_DIR, 'night-reports'), '.git'))) return;
+  const r = spawnSync(process.execPath, [path.join(__dirname, 'night-report.js')], { encoding: 'utf8', timeout: 180000 });
+  const out = ((r.stdout || '') + (r.stderr || '')).trim();
+  if (out) console.log(out);
+}
+
 async function main(argv) {
   const opt = n => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : null; };
   const file = path.resolve(argv.find(a => a.endsWith('.json')) || path.join(__dirname, 'examples', 'night', 'queue.json'));
@@ -170,6 +181,8 @@ async function main(argv) {
   const info = { stamp: st, start, stopAt, queue: path.relative(cwd, file) || file, pull };
   const rows = [];
   console.log(`night run ${st}: until ${stopAt.toString()}, log in ${dir}`);
+  writeSummary(dir, info, rows);
+  report();
 
   for (const [k, job] of q.jobs.entries()) {
     const row = { name: job.name, note: job.note || '' };
@@ -191,8 +204,10 @@ async function main(argv) {
     else { row.result = `failed (exit ${res.code})`; row.note = 'runs again next night; see the log'; }
     console.log(`${fmtTime(new Date())} ${job.name}: ${row.result}`);
     writeSummary(dir, info, rows);
+    report();
   }
   writeSummary(dir, info, rows);
+  report();
   console.log(`summary: ${path.join(dir, 'summary.md')}`);
 }
 
