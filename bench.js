@@ -75,7 +75,14 @@ function studyConfig(b, task, inst, r, rows) {
   };
 }
 
-const timeline = d => { try { return JSON.parse(fs.readFileSync(path.join(d, 'timeline.json'), 'utf8')); } catch { return null; } };
+// A run folder written on another computer (or another user name): the same
+// path under this computer's ~/.agent-dispatch, if it isn't where it was.
+function here(p) {
+  if (!p || fs.existsSync(p)) return p;
+  const m = String(p).match(/[\\/]\.agent-dispatch[\\/](.+)$/);
+  return m ? path.join(HOME_DIR, ...m[1].split(/[\\/]/)) : p;
+}
+const timeline = d => { try { return JSON.parse(fs.readFileSync(path.join(here(d), 'timeline.json'), 'utf8')); } catch { return null; } };
 const moveCount = d => (timeline(d)?.moves || []).length;
 const geminiMoves = d => (timeline(d)?.moves || []).filter(m => /^antigravity/.test(m.agent)).length;
 
@@ -316,7 +323,7 @@ function recheck(b, run) {
       try { c = JSON.parse(fs.readFileSync(cellFile(run, task.id, row.id, r), 'utf8')); } catch { continue; }
       if (c.broken || !c.source) continue;
       let s;
-      try { s = JSON.parse(fs.readFileSync(path.join(c.source, 'study.json'), 'utf8')); } catch { continue; }
+      try { s = JSON.parse(fs.readFileSync(path.join(here(c.source), 'study.json'), 'utf8')); } catch { console.warn(`  can't look again at ${c.task}/${c.config}/r${r}: no study at ${c.source}`); continue; }
       const again = roomCell(b, task, row, r - 1, s, c.source);
       if (again?.broken) { writeCell(run, again); n++; }
     }
@@ -392,5 +399,5 @@ async function main() {
   console.log(`Report: ${path.join(run, 'report.md')}`);
 }
 
-module.exports = { interval, gains, report, readCells, roomCell, studyConfig, idOf, recheck };
+module.exports = { interval, gains, report, readCells, roomCell, studyConfig, idOf, recheck, here };
 if (require.main === module) main().catch(e => { console.error(`bench: ${e.message}`); process.exit(1); });

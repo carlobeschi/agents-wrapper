@@ -55,6 +55,15 @@
       "note": "Bench v1 again: only the broken cells of the first night (Gemini never answered as player from drawing repeat 2, nor as poem judge). Stops at once (exit 3) if a model doesn't answer; ~2-4 h, ~£1-2 Gemini"
     },
     {
+      "name": "bench-v1-redo-2",
+      "cmd": [
+        "node",
+        "bench.js",
+        "examples/bench/bench-v1.json"
+      ],
+      "note": "Bench v1 broken cells, second try: the first redo found none because the cells point at the old laptop's folders (fixed). Stops at once if a model doesn't answer; ~2-4 h, ~£1-2 Gemini"
+    },
+    {
       "name": "study-10",
       "cmd": [
         "node",
