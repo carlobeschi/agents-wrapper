@@ -266,7 +266,7 @@ test('chat arms post messages everyone sees; scouts back only sites they inspect
   } finally { server.close(); }
 });
 
-test('a local model Ollama lacks: its repeats are skipped; a cell with mostly failed calls is not kept', async () => {
+test('a local model Ollama lacks: its repeats are skipped; a model that stops answering stops the run; failed cells run again', async () => {
   let fail = true;
   const server = http.createServer((req, res) => {
     let body = '';
@@ -287,14 +287,28 @@ test('a local model Ollama lacks: its repeats are skipped; a cell with mostly fa
       budget: 8, swarm: 4, repeats: 2, seed: 4, tasks: ['map'], map: { regions: 40, area: 5 } }));
     const env = { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0', OLLAMA_BASE: `http://127.0.0.1:${port}` };
     const node = () => promisify(execFile)('node', [path.join(__dirname, '..', 'swarm.js'), file, '--arms', 'swarm-marks'], { env, encoding: 'utf8', maxBuffer: 1 << 24 });
-    const { stderr } = await node();
-    expect(stderr).toContain('local:not-pulled is not in Ollama');
+    // Every call fails: the run stops after 4 in a row, with exit 3, and keeps no cell.
+    const err = await node().then(() => null, e => e);
+    expect(err?.code).toBe(3);
+    expect(err.stderr).toContain('local:not-pulled is not in Ollama');
+    expect(err.stderr).toContain('the model is not answering');
+    expect((err.stderr.match(/^  ✗ /gm) || []).length).toBeLessThanOrEqual(8);
     const cell = r => path.join(home, 'bench', 'm', 'cells', 'map', 'swarm-marks', `r${r}.json`);
     expect(fs.existsSync(cell(1))).toBe(false);
     fail = false;
     await node();
     expect(fs.existsSync(cell(1))).toBe(true);
     expect(fs.existsSync(cell(2))).toBe(false);
+    const kept = JSON.parse(fs.readFileSync(cell(1), 'utf8'));
+    expect(kept.observations.failures).toBe(0);
+    expect(kept.observations.call_seconds.median).toBeGreaterThanOrEqual(0);
+    // A cell saved by the old rule with too many failed calls runs again; a clean one is kept.
+    fs.writeFileSync(cell(1), JSON.stringify({ ...kept, score: 14.3, calls: 60, observations: { ...kept.observations, failures: 7 } }));
+    const again = await node();
+    expect(again.stdout).toContain('7 of 60 calls had failed, running it again');
+    expect(JSON.parse(fs.readFileSync(cell(1), 'utf8')).observations.failures).toBe(0);
+    expect(fs.readdirSync(path.dirname(cell(1))).some(f => /^r1\.json\.failed-\d+$/.test(f))).toBe(true);
+    expect((await node()).stdout).toContain('map/swarm-marks/r1: kept');
   } finally { server.close(); }
 });
 

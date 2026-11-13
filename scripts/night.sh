@@ -9,4 +9,10 @@ GEMINI_API_KEY=$(security find-generic-password -s second-room-gemini -w 2>/dev/
 OPENROUTER_API_KEY=$(security find-generic-password -s openrouter-key -w 2>/dev/null) && export OPENROUTER_API_KEY
 cd "$(dirname "$0")/.." || exit 1
 mkdir -p "$HOME/.agent-dispatch/night"
-node night.js "$@" 2>&1 | tee -a "$HOME/.agent-dispatch/night/night.log"
+# caffeinate keeps the Mac awake (system, disk, display idle sleep) while the
+# queue runs; it still sleeps if the lid closes on battery, so keep it plugged in.
+if command -v caffeinate >/dev/null 2>&1; then
+  caffeinate -dims node night.js "$@" 2>&1 | tee -a "$HOME/.agent-dispatch/night/night.log"
+else
+  node night.js "$@" 2>&1 | tee -a "$HOME/.agent-dispatch/night/night.log"
+fi

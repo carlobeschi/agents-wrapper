@@ -75,7 +75,7 @@
       ],
       "enabled": true,
       "max_minutes": 480,
-      "note": "Swarm, full run (study 10, local, £0; solo-strong uses Claude on the subscription). ~8k calls over several nights, keeps finished cells; repeats of a model Ollama lacks are skipped (pull gemma3:12b)"
+      "note": "Swarm, full run (study 10, local, £0; solo-strong uses Claude on the subscription). ~8k calls over several nights, keeps finished cells; repeats of a model Ollama lacks are skipped (pull gemma3:12b). Stops with exit 3 after 4 failed calls in a row (model not answering), and cells with more than 5% failed calls run again"
     },
     {
       "name": "organise-pilot",

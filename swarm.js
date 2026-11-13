@@ -238,19 +238,37 @@ async function gatherSwarm(nums, agents, rounds, boardOn, call, r, obs, opts = {
 
 // Agents run in an empty folder, away from the run folder (which holds the
 // hidden solution and the other agents' replies).
+// A cell keeps at most this many failed calls: a failed move is a skipped
+// move, so more than a few bend the score.
+const allowedFailures = calls => Math.max(1, Math.floor(calls * 0.05));
+
+// After this many failed calls in a row (anywhere in the run) the model is not
+// answering: Ollama stopped, the Mac slept, or the machine is too slow. The run
+// stops with exit 3 instead of spending the night on timeouts.
+const MAX_FAILS_IN_A_ROW = () => Number(process.env.SWARM_MAX_FAILS_IN_A_ROW) || 4;
+const streak = { fails: 0 };
+class NotAnswering extends Error {}
+
 function caller(dir, stats) {
   const cwd = path.join(dir, 'cwd');
   fs.mkdirSync(cwd, { recursive: true });
+  stats.seconds = [];
   return async (agent, file, prompt) => {
+    if (streak.fails >= MAX_FAILS_IN_A_ROW()) throw new NotAnswering(`${streak.fails} calls in a row failed`);
     stats.calls++;
+    const t0 = Date.now();
     try {
       const text = await run(dir, file, agent, prompt, cwd);
       stats.tokens += Math.round((prompt.length + text.length) / 4);
+      stats.seconds.push((Date.now() - t0) / 1000);
+      streak.fails = 0;
       return text;
     } catch (e) {
       stats.failures++;
+      streak.fails++;
       stats.tokens += Math.round(prompt.length / 4);
-      console.warn(`  ✗ ${file}: ${String(e.message).split('\n')[0]}`);
+      console.warn(`  ✗ ${file}: ${String(e.message).split('\n')[0]} (${Math.round((Date.now() - t0) / 1000)}s)`);
+      if (streak.fails >= MAX_FAILS_IN_A_ROW()) throw new NotAnswering(`${streak.fails} calls in a row failed, last: ${String(e.message).split('\n')[0]}`);
       return '';
     }
   };
@@ -595,7 +613,15 @@ function arms(cfg, task) {
 async function runCell(cfg, all, task, arm, rep) {
   const base = path.join(HOME_DIR, 'bench', cfg.run);
   const cellFile = path.join(base, 'cells', task, arm.id, `r${rep}.json`);
-  if (fs.existsSync(cellFile) && !cfg.force) { console.log(`= ${task}/${arm.id}/r${rep}: kept`); return JSON.parse(fs.readFileSync(cellFile, 'utf8')); }
+  if (fs.existsSync(cellFile) && !cfg.force) {
+    const old = JSON.parse(fs.readFileSync(cellFile, 'utf8'));
+    // A cell saved before the stricter rule, with too many failed calls, runs again.
+    const f = old.observations?.failures || 0;
+    if (f <= allowedFailures(old.calls || 0)) { console.log(`= ${task}/${arm.id}/r${rep}: kept`); return old; }
+    console.log(`↻ ${task}/${arm.id}/r${rep}: ${f} of ${old.calls} calls had failed, running it again`);
+    // Not ending in .json, so bench.js doesn't read it as a cell.
+    fs.renameSync(cellFile, `${cellFile}.failed-${Date.now()}`);
+  }
   const dir = path.join(base, 'swarm', task, arm.id, `r${rep}`);
   fs.mkdirSync(dir, { recursive: true });
   console.log(`▶ ${task}/${arm.id}/r${rep}`);
@@ -668,9 +694,11 @@ async function runCell(cfg, all, task, arm, rep) {
   }
   obs.failures = stats.failures;
   obs.quotes ??= [];
-  // A cell where most calls failed says nothing about the arm: don't keep it,
-  // so the next run tries it again.
-  if (stats.failures > stats.calls / 2) {
+  const secs = [...stats.seconds].sort((a, b) => a - b);
+  obs.call_seconds = secs.length ? { median: r1(secs[Math.floor(secs.length / 2)]), max: r1(secs[secs.length - 1]) } : null;
+  // A cell with more than a few failed calls says little about the arm: don't
+  // keep it, so the next run tries it again.
+  if (stats.failures > allowedFailures(stats.calls)) {
     console.warn(`  ✗ ${task}/${arm.id}/r${rep}: ${stats.failures} of ${stats.calls} calls failed, cell not kept`);
     fs.writeFileSync(path.join(dir, 'failed.json'), JSON.stringify({ calls: stats.calls, failures: stats.failures, at: new Date().toISOString() }));
     return null;
@@ -730,5 +758,11 @@ if (require.main === module) {
   const file = argv.find(a => a.endsWith('.json'));
   if (!file) { console.error('usage: node swarm.js <swarm.json> [--tasks map,nest] [--arms a,b] [--force]'); process.exit(2); }
   main(file, { tasks: opt('--tasks')?.split(','), arms: opt('--arms')?.split(','), force: argv.includes('--force') })
-    .catch(e => { console.error(e.message); process.exit(1); });
+    .catch(e => {
+      if (e instanceof NotAnswering) {
+        console.error(`✗ stopping: the model is not answering (${e.message}). Is Ollama running and the Mac awake? The unfinished cell runs again next time.`);
+        process.exit(3);
+      }
+      console.error(e.message); process.exit(1);
+    });
 }
