@@ -108,6 +108,8 @@ test('a cell where a part never happened is broken: left out of the report and r
   // A cell written before this check (no "broken" field) is looked at again from its study.
   const f = path.join(run, 'cells', 'poem', 'mixed', 'r1.json');
   const { broken, ...old } = cell('mixed');
+  // ...even when it was written on another computer (another home folder): the same path under this one's.
+  old.source = path.join('/nowhere', '.agent-dispatch', path.relative(home, old.source));
   fs.writeFileSync(f, JSON.stringify(old));
   const rep = execFileSync('node', [path.join(__dirname, '..', 'bench.js'), file, '--report'], { env, encoding: 'utf8' });
   expect(rep).toContain('broken on a second look');
