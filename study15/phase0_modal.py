@@ -48,19 +48,20 @@ def phase0(model: str, n: int, seed: int, turns: int, arms: list) -> dict:
 
     t0 = time.time()
     llm = LLM(model=model, max_model_len=8192, gpu_memory_utilization=0.90, seed=seed)
-    params = SamplingParams(temperature=0.7, top_p=0.8, max_tokens=1024, seed=seed)
-    calls = {"n": 0}
+    params = SamplingParams(temperature=0.7, top_p=0.8, max_tokens=2048, seed=seed)
+    calls = {"n": 0, "cut": 0}
 
     def engine(convs):
         calls["n"] += len(convs)
         outs = llm.chat(convs, params, use_tqdm=False, chat_template_kwargs={"enable_thinking": False})
+        calls["cut"] += sum(o.outputs[0].finish_reason == "length" for o in outs)
         return [re.sub(r"<think>.*?</think>", "", o.outputs[0].text, flags=re.S).strip() for o in outs]
 
     rows, s, g = core.run_all(engine, model, n=n, seed=seed, arms=tuple(arms), turns=turns)
     meta = {"model": model, "n": n, "seed": seed, "turns": turns, "arms": arms, "gpu": GPU,
-            "seconds": round(time.time() - t0), "calls": calls["n"], "vllm": "0.9.2", "transformers": "4.53.2",
-            "sampling": {"temperature": 0.7, "top_p": 0.8, "max_tokens": 1024}}
-    md = core.summary_md(meta, s, g)
+            "seconds": round(time.time() - t0), "calls": calls["n"], "truncated": calls["cut"], "vllm": "0.9.2", "transformers": "4.53.2",
+            "sampling": {"temperature": 0.7, "top_p": 0.8, "max_tokens": 2048}}
+    md = core.summary_md(meta, s, g, rows)
     run = time.strftime("%Y-%m-%d-%H%M%S")
     out = pathlib.Path("/data/runs") / run
     out.mkdir(parents=True, exist_ok=True)

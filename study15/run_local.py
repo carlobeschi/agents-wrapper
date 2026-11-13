@@ -22,7 +22,7 @@ def ollama(model, host):
         out = []
         for c in convs:
             body = json.dumps({"model": model, "messages": c, "stream": False, "think": False,
-                               "options": {"temperature": 0.7, "top_p": 0.8, "num_predict": 1024}}).encode()
+                               "options": {"temperature": 0.7, "top_p": 0.8, "num_predict": 2048}}).encode()
             req = urllib.request.Request(f"{host}/api/chat", body, {"Content-Type": "application/json"})
             with urllib.request.urlopen(req, timeout=600) as r:
                 out.append(json.loads(r.read())["message"]["content"])
@@ -47,6 +47,6 @@ if __name__ == "__main__":
     out.mkdir(parents=True, exist_ok=True)
     (out / "rows.jsonl").write_text(core.dump(rows))
     (out / "summary.json").write_text(json.dumps({"meta": meta, "summary": s, "gate": g}, indent=2))
-    md = core.summary_md(meta, s, g)
+    md = core.summary_md(meta, s, g, rows)
     (out / "summary.md").write_text(md)
     print("\n" + md + f"\nSaved in {out}")

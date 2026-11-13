@@ -30,6 +30,10 @@ def test_answers():
     assert core.answer_of("ANSWER: 1111 ... ANSWER: **5678**") == "5678"
     assert core.answer_of("ANSWER: none") == "none"
     assert core.answer_of("no answer") is None
+    assert core.answer_of("**Answer:** 3 0 8 1") == "3081"
+    assert core.answer_of("ANSWER = 3-0-8-1.") == "3081"
+    assert core.answer_of("ANSWER: `4072`") == "4072"
+    assert core.answer_of("ANSWER: 12345") is None
 
 
 def fake(policy):
@@ -88,6 +92,45 @@ def test_run_all_and_calibration():
     rows, s, g = core.run_all(fake(lambda mine, p: truth[p]), "fake", n=40, seed=3, arms=("I",))
     md = core.summary_md({"model": "fake", "seed": 3, "n": 40}, s, g)
     assert "Gate:" in md and "| T |" in md
+
+
+def test_claims():
+    rng = random.Random(5)
+    items = core.build(12, 5)
+    seen = set()
+    for it in items:
+        cl = core.claims(rng, it)
+        assert core.candidates(it["a"] + cl["true"]) == [tuple(int(x) for x in it["code"])]
+        if cl["false_hidden"]:
+            both = core.candidates(it["a"] + cl["false_hidden"])
+            assert len(both) == 1 and "".join(map(str, both[0])) != it["code"]
+            seen.add("hidden")
+        if cl["false_clash"]:
+            assert core.candidates(it["a"] + cl["false_clash"]) == [] and core.candidates(cl["false_clash"])
+            seen.add("clash")
+    assert seen == {"hidden", "clash"}
+    # A careful fake: solves when consistent, flags a clash.
+    def engine(convs):
+        out = []
+        for c in convs:
+            txt = c[-1]["content"]
+            mine = [l for l in txt.split("Your partner writes")[0].split("\n") if l.startswith("- ")]
+            theirs = [l for l in txt.split("Your partner writes")[1].split("\n") if l.startswith("- ")]
+            out.append("ANSWER: none" if TEXT2SET.get((tuple(mine), tuple(theirs))) is None else "ANSWER: " + TEXT2SET[(tuple(mine), tuple(theirs))])
+        return out
+    TEXT2SET = {}
+    rng2 = random.Random(16)
+    for it in items:
+        cl = core.claims(rng2, it)
+        for k, th in cl.items():
+            if th is None:
+                continue
+            cand = core.candidates(it["a"] + th)
+            key = (tuple("- " + core.clue_text(x) for x in it["a"]), tuple("- " + core.clue_text(x) for x in th))
+            TEXT2SET[key] = "".join(map(str, cand[0])) if len(cand) == 1 else None
+    rows = core.run_claim(engine, items, "I", seed=15)
+    s = core.summarise(rows)["I"]
+    assert s["claim_true_right"] == 1.0 and s["claim_hidden_followed"] == 1.0 and s["claim_clash_flagged"] == 1.0
 
 
 def test_alternate():
