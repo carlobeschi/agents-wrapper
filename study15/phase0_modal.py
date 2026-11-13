@@ -8,6 +8,8 @@ summary.json, summary.md), and a copy stays in the Modal volume "study15".
 
 Cost guard: the GPU stops when the job ends, and the job is killed after
 3 hours whatever happens (about $6 at most on an L40S at $1.95/h).
+Better through scripts/study15.sh, which keeps a log and sends the outcome
+(summary, or the end of the log if it failed) to the private reports repo.
 Options: --model Qwen/Qwen3-8B --n 200 --seed 15 --turns 4 --arms I,P
 GPU type: STUDY15_GPU=L40S (default) or A100-80GB, A10G, H100.
 Gemma models are gated on Hugging Face: they need a token as a Modal secret
@@ -25,7 +27,9 @@ GPU = os.environ.get("STUDY15_GPU", "L40S")
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
-    .pip_install("vllm==0.9.2", "huggingface_hub[hf_transfer]")
+    # transformers is pinned: from 4.54 it has its own "aimv2" config, which clashes with
+    # the one vLLM 0.9.2 registers ("'aimv2' is already used by a Transformers config").
+    .pip_install("vllm==0.9.2", "transformers==4.53.2", "huggingface_hub[hf_transfer]")
     .env({"HF_HOME": "/data/hf", "HF_HUB_ENABLE_HF_TRANSFER": "1"})
     .add_local_file(HERE / "core.py", "/root/core.py")
 )
@@ -54,7 +58,7 @@ def phase0(model: str, n: int, seed: int, turns: int, arms: list) -> dict:
 
     rows, s, g = core.run_all(engine, model, n=n, seed=seed, arms=tuple(arms), turns=turns)
     meta = {"model": model, "n": n, "seed": seed, "turns": turns, "arms": arms, "gpu": GPU,
-            "seconds": round(time.time() - t0), "calls": calls["n"], "vllm": "0.9.2",
+            "seconds": round(time.time() - t0), "calls": calls["n"], "vllm": "0.9.2", "transformers": "4.53.2",
             "sampling": {"temperature": 0.7, "top_p": 0.8, "max_tokens": 1024}}
     md = core.summary_md(meta, s, g)
     run = time.strftime("%Y-%m-%d-%H%M%S")

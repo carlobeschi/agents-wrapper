@@ -25,12 +25,14 @@ python3 -m venv ~/.study15-venv
 Each run:
 
 ```
-cd ~/agents-wrapper && git pull
-~/.study15-venv/bin/modal run study15/phase0_modal.py
+sh ~/agents-wrapper/scripts/study15.sh
 ```
 
-It prints the summary at the end and saves it in `~/.agent-dispatch/study15/phase0/<time>/`.
-Copy it with `pbcopy < ~/.agent-dispatch/study15/phase0/*/summary.md` (the newest folder).
+It pulls the latest code, runs phase 0 on Modal, prints the summary and saves it in
+`~/.agent-dispatch/study15/phase0/<time>/`. The log goes to `~/.agent-dispatch/study15/logs/`.
+The outcome (the summary, or the end of the log if it failed) is pushed to the private
+reports repo as `study15/latest.md`, the same clone the night queue uses, so nothing needs copying.
+A quick, cheaper try: `sh ~/agents-wrapper/scripts/study15.sh --n 20`.
 The first run downloads the model (~16 GB) into the Modal volume, so it takes longer.
 The GPU stops when the job ends; a job is killed after 3 hours (at most ~$6 on an L40S).
 
