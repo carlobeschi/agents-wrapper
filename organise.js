@@ -547,6 +547,7 @@ async function main() {
     return specs.map((s, i) => ({ spec: s, ok: v[i]?.ok, errors: v[i]?.errors || [], text }));
   }
 
+  let brokenInARow = 0;
   async function runOrg(key, base, spec, task, label) {
     if (done(key)) return runs.find(r => r.key === key);
     const row = { key, ...base, spec, desc: spec ? describe(spec) : null };
@@ -570,6 +571,13 @@ async function main() {
     } catch (e) { row.error = e.message.split('\n')[0]; console.error(`  ✗ ${key}: ${row.error}`); }
     const bw = brokenWhy(row);
     if (bw.length) { row.broken = bw; console.error(`  ✗ ${key} broken: ${bw.join('; ')}`); }
+    // Three broken runs in a row: an agent has most likely run out of usage.
+    // Stop rather than fill the night with broken runs; the next run redoes them.
+    brokenInARow = bw.length ? brokenInARow + 1 : 0;
+    if (brokenInARow >= 3) {
+      const i = runs.findIndex(r => r.key === key); if (i >= 0) runs.splice(i, 1, row); else runs.push(row);
+      save(); console.error(`Stopping: ${brokenInARow} broken runs in a row (out of usage?). Run again later to go on.`); process.exit(1);
+    }
     const i = runs.findIndex(r => r.key === key); if (i >= 0) runs.splice(i, 1, row); else runs.push(row);
     save();
     return row;
