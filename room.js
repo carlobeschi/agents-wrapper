@@ -347,7 +347,7 @@ async function main(file) {
     const asked = Date.now();
     let reply;
     try { reply = await run(dir, `${String(timeline.length + 1).padStart(2, '0')}-${me.id}`, me, movePrompt(cfg, me, others, view), cwd); st.fails = 0; }
-    catch (e) { console.warn(`  ✗ ${e.message.split('\n')[0]}`); if (++st.fails >= 2) st.out = true; return; }
+    catch (e) { console.warn(`  ✗ ${e.message.split('\n')[0]}`); st.failedCalls = (st.failedCalls || 0) + 1; if (++st.fails >= 2) st.out = true; return; }
     st.moves++;
     const mv = parseMove(reply);
     if (view.review) st.reviewed = true;
@@ -465,7 +465,9 @@ async function main(file) {
     ownerLabel: c.owner ? agents.find(a => a.id === c.owner)?.label : null, pass: check(c, doc.lines) }));
   const out = { title: cfg.title, kind: cfg.kind, brief: cfg.brief, silent: !!cfg.silent, turns: !!cfg.turns, safe_word: cfg.safe_word?.word || null, secrets: cfg.secrets || {}, results, seconds: (Date.now() - t0) / 1000,
     agents: agents.map(a => ({ id: a.id, label: a.label, model: a.model || null })), start: cfg.start || [], moves: timeline,
-    final: doc.lines.map(l => ({ text: l.text, by: l.by })), after: {} };
+    final: doc.lines.map(l => ({ text: l.text, by: l.by })), after: {},
+    // Calls that failed even after their retry, and agents dropped after two failures in a row.
+    failed_calls: agents.reduce((n, a) => n + (state[a.id].failedCalls || 0), 0), knocked_out: agents.filter(a => state[a.id].out).map(a => a.id) };
   if (cfg.plan_first) out.plan = { ...plan };
   if (cfg.versions) out.proposals = [...decided, ...pending.map(p => ({ ...p, result: 'pending' }))];
   out.stats = processStats(out);

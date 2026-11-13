@@ -80,6 +80,16 @@ function ollamaUp(timeoutMs = 5000) {
 
 const fmtTime = d => d.toTimeString().slice(0, 5);
 const fmtDur = ms => { const m = Math.round(ms / 60000); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`; };
+// Calls a job reported as failed ("  ✗ ...") or done ("  ✓ ...") in this
+// night's part of its log. Many failures with exit 0 (an agent out of usage,
+// say) means the job's numbers are not to be trusted.
+function failedCalls(file) {
+  let text = ''; try { text = fs.readFileSync(file, 'utf8'); } catch {}
+  const starts = [...text.matchAll(/^---- .*\n\$ /gm)];
+  if (starts.length) text = text.slice(starts[starts.length - 1].index);
+  const failed = (text.match(/^\s*✗ /gm) || []).length, ok = (text.match(/^\s*✓ /gm) || []).length;
+  return { failed, ok, suspect: failed >= 5 && failed >= 0.2 * (failed + ok) };
+}
 const tail = (file, n = 15) => { try { return fs.readFileSync(file, 'utf8').trimEnd().split('\n').slice(-n).join('\n'); } catch { return ''; } };
 
 // The job running now, stopped too if this script is stopped (Ctrl-C).
@@ -200,6 +210,7 @@ async function main(argv) {
     row.ms = Date.now() - t0;
     if (res.error) { row.result = 'could not start'; row.note = res.error; }
     else if (res.stopped) { row.result = 'stopped'; row.note = jobStop < stopAt ? `over its ${job.max_minutes} min; runs again next night` : 'stop time reached; it carries on next night'; }
+    else if (res.code === 0 && failedCalls(row.log).suspect) { const f = failedCalls(row.log); row.result = `suspect (${f.failed} failed calls of ${f.failed + f.ok})`; row.note = 'exit 0, but many calls failed: not marked done, runs again next night; see the log'; }
     else if (res.code === 0) { row.result = 'ok'; state.done[job.name] = new Date().toISOString().slice(0, 16).replace('T', ' '); writeState(state); }
     else { row.result = `failed (exit ${res.code})`; row.note = 'runs again next night; see the log'; }
     console.log(`${fmtTime(new Date())} ${job.name}: ${row.result}`);
@@ -215,4 +226,4 @@ if (require.main === module) {
   main(process.argv.slice(2)).catch(e => { console.error(e.message); process.exit(1); });
 }
 
-module.exports = { nextStop, loadQueue, expandHome };
+module.exports = { nextStop, loadQueue, expandHome, failedCalls };

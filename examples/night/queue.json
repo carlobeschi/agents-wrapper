@@ -105,6 +105,26 @@
         "examples/room/study-11b.json"
       ],
       "note": "Other by label, split: reviewer told / reviser told / both / neither, 3 repeats (~£0.10-0.20 Gemini judge)"
+    },
+    {
+      "name": "organise-pilot-2",
+      "cmd": [
+        "node",
+        "organise.js",
+        "examples/organise/pilot.json",
+        "--out=~/.agent-dispatch/organise/pilot"
+      ],
+      "note": "organise-pilot again: on 12 Nov from ~03:20 almost every Claude call failed (exit 1) but the job said ok. Keeps the runs that really happened, redoes the broken ones; a ping stops it at once if Claude doesn't answer"
+    },
+    {
+      "name": "kata-pilot-2",
+      "cmd": [
+        "node",
+        "organise.js",
+        "examples/organise/kata.json",
+        "--out=~/.agent-dispatch/organise/kata"
+      ],
+      "note": "kata-pilot again (same reason): broken rounds and every round after them are redone"
     }
   ]
 }
