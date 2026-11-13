@@ -70,3 +70,13 @@ test('jobs run in order, done ones are kept, a slow one is stopped', async () =>
   expect(stdout).toMatch(/ok\s+done/);
   expect(stdout).toMatch(/off\s+off/);
 });
+
+test('a job that exits 0 with many failed calls is suspect, counted on this night only', () => {
+  const { failedCalls } = require('../night');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'night-f-'));
+  const f = path.join(dir, 'job.log');
+  fs.writeFileSync(f, ['---- Wed', '$ node x.js', ...Array(9).fill('  ✗ Claude Code 1, 01: exit 1'), '---- Thu', '$ node x.js', '  ✓ a: 10 chars', '  ✓ b: 10 chars', '  ✗ c: exit 1', ''].join('\n'));
+  expect(failedCalls(f)).toEqual({ failed: 1, ok: 2, suspect: false });
+  fs.appendFileSync(f, ['---- Fri', '$ node x.js', '  ✓ a: 1 chars', ...Array(6).fill('  ✗ Claude Code 1, 02: exit 1'), '  ↻ 03: exit 1, retrying', '---- time is up, stopping', ''].join('\n'));
+  expect(failedCalls(f)).toEqual({ failed: 6, ok: 1, suspect: true });
+});

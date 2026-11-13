@@ -148,3 +148,46 @@ esac`, 'x', '{prompt}'];
   expect(md).toMatch(/kata · p · repeat 1: r1 50 → r2 50 \(70\) \[2 changes\] → r3 50 \(70\) \[0 changes\] · target 90/);
   expect(md).not.toContain('| solo |');
 });
+
+test('broken runs: failed calls fail the job, and the next run redoes them (and every later kata round)', () => {
+  const { spawnSync } = require('child_process');
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'organise-broken-'));
+  const one = { name: 'one agent', prediction: 70, steps: [{ id: 'a', do: 'work', agents: 1, moves: 2 }], final: 'a' };
+  fs.writeFileSync(path.join(home, 'kata.txt'), 'TARGET: 90\nLEARNED: x\nOBSTACLE: y\nCHANGE: agents\n```json\n' + JSON.stringify(one) + '\n```');
+  const fk = ['sh', '-c', `case "$1" in
+  *"single word OK"*) [ -f "${home}/dead" ] && exit 1; printf 'OK\\n';;
+  *"round by round"*) cat "${home}/kata.txt";;
+  *"just finished"*) printf 'ok\\n';;
+  *) [ -f "${home}/down" ] && { echo "usage limit reached" >&2; exit 1; }; printf 'INSERT AFTER 0\\nflour\\nEND\\nSTATUS: done\\n';;
+esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: ['w', 'p'].map(id => ({ id, label: id.toUpperCase(), headless: fk })) }));
+  const file = path.join(home, 'k.json'), out = path.join(home, 'out');
+  fs.writeFileSync(file, JSON.stringify({ title: 'K', worker: 'w', proposers: ['p'], judges: ['p'], repeats: 1, levels: ['kata'], kata: { rounds: 3, arms: ['fixed', 'kata'] },
+    budget: { moves: 8, calls: 12, minutes: 3 }, room: { lines_per_move: 4 },
+    tasks: [{ id: 'bake', kind: 'poem', judge: false, brief: 'a poem', short: 'a poem', checks: [{ say: 'Says flour.', type: 'contains', word: 'flour' }],
+      l0: { name: 'ours', steps: [{ id: 'a', do: 'work', agents: 2, moves: 2, talk: true }], final: 'a' } }] }));
+  const go = () => spawnSync('node', [path.join(__dirname, '..', 'organise.js'), file, `--out=${out}`],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  fs.writeFileSync(path.join(home, 'dead'), '');
+  let r = go();
+  expect(r.status).toBe(3); // the ping stops it before any run
+  expect(r.stderr).toMatch(/Not starting: 2 agent/);
+  fs.unlinkSync(path.join(home, 'dead'));
+  fs.writeFileSync(path.join(home, 'down'), ''); // workers fail after the ping (out of usage halfway through the night)
+  r = go();
+  expect(r.status).toBe(1);
+  expect(r.stderr).toMatch(/5 of 5 runs are broken/);
+  let runs = JSON.parse(fs.readFileSync(path.join(out, 'runs.json'), 'utf8'));
+  expect(runs.every(x => x.broken?.length)).toBe(true);
+  expect(fs.readFileSync(path.join(out, 'summary.md'), 'utf8')).toContain('## Broken runs (5,');
+  fs.unlinkSync(path.join(home, 'down'));
+  r = go();
+  expect(r.status).toBe(0);
+  runs = JSON.parse(fs.readFileSync(path.join(out, 'runs.json'), 'utf8'));
+  expect(runs.map(x => x.key).sort()).toEqual(['bake-r1-kata-fixed-k1', 'bake-r1-kata-fixed-k2', 'bake-r1-kata-fixed-k3', 'bake-r1-kata-kata-p-k2', 'bake-r1-kata-kata-p-k3']);
+  expect(runs.every(x => !x.broken && x.checks === 100)).toBe(true);
+  // The kata rounds saw the real starting score, not the broken one.
+  expect(fs.readFileSync(path.join(out, 'steps', 'kata-bake-r1-kata-kata-p-k2.prompt.md'), 'utf8')).toContain('Scored 100');
+  r = go(); // nothing left to do
+  expect(r.status).toBe(0);
+});

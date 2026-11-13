@@ -256,7 +256,7 @@ async function execute(c, spec, task, budget, label, deps) {
       const r = await roomMain(cfg);
       pieces[s.id] = { lines: (r.out.final || []).map(l => l.text), dir: r.dir, results: r.out.results || [] };
       log.push({ id: s.id, do: s.do, dir: r.dir, seconds: Math.round(r.out.seconds || 0), moves: r.out.moves?.length ?? null,
-        checks: (r.out.results || []).filter(x => x.pass).length });
+        checks: (r.out.results || []).filter(x => x.pass).length, failed_calls: r.out.failed_calls || 0, knocked_out: r.out.knocked_out || [] });
     } else if (s.do === 'review') {
       reviews[s.id] = (await ask(`${label}-${s.id}`, reviewPrompt(task, textOf(s.from)))).trim();
       log.push({ id: s.id, do: 'review', words: words(reviews[s.id]) });
@@ -285,6 +285,22 @@ function parseQuality(text) {
   const m = String(text).match(/SCORE\s*:\s*[*_]*(\d+(?:\.\d+)?)/i);
   return m ? Math.min(10, Number(m[1])) : null;
 }
+
+// A run is broken, not a result, when part of it never happened: a call that
+// failed (an agent out of usage, say), a worker step with no moves or an agent
+// dropped after two failed calls, a judge with no score. Broken runs stay in
+// runs.json, are left out of the summary's numbers and run again next time.
+function brokenWhy(row) {
+  const why = [];
+  if (row.callFailed) why.push(`a call failed: ${row.error || '?'}`);
+  for (const s of row.steps || []) {
+    if ((s.do === 'work' || s.do === 'merge') && !s.moves) why.push(`step ${s.id} made no moves`);
+    else if (s.knocked_out?.length) why.push(`step ${s.id}: ${s.knocked_out.join(', ')} dropped after failed calls`);
+  }
+  if (row.quality && Object.values(row.quality).some(v => v == null)) why.push('a judge gave no score');
+  return why;
+}
+const isBroken = row => brokenWhy(row).length > 0;
 
 // ---- Kata ----
 
@@ -394,7 +410,7 @@ const afterCoach = (prompt, draft, questions) => [
 ].join('\n');
 
 function kataMd(c, runs) {
-  const kr = runs.filter(r => r.level === 'kata');
+  const kr = runs.filter(r => r.level === 'kata' && !r.callFailed && !isBroken(r));
   if (!kr.length) return '';
   const K = c.kata?.rounds || 5, drop = c.kata?.drop ?? 10;
   const L = ['## Kata (round by round, a new instance every round)', '',
@@ -444,7 +460,7 @@ function kataMd(c, runs) {
 // ---- Summary ----
 
 function summaryMd(c, allRuns, labels) {
-  const runs = allRuns.filter(r => r.level !== 'kata');
+  const runs = allRuns.filter(r => r.level !== 'kata' && !r.callFailed && !isBroken(r));
   const L = [`# ${c.title}`, '', `Workers: ${c.worker}. Budget: ${c.budget.moves} moves, ${c.budget.calls} calls, at most ${c.budget.max_agents} agents per step; time box per task (${c.tasks.map(t => `${t.id} ${t.budget?.minutes ?? c.budget.minutes} min`).join(', ')}). Scores 0-100 from the app's checks${runs.some(r => r.quality != null) ? '; for the poem, half checks and half quality (blind judges, never the proposer)' : ''}.`, ''];
   for (const t of [...new Set(runs.map(r => r.task))]) {
     const tr = runs.filter(r => r.task === t);
@@ -471,7 +487,9 @@ function summaryMd(c, allRuns, labels) {
     const bad = tr.filter(r => r.invalid);
     if (bad.length) L.push(`Specs rejected after one correction: ${bad.map(r => `${r.proposer} (${r.level})`).join(', ')}.`, '');
   }
-  return L.join('\n') + (allRuns.some(r => r.level === 'kata') ? '\n' + kataMd(c, allRuns) : '');
+  const bad = allRuns.filter(r => r.callFailed || isBroken(r));
+  const tailMd = bad.length ? ['', `## Broken runs (${bad.length}, left out above; they run again next time)`, '', ...bad.map(r => `- ${r.key}: ${brokenWhy(r).join('; ')}`), ''].join('\n') : '';
+  return L.join('\n') + (allRuns.some(r => r.level === 'kata') ? '\n' + kataMd(c, allRuns) : '') + tailMd;
 }
 
 // ---- Main ----
@@ -496,12 +514,24 @@ async function main() {
   const runsFile = path.join(out, 'runs.json');
   const runs = fs.existsSync(runsFile) ? JSON.parse(fs.readFileSync(runsFile, 'utf8')) : [];
   const save = () => { fs.writeFileSync(runsFile, JSON.stringify(runs, null, 2)); fs.writeFileSync(path.join(out, 'summary.md'), summaryMd(c, runs, null)); };
-  const done = key => runs.some(r => r.key === key && !r.error);
+  const done = key => runs.some(r => r.key === key && !r.error && !isBroken(r));
   const worker = agent(c.worker);
   const calls = {};
   const ask = (name, prompt, who = worker) => { calls[who.base || who.id] = (calls[who.base || who.id] || 0) + 1; return run(out, name, who, prompt, work); };
   const deps = { roomMain: room.main, ask: (n, p) => ask(n, p), workerSpec: c.worker, workDir: work, idOf: id => agent(id).id };
   const t0 = Date.now(), started = new Date().toISOString();
+
+  // One short call to every model first: one that doesn't answer (out of
+  // usage, signed out) stops the run before it fills hours with broken runs.
+  if (c.ping !== false) {
+    const ids = [...new Set([c.worker, ...(c.proposers || []), ...(c.judges || []), ...(c.kata?.coach && c.kata.coach !== 'other' ? [c.kata.coach] : [])])];
+    const dead = [];
+    for (const id of ids) {
+      try { await run(out, `ping-${agent(id).id}`, agent(id), 'Reply with the single word OK.', work); }
+      catch (e) { dead.push(`${id}: ${e.message.split('\n').slice(0, 3).join(' ')}`); }
+    }
+    if (dead.length) { console.error(`Not starting: ${dead.length} agent(s) did not answer:\n${dead.map(d => `- ${d}`).join('\n')}`); process.exit(3); }
+  }
 
   // Ask a proposer for spec(s); one correction if a spec breaks the rules.
   async function propose(p, name, prompt, many) {
@@ -538,6 +568,8 @@ async function main() {
         row.score = q == null ? row.checks : Math.round((row.checks + q * 10) / 2);
       } else row.score = row.checks;
     } catch (e) { row.error = e.message.split('\n')[0]; console.error(`  ✗ ${key}: ${row.error}`); }
+    const bw = brokenWhy(row);
+    if (bw.length) { row.broken = bw; console.error(`  ✗ ${key} broken: ${bw.join('; ')}`); }
     const i = runs.findIndex(r => r.key === key); if (i >= 0) runs.splice(i, 1, row); else runs.push(row);
     save();
     return row;
@@ -557,8 +589,8 @@ async function main() {
         const key = `${tag}-L1-${agent(p).id}`;
         if (done(key)) continue;
         let got;
-        try { got = (await propose(p, `propose-${key}`, l1Prompt(c, task, c.budget), false))[0]; } catch (e) { got = { errors: [e.message.split('\n')[0]] }; }
-        if (!got?.ok) { runs.push({ key, task: tdef.id, repeat: r + 1, level: 'L1', proposer: p, spec: got?.spec || null, invalid: true, error: (got?.errors || ['no spec']).join(' ') }); save(); continue; }
+        try { got = (await propose(p, `propose-${key}`, l1Prompt(c, task, c.budget), false))[0]; } catch (e) { got = { errors: [e.message.split('\n')[0]], callFailed: true }; }
+        if (!got?.ok) { const row = { key, task: tdef.id, repeat: r + 1, level: 'L1', proposer: p, spec: got?.spec || null, invalid: true, error: (got?.errors || ['no spec']).join(' '), ...(got?.callFailed ? { callFailed: true } : {}) }; const i = runs.findIndex(x => x.key === key); if (i >= 0) runs.splice(i, 1, row); else runs.push(row); save(); continue; }
         await runOrg(key, { task: tdef.id, repeat: r + 1, level: 'L1', proposer: p }, got.spec, task, `${tag} L1 ${p}`);
       }
     }
@@ -567,11 +599,21 @@ async function main() {
       const task = taskFor(tdef, 1), tag = `${tdef.id}-r1`;
       for (const p of c.proposers) {
         const pid = agent(p).id;
-        if (done(`${tag}-L3-${pid}-r2`)) continue;
         let props = runs.filter(x => x.key.startsWith(`${tag}-L3-${pid}-r1-`));
+        if (props.some(x => x.callFailed)) { for (const x of props) runs.splice(runs.indexOf(x), 1); props = []; } // the proposal itself failed: ask again
+        let redone = false;
+        for (const x of props.filter(x => !x.invalid && x.spec && (x.error || isBroken(x)))) {
+          redone = true;
+          await runOrg(x.key, { task: tdef.id, repeat: 1, level: 'L3', round: 1, proposer: p }, x.spec, task, `${tag} L3 ${p} ${x.key.split('-').pop()}`);
+        }
+        props = runs.filter(x => x.key.startsWith(`${tag}-L3-${pid}-r1-`));
+        if (done(`${tag}-L3-${pid}-r2`) && !redone && props.length) continue;
         if (!props.length) {
           let got = [];
-          try { got = await propose(p, `propose-${tag}-L3-${pid}`, l3Prompt(c, task, c.budget), true); } catch (e) { console.error(`  ✗ L3 ${p}: ${e.message.split('\n')[0]}`); }
+          try { got = await propose(p, `propose-${tag}-L3-${pid}`, l3Prompt(c, task, c.budget), true); } catch (e) {
+            const error = e.message.split('\n')[0]; console.error(`  ✗ L3 ${p}: ${error}`);
+            runs.push({ key: `${tag}-L3-${pid}-r1-1`, task: tdef.id, repeat: 1, level: 'L3', round: 1, proposer: p, invalid: true, callFailed: true, error }); save(); continue;
+          }
           for (const [i, g] of got.slice(0, c.l3.n || 3).entries()) {
             const key = `${tag}-L3-${pid}-r1-${i + 1}`;
             if (!g.ok) { runs.push({ key, task: tdef.id, repeat: 1, level: 'L3', round: 1, proposer: p, spec: g.spec, invalid: true, error: g.errors.join(' ') }); save(); continue; }
@@ -582,13 +624,17 @@ async function main() {
         const context = runs.filter(x => x.key === `${tag}-solo` || x.key === `${tag}-L0`).map(x => ({ name: x.level === 'solo' ? 'one agent alone (ours, for comparison)' : 'our own design (for comparison)', desc: x.desc, prediction: null, score: x.score, minutes: x.minutes, failed: x.failed }));
         const rows = [...props.map(x => ({ name: x.spec?.name || x.key, desc: x.desc || '(rejected)', prediction: x.spec?.prediction, score: x.invalid ? null : x.score, minutes: x.minutes, failed: x.failed })), ...context];
         let text = '';
-        try { text = await ask(`report-${tag}-L3-${pid}`, reportPrompt(c, task, c.budget, rows), agent(p)); } catch (e) { console.error(`  ✗ report ${p}: ${e.message.split('\n')[0]}`); }
+        try { text = await ask(`report-${tag}-L3-${pid}`, reportPrompt(c, task, c.budget, rows), agent(p)); } catch (e) {
+          const error = e.message.split('\n')[0]; console.error(`  ✗ report ${p}: ${error}`);
+          const key = `${tag}-L3-${pid}-r2`, row = { key, task: tdef.id, repeat: 1, level: 'L3', round: 2, proposer: p, invalid: true, callFailed: true, error };
+          const i = runs.findIndex(x => x.key === key); if (i >= 0) runs.splice(i, 1, row); else runs.push(row); save(); continue;
+        }
         const found = ((text.match(/FOUND\s*:\s*([\s\S]*?)(?:\n\s*NEXT\s*:|$)/i) || [])[1] || '').trim();
         fs.writeFileSync(path.join(out, `report-${tdef.id}-${pid}.md`), text);
         const next = parseSpecs(text)[0];
         const v = next ? validate(next, c.budget) : { ok: false, errors: ['no organisation in NEXT'] };
         const key = `${tag}-L3-${pid}-r2`;
-        if (!v.ok) { runs.push({ key, task: tdef.id, repeat: 1, level: 'L3', round: 2, proposer: p, spec: next || null, found, invalid: true, error: v.errors.join(' ') }); save(); continue; }
+        if (!v.ok) { const row = { key, task: tdef.id, repeat: 1, level: 'L3', round: 2, proposer: p, spec: next || null, found, invalid: true, error: v.errors.join(' ') }; const i = runs.findIndex(x => x.key === key); if (i >= 0) runs.splice(i, 1, row); else runs.push(row); save(); continue; }
         await runOrg(key, { task: tdef.id, repeat: 1, level: 'L3', round: 2, proposer: p, found }, next, task, `${tag} L3 ${p} round 2`);
       }
     }
@@ -614,11 +660,14 @@ async function main() {
         for (const p of c.proposers) for (const arm of kc.arms.filter(a => a !== 'fixed')) {
           const pid = agent(p).id, chain = `${tag}-kata-${arm}-${pid}`;
           const hist = [histOf({ ...start, round: 1 })];
-          let target = null;
+          let target = null, redo = isBroken(start) || !!start.error;
           for (let k = 2; k <= K; k++) {
             const key = `${chain}-k${k}`;
-            const had = runs.find(x => x.key === key && !(x.error && !x.invalid));
-            if (had) { hist.push(histOf(had)); target ??= had.target ?? null; continue; }
+            // A round is kept only if it and every round before it really happened:
+            // a later round was chosen from the earlier ones' results.
+            const had = runs.find(x => x.key === key && !(x.error && !x.invalid) && !isBroken(x));
+            if (had && !redo) { hist.push(histOf(had)); target ??= had.target ?? null; continue; }
+            redo = true;
             const task = inst(k);
             const prompt = kataPrompt(c, task, c.budget, arm, hist, k, K, target);
             const base = { task: tdef.id, repeat: r + 1, level: 'kata', arm, round: k, proposer: p };
@@ -632,13 +681,13 @@ async function main() {
                 got = (await propose(p, `kata-${key}`, afterCoach(prompt, draft, questions), false))[0];
                 answers = got ? (String(got.text).match(/ANSWERS\s*:\s*([\s\S]*?)(?:\n\s*(?:TARGET|LEARNED)\s*:|$)/i) || [])[1]?.trim().slice(0, 600) || null : null;
               } else got = (await propose(p, `kata-${key}`, prompt, false))[0];
-            } catch (e) { got = { errors: [e.message.split('\n')[0]] }; }
+            } catch (e) { got = { errors: [e.message.split('\n')[0]], callFailed: true }; }
             const text = got?.text || '';
             const notes = { learned: field(text, 'LEARNED'), obstacle: field(text, 'OBSTACLE'), change: field(text, 'CHANGE'), questions, answers };
             if (target == null && arm !== 'free') { const t = Number((field(text, 'TARGET') || '').match(/\d+(?:\.\d+)?/)?.[0]); if (Number.isFinite(t)) target = t; }
             const prev = [...hist].reverse().find(h => h.spec && !h.invalid);
             if (!got?.ok) {
-              const row = { key, ...base, ...notes, target, spec: got?.spec || null, invalid: true, error: (got?.errors || ['no spec']).join(' ') };
+              const row = { key, ...base, ...notes, target, spec: got?.spec || null, invalid: true, error: (got?.errors || ['no spec']).join(' '), ...(got?.callFailed ? { callFailed: true } : {}) };
               const i = runs.findIndex(x => x.key === key); if (i >= 0) runs.splice(i, 1, row); else runs.push(row);
               save(); hist.push(histOf(row)); continue;
             }
@@ -668,9 +717,16 @@ async function main() {
   fs.writeFileSync(path.join(out, 'summary.md'), summaryMd(c, runs, labels) +
     `\n## Cost and time\n\n${Math.round((Date.now() - t0) / 60000)} minutes this session. Proposer, review, pick and judge calls this session: ${Object.entries(calls).map(([k, v]) => `${k} ${v}`).join(', ') || 'none'} (Gemini ≈ £0.03 a call, estimate; room moves not counted here). OpenRouter reported: $${(spent || 0).toFixed(4)}. Workers on subscription.\n`);
   console.log(`\n${path.join(out, 'summary.md')}`);
+  // Broken runs make the whole job fail, so the night queue runs it again
+  // (the work that did happen is kept).
+  const broken = runs.filter(r => r.callFailed || r.error && !r.invalid || isBroken(r));
+  if (broken.length) {
+    console.error(`${broken.length} of ${runs.length} runs are broken or failed; run again to redo them:\n${broken.slice(0, 10).map(r => `- ${r.key}: ${(brokenWhy(r).join('; ') || r.error || '').slice(0, 160)}`).join('\n')}`);
+    process.exitCode = 1;
+  }
 }
 
 module.exports = { parseSpecs, validate, describe, execute, checkScore, taskFor, summaryMd, l1Prompt, l3Prompt, reportPrompt, parseQuality,
-  specChanges, coreChanges, afterDrop, kataPrompt, coachPrompt, kataMd };
+  specChanges, coreChanges, afterDrop, kataPrompt, coachPrompt, kataMd, brokenWhy };
 
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });

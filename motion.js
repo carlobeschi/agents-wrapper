@@ -143,6 +143,8 @@ async function run(dir, file, agent, prompt, cwd) {
     r = await runOnce(agent, again, cwd);
   }
   if (r.err) fs.writeFileSync(base + '.stderr.txt', r.err);
+  // A failed call's reply often says why (claude -p prints "usage limit" there, not on stderr).
+  if (r.why && r.text) fs.writeFileSync(base + '.failed-reply.txt', String(r.text));
   // With nothing on stderr, the reply itself may say why (an API error, say).
   const said = r.err ? stripAnsi(r.err).trim().split('\n').slice(-5).join('\n') : String(r.text || '').trim().split('\n').slice(0, 5).join('\n');
   if (r.why) throw new Error(`${agent.label}, ${file}: ${r.why}${said ? `\n${said}` : ''}`);
