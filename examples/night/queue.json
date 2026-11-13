@@ -64,20 +64,6 @@
       "note": "Bench v1 broken cells, second try: the first redo found none because the cells point at the old laptop's folders (fixed). Stops at once if a model doesn't answer; ~2-4 h, ~£1-2 Gemini"
     },
     {
-      "name": "study-10",
-      "cmd": [
-        "node",
-        "swarm.js",
-        "examples/swarm/study-10.json"
-      ],
-      "needs": [
-        "ollama"
-      ],
-      "enabled": true,
-      "max_minutes": 480,
-      "note": "Swarm, full run (study 10, local, £0; solo-strong uses Claude on the subscription). ~8k calls over several nights, keeps finished cells; repeats of a model Ollama lacks are skipped (pull gemma3:12b). Stops with exit 3 after 4 failed calls in a row (model not answering), and cells with more than 5% failed calls run again"
-    },
-    {
       "name": "organise-pilot",
       "cmd": [
         "node",
@@ -125,6 +111,20 @@
         "--out=~/.agent-dispatch/organise/kata"
       ],
       "note": "kata-pilot again (same reason): broken rounds and every round after them are redone"
+    },
+    {
+      "name": "study-10",
+      "cmd": [
+        "node",
+        "swarm.js",
+        "examples/swarm/study-10.json"
+      ],
+      "needs": [
+        "ollama"
+      ],
+      "enabled": true,
+      "max_minutes": 480,
+      "note": "Swarm, full run (study 10, local, £0; solo-strong uses Claude on the subscription). ~8k calls over several nights, keeps finished cells; repeats of a model Ollama lacks are skipped (pull gemma3:12b). Stops with exit 3 after 4 failed calls in a row (model not answering), and cells with more than 5% failed calls run again. Last in the queue: it fills whatever is left of the night (~10 nights at ~35 s a call), so the short jobs before it run first"
     }
   ]
 }

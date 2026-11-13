@@ -176,10 +176,10 @@ esac`, 'x', '{prompt}'];
   fs.writeFileSync(path.join(home, 'down'), ''); // workers fail after the ping (out of usage halfway through the night)
   r = go();
   expect(r.status).toBe(1);
-  expect(r.stderr).toMatch(/5 of 5 runs are broken/);
+  expect(r.stderr).toMatch(/Stopping: 3 broken runs in a row/);
   let runs = JSON.parse(fs.readFileSync(path.join(out, 'runs.json'), 'utf8'));
   expect(runs.every(x => x.broken?.length)).toBe(true);
-  expect(fs.readFileSync(path.join(out, 'summary.md'), 'utf8')).toContain('## Broken runs (5,');
+  expect(fs.readFileSync(path.join(out, 'summary.md'), 'utf8')).toContain('## Broken runs (3,');
   fs.unlinkSync(path.join(home, 'down'));
   r = go();
   expect(r.status).toBe(0);
