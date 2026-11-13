@@ -188,3 +188,45 @@ test('versions: changing someone else\'s line makes a proposal the author accept
   expect(t.stats).toMatchObject({ lastMover: 'b', lastMoverShare: 67 });
   expect(fs.readFileSync(path.join(dir, 'steps', '04-b.prompt.md'), 'utf8')).toContain('A accepted your V1');
 });
+
+test('officina: private first versions are revealed with a map of differences; first move is questions only; CHECK; blind labels; shared stake', () => {
+  const a = ['sh', '-c', `case "$1" in *"just finished"*) echo A;;
+    *"Write your whole first version"*) printf 'DRAFT\\nsea line\\nsalt here\\nEND\\nNOTE: draft-a\\n';;
+    *"first move is for questions only"*) printf 'SAY: what were you told?\\nINSERT AFTER 0\\nearly\\nEND\\nSTATUS: done\\n';;
+    *"The check you asked for"*) printf 'STATUS: done\\n';;
+    *) printf 'INSERT AFTER 0\\nsalt on the sea\\nEND\\nCHECK\\nSTATUS: working\\n';; esac`, 'x', '{prompt}'];
+  const b = ['sh', '-c', `case "$1" in *"just finished"*) echo B;;
+    *"Write your whole first version"*) printf 'DRAFT\\none line\\nEND\\n';;
+    *"first move is for questions only"*) printf 'SAY: is there a rule about salt?\\nSTATUS: working\\n';;
+    *) printf 'STATUS: done\\n';; esac`, 'x', '{prompt}'];
+  const { t, dir } = runRoom([{ id: 'a', label: 'Alpha', headless: a }, { id: 'b', label: 'Beta', headless: b }],
+    { title: 'T', kind: 'poem', brief: 'a poem', agents: ['a', 'b'], moves: 4, officina: true,
+      checks: [{ say: 'two lines', type: 'lines', min: 2, max: 2 }, { owner: 'a', say: 'salt appears', type: 'contains', word: 'salt' }] });
+  expect(t.officina).toEqual({ turns: true, versions: true, stake: true, private_first: true, check_tool: true, questions_first: true, blind: true });
+  // First versions, written alone, then a map of where they differ on the shared rules.
+  expect(t.drafts.map(d => d.lines.length).sort()).toEqual([1, 2]);
+  expect(t.draft_diff.checks).toHaveLength(1);
+  expect(t.draft_diff.checks[0].say).toBe('two lines');
+  const draftB = fs.readFileSync(path.join(dir, 'steps', '00-draft-b.prompt.md'), 'utf8');
+  expect(draftB).not.toContain('salt appears'); // a's private rule stays private
+  expect(draftB).toContain('Shared stake');
+  // Blind: neutral labels, real names never shown to the agents.
+  expect(t.agents.map(x => x.label).sort()).toEqual(['Agent A', 'Agent B']);
+  expect(t.blind).toEqual({ a: 'Alpha', b: 'Beta' });
+  const p1 = fs.readFileSync(path.join(dir, 'steps', '01-a.prompt.md'), 'utf8');
+  expect(p1).not.toMatch(/Alpha|Beta/);
+  expect(p1).toContain('unsigned, in a random order');
+  expect(p1).toContain('"two lines": version');
+  // Questions first: the edit in the first move does not land, and done does not count.
+  expect(t.moves[0].dropped[0].why).toMatch(/questions only/);
+  expect(t.moves[0].done).toBe(true);
+  expect(t.stats.questions).toBe(2);
+  // CHECK: run after the move lands, result shown next move, only the rules that agent knows.
+  const asked = t.moves.find(m => m.checked);
+  expect(asked.checked).toEqual({ passed: 1, of: 2 });
+  expect(t.stats.checks).toBe(1);
+  const later = t.moves.filter(m => m.agent === 'a').pop();
+  expect(fs.readFileSync(path.join(dir, 'steps', `${String(later.n).padStart(2, '0')}-a.prompt.md`), 'utf8')).toContain('"two lines" NO; "salt appears" yes');
+  expect(t.final.map(l => l.text)).toEqual(['salt on the sea']);
+  expect(fs.readFileSync(path.join(dir, 'episode.md'), 'utf8')).toContain('First versions (written alone)');
+});

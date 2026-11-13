@@ -113,6 +113,25 @@
       "note": "kata-pilot again (same reason): broken rounds and every round after them are redone"
     },
     {
+      "name": "study-15a",
+      "cmd": [
+        "node",
+        "study.js",
+        "examples/room/study-15a.json"
+      ],
+      "note": "Officina (study 15a): chat vs versions+plan-first vs the Officina vs Officina without private first/check; Claude+Claude, 2 poems (one with rules split between the two), 3 repeats (~£0.30-0.60 Gemini judge; ~500 Claude calls, so it may hit the usage limit after the organise reruns)"
+    },
+    {
+      "name": "study-15a-codex",
+      "enabled": false,
+      "cmd": [
+        "node",
+        "study.js",
+        "examples/room/study-15a-codex.json"
+      ],
+      "note": "Same with Codex+Codex; off until the Claude run is read"
+    },
+    {
       "name": "study-10",
       "cmd": [
         "node",
