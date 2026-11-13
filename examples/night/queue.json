@@ -123,6 +123,15 @@
       "note": "kata-pilot again (same reason): broken rounds and every round after them are redone"
     },
     {
+      "name": "rules-author",
+      "cmd": [
+        "sh",
+        "scripts/rules-author.sh"
+      ],
+      "max_minutes": 240,
+      "note": "Who wrote the rules? (The Trap): Gemini words the rules, then 3 episodes per rulebook with Claude, Gemini, Codex, and Claude + Codex judge the puzzles blind (~£1-2 Gemini, 2-3 h; Carlo OK 13 Nov). Picks up where it stopped; outcome in night-reports rules-author/latest.md"
+    },
+    {
       "name": "study-15a",
       "cmd": [
         "node",

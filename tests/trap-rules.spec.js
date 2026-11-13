@@ -146,3 +146,15 @@ test('trap-rules.js asks an agent for the rules, and once more if the app cannot
   expect(saved.author).toBe('Other Author');
   expect(saved.written_by).toMatchObject({ agent: 'g', model: 'm-1' });
 });
+
+test('the night report says how far the series got, or gives its summary, with the rules Gemini wrote', () => {
+  const { build } = require('../trap-report');
+  const part = build({ log: 'x\ntrap: Gemini 402', status: '1', summary: '', progress: JSON.stringify([{ key: 'claude-rules#1' }]), rules: '', stamp: 's' });
+  expect(part).toContain('NOT FINISHED (exit 1)');
+  expect(part).toContain('Played so far: claude-rules#1');
+  expect(part).toContain('trap: Gemini 402');
+  const done = build({ log: '', status: '0', summary: '# Summary table', progress: '[]', rules: '{"author":"G"}', stamp: 's' });
+  expect(done).toContain('finished');
+  expect(done).toContain('# Summary table');
+  expect(done).toContain('{"author":"G"}');
+});
