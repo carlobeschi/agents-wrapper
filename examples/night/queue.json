@@ -4,14 +4,14 @@
   "min_minutes": 20,
   "jobs": [
     {
-      "name": "study15-phase0-qwen-1",
-      "enabled": false,
+      "name": "study15-phase0-qwen-2",
+      "enabled": true,
       "cmd": [
         "sh",
         "scripts/study15.sh"
       ],
       "max_minutes": 200,
-      "note": "Study 15 phase 0 on Modal (Qwen3-8B, 200 puzzles; cloud GPU, stops by itself, at most ~$6). Off: a thread turns it on by PR when Carlo OKs a run; a new run gets a new name (-2, -3...) because done jobs are not rerun. Outcome in night-reports study15/latest.md"
+      "note": "Study 15 phase 0, second run (Carlo OK 13 Nov 19:46): tolerant answer parsing, 2048 tokens, new claim task (partner states clues: true / false nobody could notice / false that clashes with one's own). Qwen3-8B, 200 puzzles, Modal L40S, stops by itself, ~$1-2 (at most ~$6). Run 1 was by hand on 13 Nov. Outcome in night-reports study15/latest.md. A new run needs a new name."
     },
     {
       "name": "swarm-dry",
