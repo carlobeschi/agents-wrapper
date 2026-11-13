@@ -9,6 +9,11 @@ GEMINI_API_KEY=$(security find-generic-password -s second-room-gemini -w 2>/dev/
 OPENROUTER_API_KEY=$(security find-generic-password -s openrouter-key -w 2>/dev/null) && export OPENROUTER_API_KEY
 cd "$(dirname "$0")/.." || exit 1
 mkdir -p "$HOME/.agent-dispatch/night"
+# On battery a Mac still sleeps (12-13 Nov: thermal and maintenance sleep from
+# 23:27, every local call timed out). Warn before starting.
+if command -v pmset >/dev/null 2>&1 && ! pmset -g batt | grep -q "AC Power"; then
+  echo "! The Mac is on battery: plug it in, or it may sleep and the night's local runs will time out."
+fi
 # caffeinate keeps the Mac awake (system, disk, display idle sleep) while the
 # queue runs; it still sleeps if the lid closes on battery, so keep it plugged in.
 if command -v caffeinate >/dev/null 2>&1; then
