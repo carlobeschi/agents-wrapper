@@ -4,6 +4,16 @@
   "min_minutes": 20,
   "jobs": [
     {
+      "name": "study15-phase0-qwen-1",
+      "enabled": false,
+      "cmd": [
+        "sh",
+        "scripts/study15.sh"
+      ],
+      "max_minutes": 200,
+      "note": "Study 15 phase 0 on Modal (Qwen3-8B, 200 puzzles; cloud GPU, stops by itself, at most ~$6). Off: a thread turns it on by PR when Carlo OKs a run; a new run gets a new name (-2, -3...) because done jobs are not rerun. Outcome in night-reports study15/latest.md"
+    },
+    {
       "name": "swarm-dry",
       "cmd": [
         "node",
