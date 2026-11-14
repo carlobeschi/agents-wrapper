@@ -248,6 +248,7 @@ const allowedFailures = calls => Math.max(1, Math.floor(calls * 0.05));
 const MAX_FAILS_IN_A_ROW = () => Number(process.env.SWARM_MAX_FAILS_IN_A_ROW) || 4;
 const streak = { fails: 0 };
 class NotAnswering extends Error {}
+class StrongDown extends Error {}
 
 function caller(dir, stats) {
   const cwd = path.join(dir, 'cwd');
@@ -739,14 +740,27 @@ async function main(file, opts = {}) {
   const missing = await missingLocal([...cfg.small, cfg.strong]);
   for (const x of missing) console.warn(`! ${x} is not in Ollama (ollama pull ${x.slice('local:'.length)}): its repeats are skipped`);
   const cells = [];
+  // The strong model (Claude on the subscription) can run out of usage while
+  // the local models still answer: then its cells wait for the next run and
+  // the local arms go on. 14 Nov: a 5-hour limit stopped the whole study.
+  let strongDown = null;
   for (let rep = 1; rep <= cfg.repeats; rep++) {
     const family = cfg.small[(rep - 1) % cfg.small.length];
     if (missing.includes(family) || missing.includes(cfg.strong)) continue;
     for (const task of tasks)
-      for (const arm of arms(cfg, task))
-        if (!opts.arms || opts.arms.includes(arm.id)) cells.push(await runCell(cfg, all, task, arm, rep));
+      for (const arm of arms(cfg, task)) {
+        if (opts.arms && !opts.arms.includes(arm.id)) continue;
+        if (arm.strong && strongDown) { console.log(`- ${task}/${arm.id}/r${rep}: skipped, ${cfg.strong} is not answering`); continue; }
+        try { cells.push(await runCell(cfg, all, task, arm, rep)); } catch (e) {
+          if (!(e instanceof NotAnswering) || !arm.strong || String(cfg.strong).startsWith('local:')) throw e;
+          strongDown = e.message;
+          streak.fails = 0;
+          console.warn(`! ${cfg.strong} is not answering (${e.message}; out of usage?): its cells wait for the next run, the local arms go on`);
+        }
+      }
   }
   console.log(`Cells: ${path.join(HOME_DIR, 'bench', cfg.run, 'cells')}`);
+  if (strongDown) throw new StrongDown(`${cfg.strong} stopped answering (${strongDown}); its cells run next time`);
   return cells;
 }
 
@@ -763,6 +777,7 @@ if (require.main === module) {
         console.error(`✗ stopping: the model is not answering (${e.message}). Is Ollama running and the Mac awake? The unfinished cell runs again next time.`);
         process.exit(3);
       }
+      if (e instanceof StrongDown) { console.error(`✗ ${e.message}`); process.exit(3); }
       console.error(e.message); process.exit(1);
     });
 }

@@ -312,3 +312,34 @@ test('a local model Ollama lacks: its repeats are skipped; a model that stops an
   } finally { server.close(); }
 });
 
+
+test('a strong model out of usage: its cells wait, the local arms go on, exit 3', async () => {
+  const server = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      if (req.url === '/api/tags') return res.end(JSON.stringify({ models: [{ name: 'fake-a' }] }));
+      res.end(JSON.stringify({ choices: [{ message: { content: play(JSON.parse(body).messages[0].content) } }] }));
+    });
+  });
+  await new Promise(r => server.listen(0, '127.0.0.1', () => r(null)));
+  try {
+    const port = /** @type {any} */ (server.address()).port;
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'swarm-strong-'));
+    fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'dead', label: 'Dead', headless: ['node', '-e', 'process.exit(1)'] }] }));
+    const file = path.join(home, 's.json');
+    fs.writeFileSync(file, JSON.stringify({ run: 'sd', small: ['local:fake-a'], strong: 'dead',
+      budget: 8, swarm: 4, repeats: 1, seed: 5, tasks: ['map', 'nest'], map: { regions: 40, area: 5 }, nest: { sites: 20, inspect: 2 } }));
+    const env = { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0', OLLAMA_BASE: `http://127.0.0.1:${port}` };
+    const err = await promisify(execFile)('node', [path.join(__dirname, '..', 'swarm.js'), file], { env, encoding: 'utf8', maxBuffer: 1 << 24 }).then(() => null, e => e);
+    expect(err?.code).toBe(3);
+    expect(err.stderr).toContain('dead is not answering');
+    expect(err.stdout).toContain('nest/solo-strong/r1: skipped');
+    const cells = path.join(home, 'bench', 'sd', 'cells');
+    for (const t of ['map', 'nest']) {
+      expect(fs.existsSync(path.join(cells, t, 'solo-strong', 'r1.json'))).toBe(false);
+      expect(fs.existsSync(path.join(cells, t, 'swarm-marks', 'r1.json'))).toBe(true);
+      expect(fs.existsSync(path.join(cells, t, 'solo-small', 'r1.json'))).toBe(true);
+    }
+  } finally { server.close(); }
+});
