@@ -212,4 +212,6 @@ npm install
 npm test
 ```
 
+CI also runs gitleaks on every pull request and push to main (`.github/workflows/secrets.yml`), and Dependabot proposes npm and Actions updates (`.github/dependabot.yml`). Notes for coding agents are in [CLAUDE.md](CLAUDE.md).
+
 The tests run the real server against fake agents (shell one-liners that write back the prompt they got), so they check that the prompt arrives byte-for-byte, not what any real agent does.
