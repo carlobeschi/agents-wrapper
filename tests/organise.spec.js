@@ -191,3 +191,42 @@ esac`, 'x', '{prompt}'];
   r = go(); // nothing left to do
   expect(r.status).toBe(0);
 });
+
+test('out of usage halfway: it waits for the reset the message names, then a second pass redoes the broken runs', () => {
+  const { spawnSync } = require('child_process');
+  const { resetTime } = require('../organise');
+  const now = new Date(2026, 10, 14, 1, 30);
+  expect(resetTime("You've hit your 5-hour limit · resets 3:50am (Europe/London)", now)).toEqual(new Date(2026, 10, 14, 3, 50));
+  expect(resetTime('resets 1am', now)).toEqual(new Date(2026, 10, 15, 1, 0)); // already past today: tomorrow
+  expect(resetTime('resets 11pm', now)).toEqual(new Date(2026, 10, 14, 23, 0));
+  expect(resetTime('exit 1', now)).toBe(null);
+
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'organise-usage-'));
+  const one = { name: 'one agent', prediction: 70, steps: [{ id: 'a', do: 'work', agents: 1, moves: 2 }], final: 'a' };
+  fs.writeFileSync(path.join(home, 'kata.txt'), 'TARGET: 90\nLEARNED: x\nOBSTACLE: y\nCHANGE: agents\n```json\n' + JSON.stringify(one) + '\n```');
+  fs.writeFileSync(path.join(home, 'budget'), '5'); // five worker calls, then out of usage
+  const reset = new Date(Date.now() + 60000);
+  const say = `${reset.getHours() % 12 || 12}:${String(reset.getMinutes()).padStart(2, '0')}${reset.getHours() < 12 ? 'am' : 'pm'}`;
+  const out1 = `printf "You've hit your 5-hour limit · resets ${say} (Europe/London)\\n"`;
+  const fk = ['sh', '-c', `b=$(cat "${home}/budget")
+case "$1" in
+  *"single word OK"*) if [ "$b" -le 0 ]; then n=$(cat "${home}/pings" 2>/dev/null || echo 0); echo $((n+1)) > "${home}/pings"; [ "$n" -ge 1 ] && echo 1000 > "${home}/budget"; ${out1}; exit 1; fi; printf 'OK\\n';;
+  *"round by round"*) cat "${home}/kata.txt";;
+  *"just finished"*) printf 'ok\\n';;
+  *) if [ "$b" -le 0 ]; then ${out1}; exit 1; fi; echo $((b-1)) > "${home}/budget"; printf 'INSERT AFTER 0\\nflour\\nEND\\nSTATUS: done\\n';;
+esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: ['w', 'p'].map(id => ({ id, label: id.toUpperCase(), headless: fk })) }));
+  const file = path.join(home, 'k.json'), out = path.join(home, 'out');
+  fs.writeFileSync(file, JSON.stringify({ title: 'K', worker: 'w', proposers: ['p'], judges: ['p'], repeats: 1, levels: ['kata'], kata: { rounds: 3, arms: ['fixed', 'kata'] },
+    budget: { moves: 8, calls: 12, minutes: 3 }, room: { lines_per_move: 4 },
+    tasks: [{ id: 'bake', kind: 'poem', judge: false, brief: 'a poem', short: 'a poem', checks: [{ say: 'Says flour.', type: 'contains', word: 'flour' }],
+      l0: { name: 'ours', steps: [{ id: 'a', do: 'work', agents: 2, moves: 2, talk: true }], final: 'a' } }] }));
+  const r = spawnSync('node', [path.join(__dirname, '..', 'organise.js'), file, `--out=${out}`],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0', ORGANISE_WAIT_SCALE: '0.0001', ORGANISE_RESET_MARGIN_S: '0' }, encoding: 'utf8' });
+  expect(r.stderr).toMatch(/Out of usage: waiting/);
+  expect(r.stdout).toMatch(/== pass 2: \d+ broken runs to redo/);
+  expect(r.status).toBe(0);
+  const runs = JSON.parse(fs.readFileSync(path.join(out, 'runs.json'), 'utf8'));
+  expect(runs).toHaveLength(5);
+  expect(runs.every(x => !x.broken && x.checks === 100)).toBe(true);
+});
