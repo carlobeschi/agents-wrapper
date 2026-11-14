@@ -74,6 +74,15 @@
       "note": "Bench v1 broken cells, second try: the first redo found none because the cells point at the old laptop's folders (fixed). Stops at once if a model doesn't answer; ~2-4 h, ~£1-2 Gemini"
     },
     {
+      "name": "bench-v1-redo-3",
+      "cmd": [
+        "node",
+        "bench.js",
+        "examples/bench/bench-v1.json"
+      ],
+      "note": "Bench v1: drawings of repeats 2-3 again, judged this time (the new laptop had no browser to draw the pictures; bench now checks it before starting). ~1-2 h, ~£0.50-1 Gemini"
+    },
+    {
       "name": "organise-pilot",
       "cmd": [
         "node",

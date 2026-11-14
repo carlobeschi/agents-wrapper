@@ -346,7 +346,11 @@ async function render(svg, file) {
   try {
     const { chromium } = require('@playwright/test');
     const opts = process.env.ROOM_PW_PATH ? { executablePath: process.env.ROOM_PW_PATH } : {};
-    const browser = await chromium.launch(opts);
+    // Playwright's own Chromium (npx playwright install chromium); if it isn't
+    // there, the Google Chrome installed on the computer.
+    let browser;
+    try { browser = await chromium.launch(opts); }
+    catch (e) { if (opts.executablePath) throw e; try { browser = await chromium.launch({ channel: 'chrome' }); } catch { throw e; } }
     try {
       const page = await browser.newPage({ viewport: { width: 400, height: 400 } });
       await page.setContent(`<html><body style="margin:0;background:#fff">${svg.replace(/<svg/i, '<svg width="400" height="400"')}</body></html>`, { waitUntil: 'load' });
