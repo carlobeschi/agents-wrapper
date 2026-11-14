@@ -4,10 +4,11 @@
   "min_minutes": 20,
   "claude_budget": 750,
   "claude_budget_note": "Claude Code calls one night may use (14 Nov, first guess: rules-author ~110 + study-15a ~500 + room for study-10's strong cells). Each job's claude_calls is a rough estimate for one night; the morning report shows the real count, so tune both from there.",
+  "paused_note": "14 Nov 2026: Carlo paused every experiment (only The Motion goes on, and it does not run from this queue). Every job is off; state.json keeps what each one finished, so setting a job's \"enabled\" back to true resumes it. The night then writes \"Coda in pausa\" in the morning report and stops.",
   "jobs": [
     {
       "name": "study15-phase0-qwen-2",
-      "enabled": true,
+      "enabled": false,
       "cmd": [
         "sh",
         "scripts/study15.sh"
@@ -18,6 +19,7 @@
     },
     {
       "name": "rules-author",
+      "enabled": false,
       "cmd": [
         "sh",
         "scripts/rules-author.sh"
@@ -28,6 +30,7 @@
     },
     {
       "name": "study-15a",
+      "enabled": false,
       "cmd": [
         "node",
         "study.js",
@@ -38,6 +41,7 @@
     },
     {
       "name": "swarm-dry",
+      "enabled": false,
       "cmd": [
         "node",
         "swarm.js",
@@ -53,6 +57,7 @@
     },
     {
       "name": "ideate",
+      "enabled": false,
       "cmd": [
         "node",
         "ideate.js",
@@ -64,6 +69,7 @@
     },
     {
       "name": "study-11",
+      "enabled": false,
       "cmd": [
         "node",
         "study.js",
@@ -74,6 +80,7 @@
     },
     {
       "name": "bench-v1",
+      "enabled": false,
       "cmd": [
         "node",
         "bench.js",
@@ -84,6 +91,7 @@
     },
     {
       "name": "bench-v1-redo",
+      "enabled": false,
       "cmd": [
         "node",
         "bench.js",
@@ -94,6 +102,7 @@
     },
     {
       "name": "bench-v1-redo-2",
+      "enabled": false,
       "cmd": [
         "node",
         "bench.js",
@@ -104,6 +113,7 @@
     },
     {
       "name": "bench-v1-redo-3",
+      "enabled": false,
       "cmd": [
         "node",
         "bench.js",
@@ -114,6 +124,7 @@
     },
     {
       "name": "organise-pilot",
+      "enabled": false,
       "cmd": [
         "node",
         "organise.js",
@@ -125,6 +136,7 @@
     },
     {
       "name": "kata-pilot",
+      "enabled": false,
       "cmd": [
         "node",
         "organise.js",
@@ -136,6 +148,7 @@
     },
     {
       "name": "study-11b",
+      "enabled": false,
       "cmd": [
         "node",
         "study.js",
@@ -146,6 +159,7 @@
     },
     {
       "name": "organise-pilot-2",
+      "enabled": false,
       "cmd": [
         "node",
         "organise.js",
@@ -157,6 +171,7 @@
     },
     {
       "name": "kata-pilot-2",
+      "enabled": false,
       "cmd": [
         "node",
         "organise.js",
@@ -187,7 +202,7 @@
       "needs": [
         "ollama"
       ],
-      "enabled": true,
+      "enabled": false,
       "max_minutes": 75,
       "note": "One-off test of llama.cpp next to Ollama on qwen3:8b (the file Ollama already has): A) grammars that force the reply format, B) a control vector for study 12 (steering). ~40 min, £0. Needs llama.cpp once: sh ~/agents-wrapper/scripts/install-llamacpp.sh (exit 2 until then, then it runs the next night)"
     },
@@ -202,7 +217,7 @@
       "needs": [
         "ollama"
       ],
-      "enabled": true,
+      "enabled": false,
       "max_minutes": 480,
       "note": "Swarm, full run (study 10, local, £0; solo-strong uses Claude on the subscription). ~8k calls over several nights, keeps finished cells; repeats of a model Ollama lacks are skipped (pull gemma3:12b). Stops with exit 3 after 4 failed calls in a row (model not answering), and cells with more than 5% failed calls run again. Last in the queue: it fills whatever is left of the night (~10 nights at ~35 s a call), so the short jobs before it run first"
     }

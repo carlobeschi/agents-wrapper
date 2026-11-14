@@ -231,6 +231,25 @@ async function main(argv) {
     return;
   }
 
+  // Nothing to run (every job off: the queue is paused, as from 14 Nov): say so
+  // in the morning report and stop, without caffeinate or job folders.
+  const active = q.jobs.filter(j => j.enabled !== false && !state.done[j.name]);
+  if (!active.length) {
+    const st = stamp();
+    const paused = q.jobs.every(j => j.enabled === false);
+    const why = paused ? 'Coda in pausa: every job in the queue is off ("enabled": false). Nothing ran; state.json is kept, so turning a job back on resumes it.'
+      : 'Nothing to run: every job that is on has already finished.';
+    const text = [`# Night run ${st}`, '', `Started ${start.toString()} · queue ${path.relative(cwd, file) || file}`, pull ? `git pull: ${pull}` : '', '',
+      '## Status', '', paused ? '**Coda in pausa.**' : '**Nothing to run.**', '', why, ''].filter((l, i, a) => l !== '' || a[i - 1] !== '').join('\n') + '\n';
+    const dir = path.join(NIGHT_DIR, st);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'summary.md'), text);
+    fs.writeFileSync(path.join(NIGHT_DIR, 'last-summary.md'), text);
+    console.log(paused ? 'night queue paused: every job is off, nothing to run' : 'nothing to run: every job that is on is done');
+    report();
+    return;
+  }
+
   if (process.platform === 'darwin') {
     try { spawn('caffeinate', ['-i', '-w', String(process.pid)], { stdio: 'ignore', detached: true }).on('error', () => {}).unref(); } catch {}
   }
