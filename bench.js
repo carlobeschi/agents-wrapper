@@ -368,6 +368,13 @@ async function main() {
   recheck(b, run);
   if (!args.includes('--report') && b.ping) {
     const dead = await ping(b);
+    // Drawings are judged as pictures: check one can be drawn before hours of work.
+    if (b.tasks.some(t => t.instances?.some(i => i.kind === 'svg'))) {
+      const png = path.join(HOME_DIR, 'bench', 'ping', 'render-check.png');
+      fs.mkdirSync(path.dirname(png), { recursive: true });
+      if (!await require('./room').render('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><circle cx="200" cy="200" r="80" fill="red"/></svg>', png))
+        dead.push('pictures: no browser to draw them for the judges (run: npx playwright install chromium)');
+    }
     if (dead.length) { console.error(`Not running: these models do not answer.\n${dead.map(x => `- ${x}`).join('\n')}`); report(b, readCells(run, b), run); process.exit(3); }
   }
   if (!args.includes('--report')) {

@@ -48,6 +48,9 @@ echo "Checkouts"
 [ -d "$HOME/the-motion/.git" ] && ok "~/the-motion" || todo "git clone https://github.com/carlobeschi/model-behaviour.git ~/the-motion"
 [ -d "$D/trap-site/.git" ] && ok "~/.agent-dispatch/trap-site" || todo "git clone https://github.com/carlobeschi/model-behaviour.git ~/.agent-dispatch/trap-site"
 if [ -d node_modules ]; then ok "node_modules"; else npm ci && ok "npm ci"; fi
+# The judges see drawings as pictures, drawn by Playwright's Chromium.
+if node -e "require('@playwright/test').chromium.launch().then(b => b.close()).catch(() => process.exit(1))" 2>/dev/null; then ok "Chromium for pictures"
+else npx playwright install chromium && ok "Chromium for pictures (installed)"; fi
 
 echo "Ollama models"
 if command -v ollama >/dev/null; then
