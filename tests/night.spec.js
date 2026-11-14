@@ -136,3 +136,23 @@ const a = loadConfig().agents[0];
   fs.writeFileSync(q, JSON.stringify({ claude_budget: 5, jobs: [{ name: 'x', cmd: ['node'] }] }));
   expect(() => loadQueue(q)).toThrow(/claude_calls/);
 });
+
+test('every job off: the queue is paused, the night stops at once and the report says "Coda in pausa"', async () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'night-p-'));
+  const q = path.join(home, 'queue.json');
+  fs.mkdirSync(path.join(home, 'night'));
+  fs.writeFileSync(path.join(home, 'night', 'state.json'), JSON.stringify({ done: { a: '2026-11-13 01:00' } }));
+  fs.writeFileSync(q, JSON.stringify({ jobs: [{ name: 'a', cmd: ['node', '-e', ''], enabled: false }, { name: 'b', cmd: ['node', '-e', 'process.exit(5)'], enabled: false }] }));
+  const env = { ...process.env, AGENT_DISPATCH_HOME: home };
+  const { stdout } = await run(process.execPath, ['night.js', q, '--no-pull'], { cwd: ROOT, env, timeout: 30000 });
+  expect(stdout).toContain('paused');
+  const sum = fs.readFileSync(path.join(home, 'night', 'last-summary.md'), 'utf8');
+  expect(sum).toContain('**Coda in pausa.**');
+  expect(sum).not.toContain('| b |');
+  expect(JSON.parse(fs.readFileSync(path.join(home, 'night', 'state.json'), 'utf8')).done).toEqual({ a: '2026-11-13 01:00' });
+});
+
+test('the example queue is paused (Carlo, 14 Nov): every job off', () => {
+  const q = loadQueue(path.join(ROOT, 'examples', 'night', 'queue.json'));
+  expect(q.jobs.filter(j => j.enabled !== false).map(j => j.name)).toEqual([]);
+});
