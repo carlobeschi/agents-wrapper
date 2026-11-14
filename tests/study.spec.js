@@ -259,11 +259,11 @@ esac`, 'x', '{prompt}'];
   expect(steps.length).toBeGreaterThan(0);
 });
 
-test('out of usage halfway: the study waits for the reset, runs the room again and asks the judge again', () => {
+for (const [budget, where] of [['6', 'a room'], ['12', 'a judge']]) test(`out of usage halfway, in ${where}: the study waits for the reset, then runs the room again or asks the judge again`, () => {
   const { spawnSync } = require('child_process');
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'study-usage-'));
-  fs.writeFileSync(path.join(home, 'budget'), '6'); // six calls after the first ping, then out of usage
-  const reset = new Date(Date.now() + 60000);
+  fs.writeFileSync(path.join(home, 'budget'), budget); // six calls are one room; then out of usage
+  const reset = new Date(Date.now() + 120000); // 1-2 min ahead once cut to the minute, so never already past
   const say = `${reset.getHours() % 12 || 12}:${String(reset.getMinutes()).padStart(2, '0')}${reset.getHours() < 12 ? 'am' : 'pm'}`;
   const out1 = `printf "You've hit your 5-hour limit · resets ${say} (Europe/London)\\n"`;
   const fk = ['sh', '-c', `b=$(cat "${home}/budget")
@@ -285,12 +285,13 @@ esac`, 'x', '{prompt}'];
     tasks: [{ id: 'bake', kind: 'poem', brief: 'a poem', checks: [{ say: 'Says flour.', type: 'contains', word: 'flour' }] }] }));
   const r = spawnSync('node', [path.join(__dirname, '..', 'study.js'), file],
     { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0', STUDY_WAIT_SCALE: '0.0001', STUDY_RESET_MARGIN_S: '0' }, encoding: 'utf8' });
-  expect(r.stderr).toMatch(/Out of usage: waiting/);
-  expect(r.status).toBe(0);
+  const said = `${r.stdout}\n${r.stderr}`.slice(-3000);
+  expect(r.stderr, said).toMatch(/Out of usage: waiting/);
+  expect(r.status, said).toBe(0);
   const dir = r.stdout.match(/Study folder: (.+)/)[1].trim();
   const t = JSON.parse(fs.readFileSync(path.join(dir, 'study.json'), 'utf8')).tasks[0];
-  for (const x of Object.values(t.repeats[0].runs)) expect(x.checks).toMatchObject({ passed: 1, of: 1 });
-  expect(t.repeats[0].judgings.every(j => !j.error)).toBe(true);
+  for (const x of Object.values(t.repeats[0].runs)) expect(x.checks, said).toMatchObject({ passed: 1, of: 1 });
+  expect(t.repeats[0].judgings.filter(j => j.error), said).toEqual([]);
 });
 
 test('out of usage at the start with no reset close: the study does not start', () => {
