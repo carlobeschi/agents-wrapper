@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 // Swarm study (study 10): `node swarm.js <swarm.json> [--tasks map,nest] [--arms a,b] [--force]`.
 //
 // Many small agents that coordinate like ants and bees, through marks left in

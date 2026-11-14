@@ -576,7 +576,7 @@ async function main(file) {
     if (g && await render(svg, path.join(gdir, 'picture.png'))) {
       try {
         const said = await run(dir, 'guess', g, guessPrompt('picture.png'), gdir);
-        const answer = (said.match(/Answer\s*:\s*(.+)/i) || [, said.split('\n')[0]])[1].trim();
+        const answer = (said.match(/Answer\s*:\s*(.+)/i) || [null, said.split('\n')[0]])[1].trim();
         const hits = cfg.guess.answers.map(alts => alts.some(w => new RegExp(`\\b${w}`, 'i').test(answer)));
         out.guess = { by: g.label, answer, hits, score: `${hits.filter(Boolean).length}/${hits.length}` };
       } catch (e) { out.guess = { error: e.message.split('\n')[0] }; }

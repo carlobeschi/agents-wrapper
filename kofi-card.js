@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 // A wide card and a short post for Ko-fi, for one episode of any show on the
 // studio site: The Motion, The Trap or Twelve Shapes. 1200×630, because Ko-fi's
 // feed crops tall images. Nothing here posts anything.

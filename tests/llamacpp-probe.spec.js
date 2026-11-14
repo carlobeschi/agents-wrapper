@@ -57,7 +57,7 @@ process.on('SIGTERM', () => process.exit(0));
   const model = path.join(dir, 'model.gguf');
   fs.writeFileSync(model, 'gguf');
   const ollama = http.createServer((req, res) => {
-    let b = ''; req.on('data', c => { b += c; }); req.on('end', () => {
+    let _b = ''; req.on('data', c => { _b += c; }); req.on('end', () => {
       res.end(JSON.stringify({ message: { content: 'I would change region 1.\nSET 1 red\nSET 2 blue' } }));
     });
   });

@@ -30,7 +30,6 @@ const path = require('path');
 const { HOME_DIR, loadConfig, stamp } = require('./config');
 
 const FIELDS = ['IDEA', 'MECHANISM', 'NOT HUMAN BECAUSE', 'CLOSEST HUMAN ANALOGUE', 'TEST'];
-const words = s => (String(s).match(/\S+/g) || []).length;
 
 const AFFORDANCES = [
   'Things that are true of AI agents and not of people (use them, don\'t just list them):',

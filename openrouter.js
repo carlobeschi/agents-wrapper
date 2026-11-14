@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 // OpenRouter as a text-only agent: `node openrouter.js --model <id>`, prompt
 // on stdin, reply on stdout. It sends one chat message and prints the answer.
 // No tools, no files, no shell: the model can only write text, which the app

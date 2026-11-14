@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 // Ask an agent to word The Trap's rules: `node trap-rules.js <agent-id> <out.json>`.
 //
 // The Trap's prompts were written by Claude, who also directs the show, so the

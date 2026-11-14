@@ -1,3 +1,4 @@
+// @ts-check
 // Writing an episode for a Jekyll show site: YAML front matter, and agent text
 // made safe for kramdown. Shared by season.js and motion.js.
 

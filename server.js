@@ -1,3 +1,4 @@
+// @ts-check
 // Agent dispatch — one prompt box in front of the coding agents on this laptop.
 // Usage: npm start     then open http://localhost:8787
 //
