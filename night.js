@@ -19,6 +19,17 @@
 //   whole night.
 // - A job with "needs": ["ollama"] is skipped if Ollama doesn't answer.
 // - "enabled": false keeps a job in the list without running it.
+// - Claude budget: "claude_budget" on the queue is how many Claude Code calls
+//   one night may use (Claude's 5-hour usage limit, not money, is what broke
+//   the nights of 12-14 Nov). Then every job declares "claude_calls", its
+//   expected Claude calls in one night (0 for jobs that don't use Claude). A job
+//   that would go over what is left is skipped and runs next night; a later,
+//   smaller job may still start. The night's first Claude job always starts,
+//   even if bigger than the budget, so a big job gets a night to itself. The
+//   calls are counted for real (config.js noteCall, via NIGHT_CLAUDE_CALLS),
+//   so what a job used, not its estimate, comes off the budget.
+// - The summary starts with one status line per job: ok, failed or skipped,
+//   the reason, and the Claude calls it used.
 // - On a Mac, caffeinate keeps the computer from idle sleep while this runs
 //   (closing the lid still sends it to sleep).
 // Out: ~/.agent-dispatch/night/<stamp>/ with one log per job and summary.md,
@@ -27,8 +38,8 @@
 //   night-report.js pushes the summary there at the start, after every job
 //   and at the end, so the cloud threads can read it in the morning.
 //
-// Queue: { "stop": "07:15", "min_minutes": 20,
-//          "jobs": [ { "name": "bench-v1", "cmd": ["node", "bench.js", "..."],
+// Queue: { "stop": "07:15", "min_minutes": 20, "claude_budget": 750,
+//          "jobs": [ { "name": "bench-v1", "cmd": ["node", "bench.js", "..."], "claude_calls": 150,
 //                      "needs": [], "enabled": true, "max_minutes": 90, "note": "..." } ] }
 // "~/" at the start of an argument (or after "=") is the home folder.
 
@@ -63,7 +74,9 @@ function loadQueue(file) {
     if (names.has(j.name)) throw new Error(`${file}: job "${j.name}" appears twice`);
     names.add(j.name);
     if (!Array.isArray(j.cmd) || !j.cmd.length || j.cmd.some(a => typeof a !== 'string')) throw new Error(`${file}: job "${j.name}" needs "cmd" as a list of strings`);
+    if (q.claude_budget != null && !(Number.isInteger(j.claude_calls) && j.claude_calls >= 0)) throw new Error(`${file}: job "${j.name}" needs "claude_calls" (its expected Claude calls in one night, 0 if none), because the queue has a "claude_budget"`);
   }
+  if (q.claude_budget != null && !(Number.isInteger(q.claude_budget) && q.claude_budget >= 0)) throw new Error(`${file}: "claude_budget" must be a whole number of calls`);
   return q;
 }
 
@@ -90,6 +103,36 @@ function failedCalls(file) {
   const failed = (text.match(/^\s*✗ /gm) || []).length, ok = (text.match(/^\s*✓ /gm) || []).length;
   return { failed, ok, suspect: failed >= 5 && failed >= 0.2 * (failed + ok) };
 }
+// Claude calls a job made, one line each in its calls file.
+const countCalls = file => { try { return fs.readFileSync(file, 'utf8').split('\n').filter(Boolean).length; } catch { return 0; } };
+// Did Claude (or another agent) say it was out of usage in this night's part of the log?
+function hitLimit(file) {
+  let text = ''; try { text = fs.readFileSync(file, 'utf8'); } catch {}
+  const starts = [...text.matchAll(/^---- .*\n\$ /gm)];
+  if (starts.length) text = text.slice(starts[starts.length - 1].index);
+  return /hit your [\w -]*limit|usage limit|out of usage/i.test(text);
+}
+
+// Can a job with this estimate start, with `used` of `budget` calls gone?
+function fitsBudget(budget, used, est) {
+  if (budget == null || !est) return true;
+  if (used === 0) return true; // the night's first Claude job, however big
+  return used + est <= budget;
+}
+
+// One line per job for the morning: ok / failed / skipped, the reason, Claude calls.
+function statusLine(r) {
+  const kind = r.result === 'ok' ? 'ok'
+    : /^(done before|off|not started|skipped)/.test(r.result || '') ? 'skipped' : 'failed';
+  const why = kind === 'ok' ? '' : r.why || r.result || '';
+  const bits = [`**${r.name}**: ${kind}${why ? `, ${why}` : ''}`];
+  if (r.ms != null) bits.push(fmtDur(r.ms));
+  if (r.calls != null) bits.push(`Claude ${r.calls} call${r.calls === 1 ? '' : 's'}${r.est != null ? ` (expected ${r.est})` : ''}`);
+  else if (kind === 'skipped' && r.est) bits.push(`expects ${r.est} Claude calls`);
+  if (r.limit) bits.push('the log says an agent hit its usage limit');
+  return `- ${bits.join(' · ')}`;
+}
+
 const tail = (file, n = 15) => { try { return fs.readFileSync(file, 'utf8').trimEnd().split('\n').slice(-n).join('\n'); } catch { return ''; } };
 
 // The job running now, stopped too if this script is stopped (Ctrl-C).
@@ -99,12 +142,12 @@ for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
 }
 
 // Runs one job, its output to `log`, until it ends or `stopAt`.
-function runJob(job, log, stopAt, cwd) {
+function runJob(job, log, stopAt, cwd, env = process.env) {
   return new Promise(resolve => {
     const out = fs.openSync(log, 'a');
     fs.writeSync(out, `---- ${new Date().toString()}\n$ ${job.cmd.join(' ')}\n`);
     const [bin, ...args] = job.cmd.map(expandHome);
-    const child = spawn(bin === 'node' ? process.execPath : bin, args, { cwd, stdio: ['ignore', out, out], detached: true });
+    const child = spawn(bin === 'node' ? process.execPath : bin, args, { cwd, env, stdio: ['ignore', out, out], detached: true });
     let stopped = false, killTimer = null;
     const kill = sig => { try { process.kill(-child.pid, sig); } catch { try { child.kill(sig); } catch {} } };
     current = kill;
@@ -132,9 +175,15 @@ function writeSummary(dir, info, rows) {
     `Started ${info.start.toString()} · stop time ${info.stopAt.toString()} · queue ${info.queue}`,
     info.pull ? `git pull: ${info.pull}` : '',
     '',
-    '| Job | Result | Time | Note |',
-    '|---|---|---|---|',
-    ...rows.map(r => `| ${r.name} | ${r.result} | ${r.ms != null ? fmtDur(r.ms) : ''} | ${r.note || ''} |`),
+    '## Status',
+    '',
+    info.budget != null ? `Claude calls tonight: ${info.used} of a budget of ${info.budget}.` : `Claude calls tonight: ${info.used} (no budget set).`,
+    '',
+    ...rows.map(statusLine),
+    '',
+    '| Job | Result | Time | Claude calls | Note |',
+    '|---|---|---|---|---|',
+    ...rows.map(r => `| ${r.name} | ${r.result} | ${r.ms != null ? fmtDur(r.ms) : ''} | ${r.calls ?? ''} | ${r.note || ''} |`),
     '',
   ];
   for (const r of rows.filter(r => r.log)) {
@@ -175,9 +224,10 @@ async function main(argv) {
   if (argv.includes('--list')) {
     for (const j of q.jobs) {
       const s = state.done[j.name] ? `done ${state.done[j.name]}` : j.enabled === false ? 'off' : 'to run';
-      console.log(`${j.name.padEnd(16)} ${s.padEnd(22)} ${j.note || ''}`);
+      const c = j.claude_calls != null ? `Claude ~${j.claude_calls}` : '';
+      console.log(`${j.name.padEnd(16)} ${s.padEnd(22)} ${c.padEnd(12)} ${j.note || ''}`);
     }
-    console.log(`stop time ${stopAt.toString()}`);
+    console.log(`stop time ${stopAt.toString()}${q.claude_budget != null ? ` · Claude budget ${q.claude_budget} calls a night` : ''}`);
     return;
   }
 
@@ -188,31 +238,40 @@ async function main(argv) {
   const st = stamp();
   const dir = path.join(NIGHT_DIR, st);
   fs.mkdirSync(dir, { recursive: true });
-  const info = { stamp: st, start, stopAt, queue: path.relative(cwd, file) || file, pull };
+  const info = { stamp: st, start, stopAt, queue: path.relative(cwd, file) || file, pull, budget: q.claude_budget ?? null, used: 0 };
   const rows = [];
   console.log(`night run ${st}: until ${stopAt.toString()}, log in ${dir}`);
   writeSummary(dir, info, rows);
   report();
 
   for (const [k, job] of q.jobs.entries()) {
-    const row = { name: job.name, note: job.note || '' };
+    const row = { name: job.name, note: job.note || '', est: job.claude_calls ?? null };
     rows.push(row);
-    if (state.done[job.name]) { row.result = 'done before'; row.note = `finished ${state.done[job.name]}`; writeSummary(dir, info, rows); continue; }
-    if (job.enabled === false) { row.result = 'off'; writeSummary(dir, info, rows); continue; }
-    if (stopAt - Date.now() < minMs) { row.result = 'not started'; row.note = 'too close to the stop time, next night'; writeSummary(dir, info, rows); continue; }
-    if ((job.needs || []).includes('ollama') && !(await ollamaUp())) { row.result = 'skipped'; row.note = 'Ollama does not answer: open the Ollama app'; writeSummary(dir, info, rows); continue; }
+    if (state.done[job.name]) { row.result = 'done before'; row.why = `finished ${state.done[job.name]}`; row.note = row.why; row.est = null; writeSummary(dir, info, rows); continue; }
+    if (job.enabled === false) { row.result = 'off'; row.why = 'off in the queue'; row.est = null; writeSummary(dir, info, rows); continue; }
+    if (stopAt - Date.now() < minMs) { row.result = 'not started'; row.why = row.note = 'too close to the stop time, next night'; writeSummary(dir, info, rows); continue; }
+    if (!fitsBudget(info.budget, info.used, job.claude_calls)) {
+      row.result = 'skipped'; row.why = row.note = `over the Claude budget (expects ${job.claude_calls} calls, ${Math.max(0, info.budget - info.used)} of ${info.budget} left), next night`;
+      console.log(`${fmtTime(new Date())} ${job.name}: skipped, ${row.why}`);
+      writeSummary(dir, info, rows); continue;
+    }
+    if ((job.needs || []).includes('ollama') && !(await ollamaUp())) { row.result = 'skipped'; row.why = row.note = 'Ollama does not answer: open the Ollama app'; writeSummary(dir, info, rows); continue; }
 
     row.log = path.join(dir, `${String(k + 1).padStart(2, '0')}-${job.name}.log`);
     console.log(`${fmtTime(new Date())} ${job.name}: started`);
     const t0 = Date.now();
     const jobStop = job.max_minutes ? new Date(Math.min(stopAt, t0 + job.max_minutes * 60000)) : stopAt;
-    const res = await runJob(job, row.log, jobStop, cwd);
+    const callsFile = row.log.replace(/\.log$/, '.claude-calls');
+    const res = await runJob(job, row.log, jobStop, cwd, { ...process.env, NIGHT_CLAUDE_CALLS: callsFile });
     row.ms = Date.now() - t0;
-    if (res.error) { row.result = 'could not start'; row.note = res.error; }
-    else if (res.stopped) { row.result = 'stopped'; row.note = jobStop < stopAt ? `over its ${job.max_minutes} min; runs again next night` : 'stop time reached; it carries on next night'; }
-    else if (res.code === 0 && failedCalls(row.log).suspect) { const f = failedCalls(row.log); row.result = `suspect (${f.failed} failed calls of ${f.failed + f.ok})`; row.note = 'exit 0, but many calls failed: not marked done, runs again next night; see the log'; }
+    row.calls = countCalls(callsFile);
+    info.used += row.calls;
+    row.limit = hitLimit(row.log);
+    if (res.error) { row.result = 'could not start'; row.note = res.error; row.why = `could not start: ${res.error}`; }
+    else if (res.stopped) { row.result = 'stopped'; row.note = jobStop < stopAt ? `over its ${job.max_minutes} min; runs again next night` : 'stop time reached; it carries on next night'; row.why = `stopped, ${row.note}`; }
+    else if (res.code === 0 && failedCalls(row.log).suspect) { const f = failedCalls(row.log); row.result = `suspect (${f.failed} failed calls of ${f.failed + f.ok})`; row.note = 'exit 0, but many calls failed: not marked done, runs again next night; see the log'; row.why = `exit 0 but ${f.failed} of ${f.failed + f.ok} calls failed, runs again next night`; }
     else if (res.code === 0) { row.result = 'ok'; state.done[job.name] = new Date().toISOString().slice(0, 16).replace('T', ' '); writeState(state); }
-    else { row.result = `failed (exit ${res.code})`; row.note = 'runs again next night; see the log'; }
+    else { row.result = `failed (exit ${res.code})`; row.note = 'runs again next night; see the log'; row.why = `exit ${res.code}, runs again next night`; }
     console.log(`${fmtTime(new Date())} ${job.name}: ${row.result}`);
     writeSummary(dir, info, rows);
     report();
@@ -226,4 +285,4 @@ if (require.main === module) {
   main(process.argv.slice(2)).catch(e => { console.error(e.message); process.exit(1); });
 }
 
-module.exports = { nextStop, loadQueue, expandHome, failedCalls };
+module.exports = { nextStop, loadQueue, expandHome, failedCalls, fitsBudget, statusLine, hitLimit };

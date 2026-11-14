@@ -14,6 +14,7 @@ const fs     = require('fs');
 const path   = require('path');
 const { spawn } = require('child_process');
 const { parseFiles, saveFiles, withFiles, attachedBytes } = require('./attach');
+const { noteCall } = require('./config');
 const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS, modelLine } = require('./talk');
 
 const MAX_DAYS     = 7;    // to start with; "Another day" can go past it
@@ -208,6 +209,7 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
 
     let child;
     try {
+      noteCall(cmd);
       child = spawn(cmd, args, { cwd: st.cwd, env: agentEnv(st.me.env), shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
     } catch (e) { return fail(s, `${st.me.label}: ${e.message}`); }
     cur.child = child;

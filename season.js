@@ -17,7 +17,7 @@ const os   = require('os');
 const path = require('path');
 const { spawn, execFileSync } = require('child_process');
 const { createStories } = require('./story');
-const { HOME_DIR, loadConfig, fill, agentEnv, stamp, redactor } = require('./config');
+const { HOME_DIR, loadConfig, fill, agentEnv, stamp, redactor, noteCall } = require('./config');
 const { stripAnsi } = require('./talk');
 const { cardFor, renderCard } = require('./card');
 const { inertForSite, plain, yaml } = require('./frontmatter');
@@ -37,6 +37,7 @@ function runAgent(agent, prompt, cwd) {
   return new Promise(resolve => {
     const [cmd, ...args] = fill(agent.headless, prompt, agent.model);
     let out = '', err = '';
+    noteCall(cmd);
     const child = spawn(cmd, args, { cwd, env: agentEnv(agent.env), shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
     const timer = setTimeout(() => child.kill('SIGTERM'), EDITOR_TIMEOUT);
     child.stdout.on('data', c => { out += c; });

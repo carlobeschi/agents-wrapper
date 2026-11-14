@@ -18,7 +18,7 @@ const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
 const { spawn, execFileSync } = require('child_process');
-const { HOME_DIR, loadConfig, fill, agentEnv, stdinOf, feed, stamp, redactor } = require('./config');
+const { HOME_DIR, loadConfig, fill, agentEnv, stdinOf, feed, stamp, redactor, noteCall } = require('./config');
 const { inertForSite, plain, yaml, unyaml, uninert } = require('./frontmatter');
 const { openGuardedPullRequest } = require('./publish');
 const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, MAX_REPLY, take, cutNote, inert, newTag, untag, heading, SPEAKERS, modelLine } = require('./talk');
@@ -113,6 +113,7 @@ function runOnce(agent, prompt, cwd) {
     const cur = { out: '', err: '' };
     let child;
     try {
+      noteCall(cmd);
       child = spawn(cmd, args, { cwd, env: agentEnv(agent.env), shell: false, detached: true, stdio: [stdinOf(agent), 'pipe', 'pipe'] });
       feed(agent, child, prompt);
     } catch (e) { return resolve({ why: e.message, err: '' }); }

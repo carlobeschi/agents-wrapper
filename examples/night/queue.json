@@ -2,6 +2,8 @@
   "title": "Night queue: studies that run while the laptop is left alone",
   "stop": "07:15",
   "min_minutes": 20,
+  "claude_budget": 750,
+  "claude_budget_note": "Claude Code calls one night may use (14 Nov, first guess: rules-author ~110 + study-15a ~500 + room for study-10's strong cells). Each job's claude_calls is a rough estimate for one night; the morning report shows the real count, so tune both from there.",
   "jobs": [
     {
       "name": "study15-phase0-qwen-2",
@@ -10,6 +12,7 @@
         "sh",
         "scripts/study15.sh"
       ],
+      "claude_calls": 0,
       "max_minutes": 200,
       "note": "Study 15 phase 0, second run (Carlo OK 13 Nov 19:46): tolerant answer parsing, 2048 tokens, new claim task (partner states clues: true / false nobody could notice / false that clashes with one's own). Qwen3-8B, 200 puzzles, Modal L40S, stops by itself, ~$1-2 (at most ~$6). Run 1 was by hand on 13 Nov. Outcome in night-reports study15/latest.md. A new run needs a new name."
     },
@@ -19,6 +22,7 @@
         "sh",
         "scripts/rules-author.sh"
       ],
+      "claude_calls": 110,
       "max_minutes": 240,
       "note": "Who wrote the rules? (The Trap): Gemini words the rules, then 3 episodes per rulebook with Claude, Gemini, Codex, and Claude + Codex judge the puzzles blind (~£1-2 Gemini, 2-3 h; Carlo OK 13 Nov). Picks up where it stopped (Gemini's rules already written 14 Nov). Moved before study-15a (coordinator, 14 Nov): it is smaller (~110 Claude calls) and sure to finish, while 15a would use up the limit; on 14 Nov it started at 01:36 after the organise/kata reruns and Claude had hit its 5-hour limit; outcome in night-reports rules-author/latest.md"
     },
@@ -29,6 +33,7 @@
         "study.js",
         "examples/room/study-15a.json"
       ],
+      "claude_calls": 500,
       "note": "Officina (study 15a): chat vs versions+plan-first vs the Officina vs Officina without private first/check; Claude+Claude, 2 poems (one with rules split between the two), 3 repeats — moved to the front on 14 Nov: on 13-14 Nov it ran at 01:37, after the other Claude jobs, and 108/144 calls failed (likely usage limit). ~£0.30-0.60 Gemini judge"
     },
     {
@@ -39,6 +44,7 @@
         "examples/swarm/dry-run.json",
         "--force"
       ],
+      "claude_calls": 0,
       "needs": [
         "ollama"
       ],
@@ -53,6 +59,7 @@
         "examples/ideate/ideate.json",
         "--out=~/.agent-dispatch/ideate/night"
       ],
+      "claude_calls": 20,
       "note": "Ask the agents for non-human ways of working together (~£0.15 Gemini + cents of DeepSeek)"
     },
     {
@@ -62,6 +69,7 @@
         "study.js",
         "examples/room/study-11.json"
       ],
+      "claude_calls": 60,
       "note": "Other by label (~£0.45 Gemini)"
     },
     {
@@ -71,6 +79,7 @@
         "bench.js",
         "examples/bench/bench-v1.json"
       ],
+      "claude_calls": 400,
       "note": "Collaboration bench, first pass (~12-15 h over two nights, ~£5-7 Gemini); keeps finished cells"
     },
     {
@@ -80,6 +89,7 @@
         "bench.js",
         "examples/bench/bench-v1.json"
       ],
+      "claude_calls": 150,
       "note": "Bench v1 again: only the broken cells of the first night (Gemini never answered as player from drawing repeat 2, nor as poem judge). Stops at once (exit 3) if a model doesn't answer; ~2-4 h, ~£1-2 Gemini"
     },
     {
@@ -89,6 +99,7 @@
         "bench.js",
         "examples/bench/bench-v1.json"
       ],
+      "claude_calls": 150,
       "note": "Bench v1 broken cells, second try: the first redo found none because the cells point at the old laptop's folders (fixed). Stops at once if a model doesn't answer; ~2-4 h, ~£1-2 Gemini"
     },
     {
@@ -98,6 +109,7 @@
         "bench.js",
         "examples/bench/bench-v1.json"
       ],
+      "claude_calls": 150,
       "note": "Bench v1: drawings of repeats 2-3 again, judged this time (the new laptop had no browser to draw the pictures; bench now checks it before starting). ~1-2 h, ~£0.50-1 Gemini"
     },
     {
@@ -108,6 +120,7 @@
         "examples/organise/pilot.json",
         "--out=~/.agent-dispatch/organise/pilot"
       ],
+      "claude_calls": 600,
       "note": "The agents choose how to work together: solo, ours, L1, L3 with proposers Claude/Gemini/Codex/DeepSeek, Claude workers (~£0.35 Gemini proposer calls + cents of DeepSeek; ~10 h, keeps finished runs, may take two nights)"
     },
     {
@@ -118,6 +131,7 @@
         "examples/organise/kata.json",
         "--out=~/.agent-dispatch/organise/kata"
       ],
+      "claude_calls": 900,
       "note": "Kata (study 14): improving an organisation round by round, new instance each round; arms fixed/free/kata/coach, Claude and Codex proposers, Claude workers (~£0, subscriptions; ~87 runs of ~5-6 min = ~8 h, keeps finished runs, may take two nights)"
     },
     {
@@ -127,6 +141,7 @@
         "study.js",
         "examples/room/study-11b.json"
       ],
+      "claude_calls": 60,
       "note": "Other by label, split: reviewer told / reviser told / both / neither, 3 repeats (~£0.10-0.20 Gemini judge)"
     },
     {
@@ -137,6 +152,7 @@
         "examples/organise/pilot.json",
         "--out=~/.agent-dispatch/organise/pilot"
       ],
+      "claude_calls": 600,
       "note": "organise-pilot again: on 12 Nov from ~03:20 almost every Claude call failed (exit 1) but the job said ok. Keeps the runs that really happened, redoes the broken ones; a ping stops it at once if Claude doesn't answer"
     },
     {
@@ -147,6 +163,7 @@
         "examples/organise/kata.json",
         "--out=~/.agent-dispatch/organise/kata"
       ],
+      "claude_calls": 900,
       "note": "kata-pilot again (same reason): broken rounds and every round after them are redone"
     },
     {
@@ -157,6 +174,7 @@
         "study.js",
         "examples/room/study-15a-codex.json"
       ],
+      "claude_calls": 60,
       "note": "Same with Codex+Codex; off until the Claude run is read"
     },
     {
@@ -166,6 +184,7 @@
         "swarm.js",
         "examples/swarm/study-10.json"
       ],
+      "claude_calls": 120,
       "needs": [
         "ollama"
       ],

@@ -33,7 +33,7 @@ const crypto = require('crypto');
 const fs     = require('fs');
 const path   = require('path');
 const { spawn } = require('child_process');
-const { HOME_DIR, loadConfig, agentEnv, stamp } = require('./config');
+const { HOME_DIR, loadConfig, agentEnv, stamp, noteCall } = require('./config');
 const { killTree, stripAnsi, UNATTENDED } = require('./talk');
 const { run } = require('./motion');
 
@@ -157,6 +157,7 @@ function driverTurn(p, prompt, session, dir, onEvent) {
   let child, buf = '', stopped = null, sid = session;
   const done = new Promise(resolve => {
     try {
+      noteCall(cmd);
       child = spawn(cmd, rest, { cwd: path.join(dir, 'work'), env: agentEnv(p.driver.env), shell: false, detached: true, stdio: ['pipe', 'pipe', 'pipe'] });
       child.stdin.on('error', () => {});
       child.stdin.end(prompt);

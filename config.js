@@ -48,6 +48,15 @@ const BASE_ENV = [
 const agentEnv = names => Object.fromEntries([...BASE_ENV, ...(Array.isArray(names) ? names : [])]
   .filter(k => typeof k === 'string' && process.env[k] !== undefined).map(k => [k, process.env[k]]));
 
+// The night queue counts Claude calls: night.js points NIGHT_CLAUDE_CALLS at a
+// file, and each Claude Code call started from this process (or a script it
+// runs) adds one line to it. The agent itself never sees the variable.
+function noteCall(cmd) {
+  const f = process.env.NIGHT_CLAUDE_CALLS;
+  if (!f || path.basename(String(cmd)) !== 'claude') return;
+  try { fs.appendFileSync(f, new Date().toISOString() + '\n'); } catch {}
+}
+
 // An agent with "stdin": true gets the prompt on stdin instead of in its
 // arguments (Codex on macOS is killed when a long prompt is an argument).
 const stdinOf = agent => agent.stdin ? 'pipe' : 'ignore';
@@ -75,4 +84,4 @@ function redactor(extra = []) {
   return { redact, leaks };
 }
 
-module.exports = { HOME_DIR, CONFIG, loadConfig, modelsOf, fill, agentEnv, stdinOf, feed, stamp, redactor };
+module.exports = { HOME_DIR, CONFIG, loadConfig, modelsOf, fill, agentEnv, stdinOf, feed, stamp, redactor, noteCall };
