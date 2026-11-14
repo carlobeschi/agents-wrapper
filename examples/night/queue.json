@@ -178,6 +178,20 @@
       "note": "Same with Codex+Codex; off until the Claude run is read"
     },
     {
+      "name": "llamacpp-probe",
+      "cmd": [
+        "node",
+        "llamacpp-probe.js"
+      ],
+      "claude_calls": 0,
+      "needs": [
+        "ollama"
+      ],
+      "enabled": true,
+      "max_minutes": 75,
+      "note": "One-off test of llama.cpp next to Ollama on qwen3:8b (the file Ollama already has): A) grammars that force the reply format, B) a control vector for study 12 (steering). ~40 min, £0. Needs llama.cpp once: sh ~/agents-wrapper/scripts/install-llamacpp.sh (exit 2 until then, then it runs the next night)"
+    },
+    {
       "name": "study-10",
       "cmd": [
         "node",
