@@ -118,7 +118,7 @@ function parseScores(text, letters) {
 }
 
 // Show one set of finished pieces to every judge, blind.
-async function judgeSet(dir, name, kind, brief, entries, judges) {
+async function judgeSet(dir, name, kind, brief, entries, judges, retry = async () => false) {
   const out = [];
   for (const j of judges) {
     // A judge never scores a piece made by a setup it played a part in.
@@ -133,7 +133,9 @@ async function judgeSet(dir, name, kind, brief, entries, judges) {
       if (!drawn) { out.push({ judge: j.id, error: 'could not render the pictures' }); continue; }
     } else for (const p of pieces) p.text = fs.readFileSync(path.join(p.dir, 'final.txt'), 'utf8');
     try {
-      const said = await run(dir, `judge-${name}-${j.id}`, j, judgePrompt(kind, brief, pieces), jdir);
+      let said;
+      try { said = await run(dir, `judge-${name}-${j.id}`, j, judgePrompt(kind, brief, pieces), jdir); }
+      catch (e) { if (!await retry()) throw e; said = await run(dir, `judge-${name}-${j.id}-again`, j, judgePrompt(kind, brief, pieces), jdir); }
       const r = parseScores(said, pieces.map(p => p.letter));
       out.push({ judge: j.id, pieces: pieces.map(p => ({ letter: p.letter, label: p.label, score: r.scores[p.letter] ?? null, reason: r.reasons[p.letter] || '' })),
         best: pieces.find(p => p.letter === r.best)?.label || null });
@@ -236,7 +238,11 @@ async function main(file) {
     moves: (t.moves ?? base.moves) * agents.length, min_moves: minOf(t) * agents.length, safe_word: undefined, lesson: false, readonly: [] });
   const roomRun = async (c, t) => {
     const { tag, ...rest } = c;
-    const r = await room.main(rest);
+    let r = await room.main(rest);
+    if (cfg.ping && (r.out.failed_calls || r.out.knocked_out?.length) && await waitForUsage()) {
+      console.log('  (run again after waiting out the usage limit)');
+      r = await room.main(rest);
+    }
     const res = r.out.results || [];
     const got = { dir: r.dir, guess: r.out.guess?.score || null, seconds: Math.round(r.out.seconds), lessons: r.out.lessons || {},
       checks: res.length ? { passed: res.filter(x => x.pass).length, of: res.length, failed: res.filter(x => !x.pass).map(x => x.say) } : null,
@@ -263,13 +269,48 @@ async function main(file) {
   };
   const repeats = cfg.repeats || 1;
   const processJudges = (cfg.process_judges || []).map(pick);
+
+  // Out of usage ("You've hit your 5-hour limit · resets 3:50am"): ping every model;
+  // if one is out and says it resets within STUDY_MAX_WAIT_MIN (150), wait and go on,
+  // as organise.js does. A room run that lost calls is then run again; a judge, asked again.
+  const everyone = [...new Map([...agents, ...judges, ...processJudges].map(a => [a.id, a])).values()];
+  async function pingAll(tag) {
+    const dead = [];
+    for (const a of everyone) {
+      try { await run(dir, `${tag}-${a.id}`, a, 'Reply with the single word OK.', dir); }
+      catch (e) { dead.push(`${a.id}: ${e.message.split('\n').slice(0, 3).join(' ')}`); }
+    }
+    return dead;
+  }
+  let waits = 0;
+  async function waitForUsage() {
+    if (cfg.ping === false || waits >= 3) return false;
+    const dead = await pingAll(`ping-${Date.now()}`);
+    if (!dead.length) return false; // everyone answers: not a usage limit
+    const until = require('./organise').resetTime(dead.join(' '));
+    const maxMs = Number(process.env.STUDY_MAX_WAIT_MIN ?? 150) * 60000;
+    if (!until || until - Date.now() > maxMs) { console.error(`Not answering, and no reset within ${maxMs / 60000} min:\n${dead.map(d => `- ${d}`).join('\n')}`); return false; }
+    const ms = (until - Date.now() + Number(process.env.STUDY_RESET_MARGIN_S ?? 300) * 1000) * Number(process.env.STUDY_WAIT_SCALE || 1); // the scale is for tests
+    waits++;
+    console.error(`Out of usage: waiting ${Math.round(ms / 60000)} min, until about ${new Date(Date.now() + ms).toTimeString().slice(0, 5)}, then going on.`);
+    await new Promise(res => setTimeout(res, Math.max(0, ms)));
+    return !(await pingAll(`ping-${Date.now()}`)).length;
+  }
+  if (cfg.ping) { // opt-in: a model out of usage at the start stops the study at once, unless its reset is close
+    const dead = await pingAll('ping');
+    if (dead.length && !await waitForUsage()) { console.error(`Not starting: ${dead.length} agent(s) did not answer:\n${dead.map(d => `- ${d}`).join('\n')}`); process.exit(3); }
+  }
   async function processLabels(runDir, name) {
     const tl = JSON.parse(fs.readFileSync(path.join(runDir, 'timeline.json'), 'utf8'));
     if (tl.agents.length < 2) return null;
     const text = transcript(tl), out = [];
     for (const j of processJudges) {
-      try { out.push({ judge: j.id, ...parseProcess(await run(dir, `process-${name}-${j.id}`, j, processPrompt(text), path.join(runDir, 'cwd'))) }); }
-      catch (e) { out.push({ judge: j.id, error: e.message.split('\n')[0] }); }
+      const ask = tag => run(dir, `process-${name}-${j.id}${tag}`, j, processPrompt(text), path.join(runDir, 'cwd'));
+      try {
+        let said;
+        try { said = await ask(''); } catch (e) { if (!(cfg.ping && await waitForUsage())) throw e; said = await ask('-again'); }
+        out.push({ judge: j.id, ...parseProcess(said) });
+      } catch (e) { out.push({ judge: j.id, error: e.message.split('\n')[0] }); }
     }
     return out;
   }
@@ -372,7 +413,7 @@ async function main(file) {
           save();
         }
         task.repeats[r].judgings = t.judge === false ? [] : await judgeSet(dir, `${t.id}-${r + 1}`, t.kind, t.brief || asRoom(t).brief,
-          Object.entries(runs).map(([label, x]) => ({ label, dir: x.dir, skip: cfg.variants.find(v => v.label === label)?.not_judged_by || [] })), judges);
+          Object.entries(runs).map(([label, x]) => ({ label, dir: x.dir, skip: cfg.variants.find(v => v.label === label)?.not_judged_by || [] })), judges, () => (cfg.ping ? waitForUsage() : false));
         save();
       }
       const labels = [...new Set(task.repeats.flatMap(x => Object.keys(x.runs)))];
@@ -491,7 +532,7 @@ async function main(file) {
       }
       for (const label of ['together', 'together, roles', 'writer + checker']) for (const [id, l] of Object.entries(runs[label]?.lessons || {})) lessons[id].push({ kind: t.kind, task: t.id, text: l });
       save();
-      task.repeats[r].judgings = t.judge === false ? [] : await judgeSet(dir, `${t.id}-${r + 1}`, t.kind, t.brief, Object.entries(runs).map(([label, x]) => ({ label, dir: x.dir })), judges);
+      task.repeats[r].judgings = t.judge === false ? [] : await judgeSet(dir, `${t.id}-${r + 1}`, t.kind, t.brief, Object.entries(runs).map(([label, x]) => ({ label, dir: x.dir })), judges, () => (cfg.ping ? waitForUsage() : false));
       save();
     }
     const labels = Object.keys(task.repeats[0].runs);
@@ -529,7 +570,7 @@ async function main(file) {
         console.log(`- ${a.label}: with lessons (${notes.length})`);
         runs.lessons = await roomRun(solo(t, a, { tag: 'with lessons', secrets: notes.length
           ? { [a.id]: `Techniques you noted while working with ${agents.filter(x => x !== a).map(x => x.label).join(' and ')}, to use if they help:\n${notes.map(n => `- ${n}`).join('\n')}` } : {} }));
-        const judgings = await judgeSet(dir, `${t.id}-${a.id}-${r + 1}`, t.kind, t.brief, Object.entries(runs).map(([label, x]) => ({ label, dir: x.dir })), judges);
+        const judgings = await judgeSet(dir, `${t.id}-${a.id}-${r + 1}`, t.kind, t.brief, Object.entries(runs).map(([label, x]) => ({ label, dir: x.dir })), judges, () => (cfg.ping ? waitForUsage() : false));
         reps.push({ runs, judgings });
         save();
       }

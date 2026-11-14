@@ -258,3 +258,52 @@ esac`, 'x', '{prompt}'];
   expect(rev).toContain('A reviewer (Gemini, from Google) read it and said:');
   expect(steps.length).toBeGreaterThan(0);
 });
+
+for (const [budget, where] of [['6', 'a room'], ['12', 'a judge']]) test(`out of usage halfway, in ${where}: the study waits for the reset, then runs the room again or asks the judge again`, () => {
+  const { spawnSync } = require('child_process');
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'study-usage-'));
+  fs.writeFileSync(path.join(home, 'budget'), budget); // six calls are one room; then out of usage
+  const reset = new Date(Date.now() + 120000); // 1-2 min ahead once cut to the minute, so never already past
+  const say = `${reset.getHours() % 12 || 12}:${String(reset.getMinutes()).padStart(2, '0')}${reset.getHours() < 12 ? 'am' : 'pm'}`;
+  const out1 = `printf "You've hit your 5-hour limit · resets ${say} (Europe/London)\\n"`;
+  const fk = ['sh', '-c', `b=$(cat "${home}/budget")
+case "$1" in
+  *"single word OK"*) if [ "$b" -le 0 ]; then n=$(cat "${home}/pings" 2>/dev/null || echo 0); echo $((n+1)) > "${home}/pings"; [ "$n" -ge 1 ] && echo 1000 > "${home}/budget"; ${out1}; exit 1; fi; printf 'OK\\n';;
+  *) if [ "$b" -le 0 ]; then ${out1}; exit 1; fi; echo $((b-1)) > "${home}/budget";;
+esac
+case "$1" in
+  *"single word OK"*) ;;
+  *"Score each from 1 to 10"*) printf 'A: 5\\nB: 7\\nBEST: B\\n';;
+  *"just finished"*) printf 'ok\\n';;
+  *) printf 'INSERT AFTER 0\\nflour\\nEND\\nSTATUS: done\\n';;
+esac`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: fk }] }));
+  const file = path.join(home, 's.json');
+  fs.writeFileSync(file, JSON.stringify({ title: 'U', ping: true, agents: ['a#1', 'a#2'], judges: ['a'], solo: [],
+    room: { moves: 2, min_moves: 0, turns: true }, repeats: 1,
+    variants: [{ label: 'one', room: {} }, { label: 'two', room: {} }],
+    tasks: [{ id: 'bake', kind: 'poem', brief: 'a poem', checks: [{ say: 'Says flour.', type: 'contains', word: 'flour' }] }] }));
+  const r = spawnSync('node', [path.join(__dirname, '..', 'study.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0', STUDY_WAIT_SCALE: '0.0001', STUDY_RESET_MARGIN_S: '0' }, encoding: 'utf8' });
+  const said = `${r.stdout}\n${r.stderr}`.slice(-3000);
+  expect(r.stderr, said).toMatch(/Out of usage: waiting/);
+  expect(r.status, said).toBe(0);
+  const dir = r.stdout.match(/Study folder: (.+)/)[1].trim();
+  const t = JSON.parse(fs.readFileSync(path.join(dir, 'study.json'), 'utf8')).tasks[0];
+  for (const x of Object.values(t.repeats[0].runs)) expect(x.checks, said).toMatchObject({ passed: 1, of: 1 });
+  expect(t.repeats[0].judgings.filter(j => j.error), said).toEqual([]);
+});
+
+test('out of usage at the start with no reset close: the study does not start', () => {
+  const { spawnSync } = require('child_process');
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'study-nousage-'));
+  const fk = ['sh', '-c', `printf "You've hit your weekly limit\\n"; exit 1`, 'x', '{prompt}'];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: fk }] }));
+  const file = path.join(home, 's.json');
+  fs.writeFileSync(file, JSON.stringify({ title: 'U', ping: true, agents: ['a#1', 'a#2'], judges: ['a'], solo: [], room: { moves: 2 },
+    variants: [{ label: 'one', room: {} }], tasks: [{ id: 'bake', kind: 'poem', brief: 'a poem' }] }));
+  const r = spawnSync('node', [path.join(__dirname, '..', 'study.js'), file],
+    { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  expect(r.stderr).toMatch(/Not starting/);
+  expect(r.status).toBe(3);
+});

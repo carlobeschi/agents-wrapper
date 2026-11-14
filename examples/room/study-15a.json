@@ -1,4 +1,5 @@
 {
+ "ping": true,
  "title": "Study 15a: the Officina, a room built for cooperation (Claude with Claude)",
  "agents": [
   "claude#1",
