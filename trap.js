@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 // One episode of The Trap: each agent sets the others a puzzle it expects them
 // to fail, and the app, not an agent, rules on every answer:
 // `node trap.js <trap.json>`.

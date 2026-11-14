@@ -13,9 +13,8 @@
 // Where the season is up to is in <season.json>'s folder, `s<n>.state.json`.
 
 const fs   = require('fs');
-const os   = require('os');
 const path = require('path');
-const { spawn, execFileSync } = require('child_process');
+const { spawn } = require('child_process');
 const { createStories } = require('./story');
 const { HOME_DIR, loadConfig, fill, agentEnv, stamp, redactor, noteCall } = require('./config');
 const { stripAnsi } = require('./talk');
@@ -112,7 +111,6 @@ function daySize(storyDir, st, n) {
 
 // ---- The show repo ----
 
-const git = (repo, ...args) => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
 function openPullRequest(season, n, file, text, title, card) {
   const rel = `_episodes/s${season.season}/day-${n}.md`;

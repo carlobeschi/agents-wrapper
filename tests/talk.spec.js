@@ -272,7 +272,7 @@ test('Save and clear writes finished conversations to one folder and empties the
 
 test('the API needs the token and two agents', async ({ request }) => {
   expect((await request.post(BASE + '/api/talk', { data: { opener: 'x', agents: ['a', 'b'] } })).status()).toBe(403);
-  const page = await request.get(BASE + '/talk');
+  const _page = await request.get(BASE + '/talk');
   const token = key;
   const r = await request.post(BASE + '/api/talk', { headers: { 'X-Dispatch-Token': token }, data: { opener: 'x', agents: ['a'] } });
   expect(r.status()).toBe(400);

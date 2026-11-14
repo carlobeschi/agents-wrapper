@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 // An improv show (working title Yes, And): two or three agents build a scene
 // from an audience line, one short line each in turn, every line starting
 // "Yes, and": `node yesand.js <yesand.json> [--local]`.

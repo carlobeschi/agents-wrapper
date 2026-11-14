@@ -1,3 +1,4 @@
+// @ts-check
 // Files the user attaches to an opener or a message.
 //
 // They are copied into a files/ folder inside the folder the agents run in, and

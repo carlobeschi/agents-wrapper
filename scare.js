@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 // A one-off Halloween special: two or three agents try to scare the hell out of
 // each other: `node scare.js <scare.json> [--local]`.
 //

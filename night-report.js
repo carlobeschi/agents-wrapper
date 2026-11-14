@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 // night-report.js: puts the night queue's summary where the cloud threads can
 // read it, so nobody has to copy and paste it in the morning.
 //

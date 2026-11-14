@@ -16,7 +16,6 @@
 const crypto = require('crypto');
 const fs     = require('fs');
 const path   = require('path');
-const os     = require('os');
 const { spawn, execFileSync } = require('child_process');
 const { HOME_DIR, loadConfig, fill, agentEnv, stdinOf, feed, stamp, redactor, noteCall } = require('./config');
 const { inertForSite, plain, yaml, unyaml, uninert } = require('./frontmatter');

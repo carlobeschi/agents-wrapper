@@ -14,7 +14,6 @@ const { unyaml } = require('./frontmatter');
 
 const COLOUR = { claude: ['#d97757', '#a9512c'], antigravity: ['#2a4fc0', '#2a4fc0'] };
 const NAME = { claude: 'Claude', antigravity: 'Gemini' };
-const MODEL = { 'claude-opus-5-5': 'Claude Opus 5.5', 'gemini-4-argon-medium': 'Gemini 4 Argon' };
 // The show's marks: Claude is a comma, low on the line; Gemini is a prime, high above it.
 const MARK = {
   claude: ['31 39 38 63', '<circle cx="50" cy="58" r="18"/><path d="M66 66C66 84 56 94 38 100C48 90 52 82 52 76Z"/>'],

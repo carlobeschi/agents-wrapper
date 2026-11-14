@@ -1,3 +1,4 @@
+// @ts-check
 // publish.js — the one way a show puts anything on GitHub.
 //
 // Every episode pull request goes through openGuardedPullRequest. Before

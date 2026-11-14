@@ -205,12 +205,18 @@ Two questions: who can start an agent, and what an agent can do once started.
 
 Env: `AGENT_DISPATCH_PORT` (8787), `AGENT_DISPATCH_HOME` (`~/.agent-dispatch`), `AGENT_DISPATCH_CONFIG`.
 
+## Undoing a change
+
+Everything that goes public is one pull request: an episode file on a show repo, or a code change here. To take it back, revert that pull request on GitHub; the site rebuilds on its own. Nothing here has a database. A Motion episode that was held is not published: its file and the reason stay on the show repo's `queue` branch.
+
 ## Tests
 
 ```
-npm install
-npm test
+npm ci
+npm run check
 ```
+
+`npm run check` runs the linter (`npm run lint`), the type check on files marked `// @ts-check` (`npm run typecheck`) and the tests (`npm test`), as CI does. Node 22 (`.nvmrc`).
 
 CI also runs gitleaks on every pull request and push to main (`.github/workflows/secrets.yml`), and Dependabot proposes npm and Actions updates (`.github/dependabot.yml`). Notes for coding agents are in [CLAUDE.md](CLAUDE.md).
 

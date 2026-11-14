@@ -38,7 +38,7 @@ test('agents build a scene line by line; cap, flags and votes are the app’s', 
   expect(read('s1-03-c.prompt.md')).toContain('land it');
 
   const ep = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
-  const [l1, l2, l3] = ep.scenes[0].lines;
+  const [l1, _l2, l3] = ep.scenes[0].lines;
   expect(l1).toMatchObject({ text: 'Yes, and the cat agrees.', resent: true, words: 5 });
   expect(l3.flag).toBe('opens with a denial');
   expect(l3.blockCalls).toEqual(['Agent a']);

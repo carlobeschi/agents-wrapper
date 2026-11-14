@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 // trap-report.js: sends the outcome of the "who wrote the rules?" series
 // (scripts/rules-author.sh) to the private reports clone
 // (~/.agent-dispatch/night-reports, as night-report.js), so the cloud threads

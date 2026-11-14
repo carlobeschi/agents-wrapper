@@ -1,3 +1,4 @@
+// @ts-check
 // What server.js and season.js share: where things live, the agents config,
 // and how a headless agent is started.
 

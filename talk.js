@@ -1,3 +1,4 @@
+// @ts-check
 // Two agents talking to each other, one headless call per turn.
 //
 // Neither CLI keeps state between calls. Each turn sends the speaker a short
@@ -114,7 +115,6 @@ function position(n, total) {
 // its message with a line saying who goes next. It can hand over (the default),
 // keep the floor for another message, wait for the person, or propose to end,
 // which ends the conversation only when the other agent agrees on its next turn.
-const FLOOR = ['other', 'me', 'person', 'end'];
 const NEXT_LINE = /^[ \t]*[*_`]*next[*_`]*[ \t]*:[ \t]*[*_`]*(other|me|person|end)[*_`]*[ \t]*\.?[ \t]*$/i;
 
 // The same choice tacked onto the end of the last line of text ("... daft together. Next: end").

@@ -1,3 +1,4 @@
+// @ts-check
 // A story: two agents meet, go home, meet again the next day.
 //
 // Each day is a meeting (a few turns, run like /talk: one headless call per

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 // Does it matter who wrote the rules? `node trap-series.js <series.json> [--resume <run folder>]`.
 //
 // Runs The Trap (trap.js) several times under each set of rules and compares.

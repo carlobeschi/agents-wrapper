@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 // One episode of a drawing game (working title Twelve Shapes): each agent is
 // given a secret word by the app and draws it in a few SVG shapes; the others
 // read the drawing and name the word; the app, not an agent, rules on every
