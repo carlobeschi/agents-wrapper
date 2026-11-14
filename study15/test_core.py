@@ -133,6 +133,13 @@ def test_claims():
     assert s["claim_true_right"] == 1.0 and s["claim_hidden_followed"] == 1.0 and s["claim_clash_flagged"] == 1.0
 
 
+def test_clip():
+    assert core.clip("short") == "short"
+    long = "x" * 5000 + " ANSWER: 1234"
+    c = core.clip(long)
+    assert len(c) <= core.CLIP + 10 and c.endswith("ANSWER: 1234") and c.startswith("[...]")
+
+
 def test_alternate():
     m = core.alternate([{"role": "user", "content": "a"}, {"role": "user", "content": "b"}, {"role": "assistant", "content": "c"}])
     assert [x["role"] for x in m] == ["user", "assistant"] and m[0]["content"] == "a\n\nb"

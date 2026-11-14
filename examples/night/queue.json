@@ -14,6 +14,15 @@
       "note": "Study 15 phase 0, second run (Carlo OK 13 Nov 19:46): tolerant answer parsing, 2048 tokens, new claim task (partner states clues: true / false nobody could notice / false that clashes with one's own). Qwen3-8B, 200 puzzles, Modal L40S, stops by itself, ~$1-2 (at most ~$6). Run 1 was by hand on 13 Nov. Outcome in night-reports study15/latest.md. A new run needs a new name."
     },
     {
+      "name": "study-15a",
+      "cmd": [
+        "node",
+        "study.js",
+        "examples/room/study-15a.json"
+      ],
+      "note": "Officina (study 15a): chat vs versions+plan-first vs the Officina vs Officina without private first/check; Claude+Claude, 2 poems (one with rules split between the two), 3 repeats — moved to the front on 14 Nov: on 13-14 Nov it ran at 01:37, after the other Claude jobs, and 108/144 calls failed (likely usage limit). ~£0.30-0.60 Gemini judge"
+    },
+    {
       "name": "swarm-dry",
       "cmd": [
         "node",
@@ -139,15 +148,6 @@
       ],
       "max_minutes": 240,
       "note": "Who wrote the rules? (The Trap): Gemini words the rules, then 3 episodes per rulebook with Claude, Gemini, Codex, and Claude + Codex judge the puzzles blind (~£1-2 Gemini, 2-3 h; Carlo OK 13 Nov). Picks up where it stopped; outcome in night-reports rules-author/latest.md"
-    },
-    {
-      "name": "study-15a",
-      "cmd": [
-        "node",
-        "study.js",
-        "examples/room/study-15a.json"
-      ],
-      "note": "Officina (study 15a): chat vs versions+plan-first vs the Officina vs Officina without private first/check; Claude+Claude, 2 poems (one with rules split between the two), 3 repeats (~£0.30-0.60 Gemini judge; ~500 Claude calls, so it may hit the usage limit after the organise reruns)"
     },
     {
       "name": "study-15a-codex",

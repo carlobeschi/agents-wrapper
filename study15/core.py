@@ -295,8 +295,9 @@ def run_team(engine, items, arm, turns=4):
         for e in live:
             msgs = system(arm) + [{"role": "user", "content": team_prompt(e["it"][who], turns)}]
             for m in e["log"]:
+                text = clip(m["text"])
                 msgs.append({"role": "assistant" if m["by"] == who else "user",
-                             "content": m["text"] if m["by"] == who else f"Partner: {m['text']}"})
+                             "content": text if m["by"] == who else f"Partner: {text}"})
             if msgs[-1]["role"] == "assistant":
                 msgs.append({"role": "user", "content": "(Your partner has not answered yet.)"})
             convs.append(alternate(msgs))
@@ -316,6 +317,16 @@ def run_team(engine, items, arm, turns=4):
                     "shared": {w: shared_share(e["log"], w, it[w]) for w in ("a", "b")},
                     "log": e["log"]})
     return out
+
+
+CLIP = 2400  # characters (~600 tokens) of each earlier message kept in the conversation
+
+
+def clip(text):
+    """Earlier messages are cut to their last CLIP characters (where the answer is), so a
+    long exchange stays inside the model's context (night of 13 Nov: 8213 > 8192 tokens)."""
+    text = text or ""
+    return text if len(text) <= CLIP else "[...] " + text[-CLIP:]
 
 
 def alternate(msgs):
