@@ -764,7 +764,7 @@ async function main(file, opts = {}) {
   return cells;
 }
 
-module.exports = { makeMap, makeNest, makeGather, conflicts, mapScore, nestScore, gatherScore, parseMap, parseNest, parseGather, arms, main };
+module.exports = { mapSolo, makeMap, makeNest, makeGather, conflicts, mapScore, nestScore, gatherScore, parseMap, parseNest, parseGather, arms, main };
 
 if (require.main === module) {
   const argv = process.argv.slice(2);
