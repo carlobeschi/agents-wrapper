@@ -47,7 +47,7 @@ def phase0(model: str, n: int, seed: int, turns: int, arms: list) -> dict:
     from vllm import LLM, SamplingParams
 
     t0 = time.time()
-    llm = LLM(model=model, max_model_len=8192, gpu_memory_utilization=0.90, seed=seed)
+    llm = LLM(model=model, max_model_len=16384, gpu_memory_utilization=0.90, seed=seed)
     params = SamplingParams(temperature=0.7, top_p=0.8, max_tokens=2048, seed=seed)
     calls = {"n": 0, "cut": 0}
 
