@@ -23,6 +23,15 @@
       "note": "Officina (study 15a): chat vs versions+plan-first vs the Officina vs Officina without private first/check; Claude+Claude, 2 poems (one with rules split between the two), 3 repeats — moved to the front on 14 Nov: on 13-14 Nov it ran at 01:37, after the other Claude jobs, and 108/144 calls failed (likely usage limit). ~£0.30-0.60 Gemini judge"
     },
     {
+      "name": "rules-author",
+      "cmd": [
+        "sh",
+        "scripts/rules-author.sh"
+      ],
+      "max_minutes": 240,
+      "note": "Who wrote the rules? (The Trap): Gemini words the rules, then 3 episodes per rulebook with Claude, Gemini, Codex, and Claude + Codex judge the puzzles blind (~£1-2 Gemini, 2-3 h; Carlo OK 13 Nov). Picks up where it stopped (Gemini's rules already written 14 Nov). Moved up to right after study-15a: on 14 Nov it started at 01:36 after the organise/kata reruns and Claude had hit its 5-hour limit; outcome in night-reports rules-author/latest.md"
+    },
+    {
       "name": "swarm-dry",
       "cmd": [
         "node",
@@ -139,15 +148,6 @@
         "--out=~/.agent-dispatch/organise/kata"
       ],
       "note": "kata-pilot again (same reason): broken rounds and every round after them are redone"
-    },
-    {
-      "name": "rules-author",
-      "cmd": [
-        "sh",
-        "scripts/rules-author.sh"
-      ],
-      "max_minutes": 240,
-      "note": "Who wrote the rules? (The Trap): Gemini words the rules, then 3 episodes per rulebook with Claude, Gemini, Codex, and Claude + Codex judge the puzzles blind (~£1-2 Gemini, 2-3 h; Carlo OK 13 Nov). Picks up where it stopped; outcome in night-reports rules-author/latest.md"
     },
     {
       "name": "study-15a-codex",
