@@ -124,3 +124,26 @@ test('moved tags go into the episode front matter and read back', () => {
   expect(f.moved).toEqual({ claude: { way: 'them', en: 'I moved a little.' }, antigravity: { way: 'none', en: 'Still "where" I was' } });
   expect(withMoved(site, undefined)).toBe(site);
 });
+
+test('--from publishes an episode already run, without running it again', () => {
+  // A held run leaves a checked run folder behind; a second show has the same queue and no result yet.
+  const queue = { pick: M('monorepos win.'), shortlist: [], why: 'w' };
+  const a = show(queue);
+  daily(home(a.clone, 'HOLD\\tA fact is off.'));
+  git(a.clone, 'fetch', '-q', 'origin', 'queue');
+  const folder = result(a).run;
+  const s = show(queue), dir = home(s.clone, 'OK');
+  const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-gh-'));
+  fs.writeFileSync(path.join(bin, 'gh'), '#!/bin/sh\necho "$@" >> "$(dirname "$0")/calls"\n[ "$2" = create ] && echo https://example.com/pr/3\nexit 0\n', { mode: 0o755 });
+  const before = fs.readdirSync(path.join(folder, 'steps')).length;
+  const r = spawnSync('node', [path.join(__dirname, '..', 'motion-daily.js'), '--date', '2026-11-02', '--from', folder],
+    { env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, AGENT_DISPATCH_HOME: dir, AGENT_DISPATCH_CONFIG: path.join(dir, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+  expect(r.status).toBe(0);
+  expect(r.stdout).toContain('published: Motion 3, https://example.com/pr/3');
+  git(s.clone, 'fetch', '-q', 'origin', 'queue', 'episode/motion-3');
+  expect(result(s)).toMatchObject({ status: 'published', number: 3, from: true, screened: [], run: folder });
+  expect(git(s.clone, 'show', 'origin/episode/motion-3:_episodes/motion-3.md')).toBe(fs.readFileSync(path.join(folder, 'motion-3.md'), 'utf8').trim());
+  expect(fs.readFileSync(path.join(bin, 'calls'), 'utf8')).toContain('pr merge https://example.com/pr/3');
+  // Only the editor's moved-tag call ran: no screen, no debate, no review.
+  expect(fs.readdirSync(path.join(folder, 'steps')).length - before).toBeLessThanOrEqual(1);
+});
