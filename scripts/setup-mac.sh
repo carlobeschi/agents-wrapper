@@ -49,6 +49,8 @@ echo "Checkouts"
 [ -d "$D/trap-site/.git" ] && ok "~/.agent-dispatch/trap-site" || todo "git clone https://github.com/carlobeschi/model-behaviour.git ~/.agent-dispatch/trap-site"
 if [ -d node_modules ]; then ok "node_modules"; else npm ci && ok "npm ci"; fi
 # The judges see drawings as pictures, drawn by Playwright's Chromium.
+if node -e "const p = require('./publish'); process.exit(p.guard().leaks(p.PUBLIC_NAME + ' ' + p.PUBLIC_EMAIL).length ? 1 : 0)" 2>/dev/null; then ok "publishing guard accepts the public identity"
+else todo "publishing guard treats the public identity as private: git pull, then check git config --global user.name and user.email"; fi
 if node -e "require('@playwright/test').chromium.launch().then(b => b.close()).catch(() => process.exit(1))" 2>/dev/null; then ok "Chromium for pictures"
 else npx playwright install chromium && ok "Chromium for pictures (installed)"; fi
 
@@ -72,7 +74,7 @@ for job in motion-daily trap-weekly night; do
 done
 if [ -d "$HOME/.agent-dispatch/night-reports/.git" ]; then ok "night reports clone"
 else todo "night reports clone (private repo, see docs/nuovo-portatile.md)"; fi
-echo "  the Mac must wake for The Motion: sudo pmset repeat wakeorpoweron MTWRF 07:55:00"
+echo "  the Mac must wake for The Motion: sudo pmset repeat wakeorpoweron MTWRF 11:55:00"
 
 echo
 [ "$TODOS" -eq 0 ] && echo "All set." || echo "$TODOS things left (TODO above)."

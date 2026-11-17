@@ -9,17 +9,18 @@
 //   - replaces the home folder with ~ in the title, body and commit message;
 //   - refuses, and pushes nothing, if the files, title, body, commit message or
 //     commit identity still hold a private term.
-// Private terms: the home folder, the user name, the laptop's own git name and
-// email, the macOS full name, and the show's "redact" list.
+// Private terms: the home folder, the user name (unless it is the public GitHub
+// handle), the laptop's own git name and email, the macOS full name, and the
+// show's "redact" list.
 
 const fs   = require('fs');
 const os   = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { redactor } = require('./config');
+const { redactor, PUBLIC_HANDLE } = require('./config');
 
 const PUBLIC_NAME  = 'Carlo';
-const PUBLIC_EMAIL = 'carlobeschi@users.noreply.github.com';
+const PUBLIC_EMAIL = `${PUBLIC_HANDLE}@users.noreply.github.com`;
 
 const quiet = (cmd, args) => {
   try { return execFileSync(cmd, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); }
@@ -39,8 +40,8 @@ function privateTerms() {
 }
 
 // A redactor for publishing: the show's list plus this machine's private terms.
-function guard(extra = [], terms = privateTerms()) {
-  return redactor([...extra, ...terms.map(t => [t, '[redacted]'])]);
+function guard(extra = [], terms = privateTerms(), who) {
+  return redactor([...extra, ...terms.map(t => [t, '[redacted]'])], who);
 }
 
 const git = (repo, ...args) => execFileSync('git', ['-C', repo, ...args], {

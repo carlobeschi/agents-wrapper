@@ -132,6 +132,9 @@ async function main() {
   const argv = process.argv.slice(2);
   const date = argv.includes('--date') ? argv[argv.indexOf('--date') + 1] : today();
   const dry = argv.includes('--dry-run');
+  // `--from <run folder>`: publish an episode already run and checked (one a
+  // failed push left behind), without running it again.
+  const from = argv.includes('--from') ? path.resolve(argv[argv.indexOf('--from') + 1].replace(/^~(?=$|\/)/, os.homedir())) : '';
   const set = JSON.parse(fs.readFileSync(path.join(HOME_DIR, 'motion-daily.json'), 'utf8'));
   const repo = set.repo.replace(/^~(?=$|\/)/, os.homedir());
   if (!set.github) throw new Error('motion-daily.json: no "github".');
@@ -149,6 +152,7 @@ async function main() {
   const base = { agents: ['claude', 'antigravity'], names: ['Claude', 'Gemini'], turns: 4, words: 120,
     repo, github: set.github, redact: set.redact || [], number };
   const result = { date, number, dry_run: dry || undefined, screened: [] };
+  if (from) return publish(await fromFolder(from, q, base, result), set, repo, date, editor, dry, result);
 
   // 1. Screen: the pick, then the backup, then up to two reserves.
   let m;
@@ -185,6 +189,26 @@ async function main() {
   const ep = await runMotion(m, { local: true, name: `motion-${number}` });
   result.run = ep.dir;
   const check = await review(ep.dir, editor, m, ep.st);
+  return publish({ m, ep, check }, set, repo, date, editor, dry, result);
+}
+
+// An episode already run and checked, from its run folder: its numbered site
+// file and episode.json, with the motion's brief and question from the queue.
+async function fromFolder(dir, q, base, result) {
+  const file = fs.readdirSync(dir).find(f => /^motion-\d+\.md$/.test(f));
+  if (!file) throw new Error(`${dir}: no motion-N.md, so this run was never checked.`);
+  const number = Number(file.match(/\d+/)[0]);
+  if (number !== base.number) throw new Error(`${dir} holds Motion ${number}, but the next free number is ${base.number}.`);
+  const st = JSON.parse(fs.readFileSync(path.join(dir, 'episode.json'), 'utf8'));
+  const c = [q.pick, q.backup, ...(q.reserves || [])].find(x => x && x.motion === st.motion);
+  if (!c) throw new Error(`${dir}: its motion is not in the queue for ${result.date}.`);
+  const m = { ...base, motion: c.motion, question: c.question, brief: c.brief, source: c.source, source_name: c.source_name };
+  Object.assign(result, { motion: m.motion, run: dir, from: true });
+  return { m, ep: { dir, st, site: fs.readFileSync(path.join(dir, file), 'utf8') }, check: { ok: true } };
+}
+
+async function publish({ m, ep, check }, set, repo, date, editor, dry, result) {
+  const number = m.number;
   const files = {};
 
   // 4. Publish, unless the check held it or this is a dry run. A held episode
