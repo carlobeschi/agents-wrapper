@@ -71,11 +71,16 @@ function stamp() {
 // Taking out what must not leave the laptop, for season.js and motion.js.
 const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// The home folder and user name are always on the list; the season file adds
-// the producer's name and anything else. Longest first, so "Ada Lovelace" goes
-// before "Ada".
-function redactor(extra = []) {
-  const pairs = [[os.homedir(), '~'], [os.userInfo().username, '[redacted]'], ...extra]
+// The public GitHub handle: it is in every published commit email and site URL,
+// so it is never a private term, even when the Mac's user name is the same word.
+const PUBLIC_HANDLE = 'carlobeschi';
+
+// The home folder and user name are always on the list (the user name only if it
+// is not the public handle); the season file adds the producer's name and
+// anything else. Longest first, so "Ada Lovelace" goes before "Ada".
+function redactor(extra = [], { user = os.userInfo().username, home = os.homedir() } = {}) {
+  const name = user && user.toLowerCase() !== PUBLIC_HANDLE ? user : '';
+  const pairs = [[home, '~'], [name, '[redacted]'], ...extra]
     .filter(([find]) => find && find.length > 1)
     .sort((a, b) => b[0].length - a[0].length);
   // Whole words only, in both: "Ada" is not in "adapt", nor a name in a URL that merely starts with it.
@@ -85,4 +90,4 @@ function redactor(extra = []) {
   return { redact, leaks };
 }
 
-module.exports = { HOME_DIR, CONFIG, loadConfig, modelsOf, fill, agentEnv, stdinOf, feed, stamp, redactor, noteCall };
+module.exports = { HOME_DIR, CONFIG, loadConfig, modelsOf, fill, agentEnv, stdinOf, feed, stamp, redactor, noteCall, PUBLIC_HANDLE };

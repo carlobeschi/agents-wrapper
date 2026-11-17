@@ -77,7 +77,14 @@ test('scrubs private terms from the title, body and commit message', () => {
 });
 
 test('the guard always knows the home folder and user name', () => {
-  const { redact, leaks } = guard([], []);
-  expect(redact(`${os.homedir()}/x`)).toBe('~/x');
-  expect(leaks(`user ${os.userInfo().username}`)).toHaveLength(1);
+  const { redact, leaks } = guard([], [], { user: 'ada', home: '/Users/ada' });
+  expect(redact('/Users/ada/x')).toBe('~/x');
+  expect(leaks('user ada')).toHaveLength(1);
+});
+
+test('a user name that is the public GitHub handle is not a private term', () => {
+  const { redact, leaks } = guard([], [], { user: PUBLIC_EMAIL.split('@')[0], home: `/Users/${PUBLIC_EMAIL.split('@')[0]}` });
+  expect(leaks(`${PUBLIC_NAME} <${PUBLIC_EMAIL}>`)).toEqual([]);
+  expect(redact(`${PUBLIC_EMAIL.split('@')[0]}.github.io`)).toBe(`${PUBLIC_EMAIL.split('@')[0]}.github.io`);
+  expect(redact(`/Users/${PUBLIC_EMAIL.split('@')[0]}/.agent-dispatch`)).toBe('~/.agent-dispatch');
 });
