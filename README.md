@@ -79,7 +79,7 @@ On the Mac, once:
 ```sh
 sed "s#HOME_DIR/agents-wrapper#$PWD#; s#HOME_DIR#$HOME#g" scripts/motion-daily.plist > ~/Library/LaunchAgents/com.agents-wrapper.motion-daily.plist
 launchctl load ~/Library/LaunchAgents/com.agents-wrapper.motion-daily.plist
-sudo pmset repeat wakeorpoweron MTWRF 07:55:00
+sudo pmset repeat wakeorpoweron MTWRF 11:55:00
 ```
 
 `scripts/motion-daily.sh` sets the PATH, the show's agents.json and the Gemini key from the Keychain, and logs to `~/.agent-dispatch/motion-daily.log`.
