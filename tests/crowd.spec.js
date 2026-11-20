@@ -83,13 +83,14 @@ test('questions, networks, words, replies and measures', () => {
 });
 
 test('the whole experiment runs on stand-in models: gate, four arms, shared round 1, summary, resume', async () => {
+  test.setTimeout(90_000); // about 300 stand-in calls, each a node process
   await withFakeOllama(async (port, prompts) => {
     const home = fs.mkdtempSync(path.join(os.tmpdir(), 'crowd-'));
     fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [] }));
     const file = path.join(home, 'c.json');
-    fs.writeFileSync(file, JSON.stringify({ run: 't', families: ['local:fake-a', 'local:fake-b'], agents: 8, questions: 4, rounds: 3, seed: 5 }));
+    fs.writeFileSync(file, JSON.stringify({ run: 't', families: ['local:fake-a', 'local:fake-b'], agents: 6, questions: 4, rounds: 3, seed: 5 }));
     const env = { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0',
-      OLLAMA_BASE: `http://127.0.0.1:${port}`, OPENROUTER_API_KEY: '', CROWD_PARALLEL: '8' };
+      OLLAMA_BASE: `http://127.0.0.1:${port}`, OPENROUTER_API_KEY: '', CROWD_PARALLEL: '3' };
     const node = (...a) => promisify(execFile)('node', [path.join(__dirname, '..', 'crowd.js'), ...a], { env, encoding: 'utf8', maxBuffer: 1 << 24 });
     await node(file);
     const cells = path.join(home, 'crowd', 't', 'cells');
@@ -99,10 +100,10 @@ test('the whole experiment runs on stand-in models: gate, four arms, shared roun
     expect(fs.readdirSync(path.join(cells, 'fake-b', 'isolated')).sort()).toEqual(['q1.json', 'q2.json']);
     // Round 1 is called once, in isolated, and shared: the other arms make 2 rounds of calls.
     const iso = read('fake-a', 'isolated', 1), full = read('fake-a', 'full', 1), star = read('fake-a', 'star', 1);
-    expect(iso.calls).toBe(8 * 3);
-    expect(full.calls).toBe(8 * 2);
+    expect(iso.calls).toBe(6 * 3);
+    expect(full.calls).toBe(6 * 2);
     expect(full.estimates[0]).toEqual(iso.estimates[0]);
-    expect(prompts.filter(x => x.model === 'fake-a').length).toBe(4 * (24 + 3 * 16));
+    expect(prompts.filter(x => x.model === 'fake-a').length).toBe(4 * (18 + 3 * 12));
     // Isolated copies keep their estimate (fake-a never sees anyone); full pulls everyone together.
     expect(iso.estimates[2]).toEqual(iso.estimates[0]);
     expect(measures(full).div_ratio).toBeLessThan(0.5);
