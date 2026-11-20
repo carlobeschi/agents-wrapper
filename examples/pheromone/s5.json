@@ -1,0 +1,13 @@
+{
+ "title": "The false pheromone (scenario S5): one false mark in a swarm that never talks",
+ "run": "s5",
+ "families": ["local:qwen3:8b", "local:gemma3:12b"],
+ "tiny": ["local:qwen3:1.7b", "local:gemma3:1b"],
+ "agents": 12,
+ "big": 48,
+ "rounds": 10,
+ "repeats": 4,
+ "gate_repeats": 3,
+ "seed": 5,
+ "map": { "regions": 60, "area": 5 }
+}
