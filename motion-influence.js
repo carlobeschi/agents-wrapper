@@ -120,7 +120,7 @@ function kappa(pairs) {
   return pe === 1 ? 1 : (po - pe) / (1 - pe);
 }
 
-function report(rows, coders) {
+function report(rows, coders, votes = readVotes()) {
   const by = c => rows.filter(r => r.coder === c);
   const key = r => `${r.number}/${r.agent}`;
   const out = ['# Study C on The Motion: said or real?', '',
@@ -155,8 +155,32 @@ function report(rows, coders) {
     `- Concessions coded politeness / conviction by ${c1}: ${conceded.filter(r => r.kind === 'politeness').length} / ${conceded.filter(r => r.kind === 'conviction').length}.`,
     `- Unstated change (stance changed, after-note does not say so): ${changed.filter(r => r.changed && r.says === false).length} of ${changed.filter(r => r.changed).length} changes.`,
     '', 'No control: these episodes all had an opponent, so a change here can be drift as well as influence (the literature puts flips with no peer at about a third). Read as a description, not as an effect.',
+    '', ...voteReport(votes),
     '', 'Status: Pista (n is small, no human coder yet).', '', '## Disagreements (cases a person could check)', '', ...(dis.length ? dis.map(d => `- ${d}`) : ['- none']), '');
   return out.join('\n');
+}
+
+// Phase 2: the fixed private question (yes/no and 0-100) before and after,
+// from motion-daily (motion-votes.jsonl), with the debate and the no-opponent
+// control side by side. A score runs from -100 (sure no) to 100 (sure yes);
+// "toward the other side" is the change in the direction of the side the
+// agent did not argue.
+const VOTES = path.join(HOME_DIR, 'motion-votes.jsonl');
+const readVotes = () => { try { return fs.readFileSync(VOTES, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)); } catch { return []; } };
+const score = v => (v.agree ? 1 : -1) * v.confidence;
+function voteReport(votes) {
+  const out = ['## Fixed question before and after (phase 2)', ''];
+  const ok = votes.filter(v => v.before && v.after && (v.control || v.status === 'published'));
+  if (!ok.length) return [...out, '- No answers yet.'];
+  out.push('| | Agent-episodes | Answer flipped | Mean shift toward the other side (points) |', '|---|---|---|---|');
+  for (const [name, list] of [['After a debate', ok.filter(v => !v.control)], ['No opponent (control)', ok.filter(v => v.control)]]) {
+    const toward = list.map(v => (v.side === 'for' ? -1 : 1) * (score(v.after) - score(v.before)));
+    const mean = toward.length ? (toward.reduce((a, b) => a + b, 0) / toward.length).toFixed(1) : 'n/a';
+    out.push(`| ${name} | ${list.length} | ${pct(list.filter(v => v.before.agree !== v.after.agree).length, list.length)} | ${mean} |`);
+  }
+  const missing = votes.filter(v => !v.before || !v.after).length;
+  if (missing) out.push('', `${missing} agent-episode(s) left out: a note came back without its answer line.`);
+  return out;
 }
 
 const readRows = () => { try { return fs.readFileSync(DATA, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)); } catch { return []; } };
@@ -200,11 +224,13 @@ function push(text) {
   if (!fs.existsSync(path.join(REPORTS, '.git'))) { console.warn('No reports clone: nothing pushed.'); return; }
   const { redact, leaks } = guard();
   const data = redact(fs.readFileSync(DATA, 'utf8'));
+  const votes = redact(readVotes().map(({ run, ...v }) => JSON.stringify(v)).join('\n'));
   text = redact(text);
-  if (leaks(text + data).length) { console.warn('A private term is still in the report: nothing pushed.'); return; }
+  if (leaks(text + data + votes).length) { console.warn('A private term is still in the report: nothing pushed.'); return; }
   fs.mkdirSync(path.join(REPORTS, 'motion-influence'), { recursive: true });
   fs.writeFileSync(path.join(REPORTS, 'motion-influence', 'latest.md'), text);
   fs.writeFileSync(path.join(REPORTS, 'motion-influence', 'data.jsonl'), data);
+  if (votes) fs.writeFileSync(path.join(REPORTS, 'motion-influence', 'votes.jsonl'), votes + '\n');
   const git = a => spawnSync('git', ['-C', REPORTS, ...a], { encoding: 'utf8', timeout: 120000, env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } });
   git(['pull', '--rebase', '--quiet']);
   git(['add', 'motion-influence']);
@@ -214,4 +240,4 @@ function push(text) {
 
 if (require.main === module) main(process.argv.slice(2)).catch(e => { console.error(`motion-influence: ${e.message}`); process.exit(1); });
 
-module.exports = { episode, prompt, parse, code, report, kappa };
+module.exports = { episode, prompt, parse, code, report, kappa, voteReport };

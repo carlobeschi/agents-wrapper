@@ -4,6 +4,7 @@
 export PATH="$HOME/.local/bin:$HOME/.local/node/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export AGENT_DISPATCH_CONFIG="$HOME/.agent-dispatch/shows/agents.json"
 GEMINI_API_KEY=$(security find-generic-password -s second-room-gemini -w) && export GEMINI_API_KEY
+OPENROUTER_API_KEY=$(security find-generic-password -s openrouter-key -w 2>/dev/null) && export OPENROUTER_API_KEY
 cd "$(dirname "$0")/.." || exit 1
 echo "---- $(date)"
 exec node motion-daily.js "$@"

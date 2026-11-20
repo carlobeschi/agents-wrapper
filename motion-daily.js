@@ -25,9 +25,9 @@
 const fs   = require('fs');
 const os   = require('os');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 const { HOME_DIR, loadConfig, stamp } = require('./config');
-const { runMotion, run, openPullRequest } = require('./motion');
+const { runMotion, run, openPullRequest, sidesFor } = require('./motion');
 const { guard, publicGit } = require('./publish');
 const { motionCardFor } = require('./motion-card');
 const { renderCard } = require('./card');
@@ -150,7 +150,7 @@ async function main() {
   fs.mkdirSync(dir, { recursive: true });
   const number = nextNumber(repo);
   const base = { agents: ['claude', 'antigravity'], names: ['Claude', 'Gemini'], turns: 4, words: 120,
-    repo, github: set.github, redact: set.redact || [], number };
+    repo, github: set.github, redact: set.redact || [], number, vote: true };
   const result = { date, number, dry_run: dry || undefined, screened: [] };
   if (from) return publish(await fromFolder(from, q, base, result), set, repo, date, editor, dry, result);
 
@@ -241,8 +241,37 @@ async function publish({ m, ep, check }, set, repo, date, editor, dry, result) {
   } catch (e) { result.card = `not drawn: ${e.message.split('\n')[0]}`; }
   report(repo, date, result, files);
   console.log(`${result.status}: Motion ${number}${result.pr ? `, ${result.pr}` : ''}${result.why ? ` (${result.why})` : ''}`);
+  // 6. Study C, after the day's result is out: nothing here can hold or delay the episode.
+  try { await study({ m, ep }, set, date, result, dry); } catch (e) { console.warn(`Study C: ${e.message.split('\n')[0]}`); }
+}
+
+// Study C: the fixed question's answers go to motion-votes.jsonl; on control
+// days (motion-daily.json "control_days", weekdays 0-6, default Wednesday) the
+// same motion runs again with no debate; and two outside coders code the
+// published episode (motion-influence.js, when OPENROUTER_API_KEY is set).
+const VOTES = () => path.join(HOME_DIR, 'motion-votes.jsonl');
+const voteRows = (st, extra) => st.agents.filter(x => x.vote).map(x => ({ ...extra, agent: x.id.replace(/#\d+$/, ''), side: x.side, before: x.vote.before ?? null, after: x.vote.after ?? null }));
+
+async function study({ m, ep }, set, date, result, dry) {
+  const rows = voteRows(ep.st, { date, number: m.number, control: false, status: result.status, run: ep.dir });
+  if (rows.length) fs.appendFileSync(VOTES(), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+  if (result.status !== 'published' && !dry) return;
+  const days = Array.isArray(set.control_days) ? set.control_days : [3];
+  if (days.includes(new Date(`${date}T12:00:00`).getDay())) {
+    try {
+      const c = await runMotion({ ...m, sides: sidesFor(m), number: undefined }, { local: true, control: true, name: `control-${m.number}` });
+      const cr = voteRows(c.st, { date, number: m.number, control: true, run: c.dir });
+      if (cr.length) fs.appendFileSync(VOTES(), cr.map(r => JSON.stringify(r)).join('\n') + '\n');
+    } catch (e) { console.warn(`Control run: ${e.message.split('\n')[0]}`); }
+  }
+  if (!process.env.OPENROUTER_API_KEY || dry) return;
+  const file = path.join(ep.dir, 'influence', `motion-${m.number}.md`);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, ep.site);
+  const r = spawnSync(process.execPath, [path.join(__dirname, 'motion-influence.js'), file, '--report', '--push'], { encoding: 'utf8', timeout: 15 * 60 * 1000 });
+  console.log(`Study C coding: ${r.status === 0 ? 'done' : `failed (${(r.stderr || '').trim().split('\n').pop() || r.error?.message || r.status})`}`);
 }
 
 if (require.main === module) main().catch(e => { console.error(`motion-daily: ${e.message}`); process.exit(1); });
 
-module.exports = { nextNumber, withMoved };
+module.exports = { nextNumber, withMoved, voteRows };
