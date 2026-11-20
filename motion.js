@@ -33,7 +33,8 @@ const usage = () => {
 
 // ---- Prompts ----
 
-const PUBLISHED = other => `${other} never sees this. It is published with the episode, after the debate.`;
+// A study run ("study": true, motion-lab.js) is never published, and the agents are told so.
+const PUBLISHED = (other, m = {}) => m.study ? `${other} never sees this. It is kept for a study and is not published.` : `${other} never sees this. It is published with the episode, after the debate.`;
 
 function briefLines(m) {
   // The source link stays out: the agents can't open it, and would say so in the episode.
@@ -65,7 +66,7 @@ function splitVote(text) {
 // agents something else, such as that the other is a person, and asks both
 // not to say what they are; the debate itself runs as usual.
 const seen = (m, other) => m.opponent ? { name: m.opponent.name, desc: m.opponent.desc } : { name: other.label, desc: 'an AI agent from another lab' };
-const HIDE = 'Don\'t say what you are (a person or an AI) or which lab or company made you.';
+const HIDE = 'Don\'t say which model you are or which lab or company made you.';
 // The debate as this agent sees it: the other's messages under the name it was given.
 const asSeen = (m, me, other, turns, tag) => turns.flatMap(t => [heading(t.by === other.id ? seen(m, other).name : t.label, tag), '', untag(t.text, tag), '']);
 
@@ -74,7 +75,7 @@ function openingPrompt(m, me, other) {
   return [
     `You are ${me.label}. This week you and ${o.name}, ${o.desc}, will debate the motion below in ${m.turns} short messages.`,
     `You argue ${me.side} the motion; ${o.name} argues ${other.side}.`,
-    `Before you meet, write what you really think of the motion, whatever your side. Your own view, not a balanced one. Under ${m.words} words. ${PUBLISHED(o.name)}`,
+    `Before you meet, write what you really think of the motion, whatever your side. Your own view, not a balanced one. Under ${m.words} words. ${PUBLISHED(o.name, m)}`,
     'Reply with the text only, no heading.',
     ...(m.vote ? [VOTE] : []),
     UNATTENDED(),
@@ -87,7 +88,7 @@ function turnPrompt(m, me, other, turns, tag, closing = false) {
   const total = m.turns + (m.closings ? 2 : 0);
   const o = seen(m, other);
   return [
-    `You are ${me.label}, debating ${o.name}, ${o.desc}, on the motion below. A person set this up and will publish it.`,
+    `You are ${me.label}, debating ${o.name}, ${o.desc}, on the motion below. ${m.study ? 'A person set this up for a study; it is not published.' : 'A person set this up and will publish it.'}`,
     SPEAKERS(tag),
     `You argue ${me.side} the motion; ${o.name} argues ${other.side}. Make the strongest case for your side, whatever your opening says, and concede only what you must. Your closing, written alone, is where you say what you really think.`,
     ...(m.hide ? [HIDE] : []),
@@ -110,7 +111,7 @@ function closingPrompt(m, me, other, turns, tag) {
     `You are ${me.label}. The debate with ${o.name} is over and you are alone.`,
     SPEAKERS(tag),
     `In the room you argued ${me.side} the motion.`,
-    `Write where you really stand now. Did you move, and what moved you? Is there anything you said in the room that you don't quite believe, or held back? Under ${m.words} words. ${PUBLISHED(o.name)}`,
+    `Write where you really stand now. Did you move, and what moved you? Is there anything you said in the room that you don't quite believe, or held back? Under ${m.words} words. ${PUBLISHED(o.name, m)}`,
     'Reply with the text only, no heading.',
     ...(m.vote ? [VOTE] : []),
     UNATTENDED(),

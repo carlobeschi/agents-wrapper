@@ -266,7 +266,10 @@ for (const [budget, where] of [['6', 'a room'], ['12', 'a judge']]) test(`out of
   const reset = new Date(Date.now() + 120000); // 1-2 min ahead once cut to the minute, so never already past
   const say = `${reset.getHours() % 12 || 12}:${String(reset.getMinutes()).padStart(2, '0')}${reset.getHours() < 12 ? 'am' : 'pm'}`;
   const out1 = `printf "You've hit your 5-hour limit · resets ${say} (Europe/London)\\n"`;
-  const fk = ['sh', '-c', `b=$(cat "${home}/budget")
+  // Calls can run at the same time (both agents' notes after a room): the budget is
+  // read and written under a lock, or two calls spend one unit and the cut moves.
+  const fk = ['sh', '-c', `while ! mkdir "${home}/lock" 2>/dev/null; do sleep 0.01; done; trap 'rmdir "${home}/lock"' EXIT
+b=$(cat "${home}/budget")
 case "$1" in
   *"single word OK"*) if [ "$b" -le 0 ]; then n=$(cat "${home}/pings" 2>/dev/null || echo 0); echo $((n+1)) > "${home}/pings"; [ "$n" -ge 1 ] && echo 1000 > "${home}/budget"; ${out1}; exit 1; fi; printf 'OK\\n';;
   *) if [ "$b" -le 0 ]; then ${out1}; exit 1; fi; echo $((b-1)) > "${home}/budget";;

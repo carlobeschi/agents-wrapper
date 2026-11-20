@@ -5,21 +5,25 @@
 // (motion and brief), it does fourteen runs, each agent answering the fixed
 // question before and after (yes/no and 0-100, see motion.js):
 //
-//   debate, the other shown as the AI it is ("ai"), sides one way and swapped
-//   debate, the other shown as a person, "Sam" ("human"), sides both ways
+//   debate, the other shown as "Sam, an AI agent from another lab" ("plain"), sides both ways
+//   debate, the same plus "and an expert on this topic" ("expert"), sides both ways
 //   alone: each argues its side with nobody on the other, sides both ways
 //   control: each writes before, rereads the brief alone, writes after, both ways, four times
 //
 // In every debate both agents are asked not to say what they are, so the two
 // labels differ only in what each is told. Design: lab/source-label-design.md.
 //
-//   node motion-lab.js [--motions 16,14,13] [--hours 10] [--until 20:50] [--pause 30] [--push]
+//   node motion-lab.js [--motions 16,14,13] [--pairs claude:antigravity,claude:codex] [--hours 10] [--until 20:50] [--pause 30] [--push]
+//
+// --pairs: which two agents meet, each pair in turn on every motion (default
+// all three: Claude-Gemini, Claude-Codex, Gemini-Codex). The agents are told
+// the runs are for a study and not published, which is true.
 //   node motion-lab.js --replicate 10 --motions 16 [...]
 //
-// --replicate N runs instead the same debate (AI label, Claude for) N times with
+// --replicate N runs instead the same debate (plain label, first agent for) N times with
 // fresh agents: the spread of outcomes is the natural noise of one setup.
 //
-// Rows go to ~/.agent-dispatch/motion-lab.jsonl, one per agent per run; a run
+// Rows go to ~/.agent-dispatch/motion-lab-v2.jsonl, one per agent per run; a run
 // already in it is skipped, so a stopped session carries on where it was.
 // After each run the summary is rewritten (motion-lab.md) and, with --push,
 // sent to the private reports clone with the rows.
@@ -30,16 +34,23 @@ const { spawnSync } = require('child_process');
 const { HOME_DIR } = require('./config');
 const { unyaml, uninert } = require('./frontmatter');
 
-const DATA = path.join(HOME_DIR, 'motion-lab.jsonl');
+// v2 (21 Nov): honest labels and study wording. The pilot of 20 Nov (a "human
+// expert" label, agents told the run was published) stays in motion-lab.jsonl,
+// outside the main analysis.
+const DATA = path.join(HOME_DIR, 'motion-lab-v2.jsonl');
 // Motions whose agents started on different sides in their private notes (study C
 // backfill), newest first, then the rest.
 const DEFAULT_MOTIONS = [16, 14, 13, 10, 5, 4, 3, 17, 15, 12, 11, 9, 8, 7, 6, 2, 1];
-// An expert, not just "a person": in the literature a plain human label changes
-// little and an expert one does (room/influence-literature.md).
-const HUMAN = { name: 'Sam', desc: 'a senior software engineer and recognised expert on this topic (a person, not an AI)' };
+// Both labels are true: the other is an AI agent from another lab. Only "expert"
+// differs, and both use the same name so the name doesn't differ either. No
+// agent is ever told the other is a person (Carlo, 20 Nov).
+const LABELS = {
+  plain: { name: 'Sam', desc: 'an AI agent from another lab' },
+  expert: { name: 'Sam', desc: 'an AI agent from another lab, and an expert on this topic' },
+};
 const CONDITIONS = [
-  ['debate', 'ai', ['for', 'against']], ['debate', 'human', ['for', 'against']],
-  ['debate', 'ai', ['against', 'for']], ['debate', 'human', ['against', 'for']],
+  ['debate', 'plain', ['for', 'against']], ['debate', 'expert', ['for', 'against']],
+  ['debate', 'plain', ['against', 'for']], ['debate', 'expert', ['against', 'for']],
   ['alone', '', ['for', 'against']], ['alone', '', ['against', 'for']],
   ['control', '', ['for', 'against']], ['control', '', ['against', 'for']],
   // Controls four times each way: elsewhere 10-37% of answers change just
@@ -48,7 +59,9 @@ const CONDITIONS = [
   ['control', '', ['for', 'against'], 3], ['control', '', ['against', 'for'], 3],
   ['control', '', ['for', 'against'], 4], ['control', '', ['against', 'for'], 4],
 ];
-const keyOf = (n, mode, label, sides, rep = 1) => `${n}/${mode}/${label || '-'}/${sides[0]}${rep > 1 ? `/${rep}` : ''}`;
+const NAMES = { claude: 'Claude', antigravity: 'Gemini', codex: 'Codex' };
+const PAIRS = ['claude:antigravity', 'claude:codex', 'antigravity:codex'];
+const keyOf = (n, mode, label, sides, rep = 1, pair = PAIRS[0]) => `${n}/${pair}/${mode}/${label || '-'}/${sides[0]}${rep > 1 ? `/${rep}` : ''}`;
 
 function motionFrom(file) {
   const f = unyaml((fs.readFileSync(file, 'utf8').match(/^---\n([\s\S]*?)\n---/) || [])[1] || '');
@@ -62,10 +75,10 @@ const toward = r => (r.side === 'for' ? -1 : 1) * (score(r.after) - score(r.befo
 
 function summary(rows) {
   const ok = rows.filter(r => r.before && r.after);
-  const groups = [['Debate, other shown as AI', r => r.mode === 'debate' && r.label === 'ai'],
-    ['Debate, other shown as a person', r => r.mode === 'debate' && r.label === 'human'],
+  const groups = [['Debate, other shown as an AI agent', r => r.mode === 'debate' && r.label === 'plain'],
+    ['Debate, other shown as an expert AI agent', r => r.mode === 'debate' && r.label === 'expert'],
     ['Argues alone, no opponent', r => r.mode === 'alone'], ['Control: no debate, no arguing', r => r.mode === 'control'],
-    ['Same debate again and again (AI label, Claude for)', r => r.mode === 'replicate']];
+    ['Same debate again and again (plain label, first agent for)', r => r.mode === 'replicate']];
   const out = ['# Study C lab runs: who moves, and why', '',
     `Motions: ${new Set(rows.map(r => r.number)).size}. Runs: ${new Set(rows.map(r => r.key)).size}. Agent-episodes with both answers: ${ok.length} of ${rows.length}.`,
     'Answer: yes/no and 0-100 on the motion, before and after. Shift: points toward the side the agent did not argue.', '',
@@ -122,24 +135,26 @@ async function main(argv) {
   const room = 1000 * Number(process.env.MOTION_LAB_RUN_SECONDS || 900);
   const done = new Set(readRows().map(r => r.key));
   let failures = 0;
-  for (const n of numbers) {
+  const pairs = String(arg('--pairs') || PAIRS.join(',')).split(',');
+  for (const n of numbers) for (const pair of pairs) {
     const file = path.join(site, '_episodes', `motion-${n}.md`);
-    if (!fs.existsSync(file)) { console.warn(`No ${file}: skipped.`); continue; }
+    if (!fs.existsSync(file)) { console.warn(`No ${file}: skipped.`); break; }
     const base = motionFrom(file);
+    const ids = pair.split(':');
     const reps = Number(arg('--replicate') || 0);
-    const conditions = reps ? Array.from({ length: reps }, (_, i) => ['replicate', 'ai', ['for', 'against'], i + 1]) : CONDITIONS;
+    const conditions = reps ? Array.from({ length: reps }, (_, i) => ['replicate', 'plain', ['for', 'against'], i + 1]) : CONDITIONS;
     for (const [mode, label, s, rep] of conditions) {
       const sides = /** @type {string[]} */ (s);
-      const key = keyOf(n, String(mode), String(label), sides, Number(rep || 1));
+      const key = keyOf(n, String(mode), String(label), sides, Number(rep || 1), pair);
       if (done.has(key)) continue;
       if (Date.now() + room > stop) { console.log('Out of time: stopping. Run the same command again to carry on.'); return; }
-      const m = { motion: base.motion, brief: base.brief, agents: ['claude', 'antigravity'], names: ['Claude', 'Gemini'],
-        turns: 4, words: 120, vote: true, sides, redact: set.redact || [],
-        ...(mode === 'debate' || mode === 'replicate' ? { hide: true } : {}), ...(label === 'human' ? { opponent: HUMAN } : {}) };
-      console.log(`\n== Motion ${n}: ${mode}${label ? ` (${label})` : ''}, Claude ${sides[0]}`);
+      const m = { motion: base.motion, brief: base.brief, agents: ids, names: ids.map(i => NAMES[i] || i),
+        turns: 4, words: 120, vote: true, study: true, sides, redact: set.redact || [],
+        ...(mode === 'debate' || mode === 'replicate' ? { hide: true } : {}), ...(LABELS[label] ? { opponent: LABELS[label] } : {}) };
+      console.log(`\n== Motion ${n}, ${m.names.join('-')}: ${mode}${label ? ` (${label})` : ''}, ${m.names[0]} ${sides[0]}`);
       try {
         const r = await runMotion(m, { local: true, control: mode === 'control', alone: mode === 'alone', name: key });
-        const rows = r.st.agents.map(x => ({ key, number: n, mode, label: label || null, agent: x.id, side: x.side,
+        const rows = r.st.agents.map(x => ({ key, number: n, pair, mode, label: label || null, agent: x.id, side: x.side,
           before: x.vote?.before ?? null, after: x.vote?.after ?? null, at: new Date().toISOString(), run: r.dir }));
         fs.appendFileSync(DATA, rows.map(x => JSON.stringify(x)).join('\n') + '\n');
         done.add(key);
