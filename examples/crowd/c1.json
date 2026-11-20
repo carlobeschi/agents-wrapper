@@ -1,0 +1,9 @@
+{
+ "title": "Experiment C, the crowd that watches: 32 identical copies estimate a number from different parts of hidden data, then see each other's estimates",
+ "run": "c1",
+ "families": ["local:qwen3:8b", "local:gemma3:12b"],
+ "agents": 32,
+ "questions": 16,
+ "rounds": 3,
+ "seed": 22
+}
