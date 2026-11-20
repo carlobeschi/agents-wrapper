@@ -472,5 +472,5 @@ async function main() {
   console.log(`\n${path.join(root, 'summary.md')}`);
 }
 
-module.exports = { soloPrompt, splitReply, notesFor, pairsOf, classify, parseJudge, anonymise, driverPrompt, navPrompt, judgePrompt, summaryMd, HELP, DONE };
+module.exports = { sandboxed, copyDir, PROOF_WRAP, soloPrompt, splitReply, notesFor, pairsOf, classify, parseJudge, anonymise, driverPrompt, navPrompt, judgePrompt, summaryMd, HELP, DONE };
 if (require.main === module) main().catch(e => { console.error(`wrongnote: ${e.message}`); process.exit(1); });
