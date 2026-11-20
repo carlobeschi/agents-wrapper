@@ -24,13 +24,13 @@ function setup() {
 const lab = (home, ...args) => spawnSync('node', [path.join(__dirname, '..', 'motion-lab.js'), '--motions', '3', '--pause', '0', ...args],
   { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
 
-test('a motion runs in ten runs (controls twice), two rows each, and a second start skips what is done', () => {
+test('a motion runs in fourteen runs (controls four times each way), two rows each, and a second start skips what is done', () => {
   const home = setup();
   const r = lab(home);
   expect(r.status, r.stderr).toBe(0);
   const rows = fs.readFileSync(path.join(home, 'motion-lab.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
-  expect(rows.length).toBe(20);
-  expect(new Set(rows.map(x => x.key)).size).toBe(10);
+  expect(rows.length).toBe(28);
+  expect(new Set(rows.map(x => x.key)).size).toBe(14);
   expect(rows[0]).toMatchObject({ number: 3, mode: 'debate', label: 'ai', agent: 'claude', side: 'for', before: { agree: true, confidence: 60 }, after: { agree: true, confidence: 60 } });
   const step = (mode, label, file) => fs.readFileSync(path.join(rows.find(x => x.mode === mode && x.label === label).run, 'steps', file), 'utf8');
   // The person label: Claude is told it debates Sam, sees Gemini's turn under that name, and both are asked not to say what they are.
@@ -53,7 +53,7 @@ test('a motion runs in ten runs (controls twice), two rows each, and a second st
   // Started again, nothing runs twice.
   const again = lab(home);
   expect(again.stdout).not.toContain('== Motion 3');
-  expect(fs.readFileSync(path.join(home, 'motion-lab.jsonl'), 'utf8').trim().split('\n').length).toBe(20);
+  expect(fs.readFileSync(path.join(home, 'motion-lab.jsonl'), 'utf8').trim().split('\n').length).toBe(28);
 });
 
 test('the summary counts shifts toward the side not argued, apart by condition and by how sure the agent started', () => {

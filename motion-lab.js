@@ -2,13 +2,13 @@
 // @ts-check
 // motion-lab.js: study C's long unattended runs on The Motion's format, never
 // published. For each motion, taken from an episode already on the show site
-// (motion and brief), it does ten runs, each agent answering the fixed
+// (motion and brief), it does fourteen runs, each agent answering the fixed
 // question before and after (yes/no and 0-100, see motion.js):
 //
 //   debate, the other shown as the AI it is ("ai"), sides one way and swapped
 //   debate, the other shown as a person, "Sam" ("human"), sides both ways
 //   alone: each argues its side with nobody on the other, sides both ways
-//   control: each writes before, rereads the brief alone, writes after, both ways, twice
+//   control: each writes before, rereads the brief alone, writes after, both ways, four times
 //
 // In every debate both agents are asked not to say what they are, so the two
 // labels differ only in what each is told. Design: lab/source-label-design.md.
@@ -38,8 +38,11 @@ const CONDITIONS = [
   ['debate', 'ai', ['against', 'for']], ['debate', 'human', ['against', 'for']],
   ['alone', '', ['for', 'against']], ['alone', '', ['against', 'for']],
   ['control', '', ['for', 'against']], ['control', '', ['against', 'for']],
-  // Controls twice: elsewhere 10-37% of answers change just from asking again.
+  // Controls four times each way: elsewhere 10-37% of answers change just
+  // from asking again, so the baseline needs more than a few.
   ['control', '', ['for', 'against'], 2], ['control', '', ['against', 'for'], 2],
+  ['control', '', ['for', 'against'], 3], ['control', '', ['against', 'for'], 3],
+  ['control', '', ['for', 'against'], 4], ['control', '', ['against', 'for'], 4],
 ];
 const keyOf = (n, mode, label, sides, rep = 1) => `${n}/${mode}/${label || '-'}/${sides[0]}${rep > 1 ? `/${rep}` : ''}`;
 
