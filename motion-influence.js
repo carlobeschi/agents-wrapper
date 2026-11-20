@@ -31,7 +31,7 @@ const { HOME_DIR } = require('./config');
 const { unyaml, uninert } = require('./frontmatter');
 
 const DATA = path.join(HOME_DIR, 'motion-influence.jsonl');
-const CODERS = ['deepseek/deepseek-v4-pro-0813', 'qwen/qwen3-max'];
+const CODERS = ['deepseek/deepseek-v4-pro-0813', 'qwen/qwen3.8-max-0902'];
 const STANCES = ['for', 'against', 'split'];
 const squash = t => String(t).toLowerCase().replace(/[‘’]/g, "'").replace(/[“”«»]/g, '"')
   .replace(/[–—]/g, '-').replace(/[^\w'"-]+/g, ' ').trim();
