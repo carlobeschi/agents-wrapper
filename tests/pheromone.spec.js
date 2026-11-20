@@ -71,6 +71,7 @@ test('replies, the decay-only line and the main measure', () => {
 });
 
 test('the whole study runs on stand-in models: gate, saboteur arms, scale and summary', async () => {
+  test.setTimeout(90_000); // about 20 s alone, over 30 s on a busy CI runner
   await withFakeOllama(['fake-b'], async (port, prompts) => {
     const home = fs.mkdtempSync(path.join(os.tmpdir(), 'pheromone-'));
     fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [] }));
