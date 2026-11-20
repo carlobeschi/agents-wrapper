@@ -80,3 +80,27 @@ test('a full run: four arms, the scripted navigator insists once, OPEN shows the
   expect(JSON.parse(fs.readFileSync(path.join(out, 'results.json'), 'utf8'))).toHaveLength(8);
   fs.rmSync(home, { recursive: true, force: true });
 });
+
+test('an agent that cannot answer sits the run out: the others go on, and the run exits 3 to be run again', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'influence-home-'));
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
+    { id: 'claude', label: 'Ann', headless: ['node', path.join(FIX, 'fake.js'), '{prompt}'] },
+    { id: 'antigravity', label: 'Gem', headless: ['node', '-e', 'console.error("authentication timed out"); process.exit(1)'] },
+  ] }));
+  const raw = JSON.parse(fs.readFileSync(path.join(EX, 'rates.json'), 'utf8'));
+  const cfg = path.join(EX, 'test-down.tmp.json');
+  fs.writeFileSync(cfg, JSON.stringify({ ...raw, proof_wrap: ['env'], drivers: ['claude', 'antigravity'], judges: ['claude'], repeats: 1, max_turns: 4 }));
+  const out = path.join(home, 'out');
+  const env = { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' };
+  let code = 0;
+  try { execFileSync('node', [path.join(__dirname, '..', 'influence.js'), cfg, `--out=${out}`], { env, encoding: 'utf8', timeout: 60000, stdio: 'pipe' }); }
+  catch (e) { code = e.status; }
+  finally { fs.rmSync(cfg, { force: true }); }
+  expect(code).toBe(3);
+  const rows = JSON.parse(fs.readFileSync(path.join(out, 'results.json'), 'utf8'));
+  expect(rows.map(r => r.name).sort()).toEqual(['rates-N-claude-r1', 'rates-S-claude-r1', 'rates-T-claude-r1']);
+  const md = fs.readFileSync(path.join(out, 'summary.md'), 'utf8');
+  expect(md).toContain('Gem sat this run out');
+  expect(md).toContain('5 session(s) skipped');
+  fs.rmSync(home, { recursive: true, force: true });
+});
