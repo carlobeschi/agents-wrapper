@@ -27,21 +27,21 @@ function show(queue) {
 }
 
 // Fake agents: openings name the motion, so the editor's screen can tell them apart.
-function home(repo, review) {
+function home(repo, review, extra = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-home-'));
   const agent = name => ['sh', '-c', `case "$1" in
     *"Reply SPLIT or AGREE"*) case "$1" in *"tabs"*) printf 'AGREE\\tBoth like tabs.';; *) printf 'SPLIT\\tThey differ.';; esac;;
     *"Check this episode"*) printf '${review}';;
     *"Pick the one line"*) printf '9\\tNow for, claude.';;
     *"You are the editor"*) echo "A short summary.";;
-    *"Before you meet"*) echo "Opening by ${name}.";;
-    *"you are alone"*) echo "Now for, ${name}.";;
+    *"Before you meet"*) echo "Opening by ${name}."; case "$1" in *"VOTE:"*) echo "VOTE: yes 60";; esac;;
+    *"you are alone"*) echo "Now for, ${name}."; case "$1" in *"VOTE:"*) echo "**VOTE: no 30**";; esac;;
     *) echo "Turn by ${name}.";; esac`, 'x', '{prompt}'];
   fs.writeFileSync(path.join(dir, 'agents.json'), JSON.stringify({ agents: [
     { id: 'claude', label: 'Claude Code', model: 'm-1', headless: agent('claude') },
     { id: 'antigravity', label: 'Antigravity CLI', headless: agent('antigravity') },
   ] }));
-  fs.writeFileSync(path.join(dir, 'motion-daily.json'), JSON.stringify({ repo, github: 'x/the-motion', site: 'https://example.com/show', redact: [] }));
+  fs.writeFileSync(path.join(dir, 'motion-daily.json'), JSON.stringify({ repo, github: 'x/the-motion', site: 'https://example.com/show', redact: [], ...extra }));
   return dir;
 }
 
@@ -146,4 +146,31 @@ test('--from publishes an episode already run, without running it again', () => 
   expect(fs.readFileSync(path.join(bin, 'calls'), 'utf8')).toContain('pr merge https://example.com/pr/3');
   // Only the editor's moved-tag call ran: no screen, no debate, no review.
   expect(fs.readdirSync(path.join(folder, 'steps')).length - before).toBeLessThanOrEqual(1);
+});
+
+test('study C: the fixed question is taken off the notes and kept, and a control day runs the motion again with no debate', () => {
+  const s = show({ pick: M('monorepos win.'), shortlist: [], why: 'w' });
+  // 2026-11-02 is a Monday.
+  const dir = home(s.clone, 'OK', { control_days: [1] });
+  const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-gh-'));
+  fs.writeFileSync(path.join(bin, 'gh'), '#!/bin/sh\n[ "$2" = create ] && echo https://example.com/pr/3\nexit 0\n', { mode: 0o755 });
+  const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, AGENT_DISPATCH_HOME: dir, AGENT_DISPATCH_CONFIG: path.join(dir, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' };
+  delete env.OPENROUTER_API_KEY;
+  const r = spawnSync('node', [path.join(__dirname, '..', 'motion-daily.js'), '--date', '2026-11-02'], { env, encoding: 'utf8' });
+  expect(r.status, r.stderr).toBe(0);
+  git(s.clone, 'fetch', '-q', 'origin', 'queue');
+  const res = result(s);
+  expect(res.status).toBe('published');
+  // The published notes carry no answer line.
+  const site = fs.readFileSync(path.join(res.run, 'motion-3.md'), 'utf8');
+  expect(site).toContain('Opening by claude.');
+  expect(site).not.toContain('VOTE');
+  const votes = fs.readFileSync(path.join(dir, 'motion-votes.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+  expect(votes.map(v => [v.agent, v.control])).toEqual([['claude', false], ['antigravity', false], ['claude', true], ['antigravity', true]]);
+  expect(votes[0]).toMatchObject({ number: 3, status: 'published', before: { agree: true, confidence: 60 }, after: { agree: false, confidence: 30 } });
+  // The control has the same sides and no debate.
+  const control = JSON.parse(fs.readFileSync(path.join(votes[2].run, 'control.json'), 'utf8'));
+  expect(control.agents.map(x => x.side)).toEqual(['for', 'against']);
+  expect(fs.readdirSync(path.join(votes[2].run, 'steps')).filter(f => f.startsWith('1-turn'))).toEqual([]);
+  expect(fs.readFileSync(path.join(votes[2].run, 'steps', '2-control-claude.prompt.md'), 'utf8')).toContain('the debate did not take place');
 });

@@ -5,7 +5,7 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { episode, parse, code, report, kappa } = require('../motion-influence');
+const { episode, parse, code, report, kappa, voteReport } = require('../motion-influence');
 
 function file() {
   const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'influence-')), 'motion-3.md');
@@ -65,4 +65,19 @@ test('the report gives agreement between coders and lists the disagreements', ()
   expect(text).toContain('Status: Pista');
   expect(kappa([[true, true], [false, false]])).toBe(1);
   expect(kappa([])).toBeNull();
+});
+
+test('phase 2: answers before and after give flips and the shift toward the other side, debate and control apart', () => {
+  const v = (side, b, a, control = false) => ({ side, control, status: control ? undefined : 'published', before: b, after: a });
+  const yes = c => ({ agree: true, confidence: c }), no = c => ({ agree: false, confidence: c });
+  const text = voteReport([
+    v('for', yes(80), yes(60)),            // 20 toward against
+    v('against', yes(60), no(20)),         // flipped toward its own side: 80 away from the other side
+    v('for', yes(70), yes(70), true),      // control: no change
+    v('against', no(50), null),            // no answer after: left out
+  ]).join('\n');
+  expect(text).toContain('| After a debate | 2 | 50% (1/2) | -30.0 |');
+  expect(text).toContain('| No opponent (control) | 1 | 0% (0/1) | 0.0 |');
+  expect(text).toContain('1 agent-episode(s) left out');
+  expect(voteReport([]).join('\n')).toContain('No answers yet.');
 });

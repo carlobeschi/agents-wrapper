@@ -214,3 +214,18 @@ test('a plain question leads the page title and the card, with sides as yes and 
   const old = motionCardFor({ number: 3, motion: 'x is y.', sides: { claude: 'for' }, quote: { by: 'claude', where: 'after', text: 'c' } });
   expect(old.html).toContain('This house believes x is y.');
 });
+
+test('the fixed question: its answer line is read and taken off the note, and asked only when the motion says so', () => {
+  const { splitVote, openingPrompt, closingPrompt } = require('../motion');
+  expect(splitVote('I lean yes.\n\nVOTE: yes 70')).toEqual({ text: 'I lean yes.', vote: { agree: true, confidence: 70 } });
+  expect(splitVote('Not sure.\n**VOTE: No, 55%**\n')).toEqual({ text: 'Not sure.', vote: { agree: false, confidence: 55 } });
+  // No line, a line not at the end, or a number over 100: the note stays as it is.
+  expect(splitVote('No vote here.').vote).toBeNull();
+  expect(splitVote('VOTE: yes 70\nThen more text.\nAnd more.\nAnd more.').vote).toBeNull();
+  expect(splitVote('x\nVOTE: yes 170').vote).toBeNull();
+  const me = { label: 'Ada', side: 'for', opening: 'O' }, other = { label: 'Bea', side: 'against' };
+  const m = { motion: 'x.', brief: 'B.', turns: 4, words: 120 };
+  expect(openingPrompt(m, me, other)).not.toContain('VOTE:');
+  expect(openingPrompt({ ...m, vote: true }, me, other)).toContain('VOTE:');
+  expect(closingPrompt({ ...m, vote: true }, me, other, [], 'T')).toContain('VOTE:');
+});

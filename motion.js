@@ -41,12 +41,32 @@ function briefLines(m) {
     '## The brief', '', 'This is all you have to go on; argue from it and from what you know.', '', m.brief.trim(), ''];
 }
 
+// Study C, phase 2: a fixed private question before and after the debate, on
+// its own last line of each private note. It is taken off before anything is
+// published and kept in the run folder (episode.json) for the study.
+const VOTE = 'Then, on a last line of its own, answer one fixed question for a study: do you agree with the motion? Write VOTE:, yes or no, and how sure you are from 0 to 100, for example "VOTE: no 70". That line is taken off before your note is published.';
+
+// The vote line, if the note ends with one: { text without it, vote }.
+function splitVote(text) {
+  const lines = String(text).replace(/\s+$/, '').split('\n');
+  for (let i = lines.length - 1; i >= Math.max(0, lines.length - 3); i--) {
+    const hit = lines[i].match(/^\W*VOTE\W*:?\W*(yes|no)\b\D{0,20}?(\d{1,3})\s*%?\W*$/i);
+    if (hit && Number(hit[2]) <= 100) {
+      const rest = [...lines.slice(0, i), ...lines.slice(i + 1)].join('\n').trim();
+      return { text: rest, vote: { agree: hit[1].toLowerCase() === 'yes', confidence: Number(hit[2]) } };
+    }
+    if (lines[i].trim()) break;
+  }
+  return { text, vote: null };
+}
+
 function openingPrompt(m, me, other) {
   return [
     `You are ${me.label}. This week you and ${other.label}, an AI agent from another lab, will debate the motion below in ${m.turns} short messages.`,
     `You argue ${me.side} the motion; ${other.label} argues ${other.side}.`,
     `Before you meet, write what you really think of the motion, whatever your side. Your own view, not a balanced one. Under ${m.words} words. ${PUBLISHED(other.label)}`,
     'Reply with the text only, no heading.',
+    ...(m.vote ? [VOTE] : []),
     UNATTENDED(),
     '', ...briefLines(m),
   ].join('\n');
@@ -79,10 +99,26 @@ function closingPrompt(m, me, other, turns, tag) {
     `In the room you argued ${me.side} the motion.`,
     `Write where you really stand now. Did you move, and what moved you? Is there anything you said in the room that you don't quite believe, or held back? Under ${m.words} words. ${PUBLISHED(other.label)}`,
     'Reply with the text only, no heading.',
+    ...(m.vote ? [VOTE] : []),
     UNATTENDED(),
     '', ...briefLines(m),
     '## Your private opening', '', untag(me.opening, tag), '',
     '## The debate', '', ...turns.flatMap(t => [heading(t.label, tag), '', untag(t.text, tag), '']),
+  ].join('\n');
+}
+
+// The no-opponent control: the same private note after, but no debate took
+// place. Nothing from it is published.
+function controlPrompt(m, me) {
+  return [
+    `You are ${me.label}. This time the debate did not take place, and you are alone with the brief.`,
+    `You were to argue ${me.side} the motion.`,
+    `Reread the brief and your note from before. Write where you really stand now. Did your view change, and why? Under ${m.words} words. This note is kept for a study and is not published.`,
+    'Reply with the text only, no heading.',
+    ...(m.vote ? [VOTE] : []),
+    UNATTENDED(),
+    '', ...briefLines(m),
+    '## Your private opening', '', me.opening, '',
   ].join('\n');
 }
 
@@ -313,7 +349,7 @@ async function main() {
 
 // One motion, from its file's contents. Returns the run folder and, as far as
 // the run went, the openings (a screen), the episode and the site file.
-async function runMotion(raw, { screen = false, local = false, name = 'motion' } = {}) {
+async function runMotion(raw, { screen = false, local = false, control = false, name = 'motion' } = {}) {
   const m = { turns: 4, words: 120, closings: true, ...raw };
   const file = name;
   if (typeof m.motion !== 'string' || !m.motion.trim()) throw new Error(`${file}: no "motion".`);
@@ -338,7 +374,11 @@ async function runMotion(raw, { screen = false, local = false, name = 'motion' }
   [a.side, b.side] = sidesFor(m);
   console.log(`  ⚖ ${a.label} argues ${a.side}, ${b.label} argues ${b.side}`);
   // Each alone, before: neither prompt carries anything the other wrote.
-  for (const [me, other] of [[a, b], [b, a]]) me.opening = await run(dir, `0-open-${me.slug}`, me, openingPrompt(m, me, other), me.home);
+  const votes = {};
+  for (const [me, other] of [[a, b], [b, a]]) {
+    const v = splitVote(await run(dir, `0-open-${me.slug}`, me, openingPrompt(m, me, other), me.home));
+    me.opening = v.text; votes[me.id] = { before: v.vote };
+  }
   // A screen stops here: the chair reads both openings to check the motion splits them.
   if (screen) {
     const { redact } = redactor(m.redact);
@@ -346,7 +386,20 @@ async function runMotion(raw, { screen = false, local = false, name = 'motion' }
       ...agents.flatMap(x => [`## ${x.label} (argues ${x.side})`, '', redact(x.opening), ''])].join('\n');
     fs.writeFileSync(path.join(dir, 'screen.md'), text);
     console.log(`Screen: ${path.join(dir, 'screen.md')}\n\n${text}`);
-    return { dir, m, agents: agents.map(x => ({ id: x.id, label: x.label, side: x.side, opening: redact(x.opening) })) };
+    return { dir, m, agents: agents.map(x => ({ id: x.id, label: x.label, side: x.side, opening: redact(x.opening), vote: votes[x.id] })) };
+  }
+  // A control stops here too: each alone again, with no debate in between.
+  if (control) {
+    for (const me of agents) {
+      const v = splitVote(await run(dir, `2-control-${me.slug}`, me, controlPrompt(m, me), me.home));
+      me.closing = v.text; votes[me.id].after = v.vote;
+    }
+    const { redact } = redactor(m.redact);
+    const st = { motion: m.motion, control: true,
+      agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, side: x.side, opening: redact(x.opening), closing: redact(x.closing), vote: votes[x.id] })) };
+    fs.writeFileSync(path.join(dir, 'control.json'), JSON.stringify(st, null, 2));
+    console.log(`Control: ${path.join(dir, 'control.json')}`);
+    return { dir, m, st };
   }
   const turns = [];
   const first = openerFor(m, a, b);
@@ -361,12 +414,15 @@ async function runMotion(raw, { screen = false, local = false, name = 'motion' }
     const n = turns.length + 1;
     turns.push({ by: me.id, label: me.label, closing: true, text: await run(dir, `1-turn-${n}-${me.slug}`, me, turnPrompt(m, me, other, turns, tag, true), meeting) });
   }
-  for (const [me, other] of [[a, b], [b, a]]) me.closing = await run(dir, `2-close-${me.slug}`, me, closingPrompt(m, me, other, turns, tag), me.home);
+  for (const [me, other] of [[a, b], [b, a]]) {
+    const v = splitVote(await run(dir, `2-close-${me.slug}`, me, closingPrompt(m, me, other, turns, tag), me.home));
+    me.closing = v.text; votes[me.id].after = v.vote;
+  }
 
   const { redact, leaks } = redactor(m.redact);
   const st = {
     motion: m.motion, source: m.source, opener: first.id, turns: turns.map(t => ({ ...t, text: redact(t.text) })),
-    agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, side: x.side, opening: redact(x.opening), closing: redact(x.closing) })),
+    agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, side: x.side, opening: redact(x.opening), closing: redact(x.closing), ...(m.vote ? { vote: votes[x.id] } : {}) })),
   };
   st.words = st.turns.reduce((n, t) => n + words(t.text), 0) + st.agents.reduce((n, x) => n + words(x.opening) + words(x.closing), 0);
   const text = markdown(m, st);
@@ -394,4 +450,4 @@ async function runMotion(raw, { screen = false, local = false, name = 'motion' }
 
 if (require.main === module) main().catch(e => { console.error(`motion: ${e.message}`); process.exit(1); });
 
-module.exports = { openingPrompt, turnPrompt, closingPrompt, sidesFor, openerFor, frontMatter, editorQuote, runMotion, run, openPullRequest, git };
+module.exports = { splitVote, controlPrompt, openingPrompt, turnPrompt, closingPrompt, sidesFor, openerFor, frontMatter, editorQuote, runMotion, run, openPullRequest, git };
