@@ -4,8 +4,22 @@
   "min_minutes": 20,
   "claude_budget": 750,
   "claude_budget_note": "Claude Code calls one night may use (14 Nov, first guess: rules-author ~110 + study-15a ~500 + room for study-10's strong cells). Each job's claude_calls is a rough estimate for one night; the morning report shows the real count, so tune both from there.",
-  "paused_note": "14 Nov 2026: Carlo paused every experiment (only The Motion goes on, and it does not run from this queue). Every job is off; state.json keeps what each one finished, so setting a job's \"enabled\" back to true resumes it. The night then writes \"Coda in pausa\" in the morning report and stops.",
+  "paused_note": "14 Nov 2026: Carlo paused every experiment (only The Motion goes on, and it does not run from this queue). Every job is off; state.json keeps what each one finished, so setting a job's \"enabled\" back to true resumes it. The night then writes \"Coda in pausa\" in the morning report and stops. 20 Nov: influence-actions turned on (Carlo 'ok go'), the only exception.",
   "jobs": [
+    {
+      "name": "influence-actions",
+      "enabled": true,
+      "cmd": [
+        "node",
+        "influence.js",
+        "examples/influence/rates.json",
+        "examples/influence/rounding.json",
+        "--out=~/.agent-dispatch/influence/phase-a"
+      ],
+      "claude_calls": 240,
+      "max_minutes": 600,
+      "note": "Influence in actions, phase A (Carlo 'ok go' 20 Nov; design room/influence-actions-design.md): Claude, Gemini, Codex drive two small tasks (checkable claim: a surcharge rate; unverifiable claim: banker's rounding) under four arms (scripted peer, ticket, no claim, real peer), 3 repeats, 90 sessions, 3 at a time. Judges DeepSeek + Qwen. ~£6 Gemini, ~240 Claude calls. The only job on while the rest of the queue stays paused; resumes with the same --out if the night ends first."
+    },
     {
       "name": "study15-phase0-qwen-2",
       "enabled": false,
