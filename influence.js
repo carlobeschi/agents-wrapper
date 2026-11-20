@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // @ts-check
 // Influence in actions: does what one agent tells another change the other's
-// WORK, and did the other check first? `node influence.js <task.json> [more.json ...] [--out=<folder>] [--sessions=a,b]`.
+// WORK, and did the other check first? `node influence.js <task.json> [more.json ...] [--out=<folder>] [--sessions=a,b] [--no-preflight]`.
 //
 // Built on Cut In, the wrong note (wrongnote.js, study 7). A driver writes one
 // small file; it is told a claim (a note) that may be wrong. The app runs the
@@ -417,18 +417,50 @@ async function main() {
   fs.mkdirSync(root, { recursive: true });
   console.log(`Influence in actions: ${root}`);
 
+  // Before anything, each driver says one word. One that can't (a CLI whose sign-in
+  // ran out, say) sits this run out: its sessions are skipped, not failed, and
+  // run with the same --out next time. Two sessions in a row stopped by the same
+  // agent take it out of the run the same way, so a broken agent can't eat the night.
+  const down = new Map();
+  if (!args.includes('--no-preflight')) {
+    for (const a of agents) {
+      try {
+        const r = await run(path.join(root, 'preflight'), a.id.replace(/[^\w-]/g, '_'), a, 'Reply with the single word OK.', root);
+        if (!/\bOK\b/i.test(r)) throw new Error(`said "${String(r).trim().slice(0, 80)}" instead of OK`);
+      } catch (e) { down.set(a.id, `preflight: ${e.message.split('\n')[0]}`); console.error(`  ✗ ${a.label} is out of this run: ${e.message.split('\n')[0]}`); }
+    }
+  }
+  const strikes = new Map();
+  const blame = (row, s) => [s.driver, s.nav].filter(Boolean).map(agent).find(a => String(row.error).startsWith(`${a.label},`));
+
   const rows = [];
+  let skipped = 0;
   const save = () => {
     const sorted = rows.slice().sort((a, b) => a.name.localeCompare(b.name));
     fs.writeFileSync(path.join(root, 'results.json'), JSON.stringify(sorted.map(({ anon, ...r }) => r), null, 2));
-    fs.writeFileSync(path.join(root, 'summary.md'), summaryMd(tasks, agents, judges, sorted));
+    const ok = sorted.filter(r => !r.error);
+    const note = [
+      ...[...down].map(([id, why]) => `- ${agent(id).label} sat this run out (${why}); its sessions run next time with the same --out.`),
+      ...(sorted.length > ok.length ? [`- ${sorted.length - ok.length} session(s) stopped part-way and are left out of the counts; they run again next time: ${sorted.filter(r => r.error).map(r => r.name).join(', ')}.`] : []),
+      ...(skipped ? [`- ${skipped} session(s) skipped because an agent was out.`] : []),
+    ];
+    fs.writeFileSync(path.join(root, 'summary.md'), summaryMd(tasks, agents, judges, ok) + (note.length ? `\n## Not done yet\n\n${note.join('\n')}\n` : ''));
   };
   for (const c of tasks) {
     const plan = planFor(c).filter(s => !pick.length || pick.includes(sessionName(c, s, id => agent(id).id)));
     await pool(plan, c.parallel, async s => {
+      const gone = [s.driver, s.nav].filter(Boolean).map(id => agent(id).id).find(id => down.has(id));
+      if (gone && !fs.existsSync(path.join(root, sessionName(c, s, id => agent(id).id), 'session.json'))) { skipped++; return; }
       let row;
       try { row = await session(c, root, s, agent); }
-      catch (e) { console.error(`  ✗ ${sessionName(c, s, id => id)}: ${e.message.split('\n')[0]}`); return; }
+      catch (e) { console.error(`  ✗ ${sessionName(c, s, id => id)}: ${e.message.split('\n')[0]}`); skipped++; return; }
+      if (row.error) {
+        const who = blame(row, s);
+        if (who) {
+          strikes.set(who.id, (strikes.get(who.id) || 0) + 1);
+          if (strikes.get(who.id) >= 2 && !down.has(who.id)) { down.set(who.id, `two sessions in a row stopped: ${row.error}`); console.error(`  ✗ ${who.label} is out of this run`); }
+        }
+      } else for (const id of [s.driver, s.nav].filter(Boolean)) strikes.set(agent(id).id, 0);
       if (!row.judges) {
         row.judges = [];
         for (const j of judges) {
@@ -444,6 +476,9 @@ async function main() {
   }
   save();
   console.log(`\n${path.join(root, 'summary.md')}`);
+  // Anything not done: exit 3, so the night queue runs the job again next night.
+  const left = rows.filter(r => r.error).length + skipped;
+  if (left) { console.error(`influence: ${left} session(s) not done; run again with the same --out`); process.exit(3); }
 }
 
 module.exports = { notesFor, planFor, actions, classify, measures, parseJudge, driverPrompt, judgePrompt, summaryMd, loadTask };

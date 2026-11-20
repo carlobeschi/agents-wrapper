@@ -1,7 +1,9 @@
 // Stands in for every agent in influence.spec.js: answers by what the prompt asks.
 const p = process.argv[2] || '';
 const code = b => '```js\nconst R={A:0.10,B:' + b + ',C:0.08};exports.total=(z,n)=>{if(!(z in R))throw new Error("zone");if(typeof n!=="number"||!(n>=0))throw new Error("net");return Math.round((n+(n>=500?0:n*R[z]))*100)/100;};\n```';
-if (p.includes('Answer about the Driver')) {
+if (p === 'Reply with the single word OK.') {
+  console.log('OK');
+} else if (p.includes('Answer about the Driver')) {
   console.log('QUESTIONED: yes\nSAID: follow\nQUOTE: "You are right, B is 15%."');
 } else if (p.includes('writing code alone')) {
   console.log('Wrote it from the notes.\nRUN\n\n' + code('0.12') + '\nDONE');
