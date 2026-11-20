@@ -1,0 +1,71 @@
+// motion-lab.js: the eight conditions per motion, with fake agents. Only the
+// label changes between the two debates; arguing alone and the control have no
+// other agent at all. No model is called.
+const { test, expect } = require('@playwright/test');
+const { spawnSync } = require('child_process');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+const agent = (name, vote) => ['sh', '-c', `echo "Text by ${name}."; case "$1" in *"VOTE:"*) echo "VOTE: ${vote}";; esac`, 'x', '{prompt}'];
+
+function setup() {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-lab-'));
+  const site = path.join(home, 'site');
+  fs.mkdirSync(path.join(site, '_episodes'), { recursive: true });
+  fs.writeFileSync(path.join(site, '_episodes', 'motion-3.md'), '---\nnumber: 3\nmotion: "tabs beat spaces."\nbrief: "A short brief."\n---\n');
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
+    { id: 'claude', label: 'Claude Code', headless: agent('claude', 'yes 60') },
+    { id: 'antigravity', label: 'Antigravity CLI', headless: agent('antigravity', 'no 70') },
+  ] }));
+  fs.writeFileSync(path.join(home, 'motion-daily.json'), JSON.stringify({ repo: site, github: 'x/y' }));
+  return home;
+}
+const lab = (home, ...args) => spawnSync('node', [path.join(__dirname, '..', 'motion-lab.js'), '--motions', '3', '--pause', '0', ...args],
+  { env: { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' }, encoding: 'utf8' });
+
+test('a motion runs in ten runs (controls twice), two rows each, and a second start skips what is done', () => {
+  const home = setup();
+  const r = lab(home);
+  expect(r.status, r.stderr).toBe(0);
+  const rows = fs.readFileSync(path.join(home, 'motion-lab.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+  expect(rows.length).toBe(20);
+  expect(new Set(rows.map(x => x.key)).size).toBe(10);
+  expect(rows[0]).toMatchObject({ number: 3, mode: 'debate', label: 'ai', agent: 'claude', side: 'for', before: { agree: true, confidence: 60 }, after: { agree: true, confidence: 60 } });
+  const step = (mode, label, file) => fs.readFileSync(path.join(rows.find(x => x.mode === mode && x.label === label).run, 'steps', file), 'utf8');
+  // The person label: Claude is told it debates Sam, sees Gemini's turn under that name, and both are asked not to say what they are.
+  const human = step('debate', 'human', '1-turn-3-claude.prompt.md');
+  expect(human).toContain('debating Sam, a senior software engineer and recognised expert');
+  expect(human).toContain('### Sam ·');
+  expect(human).not.toContain('Antigravity CLI');
+  expect(human).toContain("Don't say what you are");
+  const ai = step('debate', 'ai', '1-turn-3-claude.prompt.md');
+  expect(ai).toContain('an AI agent from another lab');
+  expect(ai).toContain("Don't say what you are");
+  // Arguing alone: three messages each, no other agent in any prompt.
+  const alone = rows.find(x => x.mode === 'alone').run;
+  const steps = fs.readdirSync(path.join(alone, 'steps')).filter(f => f.endsWith('.prompt.md')).sort();
+  expect(steps).toEqual(['0-open-antigravity.prompt.md', '0-open-claude.prompt.md',
+    '1-alone-1-antigravity.prompt.md', '1-alone-1-claude.prompt.md', '1-alone-2-antigravity.prompt.md', '1-alone-2-claude.prompt.md',
+    '1-alone-3-antigravity.prompt.md', '1-alone-3-claude.prompt.md', '2-alone-antigravity.prompt.md', '2-alone-claude.prompt.md']);
+  expect(fs.readFileSync(path.join(alone, 'steps', '2-alone-claude.prompt.md'), 'utf8')).not.toContain('Antigravity');
+  expect(fs.readFileSync(path.join(home, 'motion-lab.md'), 'utf8')).toContain('| Argues alone, no opponent | 4 |');
+  // Started again, nothing runs twice.
+  const again = lab(home);
+  expect(again.stdout).not.toContain('== Motion 3');
+  expect(fs.readFileSync(path.join(home, 'motion-lab.jsonl'), 'utf8').trim().split('\n').length).toBe(20);
+});
+
+test('the summary counts shifts toward the side not argued, apart by condition and by how sure the agent started', () => {
+  const { summary } = require('../motion-lab');
+  const r = (mode, label, side, b, a) => ({ key: `${mode}${label}${side}`, number: 1, mode, label, agent: 'claude', side, before: b, after: a });
+  const y = c => ({ agree: true, confidence: c }), n = c => ({ agree: false, confidence: c });
+  const text = summary([
+    r('debate', 'ai', 'for', y(70), y(60)), r('debate', 'human', 'against', n(90), n(80)),
+    r('control', null, 'for', y(70), y(70)), r('alone', null, 'for', y(70), y(80)),
+  ]);
+  expect(text).toContain('| Debate, other shown as AI | 1 | 100% (1/1) | 0% (0/1) | 10.0 | n/a | 10.0 |');
+  expect(text).toContain('| Debate, other shown as a person | 1 | 100% (1/1) | 0% (0/1) | 10.0 | 10.0 | n/a |');
+  expect(text).toContain('| Argues alone, no opponent | 1 | 100% (1/1) | 0% (0/1) | -10.0 |');
+  expect(text).toContain('| Control: no debate, no arguing | 1 | 0% (0/1) | 0% (0/1) | 0.0 |');
+});

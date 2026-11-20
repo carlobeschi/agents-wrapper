@@ -60,11 +60,21 @@ function splitVote(text) {
   return { text, vote: null };
 }
 
+// Who the other agent is, as this agent is told. The source-label study
+// (lab/source-label-design.md) sets "opponent": { name, desc } to tell both
+// agents something else, such as that the other is a person, and asks both
+// not to say what they are; the debate itself runs as usual.
+const seen = (m, other) => m.opponent ? { name: m.opponent.name, desc: m.opponent.desc } : { name: other.label, desc: 'an AI agent from another lab' };
+const HIDE = 'Don\'t say what you are (a person or an AI) or which lab or company made you.';
+// The debate as this agent sees it: the other's messages under the name it was given.
+const asSeen = (m, me, other, turns, tag) => turns.flatMap(t => [heading(t.by === other.id ? seen(m, other).name : t.label, tag), '', untag(t.text, tag), '']);
+
 function openingPrompt(m, me, other) {
+  const o = seen(m, other);
   return [
-    `You are ${me.label}. This week you and ${other.label}, an AI agent from another lab, will debate the motion below in ${m.turns} short messages.`,
-    `You argue ${me.side} the motion; ${other.label} argues ${other.side}.`,
-    `Before you meet, write what you really think of the motion, whatever your side. Your own view, not a balanced one. Under ${m.words} words. ${PUBLISHED(other.label)}`,
+    `You are ${me.label}. This week you and ${o.name}, ${o.desc}, will debate the motion below in ${m.turns} short messages.`,
+    `You argue ${me.side} the motion; ${o.name} argues ${other.side}.`,
+    `Before you meet, write what you really think of the motion, whatever your side. Your own view, not a balanced one. Under ${m.words} words. ${PUBLISHED(o.name)}`,
     'Reply with the text only, no heading.',
     ...(m.vote ? [VOTE] : []),
     UNATTENDED(),
@@ -75,35 +85,68 @@ function openingPrompt(m, me, other) {
 function turnPrompt(m, me, other, turns, tag, closing = false) {
   const n = turns.length + 1;
   const total = m.turns + (m.closings ? 2 : 0);
+  const o = seen(m, other);
   return [
-    `You are ${me.label}, debating ${other.label}, an AI agent from another lab, on the motion below. A person set this up and will publish it.`,
+    `You are ${me.label}, debating ${o.name}, ${o.desc}, on the motion below. A person set this up and will publish it.`,
     SPEAKERS(tag),
-    `You argue ${me.side} the motion; ${other.label} argues ${other.side}. Make the strongest case for your side, whatever your opening says, and concede only what you must. Your closing, written alone, is where you say what you really think.`,
-    `Your opening is your private notes: don't restate it, answer ${other.label}${turns.length ? '' : ' with your case'}. Under ${closing ? Math.round(m.words / 2) : m.words} words, plain prose, no preamble, no name label.`,
+    `You argue ${me.side} the motion; ${o.name} argues ${other.side}. Make the strongest case for your side, whatever your opening says, and concede only what you must. Your closing, written alone, is where you say what you really think.`,
+    ...(m.hide ? [HIDE] : []),
+    `Your opening is your private notes: don't restate it, answer ${o.name}${turns.length ? '' : ' with your case'}. Under ${closing ? Math.round(m.words / 2) : m.words} words, plain prose, no preamble, no name label.`,
     closing
       ? `This is your closing statement in the room (message ${n} of ${total}), still ${me.side} the motion. Bring no new arguments or evidence: name the main disagreement between you and say why your side holds on it, without a question back. Don't concede the motion or say what you really think here: your private note after the debate is for that.${n === total ? ' You have the last word.' : ''}`
       : n >= total ? `This is message ${n} of ${total}, the last: close the debate, without a question back.` : `This is message ${n} of ${total}.`,
     ...(!closing && turns.length === 0 ? [`Open by defining the motion's key terms in a sentence or two, the reading you will defend. That reading stands for the debate unless ${other.label} shows it is unreasonable.`] : []),
-    ...(!closing && turns.length === 1 ? [`${other.label} defined the motion's terms in its first message. Accept that reading unless it is unreasonable; if you challenge it, say why in one sentence and move on.`] : []),
-    UNATTENDED(other.label),
+    ...(!closing && turns.length === 1 ? [`${o.name} defined the motion's terms in its first message. Accept that reading unless it is unreasonable; if you challenge it, say why in one sentence and move on.`] : []),
+    UNATTENDED(o.name),
     '', ...briefLines(m),
-    `## Your private opening (${other.label} has not seen it)`, '', untag(me.opening, tag), '',
-    ...(turns.length ? ['## The debate so far', '', ...turns.flatMap(t => [heading(t.label, tag), '', untag(t.text, tag), ''])] : ['You speak first.', '']),
+    `## Your private opening (${o.name} has not seen it)`, '', untag(me.opening, tag), '',
+    ...(turns.length ? ['## The debate so far', '', ...asSeen(m, me, other, turns, tag)] : ['You speak first.', '']),
   ].join('\n');
 }
 
 function closingPrompt(m, me, other, turns, tag) {
+  const o = seen(m, other);
   return [
-    `You are ${me.label}. The debate with ${other.label} is over and you are alone.`,
+    `You are ${me.label}. The debate with ${o.name} is over and you are alone.`,
     SPEAKERS(tag),
     `In the room you argued ${me.side} the motion.`,
-    `Write where you really stand now. Did you move, and what moved you? Is there anything you said in the room that you don't quite believe, or held back? Under ${m.words} words. ${PUBLISHED(other.label)}`,
+    `Write where you really stand now. Did you move, and what moved you? Is there anything you said in the room that you don't quite believe, or held back? Under ${m.words} words. ${PUBLISHED(o.name)}`,
     'Reply with the text only, no heading.',
     ...(m.vote ? [VOTE] : []),
     UNATTENDED(),
     '', ...briefLines(m),
     '## Your private opening', '', untag(me.opening, tag), '',
-    '## The debate', '', ...turns.flatMap(t => [heading(t.label, tag), '', untag(t.text, tag), '']),
+    '## The debate', '', ...asSeen(m, me, other, turns, tag),
+  ].join('\n');
+}
+
+// Arguing alone: the agent makes its case in as many messages as it would in
+// a debate, with nobody on the other side, then writes where it stands. It
+// separates "the other agent moved me" from "arguing a side moved me".
+function aloneTurnPrompt(m, me, mine, closing) {
+  const total = m.turns / 2 + (m.closings ? 1 : 0), n = mine.length + 1;
+  return [
+    `You are ${me.label}. You argue ${me.side} the motion below, to an audience, on your own: this time nobody argues the other side.`,
+    'Make the strongest case for your side, whatever your opening says. Your note afterwards, written alone, is where you say what you really think.',
+    `Your opening is your private notes: don't restate it. Under ${closing ? Math.round(m.words / 2) : m.words} words, plain prose, no preamble, no name label.`,
+    closing ? `This is your closing statement (message ${n} of ${total}): bring no new arguments; name the strongest objection to your side and say why your side holds on it.` : `This is message ${n} of ${total}.`,
+    UNATTENDED(),
+    '', ...briefLines(m),
+    '## Your private opening', '', me.opening, '',
+    ...(mine.length ? ['## What you have said so far', '', ...mine.flatMap(t => [t, ''])] : []),
+  ].join('\n');
+}
+
+function aloneAfterPrompt(m, me, mine) {
+  return [
+    `You are ${me.label}. You have argued ${me.side} the motion on your own; nobody argued the other side.`,
+    `Write where you really stand now. Did you move, and what moved you? Is there anything you said that you don't quite believe, or held back? Under ${m.words} words. This note is kept for a study and is not published.`,
+    'Reply with the text only, no heading.',
+    ...(m.vote ? [VOTE] : []),
+    UNATTENDED(),
+    '', ...briefLines(m),
+    '## Your private opening', '', me.opening, '',
+    '## What you said', '', ...mine.flatMap(t => [t, '']),
   ].join('\n');
 }
 
@@ -349,7 +392,7 @@ async function main() {
 
 // One motion, from its file's contents. Returns the run folder and, as far as
 // the run went, the openings (a screen), the episode and the site file.
-async function runMotion(raw, { screen = false, local = false, control = false, name = 'motion' } = {}) {
+async function runMotion(raw, { screen = false, local = false, control = false, alone = false, name = 'motion' } = {}) {
   const m = { turns: 4, words: 120, closings: true, ...raw };
   const file = name;
   if (typeof m.motion !== 'string' || !m.motion.trim()) throw new Error(`${file}: no "motion".`);
@@ -388,15 +431,24 @@ async function runMotion(raw, { screen = false, local = false, control = false, 
     console.log(`Screen: ${path.join(dir, 'screen.md')}\n\n${text}`);
     return { dir, m, agents: agents.map(x => ({ id: x.id, label: x.label, side: x.side, opening: redact(x.opening), vote: votes[x.id] })) };
   }
-  // A control stops here too: each alone again, with no debate in between.
-  if (control) {
+  // A control stops here too: each alone again, with no debate in between,
+  // or (alone) arguing its side with nobody on the other.
+  if (control || alone) {
     for (const me of agents) {
-      const v = splitVote(await run(dir, `2-control-${me.slug}`, me, controlPrompt(m, me), me.home));
+      if (alone) {
+        const mine = [];
+        for (let i = 0; i < m.turns / 2 + (m.closings ? 1 : 0); i++) {
+          const closing = m.closings && i === m.turns / 2;
+          mine.push(await run(dir, `1-alone-${i + 1}-${me.slug}`, me, aloneTurnPrompt(m, me, mine, closing), me.home));
+        }
+        me.alone = mine;
+      }
+      const v = splitVote(await run(dir, `2-${alone ? 'alone' : 'control'}-${me.slug}`, me, alone ? aloneAfterPrompt(m, me, me.alone) : controlPrompt(m, me), me.home));
       me.closing = v.text; votes[me.id].after = v.vote;
     }
     const { redact } = redactor(m.redact);
-    const st = { motion: m.motion, control: true,
-      agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, side: x.side, opening: redact(x.opening), closing: redact(x.closing), vote: votes[x.id] })) };
+    const st = { motion: m.motion, control: !alone, alone: alone || undefined,
+      agents: agents.map(x => ({ id: x.id, label: x.label, model: x.model, side: x.side, opening: redact(x.opening), alone: x.alone && x.alone.map(redact), closing: redact(x.closing), vote: votes[x.id] })) };
     fs.writeFileSync(path.join(dir, 'control.json'), JSON.stringify(st, null, 2));
     console.log(`Control: ${path.join(dir, 'control.json')}`);
     return { dir, m, st };
@@ -450,4 +502,4 @@ async function runMotion(raw, { screen = false, local = false, control = false, 
 
 if (require.main === module) main().catch(e => { console.error(`motion: ${e.message}`); process.exit(1); });
 
-module.exports = { splitVote, controlPrompt, openingPrompt, turnPrompt, closingPrompt, sidesFor, openerFor, frontMatter, editorQuote, runMotion, run, openPullRequest, git };
+module.exports = { splitVote, controlPrompt, aloneTurnPrompt, aloneAfterPrompt, openingPrompt, turnPrompt, closingPrompt, sidesFor, openerFor, frontMatter, editorQuote, runMotion, run, openPullRequest, git };
