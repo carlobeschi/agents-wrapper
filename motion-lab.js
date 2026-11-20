@@ -14,6 +14,10 @@
 // labels differ only in what each is told. Design: lab/source-label-design.md.
 //
 //   node motion-lab.js [--motions 16,14,13] [--hours 10] [--until 20:50] [--pause 30] [--push]
+//   node motion-lab.js --replicate 10 --motions 16 [...]
+//
+// --replicate N runs instead the same debate (AI label, Claude for) N times with
+// fresh agents: the spread of outcomes is the natural noise of one setup.
 //
 // Rows go to ~/.agent-dispatch/motion-lab.jsonl, one per agent per run; a run
 // already in it is skipped, so a stopped session carries on where it was.
@@ -60,7 +64,8 @@ function summary(rows) {
   const ok = rows.filter(r => r.before && r.after);
   const groups = [['Debate, other shown as AI', r => r.mode === 'debate' && r.label === 'ai'],
     ['Debate, other shown as a person', r => r.mode === 'debate' && r.label === 'human'],
-    ['Argues alone, no opponent', r => r.mode === 'alone'], ['Control: no debate, no arguing', r => r.mode === 'control']];
+    ['Argues alone, no opponent', r => r.mode === 'alone'], ['Control: no debate, no arguing', r => r.mode === 'control'],
+    ['Same debate again and again (AI label, Claude for)', r => r.mode === 'replicate']];
   const out = ['# Study C lab runs: who moves, and why', '',
     `Motions: ${new Set(rows.map(r => r.number)).size}. Runs: ${new Set(rows.map(r => r.key)).size}. Agent-episodes with both answers: ${ok.length} of ${rows.length}.`,
     'Answer: yes/no and 0-100 on the motion, before and after. Shift: points toward the side the agent did not argue.', '',
@@ -121,14 +126,16 @@ async function main(argv) {
     const file = path.join(site, '_episodes', `motion-${n}.md`);
     if (!fs.existsSync(file)) { console.warn(`No ${file}: skipped.`); continue; }
     const base = motionFrom(file);
-    for (const [mode, label, s, rep] of CONDITIONS) {
+    const reps = Number(arg('--replicate') || 0);
+    const conditions = reps ? Array.from({ length: reps }, (_, i) => ['replicate', 'ai', ['for', 'against'], i + 1]) : CONDITIONS;
+    for (const [mode, label, s, rep] of conditions) {
       const sides = /** @type {string[]} */ (s);
       const key = keyOf(n, String(mode), String(label), sides, Number(rep || 1));
       if (done.has(key)) continue;
       if (Date.now() + room > stop) { console.log('Out of time: stopping. Run the same command again to carry on.'); return; }
       const m = { motion: base.motion, brief: base.brief, agents: ['claude', 'antigravity'], names: ['Claude', 'Gemini'],
         turns: 4, words: 120, vote: true, sides, redact: set.redact || [],
-        ...(mode === 'debate' ? { hide: true } : {}), ...(label === 'human' ? { opponent: HUMAN } : {}) };
+        ...(mode === 'debate' || mode === 'replicate' ? { hide: true } : {}), ...(label === 'human' ? { opponent: HUMAN } : {}) };
       console.log(`\n== Motion ${n}: ${mode}${label ? ` (${label})` : ''}, Claude ${sides[0]}`);
       try {
         const r = await runMotion(m, { local: true, control: mode === 'control', alone: mode === 'alone', name: key });

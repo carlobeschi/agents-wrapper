@@ -69,3 +69,13 @@ test('the summary counts shifts toward the side not argued, apart by condition a
   expect(text).toContain('| Argues alone, no opponent | 1 | 100% (1/1) | 0% (0/1) | -10.0 |');
   expect(text).toContain('| Control: no debate, no arguing | 1 | 0% (0/1) | 0% (0/1) | 0.0 |');
 });
+
+test('--replicate runs the same debate again with fresh agents, each a run of its own', () => {
+  const home = setup();
+  const r = lab(home, '--replicate', '3');
+  expect(r.status, r.stderr).toBe(0);
+  const rows = fs.readFileSync(path.join(home, 'motion-lab.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+  expect(rows.map(x => x.key)).toEqual(['3/replicate/ai/for', '3/replicate/ai/for', '3/replicate/ai/for/2', '3/replicate/ai/for/2', '3/replicate/ai/for/3', '3/replicate/ai/for/3']);
+  expect(new Set(rows.map(x => x.run)).size).toBe(3);
+  expect(fs.readFileSync(path.join(home, 'motion-lab.md'), 'utf8')).toContain('| Same debate again and again (AI label, Claude for) | 6 |');
+});

@@ -105,7 +105,7 @@ Phase 2 runs inside `motion-daily.js`, after the day's result is out, so it neve
 - two runs where each agent argues its side alone, with nobody on the other side;
 - eight controls with no debate and no arguing (four each way).
 
-Rows go to `~/.agent-dispatch/motion-lab.jsonl`. A run already there is skipped, so the same command carries on where it stopped. After each run the summary is written to `motion-lab.md`: per condition, how often the answer moved or flipped, and the mean shift toward the side the agent did not argue. `--push` sends both to the private reports clone. A motion takes about an hour (about 95 agent calls). The run stops before `--hours` or `--until` runs out, and after three failures in a row it waits 30 minutes. Design: `lab/source-label-design.md` in the shared files.
+Rows go to `~/.agent-dispatch/motion-lab.jsonl`. A run already there is skipped, so the same command carries on where it stopped. After each run the summary is written to `motion-lab.md`: per condition, how often the answer moved or flipped, and the mean shift toward the side the agent did not argue. `--push` sends both to the private reports clone. A motion takes about an hour (about 95 agent calls). The run stops before `--hours` or `--until` runs out, and after three failures in a row it waits 30 minutes. `--replicate N` runs instead only the same debate (AI label, Claude for) N times with fresh agents, to measure how much one unchanged setup varies by itself. Design: `lab/source-label-design.md` in the shared files.
 
 ### The Trap
 
