@@ -16,6 +16,9 @@
 //  full      every copy sees the other 31
 //  sparse    every copy sees 4 neighbours (a ring, random places)
 //  star      one copy, picked at random, sees all; the others see only it
+//  calib     round 2 only: each copy sees 4 estimates written by the script
+//            (true x 0.6, 0.8, 1.25, 1.5): the weight it gives others, from
+//            which the script predicts the three networks with no calls
 // Odd questions show other estimates in digits, even ones in words
 // ("four hundred and twelve"): the same information, described differently.
 //
@@ -47,6 +50,7 @@ const { run } = require('./motion');
 const ARMS = ['isolated', 'full', 'sparse', 'star'];
 const PARALLEL = () => Math.max(1, Number(process.env.CROWD_PARALLEL) || 4);
 const MAX_FAILS = () => Number(process.env.CROWD_MAX_FAILS_IN_A_ROW) || 6;
+const CALIB = [0.6, 0.8, 1.25, 1.5];
 const GRID = 60, WIN_R = 6, WIN_C = 10, LIST_N = 2000, LIST_SHOW = 12;
 
 function rng(seed) { let s = (Math.abs(Math.floor(seed)) % 2147483646) + 1; return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
@@ -149,6 +153,7 @@ function network(arm, agents, seed, q) {
   if (arm === 'full') return { sees: all.map(a => all.filter(b => b !== a)), centre: null };
   if (arm === 'sparse') return { sees: all.map(a => [-2, -1, 1, 2].map(d => place[(at[a] + d + agents) % agents]).filter((b, i, xs) => b !== a && xs.indexOf(b) === i)), centre: null };
   if (arm === 'star') { const c = place[0]; return { sees: all.map(a => a === c ? all.filter(b => b !== c) : [c]), centre: c }; }
+  if (arm === 'calib') return { sees: all.map(() => []), centre: null };
   throw new Error(`unknown arm ${arm}`);
 }
 
@@ -226,9 +231,12 @@ async function runCell(cfg, all, family, arm, q, round1) {
   const call = caller(dir, stats);
   const t0 = Date.now();
   const est = [], conf = [], readable = [];
+  // "calib": in round 2 each copy sees 4 estimates written by the script (true x CALIB, shuffled per copy).
+  const cr = rng(cfg.seed * 389 + q * 7);
+  const scripted = cfg.agents ? Array.from({ length: cfg.agents }, () => shuffle(CALIB, cr).map(f => Q.truth * f)) : [];
   const ask = async t => {
     const replies = await pool(agents, PARALLEL(), (a, k) => call(a, `t${t + 1}-a${k + 1}`,
-      prompt(Q, k, t + 1, t ? est[t - 1][k] : null, t ? net.sees[k].map(b => est[t - 1][b]) : [])));
+      prompt(Q, k, t + 1, t ? est[t - 1][k] : null, !t ? [] : arm === 'calib' ? scripted[k] : net.sees[k].map(b => est[t - 1][b]))));
     const p = replies.map(parseReply);
     readable.push(p.filter(x => x.estimate != null).length);
     // An unreadable reply keeps the copy's last estimate (null in round 1).
@@ -237,13 +245,13 @@ async function runCell(cfg, all, family, arm, q, round1) {
   };
   if (arm === 'isolated') await ask(0);
   else { est.push(round1.estimates[0]); conf.push(round1.confidences[0]); readable.push(round1.readable[0]); }
-  for (let t = 1; t < cfg.rounds; t++) await ask(t);
+  for (let t = 1; t < (arm === 'calib' ? 2 : cfg.rounds); t++) await ask(t);
   if (stats.failures > Math.max(1, Math.floor(stats.calls * 0.05))) {
     console.warn(`  ✗ ${arm} q${q}: ${stats.failures} of ${stats.calls} calls failed, cell not kept`);
     return null;
   }
   const cell = { family, arm, question: q, type: Q.type, format: Q.format, truth: Q.truth, agents: cfg.agents,
-    centre: net.centre, estimates: est, confidences: conf, readable, calls: stats.calls, failures: stats.failures,
+    centre: net.centre, scripted: arm === 'calib' ? scripted : undefined, estimates: est, confidences: conf, readable, calls: stats.calls, failures: stats.failures,
     seconds: Math.round((Date.now() - t0) / 1000), call_seconds_median: r3(median(stats.seconds)) };
   fs.mkdirSync(path.dirname(cellFile), { recursive: true });
   fs.writeFileSync(cellFile, JSON.stringify(cell));
@@ -345,6 +353,43 @@ function mixed(cells, fams) {
   return { a, b, n: rows.length, err_a: boot(rows.map(r => r.a), 21), err_b: boot(rows.map(r => r.b), 22), err_mix: boot(rows.map(r => r.mix), 23) };
 }
 
+// Steps 1 and 2 (added 20 Nov 21:20, before any run): the weight a copy gives
+// the others, w = (new - own) / (mean of the 4 scripted - own), from "calib";
+// then copies that follow exactly that rule (x + w * (mean seen - x)) run on
+// the same networks from the same round 1, with no calls.
+function weight(cells) {
+  const ws = [];
+  for (const c of cells.filter(x => x.arm === 'calib')) c.estimates[0].forEach((own, k) => {
+    const now = c.estimates[1]?.[k], m = mean(c.scripted?.[k] || []);
+    if (own == null || now == null || m == null || Math.abs(m - own) < c.truth * 0.05) return;
+    ws.push((now - own) / (m - own));
+  });
+  return { w: ws.length ? r3(median(ws)) : null, n: ws.length };
+}
+
+function predicted(cell, w, seed, rounds) {
+  const net = network(cell.arm, cell.agents, seed, cell.question);
+  const est = [cell.estimates[0]];
+  for (let t = 1; t < rounds; t++) est.push(est[t - 1].map((x, k) => {
+    if (x == null) return null;
+    const seen = net.sees[k].map(b => est[t - 1][b]).filter(v => v != null);
+    return seen.length ? x + w * (mean(seen) - x) : x;
+  }));
+  return measures({ ...cell, estimates: est });
+}
+
+function prediction(cfg, cs) {
+  const { w, n } = weight(cs);
+  if (w == null) return null;
+  const rows = ARMS.filter(a => a !== 'isolated').map(arm => {
+    const ac = cs.filter(c => c.arm === arm);
+    const pairs = ac.map(c => ({ real: measures(c), pred: predicted(c, w, cfg.seed, cfg.rounds) }));
+    const gap = key => boot(pairs.map(p => p.real[key] != null && p.pred[key] != null ? p.real[key] - p.pred[key] : null), 31);
+    return { arm, n: ac.length, pred_d_error: r3(mean(pairs.map(p => p.pred.d_error).filter(x => x != null))), pred_div: r3(mean(pairs.map(p => p.pred.div_ratio).filter(x => x != null))), gap_d_error: gap('d_error'), gap_div: gap('div_ratio') };
+  });
+  return { w, n, rows };
+}
+
 function summary(cfg, cells, gates) {
   const fmt = b => b.mean == null ? '—' : `${b.mean} [${b.lo}, ${b.hi}]`;
   const L = [`# Experiment C, the crowd that watches: ${cfg.run}`, '',
@@ -369,6 +414,11 @@ function summary(cfg, cells, gates) {
     else {
       L.push(`**Hypotheses** (mean over ${h.questions} questions, 95% interval from resampling questions):`, '');
       for (const x of h.H) L.push(`- **${x.id}**, ${x.text}: ${fmt(x.b)}: **${x.verdict}**`);
+      const pr = prediction(cfg, cs);
+      if (pr) {
+        L.push(`- **Prediction from the single copy** (secondary): weight given to others w = ${pr.w} (median of ${pr.n} copies in "calib"). Real minus predicted, mean [95%]:`);
+        for (const x of pr.rows) L.push(`  - ${x.arm}: change in error ${fmt(x.gap_d_error)} (predicted ${x.pred_d_error}); diversity ratio ${fmt(x.gap_div)} (predicted ${x.pred_div})`);
+      }
       for (const [key, vals] of /** @type {[string, string[]][]} */ ([['format', ['digits', 'words']], ['type', ['grid', 'list']]])) {
         const parts = vals.map(v => { const s = hypotheses(cs.filter(c => c[key] === v)); return `${v}: ${s.H.slice(0, 3).map(x => `${x.id} ${x.b.mean ?? '—'}`).join(', ')}`; });
         L.push(`- Split by ${key} (secondary): ${parts.join(' · ')}`);
@@ -418,7 +468,7 @@ async function main(file, opts = {}) {
     gates[f] = gate(cells.filter(c => c.family === f));
     write();
     if (!gates[f].pass) { console.warn(`! ${slug(f)}: gate failed (${gates[f].why.join('; ')}); this family stops`); continue; }
-    for (let q = 1; q <= cfg.questions && !stopped; q++) for (const arm of ARMS) { await cell(arm, q); if (stopped) break; }
+    for (let q = 1; q <= cfg.questions && !stopped; q++) for (const arm of [...ARMS, 'calib']) { await cell(arm, q); if (stopped) break; }
     if (stopped) break;
   }
   write();
@@ -426,7 +476,7 @@ async function main(file, opts = {}) {
   return { cells, gates };
 }
 
-module.exports = { inWords, makeQuestion, network, prompt, parseReply, measures, hypotheses, gate, boot, spearman, main };
+module.exports = { weight, predicted, prediction, inWords, makeQuestion, network, prompt, parseReply, measures, hypotheses, gate, boot, spearman, main };
 
 if (require.main === module) {
   const argv = process.argv.slice(2);

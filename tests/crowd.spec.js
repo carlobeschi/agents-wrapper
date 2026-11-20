@@ -95,7 +95,7 @@ test('the whole experiment runs on stand-in models: gate, four arms, shared roun
     await node(file);
     const cells = path.join(home, 'crowd', 't', 'cells');
     const read = (f, a, q) => JSON.parse(fs.readFileSync(path.join(cells, f, a, `q${q}.json`), 'utf8'));
-    expect(fs.readdirSync(path.join(cells, 'fake-a')).sort()).toEqual(['full', 'isolated', 'sparse', 'star']);
+    expect(fs.readdirSync(path.join(cells, 'fake-a')).sort()).toEqual(['calib', 'full', 'isolated', 'sparse', 'star']);
     expect(fs.readdirSync(path.join(cells, 'fake-b'))).toEqual(['isolated']);
     expect(fs.readdirSync(path.join(cells, 'fake-b', 'isolated')).sort()).toEqual(['q1.json', 'q2.json']);
     // Round 1 is called once, in isolated, and shared: the other arms make 2 rounds of calls.
@@ -103,11 +103,17 @@ test('the whole experiment runs on stand-in models: gate, four arms, shared roun
     expect(iso.calls).toBe(6 * 3);
     expect(full.calls).toBe(6 * 2);
     expect(full.estimates[0]).toEqual(iso.estimates[0]);
-    expect(prompts.filter(x => x.model === 'fake-a').length).toBe(4 * (18 + 3 * 12));
+    expect(prompts.filter(x => x.model === 'fake-a').length).toBe(4 * (18 + 3 * 12 + 6));
     // Isolated copies keep their estimate (fake-a never sees anyone); full pulls everyone together.
     expect(iso.estimates[2]).toEqual(iso.estimates[0]);
     expect(measures(full).div_ratio).toBeLessThan(0.5);
     expect(star.centre).not.toBe(null);
+    // calib: one round of calls after the shared round 1, and fake-a moves halfway, so w = 0.5.
+    const calib = read('fake-a', 'calib', 1);
+    expect(calib.calls).toBe(6);
+    expect(calib.scripted[0].map(x => Math.round(x / calib.truth * 100)).sort((a, b) => a - b)).toEqual([60, 80, 125, 150]);
+    const { weight } = require('../crowd');
+    expect(weight([1, 2, 3, 4].map(q => read('fake-a', 'calib', q))).w).toBeCloseTo(0.5, 1);
     // Words in even questions, digits in odd ones; no names in any prompt.
     expect(prompts.some(x => /estimated last round: [a-z]/.test(x.p))).toBe(true);
     expect(prompts.some(x => /estimated last round: \d/.test(x.p))).toBe(true);
@@ -117,6 +123,7 @@ test('the whole experiment runs on stand-in models: gate, four arms, shared roun
     expect(sum).toMatch(/## fake-b[\s\S]*Gate: \*\*FAILED\*\*/);
     expect(sum).toMatch(/\*\*H1\*\*[^\n]*: \*\*(holds|wrong|undecided)\*\*/);
     expect(sum).toMatch(/Split by format/);
+    expect(sum).toMatch(/Prediction from the single copy[^\n]*w = 0\.[45]/);
     // Run again: every cell is kept, no new call.
     const before = prompts.length;
     await node(file);
