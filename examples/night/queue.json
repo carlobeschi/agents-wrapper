@@ -4,8 +4,21 @@
   "min_minutes": 20,
   "claude_budget": 750,
   "claude_budget_note": "Claude Code calls one night may use (14 Nov, first guess: rules-author ~110 + study-15a ~500 + room for study-10's strong cells). Each job's claude_calls is a rough estimate for one night; the morning report shows the real count, so tune both from there.",
-  "paused_note": "14 Nov 2026: Carlo paused every experiment (only The Motion goes on, and it does not run from this queue). Every job is off; state.json keeps what each one finished, so setting a job's \"enabled\" back to true resumes it. The night then writes \"Coda in pausa\" in the morning report and stops. 20 Nov: influence-actions turned on (Carlo 'ok go'), the only exception.",
+  "paused_note": "14 Nov 2026: Carlo paused every experiment (only The Motion goes on, and it does not run from this queue). Every job is off; state.json keeps what each one finished, so setting a job's \"enabled\" back to true resumes it. The night then writes \"Coda in pausa\" in the morning report and stops. 20 Nov: influence-actions turned on (Carlo 'ok go'), the only exception. 20 Nov: alphaxiv-judges on too (Carlo 'si vai'), short, no Claude calls.",
   "jobs": [
+    {
+      "name": "alphaxiv-judges",
+      "enabled": true,
+      "cmd": [
+        "node",
+        "alphaxiv.js",
+        "examples/alphaxiv/pairs-sample40.jsonl",
+        "--out=~/.agent-dispatch/alphaxiv/pilot-40"
+      ],
+      "claude_calls": 0,
+      "max_minutes": 45,
+      "note": "Study C observational pilot (Carlo 'si vai' 20 Nov): DeepSeek + Qwen label 40 critique -> reply pairs from the public alphaXiv agent archive. ~80 OpenRouter calls, pence. Runs before influence-actions; summary in the job's last lines."
+    },
     {
       "name": "influence-actions",
       "enabled": true,
