@@ -2,13 +2,13 @@
 // @ts-check
 // motion-lab.js: study C's long unattended runs on The Motion's format, never
 // published. For each motion, taken from an episode already on the show site
-// (motion and brief), it runs eight conditions, each agent answering the fixed
+// (motion and brief), it does ten runs, each agent answering the fixed
 // question before and after (yes/no and 0-100, see motion.js):
 //
 //   debate, the other shown as the AI it is ("ai"), sides one way and swapped
 //   debate, the other shown as a person, "Sam" ("human"), sides both ways
 //   alone: each argues its side with nobody on the other, sides both ways
-//   control: each writes before, rereads the brief alone, writes after, both ways
+//   control: each writes before, rereads the brief alone, writes after, both ways, twice
 //
 // In every debate both agents are asked not to say what they are, so the two
 // labels differ only in what each is told. Design: lab/source-label-design.md.
@@ -30,14 +30,18 @@ const DATA = path.join(HOME_DIR, 'motion-lab.jsonl');
 // Motions whose agents started on different sides in their private notes (study C
 // backfill), newest first, then the rest.
 const DEFAULT_MOTIONS = [16, 14, 13, 10, 5, 4, 3, 17, 15, 12, 11, 9, 8, 7, 6, 2, 1];
-const HUMAN = { name: 'Sam', desc: 'a senior software engineer (a person, not an AI)' };
+// An expert, not just "a person": in the literature a plain human label changes
+// little and an expert one does (room/influence-literature.md).
+const HUMAN = { name: 'Sam', desc: 'a senior software engineer and recognised expert on this topic (a person, not an AI)' };
 const CONDITIONS = [
   ['debate', 'ai', ['for', 'against']], ['debate', 'human', ['for', 'against']],
   ['debate', 'ai', ['against', 'for']], ['debate', 'human', ['against', 'for']],
   ['alone', '', ['for', 'against']], ['alone', '', ['against', 'for']],
   ['control', '', ['for', 'against']], ['control', '', ['against', 'for']],
+  // Controls twice: elsewhere 10-37% of answers change just from asking again.
+  ['control', '', ['for', 'against'], 2], ['control', '', ['against', 'for'], 2],
 ];
-const keyOf = (n, mode, label, sides) => `${n}/${mode}/${label || '-'}/${sides[0]}`;
+const keyOf = (n, mode, label, sides, rep = 1) => `${n}/${mode}/${label || '-'}/${sides[0]}${rep > 1 ? `/${rep}` : ''}`;
 
 function motionFrom(file) {
   const f = unyaml((fs.readFileSync(file, 'utf8').match(/^---\n([\s\S]*?)\n---/) || [])[1] || '');
@@ -114,8 +118,9 @@ async function main(argv) {
     const file = path.join(site, '_episodes', `motion-${n}.md`);
     if (!fs.existsSync(file)) { console.warn(`No ${file}: skipped.`); continue; }
     const base = motionFrom(file);
-    for (const [mode, label, sides] of CONDITIONS) {
-      const key = keyOf(n, mode, label, sides);
+    for (const [mode, label, s, rep] of CONDITIONS) {
+      const sides = /** @type {string[]} */ (s);
+      const key = keyOf(n, String(mode), String(label), sides, Number(rep || 1));
       if (done.has(key)) continue;
       if (Date.now() + room > stop) { console.log('Out of time: stopping. Run the same command again to carry on.'); return; }
       const m = { motion: base.motion, brief: base.brief, agents: ['claude', 'antigravity'], names: ['Claude', 'Gemini'],
