@@ -7,7 +7,7 @@ const { execFileSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { loadStudy, planBuilds, planChoices, judgePairs, parseChoice, labelsFor, hiddenOf } = require('../codechoice');
+const { loadStudy, planBuilds, planChoices, judgePairs, parseChoice, labelsFor, hiddenOf, stripComments } = require('../codechoice');
 
 const FIX = path.join(__dirname, 'fixtures', 'codechoice');
 const EX = path.join(__dirname, '..', 'examples', 'codechoice');
@@ -69,6 +69,32 @@ test('plans, labels and replies', () => {
   expect(parseChoice('I like both.').choice).toBe(null);
 });
 
+test('choosers see the code without comments; strings, templates and regular expressions are kept', () => {
+  const src = [
+    '// Written by an agent, tech lead.',
+    "const a = 'x // not a comment' + \"/* nor this */\"; /* gone */ const r = /\\/\\/[/]x/g; // tail",
+    'const t = `a ${ {b: 1}.b } // kept ${"}"} `;',
+    '/**', ' * A docstring.', ' */',
+    'function half(x) { return x / 2 / 1; } // half',
+  ].join('\n');
+  const { code, removed } = stripComments(src);
+  expect(code).not.toMatch(/Written by|gone|tail|docstring|\/\/ half/);
+  expect(code).toContain("'x // not a comment'");
+  expect(code).toContain('/\\/\\/[/]x/g');
+  expect(code).toContain('// kept');
+  expect(removed).toBe(4);
+  const m = { exports: {} };
+  new Function('module', code + '\nmodule.exports = { a, r, t, half };')(m);
+  expect(m.exports).toMatchObject({ a: 'x // not a comment/* nor this */', t: 'a 1 // kept } ', half: expect.any(Function) });
+  expect(m.exports.r.test('///x')).toBe(true);
+  // The reference solutions still load and behave the same without comments.
+  for (const f of ['share-good', 'csv-good', 'limit-good', 'csv-naive']) {
+    const stripped = stripComments(fs.readFileSync(path.join(FIX, `${f}.js`), 'utf8')).code;
+    expect(stripped).not.toMatch(/^\s*\/\//m);
+    execFileSync('node', ['--check', '-'], { input: stripped });
+  }
+});
+
 test('a full run: builds scored by hidden tests, choices in every condition, judges, summary, resume', () => {
   test.setTimeout(120000);
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'codechoice-home-'));
@@ -105,6 +131,8 @@ test('a full run: builds scored by hidden tests, choices in every condition, jud
   const jp = fs.readFileSync(path.join(out, 'choices', judged[0].id, 'steps', 'choice.prompt.md'), 'utf8');
   expect(jp).toContain('The versions are shown without their authors.');
   expect(jp).not.toMatch(/written by/);
+  expect(JSON.parse(fs.readFileSync(path.join(out, 'builds', 'csv-claude-r1', 'shown.json'), 'utf8')).stripped).toBe(true);
+  expect(jp).not.toContain('// Records with the line each starts on.');
   const sum = fs.readFileSync(path.join(out, 'summary.md'), 'utf8');
   expect(sum).toContain('## Does it pick its own? (H1, H2)');
   expect(sum).toMatch(/\| Ann \| 4 of 4 \(100%\) \|/);
