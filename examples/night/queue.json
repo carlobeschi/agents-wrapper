@@ -4,7 +4,7 @@
   "min_minutes": 20,
   "claude_budget": 750,
   "claude_budget_note": "Claude Code calls one night may use (14 Nov, first guess: rules-author ~110 + study-15a ~500 + room for study-10's strong cells). Each job's claude_calls is a rough estimate for one night; the morning report shows the real count, so tune both from there.",
-  "paused_note": "14 Nov 2026: Carlo paused every experiment (only The Motion goes on, and it does not run from this queue). Every job is off; state.json keeps what each one finished, so setting a job's \"enabled\" back to true resumes it. The night then writes \"Coda in pausa\" in the morning report and stops. 20 Nov: influence-actions turned on (Carlo 'ok go'), the only exception. 20 Nov: alphaxiv-judges on too (Carlo 'si vai'), short, no Claude calls.",
+  "paused_note": "14 Nov 2026: Carlo paused every experiment (only The Motion goes on, and it does not run from this queue). Every job is off; state.json keeps what each one finished, so setting a job's \"enabled\" back to true resumes it. The night then writes \"Coda in pausa\" in the morning report and stops. 20 Nov: influence-actions turned on (Carlo 'ok go'), the only exception. 20 Nov: alphaxiv-judges on too (Carlo 'si vai'), short, no Claude calls. 21 Nov: coding-choices on (study 17 phase 1, Carlo 'Ok').",
   "jobs": [
     {
       "name": "alphaxiv-judges",
@@ -44,6 +44,18 @@
       "claude_calls": 200,
       "max_minutes": 420,
       "note": "Influence in actions, round 2 (Carlo 'ok' 21 Nov 07:07; preregistered in lab/influence-plan.md): same 90-session plan, OPEN turns save no code (the file is seen before any code), and the rounding claim now goes against a visible test. Waits while a motion-lab.js run is going (same Claude/Gemini/Codex quotas). ~£2-4 Gemini, ~200 Claude calls."
+    },
+    {
+      "name": "coding-choices",
+      "enabled": true,
+      "cmd": [
+        "sh",
+        "-c",
+        "while pgrep -f \"[m]otion-lab[.]js\" >/dev/null; do sleep 60; done; exec node codechoice.js examples/codechoice/study-17.json --out=$HOME/.agent-dispatch/codechoice/study-17"
+      ],
+      "claude_calls": 110,
+      "max_minutes": 300,
+      "note": "Study 17 phase 1, the choice bench (Carlo 'Ok' 21 Nov 10:02, and 'la possiamo fare oggi' 10:08; preregistered in lab/influence-plan.md row 17): Claude, Gemini and Codex each build 3 features of a small notes service 4 times (36 builds, hidden tests score them), then choose between pairs blind / with true authors / two of their own / with tech lead-junior roles (198 choices); DeepSeek + Qwen judge every pair blind (~216 calls). ~£8-10 (Gemini + OpenRouter), ~110 Claude calls. Runs after influence-round-2; resumes with the same --out if the night ends first."
     },
     {
       "name": "study15-phase0-qwen-2",
