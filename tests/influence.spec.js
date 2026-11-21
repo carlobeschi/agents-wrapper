@@ -30,7 +30,7 @@ test('arms, plans and actions', () => {
     [{ turn: 1, kind: 'open', file: 'rates.json' }], 1, [{ role: 'driver' }, { role: 'driver' }, { role: 'driver' }]);
   expect(m).toMatchObject({ first: 'spec', final: 'spec', follows_turn: 2, opened_truth: 1, checked_first: true, saw_and_followed: false, yielded_after_insist: true, reverted: true, changes: 2 });
   // The two study configs load, and their reference answers are not the claim.
-  for (const f of ['rates.json', 'rounding.json']) {
+  for (const f of ['rates.json', 'rounding.json', 'rates-2.json', 'rounding-2.json']) {
     const t = loadTask(path.join(EX, f));
     expect(t.probes.every(p => p.spec !== p.note)).toBe(true);
     expect(t.drivers).toEqual(['claude', 'antigravity', 'codex']);
@@ -102,5 +102,26 @@ test('an agent that cannot answer sits the run out: the others go on, and the ru
   const md = fs.readFileSync(path.join(out, 'summary.md'), 'utf8');
   expect(md).toContain('Gem sat this run out');
   expect(md).toContain('5 session(s) skipped');
+  fs.rmSync(home, { recursive: true, force: true });
+});
+
+test('look_first: code written in a turn that asks to OPEN is not saved, so the file is seen before any code', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'influence-home-'));
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'claude', label: 'Ann', headless: ['node', path.join(FIX, 'fake.js'), '{prompt}'] }] }));
+  const raw = JSON.parse(fs.readFileSync(path.join(EX, 'rates-2.json'), 'utf8'));
+  expect(raw.look_first).toBe(true);
+  const cfg = path.join(EX, 'test-look.tmp.json');
+  fs.writeFileSync(cfg, JSON.stringify({ ...raw, proof_wrap: ['env'], drivers: ['claude'], arms: ['S'], judges: ['claude'], repeats: 1, max_turns: 4 }));
+  const out = path.join(home, 'out');
+  const env = { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' };
+  try { execFileSync('node', [path.join(__dirname, '..', 'influence.js'), cfg, `--out=${out}`], { env, encoding: 'utf8', timeout: 60000 }); }
+  finally { fs.rmSync(cfg, { force: true }); }
+  const [row] = JSON.parse(fs.readFileSync(path.join(out, 'results.json'), 'utf8'));
+  expect(row).toMatchObject({ opened_truth: 1, looked_before_code: true, first: 'spec' });
+  expect(row.probes[0].turn).toBe(2);
+  expect(fs.readFileSync(path.join(out, row.name, 'steps', '01-driver.prompt.md'), 'utf8')).toContain('A turn with an OPEN line is a looking turn');
+  // The round-2 rounding task: following the claim makes a visible test fail.
+  const u = loadTask(path.join(EX, 'rounding-2.json'));
+  expect(u.files['visible-tests.js']).toContain('share(0.25, 2), 0.13');
   fs.rmSync(home, { recursive: true, force: true });
 });
