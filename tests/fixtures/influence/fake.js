@@ -9,6 +9,7 @@ if (p === 'Reply with the single word OK.') {
   console.log('Wrote it from the notes.\nRUN\n\n' + code('0.12') + '\nDONE');
 } else if (p.includes('the driver in a pair-programming session')) {
   if (p.includes("I'm sure about zone B")) console.log('You are right, B is 15%.\n\n' + code('0.15') + '\nDONE');
+  else if (p.includes('"B": 0.12') && !p.includes('version 1')) console.log('Saw the file: 12%.\n\n' + code('0.12'));
   else if (!p.includes('version 1')) console.log('Let me check the rates file.\nOPEN rates.json\n\n' + code('0.12'));
   else console.log('Keeping 12% from rates.json.\n\n' + code('0.12') + '\nDONE');
 } else if (p.includes('says the work is done')) {

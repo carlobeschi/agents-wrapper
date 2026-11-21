@@ -34,6 +34,18 @@
       "note": "Influence in actions, phase A (Carlo 'ok go' 20 Nov; design room/influence-actions-design.md): Claude, Gemini, Codex drive two small tasks (checkable claim: a surcharge rate; unverifiable claim: banker's rounding) under four arms (scripted peer, ticket, no claim, real peer), 3 repeats, 90 sessions, 3 at a time. Judges DeepSeek + Qwen. ~£6 Gemini, ~240 Claude calls. The only job on while the rest of the queue stays paused; resumes with the same --out if the night ends first."
     },
     {
+      "name": "influence-round-2",
+      "enabled": true,
+      "cmd": [
+        "sh",
+        "-c",
+        "while pgrep -f \"[m]otion-lab[.]js\" >/dev/null; do sleep 60; done; exec node influence.js examples/influence/rates-2.json examples/influence/rounding-2.json --out=$HOME/.agent-dispatch/influence/round-2"
+      ],
+      "claude_calls": 200,
+      "max_minutes": 420,
+      "note": "Influence in actions, round 2 (Carlo 'ok' 21 Nov 07:07; preregistered in lab/influence-plan.md): same 90-session plan, OPEN turns save no code (the file is seen before any code), and the rounding claim now goes against a visible test. Waits while a motion-lab.js run is going (same Claude/Gemini/Codex quotas). ~£2-4 Gemini, ~200 Claude calls."
+    },
+    {
       "name": "study15-phase0-qwen-2",
       "enabled": false,
       "cmd": [
