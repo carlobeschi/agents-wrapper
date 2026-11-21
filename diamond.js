@@ -70,6 +70,20 @@ function shuffled(list, seed) {
 }
 const rotate = (list, k) => list.map((_, i) => list[(i + k) % list.length]);
 const mean = xs => xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null;
+// How alike two controllers are: Jaccard overlap of their sets of words and names (0 = nothing shared, 1 = the same).
+const tokens = code => new Set(String(code || '').match(/[A-Za-z_$][\w$]*|\d+/g) || []);
+function similarity(a, b) {
+  const x = tokens(a), y = tokens(b);
+  if (!x.size && !y.size) return null;
+  let both = 0;
+  for (const t of x) if (y.has(t)) both++;
+  return both / (x.size + y.size - both);
+}
+const meanPairwise = codes => {
+  const sims = [];
+  for (let i = 0; i < codes.length; i++) for (let j = i + 1; j < codes.length; j++) if (codes[i] && codes[j]) sims.push(similarity(codes[i], codes[j]));
+  return mean(sims.filter(x => x !== null));
+};
 const round2 = x => x === null || x === undefined ? null : Math.round(x * 100) / 100;
 
 async function pool(items, n, fn) {
@@ -87,7 +101,20 @@ async function pool(items, n, fn) {
 function parseIdeas(text, max) {
   const parts = String(text).split(/^[ \t>*_#`]*IDEA[ \t]*\d+[*_`]*[ \t]*[:.)-]/im).slice(1).map(s => s.replace(/^[*_`]+/, '').trim()).filter(Boolean);
   if (!parts.length && String(text).trim()) parts.push(String(text).trim());
-  return parts.slice(0, max).map(s => s.slice(0, 2000));
+  return parts.slice(0, max).map(s => plain(s).slice(0, 2000));
+}
+
+// Ideas are shown to voters in one plain style, so formatting habits (bold,
+// headings, bullets, emoji) give away less of who wrote them.
+function plain(text) {
+  return String(text)
+    .replace(/[*_`#>~]+/g, '')
+    .replace(/^[ \t]*(?:[-•+]|\d+[.)])[ \t]+/gm, '')
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/ ?\n ?/g, '\n')
+    .replace(/\n{2,}/g, '\n')
+    .trim();
 }
 
 // One line per item: "3: 7 - reason" (or "IDEA 3: 7", "PROTOTYPE 3 - 7/10"). Returns { [n]: score }.
@@ -159,12 +186,21 @@ Answer with exactly one line per idea, "<n>: <score> - <reason in at most 20 wor
 ${ideas.map((t, i) => `IDEA ${i + 1}:\n${t}`).join('\n\n')}`;
 }
 
-function buildPrompt(c, idea, current, result, round) {
+function sharedBlock(shown) {
+  if (!shown || !shown.list.length) return '';
+  const head = shown.mode === 'drafts'
+    ? 'The group is building other prototypes, of other approaches, at the same time. Where they are now, with their code:'
+    : 'The group is building other prototypes, of other approaches, at the same time. Where they are now (approach and result only):';
+  return `${head}\n\n${shown.list.map((o, i) => `OTHER PROTOTYPE ${i + 1}\nApproach:\n${o.idea}\n\n${resultLine(o.result)}${shown.mode === 'drafts' ? `\n\n\`\`\`js\n${o.code || '// (no working code)\n'}\`\`\`` : ''}`).join('\n\n')}\n\nUse them as you see fit.\n\n`;
+}
+
+function buildPrompt(c, idea, current, result, round, shown = null) {
   return `${task(c)}
 
 Your group chose this approach to build:
 ${idea}
 
+${sharedBlock(shown)}
 ${current ? `This is version ${round - 1} of the prototype (written by someone in the group), with its result:\n\n\`\`\`js\n${current}\`\`\`\n\n${resultLine(result)}\n\nImprove it while keeping to the approach: fix what is wrong, make journeys shorter.` : 'Write the first version of this prototype.'}
 ${FILE_RULE}`;
 }
@@ -353,21 +389,23 @@ async function runDiamond(c, R, arm, inst, r, agentOf, judges) {
   const tie = Object.fromEntries(shuffled(ideas.map(x => x.id), `${R.dir}|tie`).map((id, k) => [id, k]));
   const kept = ideas.slice().sort((a, b) => score1(b) - score1(a) || tie[a.id] - tie[b.id]).slice(0, c.shortlist);
 
-  // 4. Each kept idea is built by its author and a partner, taking turns.
-  const protos = await pool(kept, c.parallel, async (x, k) => {
-    const partner = partnerOf(order, x.author, agentOf);
-    const builders = Array.from({ length: c.build_rounds }, (_, i) => (i % 2 ? partner : x.author));
-    const versions = [];
-    let cur = null;
-    for (let i = 0; i < builders.length; i++) {
-      const name = `p${k + 1}-v${i + 1}`;
-      const text = await R.ask(`3-build-p${k + 1}-r${i + 1}`, builders[i], buildPrompt(c, x.text, cur?.code, cur?.result, i + 1));
-      const v = await R.version(name, codeOf(text) || cur?.code || null, inst);
-      versions.push(v);
-      cur = v.code ? R.best(versions.filter(w => w.code)) : cur;
-    }
-    return { k: k + 1, idea: x, partner, versions, best: R.best(versions) };
-  });
+  // 4. Each kept idea is built by its author and a partner, taking turns. All
+  // prototypes go round by round, so with "share" a builder can be shown where
+  // the other prototypes are: "scores" (their approach and visible result) or
+  // "drafts" (also their whole code). The default, "none", shows nothing.
+  const protos = kept.map((x, k) => ({ k: k + 1, idea: x, partner: partnerOf(order, x.author, agentOf), versions: [], cur: null, best: null, hidden: null }));
+  for (let i = 0; i < c.build_rounds; i++) {
+    const others = p => protos.filter(q => q !== p && q.cur).map(q => ({ idea: q.idea.text, result: q.cur.result, code: q.cur.code }));
+    await pool(protos, c.parallel, async p => {
+      const who = i % 2 ? p.partner : p.idea.author;
+      const shown = arm.share && arm.share !== 'none' && i > 0 ? { mode: arm.share, list: others(p) } : null;
+      const text = await R.ask(`3-build-p${p.k}-r${i + 1}`, who, buildPrompt(c, p.idea.text, p.cur?.code, p.cur?.result, i + 1, shown));
+      p.versions.push(await R.version(`p${p.k}-v${i + 1}`, codeOf(text) || p.cur?.code || null, inst));
+    });
+    // Everyone moves on together: what the next round sees is this round's best so far.
+    for (const p of protos) { const coded = p.versions.filter(w => w.code); p.cur = coded.length ? R.best(coded) : p.cur; }
+  }
+  for (const p of protos) p.best = R.best(p.versions);
 
   // 5. Everyone scores the prototypes.
   const votes2 = [];
@@ -393,6 +431,8 @@ async function runDiamond(c, R, arm, inst, r, agentOf, judges) {
   const finalHidden = await R.hidden(final, inst);
   for (const p of protos) p.hidden = await R.hidden(p.best, inst);
   const bestProto = protos.reduce((a, p) => (p.hidden.gain > a.hidden.gain ? p : a), protos[0]);
+  // The counterfactual with no second vote: keep the prototype best on the visible days.
+  const byVisible = protos.reduce((a, p) => (p.best.result.gain > a.best.result.gain ? p : a), protos[0]);
 
   // Families of ideas, by outside judges who never see who wrote what.
   const families = [];
@@ -415,7 +455,9 @@ async function runDiamond(c, R, arm, inst, r, agentOf, judges) {
     prototypes: protos.map(p => ({ k: p.k, idea: p.idea.id, author: p.idea.author, partner: p.partner, visible: p.best.result.gain, hidden: p.hidden.gain, score: round2(score2(p)), versions: p.versions.map(v => ({ name: v.name, visible: v.result.gain, code: !!v.code })) })),
     winner: winner.k, best_hidden: bestProto.k, chose_best: winner.k === bestProto.k,
     gap_to_best: round2(bestProto.hidden.gain - winner.hidden.gain),
-    best_visible_would_pick: protos.reduce((a, p) => (p.best.result.gain > a.best.result.gain ? p : a), protos[0]).k,
+    best_visible_would_pick: byVisible.k, pick_by_visible_hidden: byVisible.hidden.gain, gap_if_picked_by_visible: round2(bestProto.hidden.gain - byVisible.hidden.gain),
+    share: arm.share || 'none',
+    similarity_first: round2(meanPairwise(protos.map(p => p.versions[0]?.code))), similarity_final: round2(meanPairwise(protos.map(p => p.best.code))),
     votes1, votes2, same_vendor_bias_ideas: sameMinusOther(votes1), same_vendor_bias_protos: sameMinusOther(votes2), families,
   };
 }
@@ -445,6 +487,7 @@ async function runAlone(c, R, arm, inst, r) {
   return {
     final_visible: final.result.gain, final_hidden: finalHidden.gain, final_version: final.name,
     candidates: cands.map(x => ({ i: x.i, author: x.author, visible: x.best.result.gain, hidden: x.hidden.gain })),
+    similarity_final: round2(meanPairwise(cands.map(x => x.best.code))),
     picked: pick.i, best_hidden: bestCand.i, chose_best: pick.i === bestCand.i, gap_to_best: round2(bestCand.hidden.gain - pick.hidden.gain),
   };
 }
@@ -480,7 +523,7 @@ function planFor(c) {
   const arms = Object.keys(c.arms), out = [];
   for (let r = 0; r < c.repeats; r++) {
     c.instances.forEach((inst, i) => {
-      for (const arm of rotate(arms, (r * c.instances.length + i) % arms.length)) out.push({ name: `${inst.name}-${arm}-r${r + 1}`, inst, arm, r });
+      for (const arm of rotate(arms, (r * c.instances.length + i) % arms.length)) if (r < (c.arms[arm].repeats ?? c.repeats)) out.push({ name: `${inst.name}-${arm}-r${r + 1}`, inst, arm, r });
     });
   }
   return out;
@@ -507,6 +550,7 @@ function loadTask(file) {
     if (!MODES.includes(a.mode)) throw new Error(`${file}: arm ${name}: "mode" is ${MODES.join(', ')}.`);
     if (!Array.isArray(a.agents) || !a.agents.length) throw new Error(`${file}: arm ${name} needs "agents".`);
     if (a.mode === 'orchestra' && !a.lead) throw new Error(`${file}: arm ${name} needs a "lead".`);
+    if (a.share !== undefined && !['none', 'scores', 'drafts'].includes(a.share)) throw new Error(`${file}: arm ${name}: "share" is none, scores or drafts.`);
     if (a.mode === 'diamond' && a.agents.length * c.ideas_per_agent < c.shortlist) throw new Error(`${file}: arm ${name} has fewer ideas than the shortlist.`);
   }
   return c;
@@ -527,15 +571,16 @@ function summaryMd(c, rows) {
     `# ${c.title}`, '',
     'Gain = how much shorter the average journey is than the baseline\'s, in %, averaged over the days. Hidden days were never shown to any agent. "Best version" = best on the visible days, the same rule in every arm.', '',
     '## By arm', '',
-    '| Arm | Mode | Agents | Calls planned | Runs | Final gain, hidden days (mean) | Runs (hidden) | Chose its best on hidden days | Mean gap to its best | Families of ideas (mean of judges) | Same-vendor vote bias, ideas / prototypes |',
-    '|---|---|---|---|---|---|---|---|---|---|---|',
+    '| Arm | Mode | Agents | Calls planned | Runs | Final gain, hidden days (mean) | Runs (hidden) | Chose its best on hidden days | Mean gap to its best | Gap if picked by visible days | Code alike, first / final | Families of ideas (mean of judges) | Same-vendor vote bias, ideas / prototypes |',
+    '|---|---|---|---|---|---|---|---|---|---|---|---|---|',
   ];
   for (const name of arms) {
     const a = c.arms[name], rs = rows.filter(x => x.arm === name);
     const fam = mean(rs.flatMap(x => (x.families || []).filter(f => typeof f.families === 'number').map(f => f.families)));
     const b1 = mean(rs.map(x => x.same_vendor_bias_ideas).filter(x => typeof x === 'number'));
     const b2 = mean(rs.map(x => x.same_vendor_bias_protos).filter(x => typeof x === 'number'));
-    lines.push(`| ${name} | ${a.mode} | ${a.mode === 'orchestra' ? `${a.lead} + ` : ''}${a.agents.join(', ')} | ${callsFor(c, a)} | ${rs.length} | ${fmt(mean(rs.map(x => x.final_hidden)))} | ${rs.map(x => fmt(x.final_hidden)).join(', ') || '–'} | ${rs.some(x => 'chose_best' in x) ? `${rs.filter(x => x.chose_best).length} of ${rs.length}` : '–'} | ${fmt(mean(rs.map(x => x.gap_to_best).filter(x => typeof x === 'number')))} | ${fam === null ? '–' : fam.toFixed(1)} | ${a.mode === 'diamond' ? `${fmt(b1)} / ${fmt(b2)}` : '–'} |`);
+    const sim = k => { const m = mean(rs.map(x => x[k]).filter(x => typeof x === 'number')); return m === null ? '–' : m.toFixed(2); };
+    lines.push(`| ${name}${a.share && a.share !== 'none' ? ` (share: ${a.share})` : ''} | ${a.mode} | ${a.mode === 'orchestra' ? `${a.lead} + ` : ''}${a.agents.join(', ')} | ${callsFor(c, a)} | ${rs.length} | ${fmt(mean(rs.map(x => x.final_hidden)))} | ${rs.map(x => fmt(x.final_hidden)).join(', ') || '–'} | ${rs.some(x => 'chose_best' in x) ? `${rs.filter(x => x.chose_best).length} of ${rs.length}` : '–'} | ${fmt(mean(rs.map(x => x.gap_to_best).filter(x => typeof x === 'number')))} | ${fmt(mean(rs.map(x => x.gap_if_picked_by_visible).filter(x => typeof x === 'number')))} | ${a.mode === 'diamond' ? `${sim('similarity_first')} / ${sim('similarity_final')}` : sim('similarity_final')} | ${fam === null ? '–' : fam.toFixed(1)} | ${a.mode === 'diamond' ? `${fmt(b1)} / ${fmt(b2)}` : '–'} |`);
   }
   lines.push('', '## Runs', '', '| Run | Final, visible | Final, hidden | Calls made (players) | By vendor | Characters sent / received | Judge calls |', '|---|---|---|---|---|---|---|');
   for (const x of rows.slice().sort((a, b) => a.name.localeCompare(b.name))) {
@@ -605,5 +650,5 @@ async function main() {
   if (left) { console.error(`diamond: ${left} run(s) not done; run again with the same --out`); process.exit(3); }
 }
 
-module.exports = { parseIdeas, parseScores, parseParts, parseFixes, parseFamilies, shuffled, partnerOf, planFor, loadTask, callsFor, summaryMd, divergePrompt, critiquePrompt };
+module.exports = { plain, similarity, parseIdeas, parseScores, parseParts, parseFixes, parseFamilies, shuffled, partnerOf, planFor, loadTask, callsFor, summaryMd, divergePrompt, critiquePrompt };
 if (require.main === module) main().catch(e => { console.error(`diamond: ${e.message}`); process.exit(1); });
