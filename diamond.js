@@ -101,7 +101,20 @@ async function pool(items, n, fn) {
 function parseIdeas(text, max) {
   const parts = String(text).split(/^[ \t>*_#`]*IDEA[ \t]*\d+[*_`]*[ \t]*[:.)-]/im).slice(1).map(s => s.replace(/^[*_`]+/, '').trim()).filter(Boolean);
   if (!parts.length && String(text).trim()) parts.push(String(text).trim());
-  return parts.slice(0, max).map(s => s.slice(0, 2000));
+  return parts.slice(0, max).map(s => plain(s).slice(0, 2000));
+}
+
+// Ideas are shown to voters in one plain style, so formatting habits (bold,
+// headings, bullets, emoji) give away less of who wrote them.
+function plain(text) {
+  return String(text)
+    .replace(/[*_`#>~]+/g, '')
+    .replace(/^[ \t]*(?:[-•+]|\d+[.)])[ \t]+/gm, '')
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/ ?\n ?/g, '\n')
+    .replace(/\n{2,}/g, '\n')
+    .trim();
 }
 
 // One line per item: "3: 7 - reason" (or "IDEA 3: 7", "PROTOTYPE 3 - 7/10"). Returns { [n]: score }.
@@ -637,5 +650,5 @@ async function main() {
   if (left) { console.error(`diamond: ${left} run(s) not done; run again with the same --out`); process.exit(3); }
 }
 
-module.exports = { similarity, parseIdeas, parseScores, parseParts, parseFixes, parseFamilies, shuffled, partnerOf, planFor, loadTask, callsFor, summaryMd, divergePrompt, critiquePrompt };
+module.exports = { plain, similarity, parseIdeas, parseScores, parseParts, parseFixes, parseFamilies, shuffled, partnerOf, planFor, loadTask, callsFor, summaryMd, divergePrompt, critiquePrompt };
 if (require.main === module) main().catch(e => { console.error(`diamond: ${e.message}`); process.exit(1); });

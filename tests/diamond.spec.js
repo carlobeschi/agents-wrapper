@@ -9,7 +9,7 @@ const { execFileSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { similarity, parseIdeas, parseScores, parseParts, parseFixes, parseFamilies, shuffled, partnerOf, planFor, loadTask, callsFor } = require('../diamond');
+const { plain, similarity, parseIdeas, parseScores, parseParts, parseFixes, parseFamilies, shuffled, partnerOf, planFor, loadTask, callsFor } = require('../diamond');
 const { simulate, evaluate, makeDay, BASELINE } = require('../elevator');
 
 const FAKE = path.join(__dirname, 'fixtures', 'diamond', 'fake.js');
@@ -37,6 +37,8 @@ test('the elevator simulator: the same day every time, the baseline delivers eve
 test('parsing, shuffling, partners, plan and budget', () => {
   expect(parseIdeas('Intro\n**IDEA 1:** Zones\nsplit floors\n\nIDEA 2: Parking\nback to lobby\nIDEA 3: extra', 2)).toEqual(['Zones\nsplit floors', 'Parking\nback to lobby']);
   expect(parseIdeas('just one blob', 2)).toEqual(['just one blob']);
+  // Formatting habits are flattened, so voters see every idea in one style.
+  expect(plain('**Zones** 🚀\n\n- split `floors`\n1. park  cars')).toBe('Zones\nsplit floors\npark cars');
   expect(parseScores('1: 7 - good\n**2:** 3/10 - meh\nIDEA 3 - 11\n4: 5\n4: 9', 4)).toEqual({ 1: 7, 2: 3, 4: 5 });
   expect(parseParts('Plan.\nPART 1: dispatch\n- PART 2: parking\nPART 3: extra', 2)).toEqual(['dispatch', 'parking']);
   expect(parseFixes('FIX 2: faster\nFIX 2: again\nFIX 9: nope\nFIX 1: ok', 3, 5)).toEqual([{ part: 2, fix: 'faster' }, { part: 1, fix: 'ok' }]);
@@ -104,6 +106,10 @@ test('a full run: diamond, alone and orchestra arms; votes ignore one\'s own ide
   expect(typeof d.final_hidden).toBe('number');
   // Two groups named (1-2 and 3) plus three ideas left out, one family each.
   expect(d.families.map(f => f.families)).toEqual([5, 5]);
+  // Voters never see who wrote what, nor anyone else's votes.
+  const vote = fs.readFileSync(path.join(out, 'i1-D-mix-r1', 'steps', '2-scores-02.prompt.md'), 'utf8');
+  expect(vote).not.toMatch(/claude|codex|antigravity|gemini|\b(Ann|Bob|Cy)\b/i);
+  expect(vote).not.toContain(' - reason');
   // Votes and prompts never name an agent.
   const steps = path.join(out, 'i1-D-mix-r1', 'steps');
   for (const f of fs.readdirSync(steps).filter(f => f.endsWith('.prompt.md'))) expect(fs.readFileSync(path.join(steps, f), 'utf8')).not.toMatch(/\b(Ann|Bob|Cy)\b/);
