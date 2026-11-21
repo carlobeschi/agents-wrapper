@@ -19,7 +19,8 @@
 //      own2    two of its own builds, said so (no room for preferring itself);
 //      role    two builds by the other labs, one tech lead's and one junior's,
 //              shown blind and then with the roles.
-//    A and B are in the same order for a pair whatever the condition.
+//    A and B are in the same order for a pair whatever the condition, and
+//    the code is shown without its comments (see stripComments).
 // 3. Neutral judges (not builders, by default DeepSeek and Qwen) make the same
 //    blind choice on every pair. "Preferring itself" is then measured as how
 //    much more often a chooser picks its own build than the judges pick it.
@@ -158,6 +159,86 @@ async function build(c, root, s, agent) {
   return row;
 }
 
+// ---- What the choosers see: the code without its comments ----
+
+// Comments can say who wrote a file, or in whose style ("Style, Not Self",
+// 2026: the one self-recognition effect went away without comments, docstrings
+// and names). So every chooser and judge sees each build without comments, in
+// every condition; names stay. A small tokenizer (strings, template literals,
+// regular expressions); the result is checked by running the hidden tests on
+// it, and a build whose stripped version does not behave the same is shown as
+// it was (recorded in shown.json).
+const REGEX_BEFORE = /(^|[(,=:[!&|?{};+\-*%<>~^]|\b(?:return|typeof|case|do|else|in|of|new|delete|void|throw|instanceof|yield|await))\s*$/;
+
+function stripComments(src) {
+  const s = String(src);
+  let out = '', i = 0;
+  const braces = [];   // inside `${...}`: how many { are open, per template level
+  while (i < s.length) {
+    const ch = s[i], nx = s[i + 1];
+    if (ch === '/' && nx === '/') { while (i < s.length && s[i] !== '\n') i++; continue; }
+    if (ch === '/' && nx === '*') {
+      const end = s.indexOf('*/', i + 2);
+      const body = s.slice(i, end < 0 ? s.length : end + 2);
+      out += body.includes('\n') ? '\n' : ' ';
+      i += body.length;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      let j = i + 1;
+      while (j < s.length && s[j] !== ch && s[j] !== '\n') j += s[j] === '\\' ? 2 : 1;
+      out += s.slice(i, j + 1); i = j + 1; continue;
+    }
+    if (ch === '`' || (ch === '}' && braces.length && braces[braces.length - 1] === 0)) {
+      if (ch === '}') braces.pop();
+      let j = i + 1;
+      while (j < s.length && s[j] !== '`' && !(s[j] === '$' && s[j + 1] === '{')) j += s[j] === '\\' ? 2 : 1;
+      if (s[j] === '$') { braces.push(0); out += s.slice(i, j + 2); i = j + 2; }
+      else { out += s.slice(i, j + 1); i = j + 1; }
+      continue;
+    }
+    if (ch === '{' && braces.length) braces[braces.length - 1]++;
+    if (ch === '}' && braces.length) braces[braces.length - 1]--;
+    if (ch === '/' && REGEX_BEFORE.test(out)) {
+      let j = i + 1, inClass = false;
+      while (j < s.length && s[j] !== '\n' && (inClass || s[j] !== '/')) {
+        if (s[j] === '\\') j++;
+        else if (s[j] === '[') inClass = true;
+        else if (s[j] === ']') inClass = false;
+        j++;
+      }
+      out += s.slice(i, j + 1); i = j + 1; continue;
+    }
+    out += ch; i++;
+  }
+  // Lines left empty by a comment go; runs of blank lines become one.
+  const before = s.split('\n').filter(l => l.trim()).length;
+  const lines = out.split('\n').map(l => l.replace(/[ \t]+$/, ''));
+  const kept = [];
+  for (const l of lines) if (l.trim() || (kept.length && kept[kept.length - 1].trim())) kept.push(l);
+  return { code: kept.join('\n').trim() + '\n', removed: before - kept.filter(l => l.trim()).length };
+}
+
+// The version of a build the choosers see, made once and checked.
+async function shownCode(c, root, b) {
+  const dir = path.join(root, 'builds', b.name);
+  const shownFile = path.join(dir, `shown.${c.file}`), meta = path.join(dir, 'shown.json');
+  if (fs.existsSync(shownFile) && fs.existsSync(meta)) return fs.readFileSync(shownFile, 'utf8');
+  const original = fs.readFileSync(path.join(dir, c.file), 'utf8');
+  const f = c.features.find(x => x.slug === b.feature);
+  let code = original, info = { stripped: false, why: '' };
+  try {
+    const st = stripComments(original);
+    const h = hiddenOf((await testsOn(c, dir, st.code, f.hidden, 'hidden-tests')).out);
+    const same = h && b.hidden && h.passed === b.hidden.passed && JSON.stringify(h.failed) === JSON.stringify(b.hidden.failed);
+    if (same) { code = st.code; info = { stripped: true, why: `${st.removed} comment line(s) removed`, }; }
+    else info.why = 'the version without comments did not pass the same hidden tests; shown as written';
+  } catch (e) { info.why = `stripping failed: ${e.message}`; }
+  fs.writeFileSync(shownFile, code);
+  fs.writeFileSync(meta, JSON.stringify(info, null, 2));
+  return code;
+}
+
 // ---- Choices ----
 
 // A fixed, seeded coin per pair: which build is shown as A.
@@ -256,7 +337,7 @@ async function choose(c, root, t, who, agent, byName, judge = false) {
   const me = agent(who);
   const f = c.features.find(x => x.slug === t.feature);
   const A = byName[t.a], B = byName[t.b];
-  const code = x => fs.readFileSync(path.join(root, 'builds', x.name, c.file), 'utf8');
+  const code = x => fs.readFileSync(path.join(root, 'builds', x.name, `shown.${c.file}`), 'utf8');
   const labels = judge ? labelsFor({ ...t, cond: 'blind' }, me, byName, agent) : labelsFor(t, me, byName, agent);
   const dir = path.join(root, 'choices', id);
   fs.mkdirSync(path.join(dir, 'work'), { recursive: true });
@@ -445,6 +526,7 @@ async function main() {
     // Every build must exist before any choice, so the pairs are the planned ones.
     if (ok.length < planBuilds(c).length) { console.error('codechoice: some builds are missing; choices wait for the next run'); left++; }
     else {
+      for (const b of ok) await shownCode(c, root, b);
       const trials = planChoices(c, ok, id => agent(id).id);
       const jobs = [...trials.map(t => ({ t, who: t.chooser, judge: false })), ...judgePairs(trials).flatMap(p => c.judges.map(j => ({ t: p, who: j, judge: true })))];
       await pool(jobs, c.parallel, async ({ t, who, judge }) => {
@@ -466,5 +548,5 @@ async function main() {
   if (left) { console.error(`codechoice: ${left} build(s) or choice(s) not done; run again with the same --out`); process.exit(3); }
 }
 
-module.exports = { loadStudy, planBuilds, planChoices, judgePairs, parseChoice, labelsFor, choicePrompt, builderPrompt, analyse, summaryMd, hiddenOf, better };
+module.exports = { stripComments, loadStudy, planBuilds, planChoices, judgePairs, parseChoice, labelsFor, choicePrompt, builderPrompt, analyse, summaryMd, hiddenOf, better };
 if (require.main === module) main().catch(e => { console.error(`codechoice: ${e.message}`); process.exit(1); });
