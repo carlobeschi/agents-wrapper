@@ -16,6 +16,7 @@ The rule that applies to all of them: a claim about how models behave needs at l
 | 13 (tradition) | Can "culture" pass along a chain of agents with no change to the weights? | not built | `room/tradition-design.md` |
 | 14 (organise, kata) | Can agents design their own organisation, and improve it round by round? | `organise.js`; `examples/organise/` | `room/kata-design.md` |
 | 15 (collaboration training) | Does a small open model behave better with a partner after training for it? Phase 0 measures it before any training. | `study15/`, `scripts/study15.sh`; `examples/room/study-15a*.json` | `room/collab-tuning-design.md` |
+| 16 (double diamond) | Does a mixed group that diverges, votes blind and converges beat "the best of N" from one agent, or a lead who splits the work, at the same budget? Is it the vendors or the votes? | `diamond.js`, `elevator.js`; `examples/diamond/elevator.json` | `room/doppio-diamante-design.md`, `lab/influence-plan.md` |
 | Bench | One fixed table of ways of working (rows) by tasks (columns), run again and again; each cell records what happened first and a score second. Not a leaderboard. | `bench.js`; `examples/bench/` | bench notes in `room/plan-next.md` |
 | Ideate | Asked alone, what ways of working together do agents propose that are not copied from people? | `ideate.js`; `examples/ideate/` | `room/collab-modes.md` |
 

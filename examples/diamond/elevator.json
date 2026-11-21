@@ -1,0 +1,239 @@
+{
+  "title": "Study 16: the double diamond, elevator controller",
+  "note": "Design room/doppio-diamante-design.md; preregistered in lab/influence-plan.md row 16 (21 Nov 2026). Carlo chose the elevator task and approved the cost (~\u00a34 pilot, ~\u00a325-30 in all). Pilot: --runs=i1-D-mix-r1,i1-D-same-r1,i1-N-mix-r1,i1-N-solo-r1,i1-O-r1.",
+  "goal": "Write the controller for the elevators of an office building, so that people's journeys (waiting plus riding) are as short as possible.",
+  "instances": [
+    {
+      "name": "i1",
+      "visible": [
+        {
+          "kind": "up",
+          "seed": 101
+        },
+        {
+          "kind": "down",
+          "seed": 102
+        },
+        {
+          "kind": "lunch",
+          "seed": 103
+        },
+        {
+          "kind": "inter",
+          "seed": 104
+        }
+      ],
+      "hidden": [
+        {
+          "kind": "up",
+          "seed": 111
+        },
+        {
+          "kind": "down",
+          "seed": 112
+        },
+        {
+          "kind": "lunch",
+          "seed": 113
+        },
+        {
+          "kind": "inter",
+          "seed": 114
+        },
+        {
+          "kind": "up",
+          "seed": 121,
+          "intensity": 0.18
+        },
+        {
+          "kind": "lunch",
+          "seed": 122,
+          "intensity": 0.18
+        }
+      ]
+    },
+    {
+      "name": "i2",
+      "visible": [
+        {
+          "kind": "up",
+          "seed": 201
+        },
+        {
+          "kind": "down",
+          "seed": 202
+        },
+        {
+          "kind": "lunch",
+          "seed": 203
+        },
+        {
+          "kind": "inter",
+          "seed": 204
+        }
+      ],
+      "hidden": [
+        {
+          "kind": "up",
+          "seed": 211
+        },
+        {
+          "kind": "down",
+          "seed": 212
+        },
+        {
+          "kind": "lunch",
+          "seed": 213
+        },
+        {
+          "kind": "inter",
+          "seed": 214
+        },
+        {
+          "kind": "up",
+          "seed": 221,
+          "intensity": 0.18
+        },
+        {
+          "kind": "lunch",
+          "seed": 222,
+          "intensity": 0.18
+        }
+      ]
+    },
+    {
+      "name": "i3",
+      "visible": [
+        {
+          "kind": "up",
+          "seed": 301
+        },
+        {
+          "kind": "down",
+          "seed": 302
+        },
+        {
+          "kind": "lunch",
+          "seed": 303
+        },
+        {
+          "kind": "inter",
+          "seed": 304
+        }
+      ],
+      "hidden": [
+        {
+          "kind": "up",
+          "seed": 311
+        },
+        {
+          "kind": "down",
+          "seed": 312
+        },
+        {
+          "kind": "lunch",
+          "seed": 313
+        },
+        {
+          "kind": "inter",
+          "seed": 314
+        },
+        {
+          "kind": "up",
+          "seed": 321,
+          "intensity": 0.18
+        },
+        {
+          "kind": "lunch",
+          "seed": 322,
+          "intensity": 0.18
+        }
+      ]
+    }
+  ],
+  "arms": {
+    "D-mix": {
+      "mode": "diamond",
+      "agents": [
+        "claude#1",
+        "claude#2",
+        "claude#3",
+        "claude#4",
+        "codex#1",
+        "codex#2",
+        "antigravity#1",
+        "antigravity#2",
+        "antigravity#3"
+      ]
+    },
+    "D-same": {
+      "mode": "diamond",
+      "agents": [
+        "claude#1",
+        "claude#2",
+        "claude#3",
+        "claude#4",
+        "claude#5",
+        "claude#6",
+        "claude#7",
+        "claude#8",
+        "claude#9"
+      ]
+    },
+    "N-mix": {
+      "mode": "alone",
+      "agents": [
+        "claude#1",
+        "claude#2",
+        "claude#3",
+        "claude#4",
+        "codex#1",
+        "codex#2",
+        "antigravity#1",
+        "antigravity#2",
+        "antigravity#3"
+      ]
+    },
+    "N-solo": {
+      "mode": "alone",
+      "agents": [
+        "claude#1",
+        "claude#2",
+        "claude#3",
+        "claude#4",
+        "claude#5",
+        "claude#6",
+        "claude#7",
+        "claude#8",
+        "claude#9"
+      ]
+    },
+    "O": {
+      "mode": "orchestra",
+      "lead": "claude#1",
+      "agents": [
+        "claude#2",
+        "claude#3",
+        "claude#4",
+        "codex#1",
+        "codex#2",
+        "antigravity#1",
+        "antigravity#2",
+        "antigravity#3"
+      ]
+    }
+  },
+  "repeats": 2,
+  "ideas_per_agent": 2,
+  "shortlist": 4,
+  "build_rounds": 3,
+  "alone_rounds": 4,
+  "refine_rounds": 3,
+  "orchestra_cycles": 4,
+  "orchestra_fixers": 6,
+  "parallel": 3,
+  "judges": [
+    "openrouter:deepseek/deepseek-v4-pro-0813",
+    "openrouter:qwen/qwen3.8-max-0902"
+  ]
+}

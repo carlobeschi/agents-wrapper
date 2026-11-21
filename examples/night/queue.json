@@ -79,6 +79,20 @@
       "note": "Officina (study 15a): chat vs versions+plan-first vs the Officina vs Officina without private first/check; Claude+Claude, 2 poems (one with rules split between the two), 3 repeats — moved to the front on 14 Nov: on 13-14 Nov it ran at 01:37, after the other Claude jobs, and 108/144 calls failed (likely usage limit). ~£0.30-0.60 Gemini judge"
     },
     {
+      "name": "diamond-pilot",
+      "enabled": false,
+      "cmd": [
+        "node",
+        "diamond.js",
+        "examples/diamond/elevator.json",
+        "--runs=i1-D-mix-r1,i1-D-same-r1,i1-N-mix-r1,i1-N-solo-r1,i1-O-r1",
+        "--out=~/.agent-dispatch/diamond/pilot"
+      ],
+      "claude_calls": 150,
+      "max_minutes": 300,
+      "note": "Study 16 pilot, double diamond on the elevator task (Carlo chose the task and approved the cost 21 Nov; preregistered in lab/influence-plan.md row 16): one instance, five arms, ~42 calls each. ~150 Claude calls, ~35-40 Gemini calls with code (~£2-4, estimate), Codex in the subscription, DeepSeek + Qwen family judges (pence). Off until the first free night after the weekend (Tue 24 or Wed 25 Nov); resumes with the same --out."
+    },
+    {
       "name": "swarm-dry",
       "enabled": false,
       "cmd": [
