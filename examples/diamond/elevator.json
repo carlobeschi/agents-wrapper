@@ -1,6 +1,6 @@
 {
   "title": "Study 16: the double diamond, elevator controller",
-  "note": "Design room/doppio-diamante-design.md; preregistered in lab/influence-plan.md row 16 (21 Nov 2026). Carlo chose the elevator task and approved the cost (~\u00a34 pilot, ~\u00a325-30 in all). Pilot: --runs=i1-D-mix-r1,i1-D-same-r1,i1-N-mix-r1,i1-N-solo-r1,i1-O-r1.",
+  "note": "Design room/doppio-diamante-design.md; preregistered in lab/influence-plan.md row 16 (21 Nov 2026). Carlo chose the elevator task and approved the cost (~\u00a34 pilot, ~\u00a325-30 in all). Pilot: --runs=i1-D-mix-r1,i1-D-same-r1,i1-N-mix-r1,i1-N-solo-r1,i1-O-r1. D-drafts added 21 Nov 16:50 (The Interaction Tax, arXiv 2608.23541): like D-mix, but from round 2 each builder sees the other prototypes' code and results; one repeat per instance (3 runs).",
   "goal": "Write the controller for the elevators of an office building, so that people's journeys (waiting plus riding) are as short as possible.",
   "instances": [
     {
@@ -165,6 +165,22 @@
         "antigravity#2",
         "antigravity#3"
       ]
+    },
+    "D-drafts": {
+      "mode": "diamond",
+      "agents": [
+        "claude#1",
+        "claude#2",
+        "claude#3",
+        "claude#4",
+        "codex#1",
+        "codex#2",
+        "antigravity#1",
+        "antigravity#2",
+        "antigravity#3"
+      ],
+      "share": "drafts",
+      "repeats": 1
     },
     "D-same": {
       "mode": "diamond",

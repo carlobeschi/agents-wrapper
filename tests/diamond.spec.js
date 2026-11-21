@@ -9,7 +9,7 @@ const { execFileSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { parseIdeas, parseScores, parseParts, parseFixes, parseFamilies, shuffled, partnerOf, planFor, loadTask, callsFor } = require('../diamond');
+const { similarity, parseIdeas, parseScores, parseParts, parseFixes, parseFamilies, shuffled, partnerOf, planFor, loadTask, callsFor } = require('../diamond');
 const { simulate, evaluate, makeDay, BASELINE } = require('../elevator');
 
 const FAKE = path.join(__dirname, 'fixtures', 'diamond', 'fake.js');
@@ -41,6 +41,8 @@ test('parsing, shuffling, partners, plan and budget', () => {
   expect(parseParts('Plan.\nPART 1: dispatch\n- PART 2: parking\nPART 3: extra', 2)).toEqual(['dispatch', 'parking']);
   expect(parseFixes('FIX 2: faster\nFIX 2: again\nFIX 9: nope\nFIX 1: ok', 3, 5)).toEqual([{ part: 2, fix: 'faster' }, { part: 1, fix: 'ok' }]);
   expect(parseFamilies('FAMILY: 1, 3 | parking\nFAMILY A: 2,4 | zones\nFAMILY: 9', 4)).toEqual([{ ids: [1, 3], name: 'parking' }, { ids: [2, 4], name: 'zones' }]);
+  expect(similarity('const a = 1; go(a)', 'const a = 1; go(a)')).toBe(1);
+  expect(similarity('alpha beta', 'gamma delta')).toBe(0);
   expect(shuffled([1, 2, 3, 4, 5], 'x')).toEqual(shuffled([1, 2, 3, 4, 5], 'x'));
   expect(shuffled([1, 2, 3, 4, 5], 'x').slice().sort()).toEqual([1, 2, 3, 4, 5]);
   const base = id => ({ base: id.split('#')[0] });
@@ -48,10 +50,14 @@ test('parsing, shuffling, partners, plan and budget', () => {
   expect(partnerOf(['claude#1', 'claude#2'], 'claude#2', base)).toBe('claude#1');
   const c = loadTask(path.join(__dirname, '..', 'examples', 'diamond', 'elevator.json'));
   const plan = planFor(c);
-  expect(plan).toHaveLength(3 * 5 * 2);
+  // Five arms with 2 repeats, D-drafts with one.
+  expect(plan).toHaveLength(3 * 5 * 2 + 3);
+  expect(plan.filter(s => s.arm === 'D-drafts').map(s => s.r)).toEqual([0, 0, 0]);
   expect(new Set(plan.map(s => s.name)).size).toBe(plan.length);
   // Every arm goes first at least once.
-  expect(new Set(plan.filter((_, i) => i % 5 === 0).map(s => s.arm)).size).toBe(5);
+  const firsts = new Set();
+  for (const s of plan) if (![...firsts].some(f => f.startsWith(`${s.inst.name}|${s.r}|`))) firsts.add(`${s.inst.name}|${s.r}|${s.arm}`);
+  expect(new Set([...firsts].map(f => f.split('|')[2])).size).toBe(6);
   // The arms share about the same budget of calls.
   const calls = Object.values(c.arms).map(a => callsFor(c, a));
   expect(Math.max(...calls) - Math.min(...calls)).toBeLessThanOrEqual(3);
@@ -73,6 +79,7 @@ test('a full run: diamond, alone and orchestra arms; votes ignore one\'s own ide
     instances: [{ name: 'i1', visible: [{ kind: 'up', seed: 2, ...SHORT }], hidden: [{ kind: 'up', seed: 5, ...SHORT }, { kind: 'lunch', seed: 3, ...SHORT }] }],
     arms: {
       'D-mix': { mode: 'diamond', agents: ['claude#1', 'codex#1', 'antigravity#1'] },
+      'D-drafts': { mode: 'diamond', agents: ['claude#1', 'codex#1', 'antigravity#1'], share: 'drafts' },
       'N-solo': { mode: 'alone', agents: ['codex#1', 'claude#1'] },
       O: { mode: 'orchestra', lead: 'claude#1', agents: ['codex#1', 'antigravity#1'] },
     },
@@ -82,7 +89,7 @@ test('a full run: diamond, alone and orchestra arms; votes ignore one\'s own ide
   const env = { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0' };
   execFileSync('node', [path.join(__dirname, '..', 'diamond.js'), cfg, `--out=${out}`], { env, encoding: 'utf8', timeout: 200000 });
   const rows = JSON.parse(fs.readFileSync(path.join(out, 'results.json'), 'utf8'));
-  expect(rows.map(r => r.name).sort()).toEqual(['i1-D-mix-r1', 'i1-N-solo-r1', 'i1-O-r1']);
+  expect(rows.map(r => r.name).sort()).toEqual(['i1-D-drafts-r1', 'i1-D-mix-r1', 'i1-N-solo-r1', 'i1-O-r1']);
 
   const d = rows.find(r => r.arm === 'D-mix');
   expect(d.ideas).toHaveLength(6);
@@ -105,6 +112,21 @@ test('a full run: diamond, alone and orchestra arms; votes ignore one\'s own ide
   expect(build).toContain('up-2:');
   for (const f of fs.readdirSync(steps).filter(f => f.endsWith('.prompt.md'))) expect(fs.readFileSync(path.join(steps, f), 'utf8')).not.toMatch(/up-5:|lunch-3:/);
 
+  // Without sharing, a builder never sees another prototype; with "drafts", from round 2 it sees their code and results.
+  expect(build).not.toContain('OTHER PROTOTYPE');
+  expect(d).toMatchObject({ share: 'none' });
+  expect(typeof d.similarity_first).toBe('number');
+  expect(typeof d.gap_if_picked_by_visible).toBe('number');
+  const dd = rows.find(r => r.arm === 'D-drafts');
+  expect(dd.share).toBe('drafts');
+  const ddSteps = path.join(out, 'i1-D-drafts-r1', 'steps');
+  expect(fs.readFileSync(path.join(ddSteps, '3-build-p1-r1.prompt.md'), 'utf8')).not.toContain('OTHER PROTOTYPE');
+  const shared = fs.readFileSync(path.join(ddSteps, '3-build-p1-r2.prompt.md'), 'utf8');
+  expect(shared).toContain('OTHER PROTOTYPE 1');
+  expect(shared).toContain('module.exports');
+  expect(shared).not.toMatch(/up-5:|lunch-3:/);
+  expect(dd.calls).toHaveLength(d.calls.length);
+
   const n = rows.find(r => r.arm === 'N-solo');
   expect(n.calls).toHaveLength(2 * 2 + 1);
   expect(n.candidates).toHaveLength(2);
@@ -126,5 +148,5 @@ test('a full run: diamond, alone and orchestra arms; votes ignore one\'s own ide
   const before = fs.statSync(path.join(steps, '1-ideas-01.reply.md')).mtimeMs;
   execFileSync('node', [path.join(__dirname, '..', 'diamond.js'), cfg, `--out=${out}`], { env, encoding: 'utf8', timeout: 60000 });
   expect(fs.statSync(path.join(steps, '1-ideas-01.reply.md')).mtimeMs).toBe(before);
-  expect(JSON.parse(fs.readFileSync(path.join(out, 'results.json'), 'utf8'))).toHaveLength(3);
+  expect(JSON.parse(fs.readFileSync(path.join(out, 'results.json'), 'utf8'))).toHaveLength(4);
 });
