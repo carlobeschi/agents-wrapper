@@ -125,3 +125,26 @@ test('look_first: code written in a turn that asks to OPEN is not saved, so the 
   expect(u.files['visible-tests.js']).toContain('share(0.25, 2), 0.13');
   fs.rmSync(home, { recursive: true, force: true });
 });
+
+test('--push puts summary.md and results.json in the private reports clone, under influence/<run>/', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'influence-home-'));
+  const git = (cwd, ...a) => execFileSync('git', a, { cwd, encoding: 'utf8' });
+  const bare = path.join(home, 'remote.git');
+  git(home, 'init', '--quiet', '--bare', bare);
+  const clone = path.join(home, 'reports');
+  git(home, 'clone', '--quiet', bare, clone);
+  git(clone, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', 'commit', '--quiet', '--allow-empty', '-m', 'start');
+  git(clone, 'push', '--quiet', 'origin', 'HEAD');
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'claude', label: 'Ann', headless: ['node', path.join(FIX, 'fake.js'), '{prompt}'] }] }));
+  const raw = JSON.parse(fs.readFileSync(path.join(EX, 'rates.json'), 'utf8'));
+  const cfg = path.join(EX, 'test-push.tmp.json');
+  fs.writeFileSync(cfg, JSON.stringify({ ...raw, proof_wrap: ['env'], drivers: ['claude'], arms: ['T'], judges: ['claude'], repeats: 1, max_turns: 3 }));
+  const out = path.join(home, 'round-x');
+  const env = { ...process.env, AGENT_DISPATCH_HOME: home, AGENT_DISPATCH_CONFIG: path.join(home, 'agents.json'), AGENT_DISPATCH_RETRY_MS: '0', NIGHT_REPORTS_DIR: clone };
+  try { execFileSync('node', [path.join(__dirname, '..', 'influence.js'), cfg, `--out=${out}`, '--push'], { env, encoding: 'utf8', timeout: 60000 }); }
+  finally { fs.rmSync(cfg, { force: true }); }
+  const files = git(clone, 'ls-tree', '-r', '--name-only', 'HEAD').split('\n');
+  expect(files).toContain('influence/round-x/summary.md');
+  expect(files).toContain('influence/round-x/results.json');
+  fs.rmSync(home, { recursive: true, force: true });
+});
