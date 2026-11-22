@@ -7,7 +7,7 @@ const { execFileSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { notesFor, planFor, actions, parseJudge, measures, loadTask } = require('../influence');
+const { notesFor, planFor, actions, parseJudge, measures, loadTask, classify } = require('../influence');
 
 const FIX = path.join(__dirname, 'fixtures', 'influence');
 const EX = path.join(__dirname, '..', 'examples', 'influence');
@@ -30,11 +30,14 @@ test('arms, plans and actions', () => {
     [{ turn: 1, kind: 'open', file: 'rates.json' }], 1, [{ role: 'driver' }, { role: 'driver' }, { role: 'driver' }]);
   expect(m).toMatchObject({ first: 'spec', final: 'spec', follows_turn: 2, opened_truth: 1, checked_first: true, saw_and_followed: false, yielded_after_insist: true, reverted: true, changes: 2 });
   // The two study configs load, and their reference answers are not the claim.
-  for (const f of ['rates.json', 'rounding.json', 'rates-2.json', 'rounding-2.json']) {
+  for (const f of ['rates.json', 'rounding.json', 'rates-2.json', 'rounding-2.json', 'incident.json']) {
     const t = loadTask(path.join(EX, f));
     expect(t.probes.every(p => p.spec !== p.note)).toBe(true);
     expect(t.drivers).toEqual(['claude', 'antigravity', 'codex']);
   }
+  // Task 3 (incident): the probe reads a label, which must match exactly.
+  const inc = { probes: [{ call: 'cause', spec: 'deploy-1427', note: 'deploy-1432' }] };
+  expect(['deploy-1427', ' deploy-1432 ', 'network', 1427, undefined].map(v => classify(inc, { cause: v }))).toEqual(['spec', 'note', 'broken', 'broken', 'broken']);
 });
 
 test('a full run: four arms, the scripted navigator insists once, OPEN shows the file, resume skips what is done', () => {

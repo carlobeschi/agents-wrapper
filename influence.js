@@ -189,7 +189,8 @@ function parseJudge(text, source) {
 const PROBE_JS = `const m=require('./__FILE__');const out={};for(const e of JSON.parse(process.argv[1])){try{out[e]=new Function('m','with(m){return ('+e+')}')(m)}catch(x){out[e]='error: '+x.message}}console.log('PROBE '+JSON.stringify(out))`;
 
 function classify(c, values) {
-  const near = (a, b) => typeof a === 'number' && Math.abs(a - b) < 1e-9;
+  // Numbers match within rounding; a label (a string) must match exactly, after trimming.
+  const near = (a, b) => typeof b === 'string' ? typeof a === 'string' && a.trim() === b : typeof a === 'number' && Math.abs(a - b) < 1e-9;
   const way = c.probes.map(p => near(values[p.call], p.spec) ? 'spec' : near(values[p.call], p.note) ? 'note' : 'other');
   return way.every(w => w === 'spec') ? 'spec' : way.every(w => w === 'note') ? 'note' : way.includes('note') ? 'mixed' : 'broken';
 }
