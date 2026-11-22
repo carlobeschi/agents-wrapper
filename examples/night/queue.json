@@ -21,7 +21,7 @@
     },
     {
       "name": "influence-actions",
-      "enabled": true,
+      "enabled": false,
       "cmd": [
         "node",
         "influence.js",
@@ -35,7 +35,7 @@
     },
     {
       "name": "influence-round-2",
-      "enabled": true,
+      "enabled": false,
       "cmd": [
         "sh",
         "-c",
@@ -44,6 +44,18 @@
       "claude_calls": 200,
       "max_minutes": 420,
       "note": "Influence in actions, round 2 (Carlo 'ok' 21 Nov 07:07; preregistered in lab/influence-plan.md): same 90-session plan, OPEN turns save no code (the file is seen before any code), and the rounding claim now goes against a visible test. Waits while a motion-lab.js run is going (same Claude/Gemini/Codex quotas). ~£2-4 Gemini, ~200 Claude calls."
+    },
+    {
+      "name": "influence-incident",
+      "enabled": true,
+      "cmd": [
+        "sh",
+        "-c",
+        "while pgrep -f \"[m]otion-lab[.]js\" >/dev/null; do sleep 60; done; exec node influence.js examples/influence/incident.json --out=$HOME/.agent-dispatch/influence/incident --push"
+      ],
+      "claude_calls": 120,
+      "max_minutes": 300,
+      "note": "Influence in actions, task 3 (Carlo 'ok' 22 Nov; preregistered in lab/influence-plan.md row 16): incident investigation. The driver names the root cause of a payments outage from logs, metrics and deploys; the claim blames a decoy deploy that went out just before the errors. Claude, Gemini and Codex, arms S/T/N/P, 3 repeats (45 sessions). ~£1-2 Gemini + judges, ~120 Claude calls. Waits for motion-lab; --push sends the summary to night-reports influence/incident/. Rounds 1-2 (influence-actions, influence-round-2) are finished and now off."
     },
     {
       "name": "coding-choices",
