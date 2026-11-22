@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // @ts-check
 // Influence in actions: does what one agent tells another change the other's
-// WORK, and did the other check first? `node influence.js <task.json> [more.json ...] [--out=<folder>] [--sessions=a,b] [--no-preflight]`.
+// WORK, and did the other check first? `node influence.js <task.json> [more.json ...] [--out=<folder>] [--sessions=a,b] [--no-preflight] [--push]`.
 //
 // Built on Cut In, the wrong note (wrongnote.js, study 7). A driver writes one
 // small file; it is told a claim (a note) that may be wrong. The app runs the
@@ -482,9 +482,30 @@ async function main() {
   }
   save();
   console.log(`\n${path.join(root, 'summary.md')}`);
+  if (args.includes('--push')) push(root);
   // Anything not done: exit 3, so the night queue runs the job again next night.
   const left = rows.filter(r => r.error).length + skipped;
   if (left) { console.error(`influence: ${left} session(s) not done; run again with the same --out`); process.exit(3); }
+}
+
+// --push: summary.md and results.json to the private reports clone, influence/<run folder name>/,
+// through the publish guard (as motion-influence.js), so nobody copies them by hand in the morning.
+function push(root) {
+  const { spawnSync } = require('child_process');
+  const { guard, PUBLIC_NAME, PUBLIC_EMAIL } = require('./publish');
+  const REPORTS = process.env.NIGHT_REPORTS_DIR || path.join(HOME_DIR, 'night-reports');
+  if (!fs.existsSync(path.join(REPORTS, '.git'))) { console.warn('No reports clone: nothing pushed.'); return; }
+  const { redact, leaks } = guard();
+  const files = ['summary.md', 'results.json'].map(f => [f, redact(fs.readFileSync(path.join(root, f), 'utf8'))]);
+  if (leaks(files.map(f => f[1]).join('\n')).length) { console.warn('A private term is still in the results: nothing pushed.'); return; }
+  const to = path.join(REPORTS, 'influence', path.basename(root));
+  fs.mkdirSync(to, { recursive: true });
+  for (const [f, text] of files) fs.writeFileSync(path.join(to, f), text);
+  const git = a => spawnSync('git', ['-C', REPORTS, ...a], { encoding: 'utf8', timeout: 120000, env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } });
+  git(['pull', '--rebase', '--quiet']);
+  git(['add', 'influence']);
+  git(['-c', `user.name=${PUBLIC_NAME}`, '-c', `user.email=${PUBLIC_EMAIL}`, 'commit', '--quiet', '-m', `influence ${path.basename(root)}`]);
+  console.log(git(['push', '--quiet']).status === 0 ? 'Pushed to the reports clone.' : 'Push to the reports clone failed.');
 }
 
 module.exports = { notesFor, planFor, actions, classify, measures, parseJudge, driverPrompt, judgePrompt, summaryMd, loadTask };
