@@ -1,0 +1,51 @@
+# The shared agent's GitHub Action. `node shared-agent.js init` copies it to
+# .github/workflows/agent.yml in the shared space (a private repository).
+# Anyone in the space who writes "@agent ..." in an issue or a comment starts
+# it; requests wait in a queue, one at a time, because there is one agent and
+# one output. It works on the output, commits to the main branch and replies
+# in the same thread. People who are not members of the repository (or not in
+# "members" in agent.json) are ignored.
+#
+# Needs one repository secret, ANTHROPIC_API_KEY, set by the owner in the
+# repository's Settings > Secrets and variables > Actions.
+name: shared-agent
+on:
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: shared-agent
+  cancel-in-progress: false
+
+jobs:
+  agent:
+    if: contains(github.event.comment.body, '@agent') || contains(github.event.issue.body, '@agent') || contains(github.event.issue.title, '@agent')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: carlobeschi/agents-wrapper
+          path: .agents-wrapper
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install -g @anthropic-ai/claude-code
+      - name: The agent's turn
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo .agents-wrapper >> .git/info/exclude
+          node .agents-wrapper/shared-agent.js . --push
