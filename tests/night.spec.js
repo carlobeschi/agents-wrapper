@@ -152,7 +152,7 @@ test('every job off: the queue is paused, the night stops at once and the report
   expect(JSON.parse(fs.readFileSync(path.join(home, 'night', 'state.json'), 'utf8')).done).toEqual({ a: '2026-11-13 01:00' });
 });
 
-test('the example queue is paused (Carlo, 14 Nov): every job off but alphaxiv-judges, coding-choices (Carlo, 21 Nov) and influence-incident (Carlo, 22 Nov)', () => {
+test('the example queue is paused (Carlo, 14 Nov): every job off but alphaxiv-judges (influence-incident and coding-choices off 23 Nov, until a Gemini recovery night)', () => {
   const q = loadQueue(path.join(ROOT, 'examples', 'night', 'queue.json'));
-  expect(q.jobs.filter(j => j.enabled !== false).map(j => j.name)).toEqual(['alphaxiv-judges', 'influence-incident', 'coding-choices']);
+  expect(q.jobs.filter(j => j.enabled !== false).map(j => j.name)).toEqual(['alphaxiv-judges']);
 });
