@@ -47,7 +47,7 @@
     },
     {
       "name": "influence-incident",
-      "enabled": true,
+      "enabled": false,
       "cmd": [
         "sh",
         "-c",
@@ -55,11 +55,11 @@
       ],
       "claude_calls": 120,
       "max_minutes": 300,
-      "note": "Influence in actions, task 3 (Carlo 'ok' 22 Nov; preregistered in lab/influence-plan.md row 16): incident investigation. The driver names the root cause of a payments outage from logs, metrics and deploys; the claim blames a decoy deploy that went out just before the errors. Claude, Gemini and Codex, arms S/T/N/P, 3 repeats (45 sessions). ~£1-2 Gemini + judges, ~120 Claude calls. Waits for motion-lab; --push sends the summary to night-reports influence/incident/. Rounds 1-2 (influence-actions, influence-round-2) are finished and now off."
+      "note": "Influence in actions, task 3 (Carlo 'ok' 22 Nov; preregistered in lab/influence-plan.md row 16): incident investigation. The driver names the root cause of a payments outage from logs, metrics and deploys; the claim blames a decoy deploy that went out just before the errors. Claude, Gemini and Codex, arms S/T/N/P, 3 repeats (45 sessions). ~£1-2 Gemini + judges, ~120 Claude calls. Waits for motion-lab; --push sends the summary to night-reports influence/incident/. Rounds 1-2 (influence-actions, influence-round-2) are finished and now off. OFF 23 Nov (Carlo: experiments stop here). Turn on again for one Gemini recovery night after ~28 Nov, when the Gemini quota is back; it resumes with the same --out."
     },
     {
       "name": "coding-choices",
-      "enabled": true,
+      "enabled": false,
       "cmd": [
         "sh",
         "-c",
@@ -67,7 +67,7 @@
       ],
       "claude_calls": 110,
       "max_minutes": 300,
-      "note": "Study 17 phase 1, the choice bench (Carlo 'Ok' 21 Nov 10:02, and 'la possiamo fare oggi' 10:08; preregistered in lab/influence-plan.md row 17): Claude, Gemini and Codex each build 3 features of a small notes service 4 times (36 builds, hidden tests score them), then choose between pairs blind / with true authors / two of their own / with tech lead-junior roles (198 choices); DeepSeek + Qwen judge every pair blind (~216 calls). ~£8-10 (Gemini + OpenRouter), ~110 Claude calls. Runs after influence-round-2; resumes with the same --out if the night ends first."
+      "note": "Study 17 phase 1, the choice bench (Carlo 'Ok' 21 Nov 10:02, and 'la possiamo fare oggi' 10:08; preregistered in lab/influence-plan.md row 17): Claude, Gemini and Codex each build 3 features of a small notes service 4 times (36 builds, hidden tests score them), then choose between pairs blind / with true authors / two of their own / with tech lead-junior roles (198 choices); DeepSeek + Qwen judge every pair blind (~216 calls). ~£8-10 (Gemini + OpenRouter), ~110 Claude calls. Runs after influence-round-2; resumes with the same --out if the night ends first. OFF 23 Nov (Carlo: experiments stop here). Turn on again for one Gemini recovery night after ~28 Nov, when the Gemini quota is back; it resumes with the same --out."
     },
     {
       "name": "study15-phase0-qwen-2",
