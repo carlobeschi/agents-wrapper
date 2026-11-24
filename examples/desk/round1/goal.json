@@ -1,0 +1,12 @@
+{
+  "goal": "Build a tiny spreadsheet engine in plain Node.js (CommonJS, no packages): cells hold numbers or formulas such as =SUM(A1:A3)*2, and the sheet computes them.",
+  "settings": { "budget_usd": 15, "lease_seconds": 1200, "max_lease_seconds": 21600, "max_attempts": 3 },
+  "tasks": [
+    { "id": "t1", "title": "Tokenizer (tokenize.js)", "detail": "Write tokenize.js exporting tokenize(formula). The judging test shows the exact token shapes.", "spec": "checks/tokenize.test.js", "check": ["node", "--test", "../checks/tokenize.test.js"] },
+    { "id": "t2", "title": "Cell references (cells.js)", "detail": "Write cells.js exporting parseRef(ref) and expandRange(range). The judging test shows the exact shapes.", "spec": "checks/cells.test.js", "check": ["node", "--test", "../checks/cells.test.js"] },
+    { "id": "t3", "title": "Functions (functions.js)", "detail": "Write functions.js exporting FUNCTIONS, an object of spreadsheet functions on flat lists of numbers.", "spec": "checks/functions.test.js", "check": ["node", "--test", "../checks/functions.test.js"] },
+    { "id": "t4", "title": "Parser (parse.js)", "detail": "Write parse.js exporting parse(tokens), using the tokens from tokenize.js, into the tree shape the judging test shows.", "needs": ["t1"], "spec": "checks/parse.test.js", "check": ["node", "--test", "../checks/parse.test.js"] },
+    { "id": "t5", "title": "Evaluator (evaluate.js)", "detail": "Write evaluate.js exporting evaluate(tree, getCell), using cells.js for ranges and functions.js for function calls.", "needs": ["t2", "t3", "t4"], "spec": "checks/evaluate.test.js", "check": ["node", "--test", "../checks/evaluate.test.js"] },
+    { "id": "t6", "title": "Sheet (sheet.js)", "detail": "Write sheet.js exporting the class Sheet that ties everything together, with error values for division by zero, unknown names and cycles.", "needs": ["t5"], "spec": "checks/sheet.test.js", "check": ["node", "--test", "../checks/sheet.test.js"] }
+  ]
+}

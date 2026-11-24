@@ -183,6 +183,27 @@ node shared-agent.js init ~/spaces/summer --title "Plan the summer trip"
 
 Each request costs what Claude Code spends on it, shown in the reply (typically some cents to a dollar on a long task).
 
+## The desk (agents borrow tasks, people watch and steer)
+
+`desk.js` is a shared board of tasks that agents borrow, the way the P = NP fleet (pequalnp.com) hands out proof steps. Nobody assigns work. A worker asks the desk for the next free task (one whose `needs` are all done) and gets it on a lease. It renews the lease while it works (every half lease) and gives the task back with a reason. A lease runs out `lease_seconds` after the last renewal (20 minutes by default) and never lasts more than `max_lease_seconds` (6 hours); the task then goes back on the board for someone else, and work that comes back late is refused (its cost still counts). A task given back as done is judged at once by its `check`, a command written by a person in `goal.json` and run in `work/` (exit 0 = accepted); a rejected task goes back with the failing output, which the next try reads. A task without a check waits for a person's review. After `max_attempts` tries a task is marked stuck. When the spend reaches `budget_usd`, the desk lends nothing more.
+
+```
+node desk.js init ~/.agent-dispatch/desk/group-1 --from examples/desk/round1
+node desk.js serve ~/.agent-dispatch/desk/group-1            # http://127.0.0.1:8790
+node desk-worker.js ~/.agent-dispatch/desk/group-1 --name w1  # one per worker
+node desk.js report ~/.agent-dispatch/desk/group-1
+```
+
+`scripts/desk-round.sh <new run dir> <workers>` does all four on the Mac: 3 workers for the group, 1 on a fresh folder for the solo comparison (same tasks, same budget).
+
+**Workers.** `desk-worker.js` runs Claude Code headless (`claude -p`, Claude Opus 5.5 by default) in `<dir>/work` with file tools only (read, write, edit, search): no shell, no web, no MCP, no GitHub token. It sees the goal, its task, the task's `spec` file (in round 1 the judging test, which it cannot run), the notes from earlier tries and from people, the rest of the board with who holds what, and people's comments. It answers with a note for the others, or `STUCK: why`, and stops when the desk says done or budget, or after 30 minutes with nothing free. It runs on `ANTHROPIC_API_KEY` if set (the script reads the Keychain item `anthropic-key`), otherwise on the Mac's Claude Code sign-in.
+
+**People.** The board is a page at `http://127.0.0.1:8790/` (refreshes every 5 seconds). From Open WebUI, paste `examples/desk/openwebui_desk_tool.py` in Workspace > Tools and turn it on for a model: in a chat it can then show the board, add a task, comment on a task (the next worker on it reads the comment) or accept or reject a task that waits for review. The same calls are plain HTTP on the desk (`GET /board`, `POST /tasks`, `/comment`, `/review`). Tasks added this way never carry a check command; they go to a person's review. The desk listens on 127.0.0.1 only.
+
+**Files** in the run folder: `goal.json` (the round), `desk.json` (the board, saved after every step), `events.jsonl` (every lease, renewal that ran out, verdict, comment), `work/` (what the agents wrote), `checks/` (the judges, outside the agents' folder), `report.txt`. The report gives tasks done, stuck and waiting, leases taken, accepted, rejected, given back and run out, what each worker got accepted, time from the first lease to the last acceptance, and the spend.
+
+**Round 1** (`examples/desk/round1`): a tiny spreadsheet engine in six tasks with dependencies (tokenizer, cell references and functions first, then parser, evaluator, sheet), each judged by a Node test. Budget $15.
+
 ## Night queue
 
 `sh scripts/night.sh` runs the studies in `examples/night/queue.json` one after the other (night.js) while the laptop is left alone, and stops at 07:15, before The Motion. It starts with `git pull --ff-only`, so a merged change to the queue takes effect that night. A job that finishes is not run again; a job that fails, is stopped at the stop time or goes over its `max_minutes` runs again the next night, and bench.js, swarm.js and ideate.js keep the work already done. Jobs that need Ollama are skipped if it doesn't answer. `node night.js --list` shows what is done and what is left. `sh scripts/install-night.sh` makes launchd start it every evening at 21:00 (`--scheduled`: on battery it waits 30 minutes for the charger, then skips the night); only one night run goes at a time. If `~/.agent-dispatch/night-reports` is a clone of a private repository, night-report.js pushes the summary there (home folder and names redacted) at the start, after every job and at the end. Otherwise, in the morning: `pbcopy < ~/.agent-dispatch/night/last-summary.md`. Keep the laptop plugged in with the lid open (caffeinate stops idle sleep, not lid sleep).
