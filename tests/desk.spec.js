@@ -281,3 +281,30 @@ test('a worker started before the desk waits for it instead of failing', async (
     expect((await worker).stdout).toContain('early: stopping, the desk says budget.');
   } finally { server.kill(); }
 });
+
+test('table: one row per run of a series and the mean time per side', async () => {
+  const d = await desk();
+  try {
+    await d.work('w1');
+  } finally { d.stop(); }
+  const runs = fs.mkdtempSync(path.join(os.tmpdir(), 'desk-runs-'));
+  for (const name of ['s-gruppo-1', 's-solo-1', 'other-solo-1']) fs.cpSync(d.dir, path.join(runs, name), { recursive: true });
+  fs.writeFileSync(path.join(runs, 's-gruppo-1', 'work', 'README.md'), '# how files plug in\n');
+  const out = execFileSync('node', [DESK, 'table', runs, 's'], { encoding: 'utf8' });
+  const lines = out.split('\n');
+  expect(lines[0]).toMatch(/^run\s+workers\s+done\s+leases\s+rejected/);
+  expect(lines[1]).toMatch(/^s-gruppo-1\s+1\s+6\/6\s+6\s+0\s+0\s+0\s+\d+\.\d\s+0\.60\s+yes/);
+  expect(lines[2]).toMatch(/^s-solo-1\s+1\s+6\/6\s+6\s+0\s+0\s+0\s+\d+\.\d\s+0\.60\s+no/);
+  expect(out).not.toContain('other-solo-1');
+  expect(out).toMatch(/group: 1 runs, mean \d+\.\d min/);
+  expect(out).toMatch(/solo: 1 runs, mean \d+\.\d min .*mean \$0\.60/);
+});
+
+test('JSON Schema mini plain: the same round with a goal that says nothing about how to coordinate', () => {
+  const mini = JSON.parse(fs.readFileSync(path.join(ROOT, 'examples', 'desk', 'jsonschema-mini', 'goal.json'), 'utf8'));
+  const plain = JSON.parse(fs.readFileSync(path.join(ROOT, 'examples', 'desk', 'jsonschema-mini-plain', 'goal.json'), 'utf8'));
+  expect(mini.goal).toContain('README');
+  expect(plain.goal).not.toMatch(/README|agree|structure|Several workers/);
+  expect(plain.tasks).toEqual(mini.tasks);
+  expect(plain.settings).toEqual(mini.settings);
+});

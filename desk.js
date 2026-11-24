@@ -12,6 +12,7 @@
 //   node desk.js init <dir> --from <example dir>        copy a round (goal.json, checks/, work/)
 //   node desk.js serve <dir> [--port 8790]              run the desk on 127.0.0.1
 //   node desk.js report <dir>                           what happened, from events.jsonl
+//   node desk.js table <runs dir> <prefix>              one row per run <prefix>-*, means per side
 //
 // Workers are desk-worker.js. Everything lives in <dir>: desk.json (the
 // board), events.jsonl (every step, for the report), work/ (the shared
@@ -289,8 +290,49 @@ function init(dir, from) {
   console.log(`Ready: ${dir}. Next: node desk.js serve ${dir}`);
 }
 
+// ---------- a table over several runs ----------
+
+// One row per run folder <runs>/<prefix>-*, from the same events as the
+// report, then the mean time and cost per side (folder names with "solo" or
+// not). The README column says whether the agents left a README.md in work/,
+// which the plain rounds do not ask for.
+function table(runs, prefix) {
+  const dirs = fs.readdirSync(runs).filter(d => d.startsWith(prefix + '-') && fs.existsSync(path.join(runs, d, 'desk.json'))).sort();
+  if (!dirs.length) die(`No runs named ${prefix}-* in ${runs}`);
+  const rows = dirs.map(d => {
+    const dir = path.join(runs, d), board = load(dir);
+    const evs = fs.existsSync(path.join(dir, 'events.jsonl')) ? fs.readFileSync(path.join(dir, 'events.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : [];
+    const n = e => evs.filter(x => x.ev === e).length;
+    const times = evs.map(e => Date.parse(e.at)), acc = evs.filter(e => e.ev === 'accepted').map(e => Date.parse(e.at));
+    const min = times.length && acc.length ? (Math.max(...acc) - Math.min(...times)) / 60000 : NaN;
+    const fc = board.settings.final_check;
+    let final = '';
+    if (Array.isArray(fc)) {
+      let out;
+      try { out = execFileSync(fc[0], fc.slice(1), { cwd: path.join(dir, 'work'), encoding: 'utf8', timeout: 300000 }); } catch (e) { out = String(e.stdout || e.message); }
+      const first = out.trim().split('\n')[0];
+      const m = first.match(/^(\d+ of \d+)/);
+      final = m ? m[1] : first.slice(0, 30);
+    }
+    return { d, solo: /solo/.test(d), workers: new Set(evs.filter(e => e.ev === 'leased').map(e => e.worker)).size,
+      done: `${board.tasks.filter(t => t.status === 'done').length}/${board.tasks.length}`, leased: n('leased'), rejected: n('rejected'),
+      broken: n('broken'), expired: n('expired'), min, usd: board.spent_usd, final, readme: fs.existsSync(path.join(dir, 'work', 'README.md')) ? 'yes' : 'no' };
+  });
+  const head = ['run', 'workers', 'done', 'leases', 'rejected', 'broken', 'ran out', 'minutes', 'cost $', 'final check', 'README'];
+  const cells = rows.map(r => [r.d, r.workers, r.done, r.leased, r.rejected, r.broken, r.expired, isNaN(r.min) ? 'n/a' : r.min.toFixed(1), r.usd.toFixed(2), r.final, r.readme].map(String));
+  const w = head.map((h, i) => Math.max(h.length, ...cells.map(c => c[i].length)));
+  const line = c => c.map((x, i) => x.padEnd(w[i])).join('  ');
+  const out = [line(head), ...cells.map(line), ''];
+  for (const [label, solo] of [['group', false], ['solo', true]]) {
+    const rs = rows.filter(r => r.solo === solo && !isNaN(r.min));
+    if (rs.length) out.push(`${label}: ${rs.length} runs, mean ${(rs.reduce((a, r) => a + r.min, 0) / rs.length).toFixed(1)} min (from ${Math.min(...rs.map(r => r.min)).toFixed(1)} to ${Math.max(...rs.map(r => r.min)).toFixed(1)}), mean $${(rs.reduce((a, r) => a + r.usd, 0) / rs.length).toFixed(2)}`);
+  }
+  console.log(out.join('\n'));
+}
+
 const [cmd, dir] = args;
 if (cmd === 'init' && dir) init(dir, opt('--from'));
 else if (cmd === 'serve' && dir) serve(dir, Number(opt('--port', '8790')));
 else if (cmd === 'report' && dir) report(dir);
-else die('Usage: node desk.js init <dir> --from <example> | serve <dir> [--port 8790] | report <dir>');
+else if (cmd === 'table' && dir && args[2]) table(dir, args[2]);
+else die('Usage: node desk.js init <dir> --from <example> | serve <dir> [--port 8790] | report <dir> | table <runs dir> <prefix>');

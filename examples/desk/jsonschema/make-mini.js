@@ -43,3 +43,15 @@ const goal = {
 };
 fs.writeFileSync(path.join(OUT, 'goal.json'), JSON.stringify(goal, null, 2) + '\n');
 console.log(`${tasks.length} tasks, ${total} tests, in ${OUT}`);
+
+// The same round with a goal that says nothing about how to coordinate (no
+// README, no shared structure), for the repeats: in the first runs the group
+// and the solo agent both wrote the README the goal suggested (24 Nov), so
+// that goal could not show whether agents set up a protocol by themselves.
+const PLAIN = path.join(__dirname, '..', 'jsonschema-mini-plain');
+const COORD = ' Several workers write in the same folder at once: agree on the structure through the files themselves (for example a README.md in work/ describing how keywords plug in) and do not break what others got accepted.';
+if (!goal.goal.includes(COORD)) throw new Error('the coordination sentence is not in the goal any more: update make-mini.js');
+fs.rmSync(PLAIN, { recursive: true, force: true });
+fs.cpSync(OUT, PLAIN, { recursive: true });
+fs.writeFileSync(path.join(PLAIN, 'goal.json'), JSON.stringify({ ...goal, goal: goal.goal.replace(COORD, '') }, null, 2) + '\n');
+console.log(`The same with a goal that says nothing about coordination, in ${PLAIN}`);
