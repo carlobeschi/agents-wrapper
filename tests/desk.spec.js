@@ -214,7 +214,7 @@ test('JSON Schema round: every suite file is judged once, needs never loop, the 
   const R = path.join(ROOT, 'examples', 'desk', 'jsonschema');
   const goal = JSON.parse(fs.readFileSync(path.join(R, 'goal.json'), 'utf8'));
   const files = fs.readdirSync(path.join(R, 'suite')).filter(f => f.endsWith('.json')).sort();
-  const judged = goal.tasks.filter(t => t.id !== 'all').flatMap(t => t.check.slice(2)).sort();
+  const judged = goal.tasks.filter(t => t.id !== 'all').flatMap(t => t.check.slice(2).filter(a => !a.startsWith('--'))).sort();
   expect(judged).toEqual(files);
   // Every task can be lent once the tasks it needs are done: no cycles, no unknown ids.
   const done = new Set();
@@ -242,10 +242,16 @@ test('JSON Schema mini round: a closed subset with its own suite files, a $2 cap
   expect(goal.settings.budget_usd).toBe(2);
   const ids = goal.tasks.map(t => t.id);
   for (const t of goal.tasks) for (const n of t.needs) expect(ids).toContain(n);
-  const judged = goal.tasks.filter(t => t.id !== 'all').flatMap(t => t.check.slice(2)).sort();
+  const judged = goal.tasks.filter(t => t.id !== 'all').flatMap(t => t.check.slice(2).filter(a => !a.startsWith('--'))).sort();
   expect(fs.readdirSync(path.join(M, 'suite')).filter(f => f.endsWith('.json')).sort()).toEqual(judged);
   for (const t of goal.tasks) expect(fs.existsSync(path.join(M, t.spec))).toBe(true);
   expect(goal.tasks.find(t => t.id === 'all').needs.sort()).toEqual(ids.filter(i => i !== 'all').sort());
+  // enum's tests also use "properties", which no mini task owns: those cases
+  // are left out (once a task stuck on them after three honest tries).
+  const skipOf = id => goal.tasks.find(t => t.id === id).check.find(a => a.startsWith('--skip-keywords=')).slice(16).split(',');
+  expect(skipOf('enum')).toContain('properties');
+  expect(skipOf('all')).toContain('properties');
+  expect(skipOf('enum')).not.toContain('enum');
 });
 
 test('a task with a check is judged whatever the agent answers, even "STUCK: no, it is done"', async () => {

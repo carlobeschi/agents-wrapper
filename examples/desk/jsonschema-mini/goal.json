@@ -19,18 +19,33 @@
     {
       "id": "core",
       "title": "Core: validate.js and boolean schemas",
+      "owns": [
+        "$schema",
+        "$comment",
+        "default",
+        "examples",
+        "title",
+        "description",
+        "deprecated",
+        "readOnly",
+        "writeOnly"
+      ],
       "detail": "Make validate.js pass the official 2020-12 tests in boolean_schema.json. The keywords this task owns: $schema, $comment, default, examples, title, description, deprecated, readOnly, writeOnly.",
       "needs": [],
       "spec": "checks/core.md",
       "check": [
         "node",
         "../checks/run-suite.js",
-        "boolean_schema.json"
+        "boolean_schema.json",
+        "--skip-keywords=type,enum,const,minimum,maximum,exclusiveMinimum,exclusiveMaximum,multipleOf,minLength,maxLength,pattern,format,contentEncoding,contentMediaType,contentSchema,required,properties,patternProperties,additionalProperties,propertyNames,minProperties,maxProperties,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,minItems,maxItems,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties"
       ]
     },
     {
       "id": "type",
       "title": "type",
+      "owns": [
+        "type"
+      ],
       "detail": "Make validate.js pass the official 2020-12 tests in type.json. The keywords this task owns: type.",
       "needs": [
         "core"
@@ -39,12 +54,16 @@
       "check": [
         "node",
         "../checks/run-suite.js",
-        "type.json"
+        "type.json",
+        "--skip-keywords=enum,const,minimum,maximum,exclusiveMinimum,exclusiveMaximum,multipleOf,minLength,maxLength,pattern,format,contentEncoding,contentMediaType,contentSchema,required,properties,patternProperties,additionalProperties,propertyNames,minProperties,maxProperties,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,minItems,maxItems,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties"
       ]
     },
     {
       "id": "enum",
       "title": "enum",
+      "owns": [
+        "enum"
+      ],
       "detail": "Make validate.js pass the official 2020-12 tests in enum.json. The keywords this task owns: enum.",
       "needs": [
         "core",
@@ -54,12 +73,16 @@
       "check": [
         "node",
         "../checks/run-suite.js",
-        "enum.json"
+        "enum.json",
+        "--skip-keywords=const,minimum,maximum,exclusiveMinimum,exclusiveMaximum,multipleOf,minLength,maxLength,pattern,format,contentEncoding,contentMediaType,contentSchema,required,properties,patternProperties,additionalProperties,propertyNames,minProperties,maxProperties,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,minItems,maxItems,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties"
       ]
     },
     {
       "id": "const",
       "title": "const",
+      "owns": [
+        "const"
+      ],
       "detail": "Make validate.js pass the official 2020-12 tests in const.json. The keywords this task owns: const.",
       "needs": [
         "core"
@@ -68,12 +91,20 @@
       "check": [
         "node",
         "../checks/run-suite.js",
-        "const.json"
+        "const.json",
+        "--skip-keywords=type,enum,minimum,maximum,exclusiveMinimum,exclusiveMaximum,multipleOf,minLength,maxLength,pattern,format,contentEncoding,contentMediaType,contentSchema,required,properties,patternProperties,additionalProperties,propertyNames,minProperties,maxProperties,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,minItems,maxItems,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties"
       ]
     },
     {
       "id": "numbers",
       "title": "Number keywords",
+      "owns": [
+        "minimum",
+        "maximum",
+        "exclusiveMinimum",
+        "exclusiveMaximum",
+        "multipleOf"
+      ],
       "detail": "Make validate.js pass the official 2020-12 tests in minimum.json, maximum.json, multipleOf.json. The keywords this task owns: minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf.",
       "needs": [
         "core",
@@ -85,12 +116,18 @@
         "../checks/run-suite.js",
         "minimum.json",
         "maximum.json",
-        "multipleOf.json"
+        "multipleOf.json",
+        "--skip-keywords=enum,const,minLength,maxLength,pattern,format,contentEncoding,contentMediaType,contentSchema,required,properties,patternProperties,additionalProperties,propertyNames,minProperties,maxProperties,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,minItems,maxItems,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties"
       ]
     },
     {
       "id": "strings",
       "title": "String keywords",
+      "owns": [
+        "minLength",
+        "maxLength",
+        "pattern"
+      ],
       "detail": "Make validate.js pass the official 2020-12 tests in minLength.json, maxLength.json, pattern.json. The keywords this task owns: minLength, maxLength, pattern.",
       "needs": [
         "core",
@@ -102,12 +139,16 @@
         "../checks/run-suite.js",
         "minLength.json",
         "maxLength.json",
-        "pattern.json"
+        "pattern.json",
+        "--skip-keywords=enum,const,minimum,maximum,exclusiveMinimum,exclusiveMaximum,multipleOf,format,contentEncoding,contentMediaType,contentSchema,required,properties,patternProperties,additionalProperties,propertyNames,minProperties,maxProperties,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,minItems,maxItems,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties"
       ]
     },
     {
       "id": "required",
       "title": "required",
+      "owns": [
+        "required"
+      ],
       "detail": "Make validate.js pass the official 2020-12 tests in required.json. The keywords this task owns: required.",
       "needs": [
         "core"
@@ -116,12 +157,16 @@
       "check": [
         "node",
         "../checks/run-suite.js",
-        "required.json"
+        "required.json",
+        "--skip-keywords=type,enum,const,minimum,maximum,exclusiveMinimum,exclusiveMaximum,multipleOf,minLength,maxLength,pattern,format,contentEncoding,contentMediaType,contentSchema,properties,patternProperties,additionalProperties,propertyNames,minProperties,maxProperties,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,minItems,maxItems,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties"
       ]
     },
     {
       "id": "patternProperties",
       "title": "patternProperties",
+      "owns": [
+        "patternProperties"
+      ],
       "detail": "Make validate.js pass the official 2020-12 tests in patternProperties.json. The keywords this task owns: patternProperties.",
       "needs": [
         "core",
@@ -132,12 +177,17 @@
       "check": [
         "node",
         "../checks/run-suite.js",
-        "patternProperties.json"
+        "patternProperties.json",
+        "--skip-keywords=enum,const,minLength,maxLength,pattern,format,contentEncoding,contentMediaType,contentSchema,required,properties,additionalProperties,propertyNames,minProperties,maxProperties,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,minItems,maxItems,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties"
       ]
     },
     {
       "id": "propertyCounts",
       "title": "minProperties and maxProperties",
+      "owns": [
+        "minProperties",
+        "maxProperties"
+      ],
       "detail": "Make validate.js pass the official 2020-12 tests in minProperties.json, maxProperties.json. The keywords this task owns: minProperties, maxProperties.",
       "needs": [
         "core"
@@ -147,12 +197,16 @@
         "node",
         "../checks/run-suite.js",
         "minProperties.json",
-        "maxProperties.json"
+        "maxProperties.json",
+        "--skip-keywords=type,enum,const,minimum,maximum,exclusiveMinimum,exclusiveMaximum,multipleOf,minLength,maxLength,pattern,format,contentEncoding,contentMediaType,contentSchema,required,properties,patternProperties,additionalProperties,propertyNames,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,minItems,maxItems,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties"
       ]
     },
     {
       "id": "dependentRequired",
       "title": "dependentRequired",
+      "owns": [
+        "dependentRequired"
+      ],
       "detail": "Make validate.js pass the official 2020-12 tests in dependentRequired.json. The keywords this task owns: dependentRequired.",
       "needs": [
         "core"
@@ -161,12 +215,17 @@
       "check": [
         "node",
         "../checks/run-suite.js",
-        "dependentRequired.json"
+        "dependentRequired.json",
+        "--skip-keywords=type,enum,const,minimum,maximum,exclusiveMinimum,exclusiveMaximum,multipleOf,minLength,maxLength,pattern,format,contentEncoding,contentMediaType,contentSchema,required,properties,patternProperties,additionalProperties,propertyNames,minProperties,maxProperties,dependentSchemas,items,prefixItems,contains,minContains,maxContains,minItems,maxItems,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties"
       ]
     },
     {
       "id": "itemCounts",
       "title": "minItems and maxItems",
+      "owns": [
+        "minItems",
+        "maxItems"
+      ],
       "detail": "Make validate.js pass the official 2020-12 tests in minItems.json, maxItems.json. The keywords this task owns: minItems, maxItems.",
       "needs": [
         "core"
@@ -176,7 +235,8 @@
         "node",
         "../checks/run-suite.js",
         "minItems.json",
-        "maxItems.json"
+        "maxItems.json",
+        "--skip-keywords=type,enum,const,minimum,maximum,exclusiveMinimum,exclusiveMaximum,multipleOf,minLength,maxLength,pattern,format,contentEncoding,contentMediaType,contentSchema,required,properties,patternProperties,additionalProperties,propertyNames,minProperties,maxProperties,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties"
       ]
     },
     {
@@ -200,7 +260,8 @@
       "check": [
         "node",
         "../checks/run-suite.js",
-        "--all"
+        "--all",
+        "--skip-keywords=format,contentEncoding,contentMediaType,contentSchema,properties,additionalProperties,propertyNames,dependentSchemas,items,prefixItems,contains,minContains,maxContains,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties"
       ]
     }
   ]

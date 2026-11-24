@@ -1,6 +1,6 @@
 # ref: $ref, $id, $anchor, $defs, external schemas
 
-The desk runs, in work/: `node ../checks/run-suite.js ref.json anchor.json id.json infinite-loop-detection.json`
+The desk runs, in work/: `node ../checks/run-suite.js ref.json anchor.json id.json infinite-loop-detection.json --skip-keywords=format,contentEncoding,contentMediaType,contentSchema,minProperties,maxProperties,dependentRequired,dependentSchemas,contains,minContains,maxContains,uniqueItems,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties`
 
 It loads `validate` from work/validate.js and, for every test case in the files below, checks that
 `validate(testCase.schema, test.data, testCase.externalSchemas || {})` returns exactly `test.valid`.

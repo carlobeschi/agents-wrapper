@@ -1,6 +1,6 @@
 # ifThenElse: if, then, else
 
-The desk runs, in work/: `node ../checks/run-suite.js if-then-else.json`
+The desk runs, in work/: `node ../checks/run-suite.js if-then-else.json --skip-keywords=enum,format,contentEncoding,contentMediaType,contentSchema,additionalProperties,propertyNames,minProperties,maxProperties,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,uniqueItems,not,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties`
 
 It loads `validate` from work/validate.js and, for every test case in the files below, checks that
 `validate(testCase.schema, test.data, testCase.externalSchemas || {})` returns exactly `test.valid`.

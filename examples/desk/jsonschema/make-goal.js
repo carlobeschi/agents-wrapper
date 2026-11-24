@@ -69,7 +69,7 @@ const tasks = TASKS.map(([id, title, , judged]) => {
   for (const k of used) { if (owner[k]) needs.add(owner[k]); else unknown.add(k); }
   needs.delete(id);
   return {
-    id, title: `${title}`,
+    id, title: `${title}`, owns: TASKS.find(x => x[0] === id)[2],
     detail: `Make validate.js pass the official 2020-12 tests in ${judged.join(', ')}. The keywords this task owns: ${TASKS.find(t => t[0] === id)[2].join(', ')}.`,
     needs: id === 'core' ? [] : [...needs].sort(),
     spec: `checks/${id}.md`,
@@ -80,11 +80,21 @@ const tasks = TASKS.map(([id, title, , judged]) => {
 const byId = Object.fromEntries(tasks.map(t => [t.id, t]));
 const reaches = (a, b, seen = new Set()) => a === b || (!seen.has(a) && (seen.add(a), byId[a].needs.some(n => reaches(n, b, seen))));
 for (const t of tasks) t.needs = t.needs.filter(n => !reaches(n, t.id));
+// Dropping a need leaves test cases the task cannot pass yet (enum's tests use
+// properties, properties' tests use additionalProperties, and so on). Each
+// task is judged only on the cases whose keywords belong to it or to what it
+// (transitively) needs; the other cases wait for "all", which runs everything.
+const closure = (id, acc = new Set()) => { if (!acc.has(id)) { acc.add(id); byId[id].needs.forEach(n => closure(n, acc)); } return acc; };
+for (const t of tasks) {
+  const mine = closure(t.id);
+  const skip = Object.entries(owner).filter(([, o]) => !mine.has(o)).map(([k]) => k);
+  if (skip.length) t.check.push(`--skip-keywords=${skip.join(',')}`);
+}
 tasks.push({ id: 'all', title: 'Everything together', detail: 'The whole suite passes at once: fix whatever breaks when all keywords meet.', needs: tasks.map(t => t.id), spec: 'checks/all.md', check: ['node', '../checks/run-suite.js', '--all'] });
 
 fs.mkdirSync(path.join(__dirname, 'checks'), { recursive: true });
 for (const t of tasks) {
-  const judged = t.check.slice(2);
+  const judged = t.check.slice(2).filter(a => !a.startsWith('--'));
   fs.writeFileSync(path.join(__dirname, t.spec), [
     `# ${t.id}: ${t.title}`, '',
     'The desk runs, in work/: `' + t.check.join(' ') + '`', '',

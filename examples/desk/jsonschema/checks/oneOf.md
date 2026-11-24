@@ -1,6 +1,6 @@
 # oneOf: oneOf
 
-The desk runs, in work/: `node ../checks/run-suite.js oneOf.json`
+The desk runs, in work/: `node ../checks/run-suite.js oneOf.json --skip-keywords=enum,const,format,contentEncoding,contentMediaType,contentSchema,additionalProperties,propertyNames,minProperties,maxProperties,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,uniqueItems,allOf,anyOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties`
 
 It loads `validate` from work/validate.js and, for every test case in the files below, checks that
 `validate(testCase.schema, test.data, testCase.externalSchemas || {})` returns exactly `test.valid`.

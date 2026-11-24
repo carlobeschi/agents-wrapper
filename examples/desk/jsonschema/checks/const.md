@@ -1,6 +1,6 @@
 # const: const
 
-The desk runs, in work/: `node ../checks/run-suite.js const.json`
+The desk runs, in work/: `node ../checks/run-suite.js const.json --skip-keywords=type,enum,minimum,maximum,exclusiveMinimum,exclusiveMaximum,multipleOf,minLength,maxLength,pattern,format,contentEncoding,contentMediaType,contentSchema,required,properties,patternProperties,additionalProperties,propertyNames,minProperties,maxProperties,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,minItems,maxItems,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties`
 
 It loads `validate` from work/validate.js and, for every test case in the files below, checks that
 `validate(testCase.schema, test.data, testCase.externalSchemas || {})` returns exactly `test.valid`.

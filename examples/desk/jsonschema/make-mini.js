@@ -12,8 +12,17 @@ const KEEP = ['core', 'type', 'enum', 'const', 'numbers', 'strings', 'required',
 const full = JSON.parse(fs.readFileSync(path.join(FULL, 'goal.json'), 'utf8'));
 const tasks = full.tasks.filter(t => KEEP.includes(t.id));
 for (const t of tasks) for (const n of t.needs) if (!KEEP.includes(n)) throw new Error(`${t.id} needs ${n}, which is not in the mini set`);
-const files = tasks.flatMap(t => t.check.slice(2));
-tasks.push({ ...full.tasks.find(t => t.id === 'all'), needs: [...KEEP], detail: 'All the tests of the other tasks pass at once: fix whatever breaks when the keywords meet.' });
+const files = tasks.flatMap(t => t.check.slice(2).filter(a => !a.startsWith('--')));
+// Cases that use keywords of tasks outside the mini set can never pass here:
+// they are left out everywhere, "all" included.
+const outside = full.tasks.filter(t => t.owns && !KEEP.includes(t.id)).flatMap(t => t.owns);
+const all = full.tasks.find(t => t.id === 'all');
+tasks.push({ ...all, needs: [...KEEP], check: ['node', '../checks/run-suite.js', '--all', `--skip-keywords=${outside.join(',')}`], detail: 'All the tests of the other tasks pass at once: fix whatever breaks when the keywords meet.' });
+for (const t of tasks) {
+  const skip = t.check.find(a => a.startsWith('--skip-keywords=')) || '--skip-keywords=';
+  const merged = [...new Set([...skip.slice(16).split(',').filter(Boolean), ...outside])];
+  t.check = [...t.check.filter(a => !a.startsWith('--skip-keywords=')), `--skip-keywords=${merged.join(',')}`];
+}
 
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(path.join(OUT, 'checks'), { recursive: true });
@@ -22,7 +31,7 @@ for (const f of [...files, 'LICENSE']) fs.copyFileSync(path.join(FULL, 'suite', 
 fs.copyFileSync(path.join(FULL, 'checks', 'run-suite.js'), path.join(OUT, 'checks', 'run-suite.js'));
 for (const t of tasks) fs.copyFileSync(path.join(FULL, t.spec), path.join(OUT, t.spec));
 const total = files.reduce((n, f) => n + JSON.parse(fs.readFileSync(path.join(OUT, 'suite', f), 'utf8')).reduce((m, c) => m + c.tests.length, 0), 0);
-fs.writeFileSync(path.join(OUT, 'checks', 'all.md'), `# all: Everything together\n\nThe desk runs, in work/: \`node ../checks/run-suite.js --all\`: all ${total} tests of the other tasks at once.\n`);
+fs.writeFileSync(path.join(OUT, 'checks', 'all.md'), `# all: Everything together\n\nThe desk runs, in work/: \`node ../checks/run-suite.js --all\`: all the tests of the other tasks at once (cases that need keywords outside this round are left out).\n`);
 const goal = {
   ...full,
   goal: full.goal.replace('Write a JSON Schema validator for draft 2020-12', 'Write the simple part of a JSON Schema validator for draft 2020-12 (no $ref, no applicators such as allOf or properties)'),

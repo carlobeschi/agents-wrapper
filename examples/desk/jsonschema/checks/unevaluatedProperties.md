@@ -1,6 +1,6 @@
 # unevaluatedProperties: unevaluatedProperties
 
-The desk runs, in work/: `node ../checks/run-suite.js unevaluatedProperties.json`
+The desk runs, in work/: `node ../checks/run-suite.js unevaluatedProperties.json --skip-keywords=format,contentEncoding,contentMediaType,contentSchema,dependentRequired,contains,minContains,maxContains,uniqueItems,unevaluatedItems`
 
 It loads `validate` from work/validate.js and, for every test case in the files below, checks that
 `validate(testCase.schema, test.data, testCase.externalSchemas || {})` returns exactly `test.valid`.

@@ -1,6 +1,6 @@
 # format: format and content (annotations only)
 
-The desk runs, in work/: `node ../checks/run-suite.js content.json format-date-time.json format-date.json format-duration.json format-email.json format-hostname.json format-idn-email.json format-idn-hostname.json format-ipv4.json format-ipv6.json format-iri-reference.json format-iri.json format-json-pointer.json format-regex.json format-relative-json-pointer.json format-time.json format-unknown.json format-uri-reference.json format-uri-template.json format-uri.json format-uuid.json`
+The desk runs, in work/: `node ../checks/run-suite.js content.json format-date-time.json format-date.json format-duration.json format-email.json format-hostname.json format-idn-email.json format-idn-hostname.json format-ipv4.json format-ipv6.json format-iri-reference.json format-iri.json format-json-pointer.json format-regex.json format-relative-json-pointer.json format-time.json format-unknown.json format-uri-reference.json format-uri-template.json format-uri.json format-uuid.json --skip-keywords=enum,const,additionalProperties,propertyNames,minProperties,maxProperties,dependentRequired,dependentSchemas,items,prefixItems,contains,minContains,maxContains,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties`
 
 It loads `validate` from work/validate.js and, for every test case in the files below, checks that
 `validate(testCase.schema, test.data, testCase.externalSchemas || {})` returns exactly `test.valid`.
