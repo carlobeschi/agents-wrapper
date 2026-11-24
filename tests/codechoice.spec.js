@@ -98,7 +98,7 @@ test('choosers see the code without comments; strings, templates and regular exp
 test('a full run: builds scored by hidden tests, choices in every condition, judges, summary, resume', () => {
   test.setTimeout(120000);
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'codechoice-home-'));
-  const fake = { headless: ['node', path.join(FIX, 'fake.js'), '{prompt}'] };
+  const fake = { headless: ['node', path.join(FIX, 'fake.js')], stdin: true };
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
     { id: 'claude', label: 'Ann', ...fake }, { id: 'codex', label: 'Bob', ...fake }, { id: 'antigravity', label: 'Cy', ...fake },
     { id: 'judge1', label: 'Jo', ...fake }, { id: 'judge2', label: 'Kim', ...fake },

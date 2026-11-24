@@ -1,7 +1,8 @@
 // Stands in for every agent in bench.spec.js: the room steps, the judges and the
 // wrong-note sessions, answered by what the prompt asks.
-const p = process.argv[2] || '';
+const p = process.argv[2] || require('fs').readFileSync(0, 'utf8');
 if (/pair-programming|writing code alone|Answer with exactly these four lines|says the work is done/.test(p)) {
+  process.argv[2] = p;
   require('./wrongnote/fake.js');
 } else if (p.includes('Score each from 1 to 10')) {
   // Every piece 6, except the one shown as A gets 8: the judge order is shuffled, so scores vary by row.

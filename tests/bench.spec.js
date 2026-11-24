@@ -20,8 +20,8 @@ test('interval: the mean of task means, with a seeded resample', () => {
 
 test('a small bench: cells per row and repeat, resumable, and a report in fixed row order', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'bench-home-'));
-  const fake = ['node', path.join(__dirname, 'fixtures', 'bench-fake.js'), '{prompt}'];
-  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: fake }, { id: 'g', label: 'G', headless: fake }] }));
+  const fake = ['node', path.join(__dirname, 'fixtures', 'bench-fake.js')];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: fake, stdin: true }, { id: 'g', label: 'G', headless: fake, stdin: true }] }));
   const wn = path.join(home, 'wn.json');
   fs.writeFileSync(wn, JSON.stringify({ spec: 'Left to right.', nav_task: 'A calculator.', notes: ['N1'], wrong_note: 'Right to left.', conflict: 'Left to right.',
     probes: [{ expr: '10 - 4 - 1', spec: 5, note: 7 }], tests: path.join(__dirname, 'fixtures', 'wrongnote', 'hidden'), proof: ['node', 'hidden-tests/ok.js'], proof_wrap: ['env'],
@@ -83,10 +83,10 @@ test('a small bench: cells per row and repeat, resumable, and a report in fixed 
 
 test('a cell where a part never happened is broken: left out of the report and run again', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'bench-broken-'));
-  const fake = ['node', path.join(__dirname, 'fixtures', 'bench-fake.js'), '{prompt}'];
+  const fake = ['node', path.join(__dirname, 'fixtures', 'bench-fake.js')];
   // "g" fails every call, as an agent whose CLI is out of credit would.
   const dead = ['node', '-e', 'process.exit(1)'];
-  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: fake }, { id: 'g', label: 'G', headless: dead }] }));
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: fake, stdin: true }, { id: 'g', label: 'G', headless: dead }] }));
   const file = path.join(home, 'tiny.json');
   fs.writeFileSync(file, JSON.stringify({ title: 'Broken bench', judges: ['a', 'g'], process_judges: ['a'], team: ['a#1', 'a#2'], solo: 'a', repeats: 1,
     room: { moves: 2, min_moves: 0, turns: true, silent: false },
@@ -128,8 +128,8 @@ test('a cell where a part never happened is broken: left out of the report and r
 
 test('wrong note: a session that errored runs again on its own, and the new one counts', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'bench-wn-'));
-  const fake = ['node', path.join(__dirname, 'fixtures', 'bench-fake.js'), '{prompt}'];
-  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: fake }] }));
+  const fake = ['node', path.join(__dirname, 'fixtures', 'bench-fake.js')];
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'a', label: 'A', headless: fake, stdin: true }] }));
   const wn = path.join(home, 'wn.json');
   fs.writeFileSync(wn, JSON.stringify({ spec: 'Left to right.', nav_task: 'A calculator.', notes: ['N1'], wrong_note: 'Right to left.', conflict: 'Left to right.',
     probes: [{ expr: '10 - 4 - 1', spec: 5, note: 7 }], tests: path.join(__dirname, 'fixtures', 'wrongnote', 'hidden'), proof: ['node', 'hidden-tests/ok.js'], proof_wrap: ['env'],

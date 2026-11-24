@@ -31,7 +31,7 @@ test('replies split into message and file; the wrong note moves; every ordered p
 
 test('a full run: the driver follows the wrong note, is challenged, goes back to the spec', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'wrongnote-home-'));
-  const fake = { headless: ['node', path.join(FIX, 'fake.js'), '{prompt}'] };
+  const fake = { headless: ['node', path.join(FIX, 'fake.js')], stdin: true };
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
     { id: 'claude', label: 'Ann', ...fake }, { id: 'codex', label: 'Bob', ...fake },
   ] }));
@@ -69,7 +69,7 @@ test('a full run: the driver follows the wrong note, is challenged, goes back to
 
 test('a session whose step fails keeps what it did, and --sessions runs only the ones named', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'wrongnote-home-'));
-  const fake = { headless: ['node', path.join(FIX, 'fake.js'), '{prompt}'] };
+  const fake = { headless: ['node', path.join(FIX, 'fake.js')], stdin: true };
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
     { id: 'claude', label: 'Ann', ...fake }, { id: 'codex', label: 'Bob', ...fake },
   ] }));
@@ -108,7 +108,7 @@ test('study 7: the "think for yourself" line can be dropped, and the probes can 
 
 test('bench: named pairs of copies, a driver alone, and an output folder', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'wrongnote-home-'));
-  const fake = { headless: ['node', path.join(FIX, 'fake.js'), '{prompt}'] };
+  const fake = { headless: ['node', path.join(FIX, 'fake.js')], stdin: true };
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'claude', label: 'Ann', ...fake }] }));
   const cfg = path.join(home, 'wn.json');
   fs.writeFileSync(cfg, JSON.stringify({
