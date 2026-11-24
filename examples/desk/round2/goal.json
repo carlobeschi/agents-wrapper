@@ -1,0 +1,11 @@
+{
+  "goal": "Help a product engineering team of about eight people measure how well it works as a team, so the team itself can use the numbers to improve. Team-level only: no number may rank or watch a single person.",
+  "settings": { "budget_usd": 15, "lease_seconds": 1200, "max_lease_seconds": 21600, "max_attempts": 3 },
+  "tasks": [
+    { "id": "b1", "title": "KPI tree (kpi-tree.json)", "detail": "Write kpi-tree.json: one top number the team wants to move, 3 to 5 drivers under it, and 1 to 3 indicators under each driver. The judging check shows the exact shape. Every indicator says how it is measured, from which data, which direction is better, and how it could be gamed.", "spec": "checks/kpi-tree.check.js", "check": ["node", "../checks/kpi-tree.check.js"] },
+    { "id": "b2", "title": "Data sources (data-sources.md)", "detail": "For each indicator in kpi-tree.json, say where the data comes from in a typical team (issue tracker, git host, CI, incident tool, surveys), how often it can be collected, its cost, and what to do when the data is missing. A person reviews it against spec/review.md.", "needs": ["b1"], "spec": "spec/review.md" },
+    { "id": "b3", "title": "Risks and safeguards (risks.md)", "detail": "The ways these numbers can hurt the team: Goodhart's law, gaming, surveillance of individuals, privacy and labour rules in the EU and the UK, comparing teams that do different work. For each, a safeguard the team can actually apply. A person reviews it against spec/review.md.", "needs": ["b1"], "spec": "spec/review.md" },
+    { "id": "b4", "title": "Six-week trial (trial.md)", "detail": "A six-week trial: what to measure first, the baseline, which change the team will try, what result would count as better, worse or unclear, and when to stop measuring something. A person reviews it against spec/review.md.", "needs": ["b1", "b3"], "spec": "spec/review.md" },
+    { "id": "b5", "title": "One page for the team (summary.md)", "detail": "One page, plain words, for the team that will use this: the top number, why it, the drivers, what changes for them, what will never be measured. Under 400 words. A person reviews it against spec/review.md.", "needs": ["b2", "b3", "b4"], "spec": "spec/review.md" }
+  ]
+}

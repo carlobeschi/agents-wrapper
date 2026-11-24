@@ -169,3 +169,26 @@ print(t.desk_board())
     expect(out).toContain('- p1 Summarise the open questions: open (tries 0)');
   } finally { d.stop(); }
 });
+
+test('round 2: the KPI-tree check accepts a complete team-level tree and names what is wrong with a bad one', () => {
+  const work = fs.mkdtempSync(path.join(os.tmpdir(), 'kpi-'));
+  const check = path.join(ROOT, 'examples', 'desk', 'round2', 'checks', 'kpi-tree.check.js');
+  const run = () => { try { return { ok: true, out: execFileSync('node', [check], { cwd: work, encoding: 'utf8' }) }; } catch (e) { return { ok: false, out: String(e.stdout) }; } };
+  const ind = n => ({ name: n, measure: 'median days', data: 'issue tracker', better: 'down', gaming: 'splitting tickets', level: 'team' });
+  const good = { top: { name: 'Lead time', why: 'speed to users', measure: 'median days idea to production', better: 'down' },
+    drivers: ['Flow', 'Quality', 'Focus'].map((d, i) => ({ name: d, why: 'matters', indicators: [ind(`i${i}a`), ind(`i${i}b`)] })) };
+  expect(run()).toMatchObject({ ok: false });
+  fs.writeFileSync(path.join(work, 'kpi-tree.json'), JSON.stringify(good));
+  expect(run()).toEqual({ ok: true, out: 'kpi-tree.json accepted: 3 drivers, 6 indicators.\n' });
+  const bad = structuredClone(good);
+  bad.drivers[0].indicators[0].level = 'person';
+  bad.drivers.pop();
+  fs.writeFileSync(path.join(work, 'kpi-tree.json'), JSON.stringify(bad));
+  const r = run();
+  expect(r.ok).toBe(false);
+  expect(r.out).toContain('there must be 3 to 5 drivers, not 2');
+  expect(r.out).toContain('drivers[0].indicators[0].level must be "team"');
+  // Every round-2 task points at a spec that exists in the round folder.
+  const goal = JSON.parse(fs.readFileSync(path.join(ROOT, 'examples', 'desk', 'round2', 'goal.json'), 'utf8'));
+  for (const t of goal.tasks) expect(fs.existsSync(path.join(ROOT, 'examples', 'desk', 'round2', t.spec))).toBe(true);
+});
