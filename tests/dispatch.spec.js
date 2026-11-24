@@ -25,6 +25,7 @@ test.beforeAll(async () => {
       { id: 'a', label: 'Agent A', interactive: write('term-a.txt'), headless: ['sh', '-c', 'printf %s "$1"; pwd > cwd-a.txt', 'x', '{prompt}'] },
       { id: 'b', label: 'Agent B', interactive: write('term-b.txt'), headless: ['sh', '-c', 'printf %s "$1"', 'x', '{prompt}'] },
       { id: 'gone', label: 'Missing', interactive: ['no-such-agent-binary', '{prompt}'] },
+      { id: 'stopped', label: 'Stopped', headless: ['sh', '-c', 'kill -TERM $$'] },
       { id: 'web', label: 'Web', type: 'url', url: 'https://example.com/?q={prompt}' },
       { id: 'paste', label: 'Paste', type: 'url', url: 'about:blank' },
     ],
@@ -48,7 +49,7 @@ test.afterAll(() => {
 
 async function load(page) {
   await page.goto(BASE + '/dispatch#k=' + key);
-  await expect(page.locator('#agents .agent')).toHaveCount(5);
+  await expect(page.locator('#agents .agent')).toHaveCount(6);
   await page.locator('#none').click();
   await page.locator('#cwd').fill(work);
   await page.locator('#prompt').fill(NASTY);
@@ -75,6 +76,14 @@ test('background mode sends the same prompt to every picked agent, unmangled', a
   expect(await page.locator('pre.log').textContent()).toContain(NASTY);
   expect(fs.existsSync(path.join(work, 'pwned'))).toBe(false);
   expect(fs.readFileSync(path.join(work, 'cwd-a.txt'), 'utf8').trim()).toBe(fs.realpathSync(work));
+});
+
+test('background run reports when an agent exits from a signal', async ({ page }) => {
+  await load(page);
+  await page.locator('input[name=mode][value=background]').check();
+  await page.locator('#agents input[value=stopped]').check();
+  await page.locator('#send').click();
+  await expect(page.locator('.run .s-failed')).toContainText('SIGTERM');
 });
 
 test('terminal mode runs the interactive command in the chosen directory with the prompt intact', async ({ page }) => {
@@ -150,7 +159,7 @@ test('the key is only in the printed link: pages hold none, and the browser keep
   expect((await request.get(BASE + '/api/runs', { headers: { 'X-Dispatch-Token': key.slice(0, -1) } })).status()).toBe(403);
 
   await page.goto(BASE + '/dispatch#k=' + key);
-  await expect(page.locator('#agents .agent')).toHaveCount(5);
+  await expect(page.locator('#agents .agent')).toHaveCount(6);
   expect(page.url()).toBe(BASE + '/dispatch');
   await page.goto(BASE + '/story');                         // a later visit without the link
   await expect(page.locator('#a option')).not.toHaveCount(0);

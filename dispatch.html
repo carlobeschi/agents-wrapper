@@ -188,7 +188,7 @@ async function refreshRuns() {
       <div class="head"><span>${esc(r.runId)}</span><span>${esc(r.mode)}</span><span>${esc(r.cwd)}</span></div>
       <div class="prompt">${esc(r.prompt)}</div>
       <div class="agents">${Object.entries(r.agents).map(([id, a]) => `
-        <span>${esc(label(id))}: <span class="s-${esc(a.status)}">${esc(a.status)}${a.status === 'running' || a.status === 'done' ? ` · ${a.seconds}s` : ''}${a.error ? ` — ${esc(a.error)}` : ''}</span>
+        <span>${esc(label(id))}: <span class="s-${esc(a.status)}">${esc(a.status)}${a.status === 'running' || a.status === 'done' ? ` · ${a.seconds}s` : ''}${a.signal ? ` · ${esc(a.signal)}` : ''}${a.error ? ` — ${esc(a.error)}` : ''}</span>
         ${a.hasLog ? `<button class="linkish" data-log="${esc(r.runId)}|${esc(id)}">${openLogs.has(r.runId + '|' + id) ? 'hide' : 'output'}</button>` : ''}</span>`).join('')}
       </div>
       ${Object.keys(r.agents).filter(id => openLogs.has(r.runId + '|' + id)).map(id => `<pre class="log" data-for="${esc(r.runId)}|${esc(id)}"></pre>`).join('')}
