@@ -234,3 +234,15 @@ test('JSON Schema round: every suite file is judged once, needs never loop, the 
   expect(bad.out).toMatch(/^\d+ of 80 tests pass\.\ntype\.json \| /);
   expect(execFileSync('node', [DESK, 'report', dir], { encoding: 'utf8' })).toMatch(/Final check: \d+ of 1314 tests pass\./);
 });
+
+test('JSON Schema mini round: a closed subset with its own suite files, a $2 cap and a final task over all of them', () => {
+  const M = path.join(ROOT, 'examples', 'desk', 'jsonschema-mini');
+  const goal = JSON.parse(fs.readFileSync(path.join(M, 'goal.json'), 'utf8'));
+  expect(goal.settings.budget_usd).toBe(2);
+  const ids = goal.tasks.map(t => t.id);
+  for (const t of goal.tasks) for (const n of t.needs) expect(ids).toContain(n);
+  const judged = goal.tasks.filter(t => t.id !== 'all').flatMap(t => t.check.slice(2)).sort();
+  expect(fs.readdirSync(path.join(M, 'suite')).filter(f => f.endsWith('.json')).sort()).toEqual(judged);
+  for (const t of goal.tasks) expect(fs.existsSync(path.join(M, t.spec))).toBe(true);
+  expect(goal.tasks.find(t => t.id === 'all').needs.sort()).toEqual(ids.filter(i => i !== 'all').sort());
+});

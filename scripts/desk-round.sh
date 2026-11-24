@@ -4,6 +4,7 @@
 #   scripts/desk-round.sh <new run dir> <workers> [example dir] [port]
 #   scripts/desk-round.sh ~/.agent-dispatch/desk/group-1 3
 #   scripts/desk-round.sh ~/.agent-dispatch/desk/solo-1 1
+#   DESK_MODEL=claude-haiku-5-5 scripts/desk-round.sh ... (a cheaper model)
 # Claude Code runs on the Keychain key "anthropic-key" if there is one,
 # otherwise on the machine's Claude Code sign-in.
 set -e
@@ -19,7 +20,7 @@ sleep 1
 echo "Board: http://127.0.0.1:$PORT"
 PIDS=()
 for i in $(seq 1 "$N"); do
-  node desk-worker.js "$RUN" --name "w$i" --desk "http://127.0.0.1:$PORT" &
+  node desk-worker.js "$RUN" --name "w$i" --desk "http://127.0.0.1:$PORT" --model "${DESK_MODEL:-claude-opus-5-5}" &
   PIDS+=($!)
   sleep 5
 done
