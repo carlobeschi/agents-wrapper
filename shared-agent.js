@@ -123,7 +123,7 @@ const agentEnv = () => Object.fromEntries(Object.entries(process.env).filter(([k
 function runAgent(dir, cfg, text) {
   const cmd = process.env.SHARED_AGENT_CLAUDE || 'claude';
   const out = execFileSync(cmd, ['-p', '--model', cfg.model, '--max-turns', String(cfg.max_turns), '--tools', 'Read,Write,Edit,Glob,Grep',
-    '--permission-mode', 'dontAsk', '--strict-mcp-config', '--output-format', 'json', '--', text],
+    '--permission-mode', 'acceptEdits', '--strict-mcp-config', '--output-format', 'json', '--', text],
   { cwd: dir, env: agentEnv(), encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: Number(process.env.SHARED_AGENT_TIMEOUT_MS || 1500000) });
   const j = JSON.parse(out.slice(out.indexOf('{')));
   if (j.is_error) throw new Error(`the agent stopped: ${j.subtype || ''} ${String(j.result || '').slice(0, 200)}`);

@@ -71,7 +71,7 @@ test('anyone in the space calls the same agent; it works on the shared output, c
   // The agent runs on the API key, with file tools only, and never sees the GitHub token.
   const seen = JSON.parse(s.read('env.json'));
   expect([seen.gh, seen.key]).toEqual([null, 'sk-ant-test']);
-  expect(seen.args).toEqual(['-p', '--model', 'claude-opus-5-5', '--max-turns', '40', '--tools', 'Read,Write,Edit,Glob,Grep', '--permission-mode', 'dontAsk', '--strict-mcp-config', '--output-format', 'json', '--']);
+  expect(seen.args).toEqual(['-p', '--model', 'claude-opus-5-5', '--max-turns', '40', '--tools', 'Read,Write,Edit,Glob,Grep', '--permission-mode', 'acceptEdits', '--strict-mcp-config', '--output-format', 'json', '--']);
   expect(s.read('prompts.txt')).toContain('From @ann, in issue #7 "Summer trip":\n\ndraft a plan for two weeks in Sicily');
 
   // A second person, another thread: same agent, same output, and it sees the history.
