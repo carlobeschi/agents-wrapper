@@ -5,7 +5,7 @@
 // gives the task back. Then it asks again, until the desk says everything is
 // done, the budget is spent or it has waited too long with nothing to do.
 //
-//   node desk-worker.js <dir> --name w1 [--desk http://127.0.0.1:8790] [--max-tasks 20] [--model claude-opus-5-5]
+//   node desk-worker.js <dir> --name w1 [--desk http://127.0.0.1:8790] [--max-tasks 100] [--model claude-opus-5-5]
 //
 // Start two or three with different names for the group; start one alone,
 // on a fresh copy of the same round, for the solo comparison.
@@ -25,7 +25,7 @@ const opt = (name, d) => { const i = args.indexOf(name); return i >= 0 ? args[i 
 const dir = args[0];
 if (!dir || dir.startsWith('--')) { console.error('Usage: node desk-worker.js <dir> --name w1 [--desk http://127.0.0.1:8790]'); process.exit(1); }
 const NAME = opt('--name', 'w1'), DESK = opt('--desk', 'http://127.0.0.1:8790');
-const MAX_TASKS = Number(opt('--max-tasks', '20')), MODEL = opt('--model', 'claude-opus-5-5');
+const MAX_TASKS = Number(opt('--max-tasks', '100')), MODEL = opt('--model', 'claude-opus-5-5');
 const POLL_MS = Number(process.env.DESK_POLL_MS || 10000), IDLE_MS = Number(process.env.DESK_IDLE_MS || 30 * 60000);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 

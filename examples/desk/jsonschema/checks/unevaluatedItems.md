@@ -1,0 +1,9 @@
+# unevaluatedItems: unevaluatedItems
+
+The desk runs, in work/: `node ../checks/run-suite.js unevaluatedItems.json`
+
+It loads `validate` from work/validate.js and, for every test case in the files below, checks that
+`validate(testCase.schema, test.data, testCase.externalSchemas || {})` returns exactly `test.valid`.
+The test files are the official JSON Schema Test Suite (2020-12 cases only). You cannot read them; here is what they cover:
+
+- unevaluatedItems.json: unevaluatedItems true; unevaluatedItems false; unevaluatedItems as schema; unevaluatedItems with uniform items; unevaluatedItems with tuple (prefixItems); unevaluatedItems with items and prefixItems; unevaluatedItems with items; unevaluatedItems with nested tuple (prefixItems); unevaluatedItems with nested items; unevaluatedItems with nested prefixItems and items; unevaluatedItems with nested unevaluatedItems (prefixItems); unevaluatedItems with anyOf (prefixItems); unevaluatedItems with oneOf (prefixItems); unevaluatedItems with not (prefixItems); unevaluatedItems with if/then/else (prefixItems); unevaluatedItems with boolean schemas; unevaluatedItems with $ref (prefixItems); unevaluatedItems before $ref (prefixItems); unevaluatedItems with $dynamicRef (2020-12); unevaluatedItems can't see inside cousins (prefixItems); item is evaluated in an uncle schema to unevaluatedItems (prefixItems); unevaluatedItems depends on adjacent contains; unevaluatedItems depends on multiple nested contains; unevaluatedItems and contains interact to control item dependency relationship; unevaluatedItems with minContains = 0; non-array instances are valid; unevaluatedItems with null instance elements; unevaluatedItems can see annotations from if without then and else (prefixItems); Evaluated items collection needs to consider instance location (prefixItems)

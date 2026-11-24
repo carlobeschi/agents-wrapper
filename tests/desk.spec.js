@@ -36,6 +36,8 @@ const file = { t1: 'tokenize', t2: 'cells', t3: 'functions', t4: 'parse', t5: 'e
 const flag = ${JSON.stringify(path.join(side, 'bad-done'))};
 if (process.env.FAKE_BAD_ONCE === id && !fs.existsSync(flag)) { fs.writeFileSync(flag, ''); fs.writeFileSync(file, 'module.exports = { tokenize: () => [] };\\n'); }
 else fs.copyFileSync(path.join(${JSON.stringify(REF)}, file), file);
+const broke = ${JSON.stringify(path.join(side, 'break-done'))};
+if (process.env.FAKE_BREAK === id && !fs.existsSync(broke)) { fs.writeFileSync(broke, ''); fs.writeFileSync('tokenize.js', 'module.exports = { tokenize: () => [] };\\n'); }
 console.log(JSON.stringify({ type: 'result', is_error: false, result: 'Wrote ' + file + '.', total_cost_usd: 0.1 }));
 `, { mode: 0o755 });
   const port = nextPort++;
@@ -191,4 +193,44 @@ test('round 2: the KPI-tree check accepts a complete team-level tree and names w
   // Every round-2 task points at a spec that exists in the round folder.
   const goal = JSON.parse(fs.readFileSync(path.join(ROOT, 'examples', 'desk', 'round2', 'goal.json'), 'utf8'));
   for (const t of goal.tasks) expect(fs.existsSync(path.join(ROOT, 'examples', 'desk', 'round2', t.spec))).toBe(true);
+});
+
+test('recheck_done: work that breaks something already accepted sends it back, and the report counts it', async () => {
+  const d = await desk({ recheck_done: true });
+  try {
+    await d.work('solo', { FAKE_BREAK: 't2' });
+    const evs = fs.readFileSync(path.join(d.dir, 'events.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    expect(evs.find(e => e.ev === 'broken')).toMatchObject({ task: 't1', after: 't2', worker: 'solo' });
+    const board = (await d.call('GET', '/board')).json;
+    expect(board.tasks.map(t => t.status)).toEqual(['done', 'done', 'done', 'done', 'done', 'done']);
+    const prompts = fs.readFileSync(path.join(d.side, 'prompts.txt'), 'utf8');
+    expect(prompts).toContain('Was accepted, but fails now (after t2 by solo was accepted)');
+    expect(execFileSync('node', [DESK, 'report', d.dir], { encoding: 'utf8' })).toContain('Accepted work broken later by other work: 1 times');
+  } finally { d.stop(); }
+});
+
+test('JSON Schema round: every suite file is judged once, needs never loop, the official tests are copied for reading, and the runner judges', () => {
+  const R = path.join(ROOT, 'examples', 'desk', 'jsonschema');
+  const goal = JSON.parse(fs.readFileSync(path.join(R, 'goal.json'), 'utf8'));
+  const files = fs.readdirSync(path.join(R, 'suite')).filter(f => f.endsWith('.json')).sort();
+  const judged = goal.tasks.filter(t => t.id !== 'all').flatMap(t => t.check.slice(2)).sort();
+  expect(judged).toEqual(files);
+  // Every task can be lent once the tasks it needs are done: no cycles, no unknown ids.
+  const done = new Set();
+  for (let round = 0; round < goal.tasks.length; round++) for (const t of goal.tasks) if (t.needs.every(n => done.has(n))) done.add(t.id);
+  expect(done.size).toBe(goal.tasks.length);
+  for (const t of goal.tasks) expect(fs.existsSync(path.join(R, t.spec))).toBe(true);
+
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'js-'));
+  const dir = path.join(tmp, 'run');
+  execFileSync('node', [DESK, 'init', dir, '--from', R]);
+  expect(fs.readdirSync(path.join(dir, 'work', 'tests-official')).filter(f => f.endsWith('.json')).sort()).toEqual(files);
+  const run = (...a) => { try { return { ok: true, out: execFileSync('node', ['../checks/run-suite.js', ...a], { cwd: path.join(dir, 'work'), encoding: 'utf8' }) }; } catch (e) { return { ok: false, out: String(e.stdout) }; } };
+  expect(run('boolean_schema.json')).toMatchObject({ ok: false, out: expect.stringContaining('validate.js could not be loaded') });
+  fs.writeFileSync(path.join(dir, 'work', 'validate.js'), 'module.exports = { validate: schema => schema !== false };\n');
+  expect(run('boolean_schema.json')).toEqual({ ok: true, out: '18 of 18 tests pass.\n' });
+  const bad = run('type.json');
+  expect(bad.ok).toBe(false);
+  expect(bad.out).toMatch(/^\d+ of 80 tests pass\.\ntype\.json \| /);
+  expect(execFileSync('node', [DESK, 'report', dir], { encoding: 'utf8' })).toMatch(/Final check: \d+ of 1314 tests pass\./);
 });

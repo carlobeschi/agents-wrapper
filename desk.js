@@ -21,7 +21,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const crypto = require('crypto');
-const { execFile } = require('child_process');
+const { execFile, execFileSync } = require('child_process');
 
 const args = process.argv.slice(2);
 const opt = (name, d) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : d; };
@@ -172,6 +172,18 @@ function serve(dir, port) {
           verdict = r.ok ? 'done' : 'open';
           if (!r.ok) t.notes.push({ by: 'check', at: iso(now()), text: `Rejected by the check:\n${r.out}` });
           log(dir, { ev: r.ok ? 'accepted' : 'rejected', task: t.id, worker, cost_usd: cost });
+          // recheck_done: work in one shared folder can break what was already
+          // accepted. After each acceptance, rerun the checks of the other done
+          // tasks; one that fails now goes back on the board, and it is logged.
+          if (r.ok && board.settings.recheck_done) {
+            for (const o of board.tasks.filter(x => x !== t && x.status === 'done' && Array.isArray(x.check))) {
+              const again = await runCheck(dir, board, o);
+              if (again.ok) continue;
+              o.status = 'open'; o.attempts = Math.max(0, o.attempts - 1);
+              o.notes.push({ by: 'check', at: iso(now()), text: `Was accepted, but fails now (after ${t.id} by ${worker} was accepted):\n${again.out}` });
+              log(dir, { ev: 'broken', task: o.id, after: t.id, worker });
+            }
+          }
         } else if (b.reason === 'submitted') {
           verdict = 'review';
           log(dir, { ev: 'submitted', task: t.id, worker, cost_usd: cost });
@@ -238,10 +250,19 @@ function report(dir) {
     `Goal: ${board.goal}`,
     `Tasks: ${board.tasks.length} (done ${count('done')}, waiting for review ${count('review')}, stuck ${count('stuck')}, open ${count('open') + count('leased')})`,
     `Leases taken ${n('leased')}, accepted ${n('accepted')}, rejected ${n('rejected')}, given back ${n('released')}, ran out ${n('expired')}`,
+    `Accepted work broken later by other work: ${n('broken')} times`,
     `Workers ${workers.length}. ${per.join('; ')}`,
     `Time from first lease to last acceptance: ${times.length && accepted.length ? ((Math.max(...accepted) - Math.min(...times)) / 60000).toFixed(1) + ' min' : 'n/a'}`,
     `Spent about $${board.spent_usd.toFixed(2)}`,
   ];
+  // final_check in the settings: one command run on the work as it ends up,
+  // whatever the board says (e.g. the whole test suite).
+  const fc = board.settings.final_check;
+  if (Array.isArray(fc)) {
+    let out;
+    try { out = execFileSync(fc[0], fc.slice(1), { cwd: path.join(dir, 'work'), encoding: 'utf8', timeout: 300000 }); } catch (e) { out = String(e.stdout || e.message); }
+    lines.push(`Final check: ${out.trim().split('\n')[0]}`);
+  }
   console.log(lines.join('\n'));
 }
 
@@ -253,6 +274,14 @@ function init(dir, from) {
   fs.mkdirSync(dir, { recursive: true });
   fs.cpSync(from, dir, { recursive: true });
   fs.mkdirSync(path.join(dir, 'work'), { recursive: true });
+  // "work_files" in goal.json: copies the agents may read (and may change:
+  // the checks never use them), e.g. a copy of the tests as a reference.
+  const goal = readJSON(path.join(dir, 'goal.json'), {});
+  for (const [to, src] of Object.entries(goal.work_files || {})) {
+    const a = path.resolve(dir, src), b = path.resolve(dir, 'work', to);
+    if (!a.startsWith(path.resolve(dir) + path.sep) || !b.startsWith(path.resolve(dir, 'work') + path.sep)) die(`work_files: ${to} must stay inside the run folder`);
+    fs.cpSync(a, b, { recursive: true });
+  }
   console.log(`Ready: ${dir}. Next: node desk.js serve ${dir}`);
 }
 
