@@ -1,5 +1,5 @@
 // Stands in for every agent in influence.spec.js: answers by what the prompt asks.
-const p = process.argv[2] || '';
+const p = process.argv[2] || require('fs').readFileSync(0, 'utf8');
 const code = b => '```js\nconst R={A:0.10,B:' + b + ',C:0.08};exports.total=(z,n)=>{if(!(z in R))throw new Error("zone");if(typeof n!=="number"||!(n>=0))throw new Error("net");return Math.round((n+(n>=500?0:n*R[z]))*100)/100;};\n```';
 if (p === 'Reply with the single word OK.') {
   console.log('OK');

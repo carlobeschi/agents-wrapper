@@ -42,7 +42,7 @@ test('arms, plans and actions', () => {
 
 test('a full run: four arms, the scripted navigator insists once, OPEN shows the file, resume skips what is done', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'influence-home-'));
-  const fake = { headless: ['node', path.join(FIX, 'fake.js'), '{prompt}'] };
+  const fake = { headless: ['node', path.join(FIX, 'fake.js')], stdin: true };
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
     { id: 'claude', label: 'Ann', ...fake }, { id: 'codex', label: 'Bob', ...fake },
   ] }));
@@ -87,7 +87,7 @@ test('a full run: four arms, the scripted navigator insists once, OPEN shows the
 test('an agent that cannot answer sits the run out: the others go on, and the run exits 3 to be run again', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'influence-home-'));
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
-    { id: 'claude', label: 'Ann', headless: ['node', path.join(FIX, 'fake.js'), '{prompt}'] },
+    { id: 'claude', label: 'Ann', headless: ['node', path.join(FIX, 'fake.js')], stdin: true },
     { id: 'antigravity', label: 'Gem', headless: ['node', '-e', 'console.error("authentication timed out"); process.exit(1)'] },
   ] }));
   const raw = JSON.parse(fs.readFileSync(path.join(EX, 'rates.json'), 'utf8'));
@@ -110,7 +110,7 @@ test('an agent that cannot answer sits the run out: the others go on, and the ru
 
 test('look_first: code written in a turn that asks to OPEN is not saved, so the file is seen before any code', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'influence-home-'));
-  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'claude', label: 'Ann', headless: ['node', path.join(FIX, 'fake.js'), '{prompt}'] }] }));
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'claude', label: 'Ann', headless: ['node', path.join(FIX, 'fake.js')], stdin: true }] }));
   const raw = JSON.parse(fs.readFileSync(path.join(EX, 'rates-2.json'), 'utf8'));
   expect(raw.look_first).toBe(true);
   const cfg = path.join(EX, 'test-look.tmp.json');
@@ -138,7 +138,7 @@ test('--push puts summary.md and results.json in the private reports clone, unde
   git(home, 'clone', '--quiet', bare, clone);
   git(clone, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', 'commit', '--quiet', '--allow-empty', '-m', 'start');
   git(clone, 'push', '--quiet', 'origin', 'HEAD');
-  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'claude', label: 'Ann', headless: ['node', path.join(FIX, 'fake.js'), '{prompt}'] }] }));
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [{ id: 'claude', label: 'Ann', headless: ['node', path.join(FIX, 'fake.js')], stdin: true }] }));
   const raw = JSON.parse(fs.readFileSync(path.join(EX, 'rates.json'), 'utf8'));
   const cfg = path.join(EX, 'test-push.tmp.json');
   fs.writeFileSync(cfg, JSON.stringify({ ...raw, proof_wrap: ['env'], drivers: ['claude'], arms: ['T'], judges: ['claude'], repeats: 1, max_turns: 3 }));

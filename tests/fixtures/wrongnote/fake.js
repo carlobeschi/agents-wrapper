@@ -1,5 +1,5 @@
 // Stands in for every agent in wrongnote.spec.js: answers by what the prompt asks.
-const p = process.argv[2] || '';
+const p = process.argv[2] || require('fs').readFileSync(0, 'utf8');
 const NOTE = 'exports.evaluate = s => s.split("-").map(Number).reduceRight((a, b) => b - a);';
 const SPEC = 'exports.evaluate = s => s.split("-").map(Number).reduce((a, b) => a - b);';
 if (p.includes('Answer with exactly these four lines')) {

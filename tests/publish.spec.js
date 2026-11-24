@@ -10,7 +10,25 @@ const os = require('os');
 const path = require('path');
 const { openGuardedPullRequest, guard, PUBLIC_NAME, PUBLIC_EMAIL } = require('../publish');
 
-const sh = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
+function withBareRepositoryAllowed(run) {
+  const index = Number(process.env.GIT_CONFIG_COUNT || 0);
+  const key = `GIT_CONFIG_KEY_${index}`, value = `GIT_CONFIG_VALUE_${index}`;
+  const previous = [process.env.GIT_CONFIG_COUNT, process.env[key], process.env[value]];
+  process.env[key] = 'safe.bareRepository';
+  process.env[value] = 'all';
+  process.env.GIT_CONFIG_COUNT = String(index + 1);
+  try { return run(); }
+  finally {
+    if (previous[0] === undefined) delete process.env.GIT_CONFIG_COUNT;
+    else process.env.GIT_CONFIG_COUNT = previous[0];
+    if (previous[1] === undefined) delete process.env[key];
+    else process.env[key] = previous[1];
+    if (previous[2] === undefined) delete process.env[value];
+    else process.env[value] = previous[2];
+  }
+}
+
+const sh = (cwd, ...args) => withBareRepositoryAllowed(() => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim());
 
 function site() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'publish-'));
@@ -31,12 +49,12 @@ const terms = ['Ada Lovelace', 'ada.lovelace@laptop.lan'];
 
 test('commits as the public identity and takes the home folder out of the body', () => {
   const s = site();
-  const url = openGuardedPullRequest({
+  const url = withBareRepositoryAllowed(() => openGuardedPullRequest({
     repo: s.repo, github: 'o/r', branch: 'episode/1', gh: s.gh, terms,
     files: [{ rel: '_shapes/episode-1.md', text: 'drawings\n' }],
     title: 'Episode 1', commit: 'Episode 1',
     body: `Run folder on the laptop: \`${path.join(os.homedir(), '.agent-dispatch', 'x')}\``,
-  });
+  }));
   expect(url).toBe('https://example.test/pr/1');
   const who = sh(s.origin, 'log', '-1', '--format=%an|%ae|%cn|%ce', 'episode/1');
   expect(who).toBe(`${PUBLIC_NAME}|${PUBLIC_EMAIL}|${PUBLIC_NAME}|${PUBLIC_EMAIL}`);
@@ -54,10 +72,10 @@ for (const [where, opts] of [
     const leak = path.join(s.root, 'leak.json');
     fs.writeFileSync(leak, '{"by": "Ada Lovelace"}');
     const files = opts.files.map(f => f.src ? { ...f, src: leak } : f);
-    expect(() => openGuardedPullRequest({
+    expect(() => withBareRepositoryAllowed(() => openGuardedPullRequest({
       repo: s.repo, github: 'o/r', branch: 'episode/1', gh: s.gh, terms,
       title: 'Episode 1', body: 'ok', commit: 'Episode 1', files,
-    })).toThrow(/Not published/);
+    }))).toThrow(/Not published/);
     expect(sh(s.origin, 'branch', '--list')).not.toContain('episode/1');
     expect(fs.existsSync(path.join(s.root, 'gh-args'))).toBe(false);
   });
@@ -65,11 +83,11 @@ for (const [where, opts] of [
 
 test('scrubs private terms from the title, body and commit message', () => {
   const s = site();
-  openGuardedPullRequest({
+  withBareRepositoryAllowed(() => openGuardedPullRequest({
     repo: s.repo, github: 'o/r', branch: 'episode/1', gh: s.gh, terms,
     files: [{ rel: 'e.md', text: 'fine' }],
     title: 'Episode for Ada Lovelace', body: 'mail ada.lovelace@laptop.lan', commit: 'by Ada Lovelace',
-  });
+  }));
   const args = fs.readFileSync(path.join(s.root, 'gh-args'), 'utf8');
   const message = sh(s.origin, 'log', '-1', '--format=%B', 'episode/1');
   for (const t of terms) { expect(args).not.toContain(t); expect(message).not.toContain(t); }

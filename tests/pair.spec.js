@@ -24,7 +24,7 @@ test('Codex events become readable timeline entries', () => {
 test('a session: help, a cut-in, a resume of the same session, the hidden tests and sign-off', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'pair-home-'));
   fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [
-    { id: 'claude', label: 'Navi', headless: ['sh', path.join(FIX, 'nav.sh'), '{prompt}'] },
+    { id: 'claude', label: 'Navi', headless: ['sh', path.join(FIX, 'nav.sh')], stdin: true },
   ] }));
   const cfg = path.join(home, 'pair.json');
   fs.writeFileSync(cfg, JSON.stringify({

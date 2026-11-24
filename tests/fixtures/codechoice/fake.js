@@ -3,7 +3,7 @@
 // version "written by you"; everyone else picks A.
 const fs = require('fs');
 const path = require('path');
-const p = process.argv[2] || '';
+const p = process.argv[2] || fs.readFileSync(0, 'utf8');
 const who = (p.match(/^You are (\w+)/) || [])[1];
 const feature = /createShareLink/.test(p) ? 'share' : /importCsv/.test(p) ? 'csv' : 'limit';
 if (p === 'Reply with the single word OK.') console.log('OK');
