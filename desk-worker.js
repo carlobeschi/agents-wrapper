@@ -48,7 +48,9 @@ function prompt(job) {
     others ? `The other tasks on the desk:\n${others}` : '',
     comments ? `Comments from people on the desk:\n${comments}` : '',
     'Work only on your task. Read files other workers wrote if you need them, but change them only if your task says so.',
-    'When you finish, answer with a short note for the others: what you did, which files, anything left open. If you cannot do the task (for example something it needs is missing), start your answer with STUCK: and say why.',
+    t.has_check
+      ? 'When you finish, answer with a short note for the others: what you did, which files, anything left open. The check judges your files whatever you answer.'
+      : 'When you finish, answer with a short note for the others: what you did, which files, anything left open. If you cannot do the task (for example something it needs is missing), start your answer with STUCK: and say why.',
   ].filter(Boolean).join('\n\n');
 }
 
@@ -88,7 +90,10 @@ async function main() {
     }, job.beat_seconds * 1000);
     const r = await runClaude(prompt(job));
     clearInterval(beat);
-    const stuck = !r.ok || /^STUCK:/i.test(r.note);
+    // With a check, the check decides: whatever the agent says, its work is
+    // judged (a "STUCK: no, it is done" was once read as stuck, three times).
+    // Without one, "STUCK: <why>" keeps unfinished work away from review.
+    const stuck = !r.ok || (!job.task.has_check && /^\s*\**STUCK:\**\s*(?!no\b)/i.test(r.note));
     const back = await call('POST', '/release', { lease: job.lease, reason: stuck ? 'stuck' : 'submitted', note: r.note, cost_usd: r.cost });
     console.log(`${NAME}: gave back ${job.task.id}: ${back.code === 410 || lost ? 'too late, the lease had run out' : back.json.status}`);
     idleSince = Date.now();

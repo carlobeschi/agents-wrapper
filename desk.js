@@ -145,7 +145,7 @@ function serve(dir, port) {
         save(dir, board);
         return send(res, 200, {
           status: 'task', lease: t.lease.id, beat_seconds: Math.max(1, Math.floor(board.settings.lease_seconds / 2)),
-          goal: board.goal, task: { id: t.id, title: t.title, detail: t.detail, spec: specText(dir, t), notes: t.notes.slice(-5) },
+          goal: board.goal, task: { id: t.id, title: t.title, detail: t.detail, spec: specText(dir, t), notes: t.notes.slice(-5), has_check: Array.isArray(t.check) },
           board: summary(board), comments: board.comments.slice(-10),
         });
       }

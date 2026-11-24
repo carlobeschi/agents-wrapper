@@ -38,7 +38,8 @@ if (process.env.FAKE_BAD_ONCE === id && !fs.existsSync(flag)) { fs.writeFileSync
 else fs.copyFileSync(path.join(${JSON.stringify(REF)}, file), file);
 const broke = ${JSON.stringify(path.join(side, 'break-done'))};
 if (process.env.FAKE_BREAK === id && !fs.existsSync(broke)) { fs.writeFileSync(broke, ''); fs.writeFileSync('tokenize.js', 'module.exports = { tokenize: () => [] };\\n'); }
-console.log(JSON.stringify({ type: 'result', is_error: false, result: 'Wrote ' + file + '.', total_cost_usd: 0.1 }));
+const said = process.env.FAKE_SAY_STUCK === id ? 'STUCK: no, the task is done. Wrote ' + file + '.' : 'Wrote ' + file + '.';
+console.log(JSON.stringify({ type: 'result', is_error: false, result: said, total_cost_usd: 0.1 }));
 `, { mode: 0o755 });
   const port = nextPort++;
   const server = spawn('node', [DESK, 'serve', dir, '--port', String(port)], { stdio: ['ignore', 'pipe', 'inherit'] });
@@ -245,4 +246,16 @@ test('JSON Schema mini round: a closed subset with its own suite files, a $2 cap
   expect(fs.readdirSync(path.join(M, 'suite')).filter(f => f.endsWith('.json')).sort()).toEqual(judged);
   for (const t of goal.tasks) expect(fs.existsSync(path.join(M, t.spec))).toBe(true);
   expect(goal.tasks.find(t => t.id === 'all').needs.sort()).toEqual(ids.filter(i => i !== 'all').sort());
+});
+
+test('a task with a check is judged whatever the agent answers, even "STUCK: no, it is done"', async () => {
+  const d = await desk();
+  try {
+    await d.work('solo', { FAKE_SAY_STUCK: 't1' });
+    const board = (await d.call('GET', '/board')).json;
+    expect(board.tasks.find(t => t.id === 't1')).toMatchObject({ status: 'done', attempts: 1 });
+    const prompts = fs.readFileSync(path.join(d.side, 'prompts.txt'), 'utf8');
+    expect(prompts).toContain('The check judges your files whatever you answer.');
+    expect(prompts).not.toContain('start your answer with STUCK:');
+  } finally { d.stop(); }
 });
