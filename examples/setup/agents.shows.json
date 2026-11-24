@@ -45,6 +45,8 @@
         "--model",
         "{model}",
         "--sandbox",
+        "--settings",
+        "{\"toolPermission\":\"request-review\",\"allowNonWorkspaceAccess\":false,\"enableTerminalSandbox\":true,\"permissions\":{\"deny\":[\"write_file(*)\",\"command(*)\",\"mcp(*)\",\"read_url(*)\",\"execute_url(*)\",\"download_url(*)\"]}}",
         "--disable-slash-commands",
         "-p",
         "{prompt}"
@@ -90,6 +92,8 @@
       ],
       "headless": [
         "cursor-agent",
+        "--mode",
+        "ask",
         "-p",
         "{prompt}"
       ],
