@@ -81,6 +81,7 @@ test('two workers borrow every task in dependency order and the checks accept th
     expect(prompts).toContain('- t1 "Tokenizer (tokenize.js)": done');
 
     const report = execFileSync('node', [DESK, 'report', d.dir], { encoding: 'utf8' });
+    expect(report).toMatch(/^Run: .+, first event \d{4}-/);
     expect(report).toContain('Tasks: 6 (done 6, waiting for review 0, stuck 0, open 0)');
     expect(report).toContain('accepted 6, rejected 0');
     expect(report).toContain('Spent about $0.60');

@@ -194,7 +194,7 @@ node desk-worker.js ~/.agent-dispatch/desk/group-1 --name w1  # one per worker
 node desk.js report ~/.agent-dispatch/desk/group-1
 ```
 
-`scripts/desk-round.sh <new run dir> <workers>` does all four on the Mac: 3 workers for the group, 1 on a fresh folder for the solo comparison (same tasks, same budget).
+`scripts/desk-round.sh <run name> <workers>` does all four on the Mac, in `~/claude-projects/desk/<run name>` (change it with `DESK_RUNS`; a path with a `/` is used as it is). The report starts with the run folder and its first event, so a pasted report can be matched to its files: 3 workers for the group, 1 on a fresh folder for the solo comparison (same tasks, same budget).
 
 **Workers.** `desk-worker.js` runs Claude Code headless (`claude -p`, Claude Opus 5.5 by default) in `<dir>/work` with file tools only (read, write, edit, search): no shell, no web, no MCP, no GitHub token. `--permission-mode acceptEdits` lets it create and change files without asking inside `work/` only; a write anywhere else would need a question, which headless means no. It sees the goal, its task, the task's `spec` file (in round 1 the judging test, which it cannot run), the notes from earlier tries and from people, the rest of the board with who holds what, and people's comments. It answers with a note for the others, or, on a task without a check, `STUCK: why` (a task with a check is always judged by it, whatever the agent answers), and stops when the desk says done or budget, or after 30 minutes with nothing free. It runs on `ANTHROPIC_API_KEY` if set (the script reads the Keychain item `anthropic-key`), otherwise on the Mac's Claude Code sign-in.
 

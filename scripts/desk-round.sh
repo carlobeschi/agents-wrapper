@@ -1,16 +1,18 @@
 #!/bin/zsh
 # One round on the desk: starts desk.js, N workers (desk-worker.js), waits for
 # them, prints the report and stops the desk. Watch it live on the printed page.
-#   scripts/desk-round.sh <new run dir> <workers> [example dir] [port]
-#   scripts/desk-round.sh ~/.agent-dispatch/desk/group-1 3
-#   scripts/desk-round.sh ~/.agent-dispatch/desk/solo-1 1
+#   scripts/desk-round.sh <run name or dir> <workers> [example dir] [port]
+#   scripts/desk-round.sh group-1 3      (in ~/claude-projects/desk/group-1)
+#   scripts/desk-round.sh solo-1 1
+# A bare name goes in $DESK_RUNS (default ~/claude-projects/desk, a folder
+# the project's Claude can read); a path with a / is used as it is.
 #   DESK_MODEL=claude-haiku-5-5 scripts/desk-round.sh ... (a cheaper model)
 # Claude Code runs on the Keychain key "anthropic-key" if there is one,
 # otherwise on the machine's Claude Code sign-in.
 set -e
 cd "$(dirname "$0")/.."
-RUN="$1"; N="${2:-3}"; FROM="${3:-examples/desk/round1}"; PORT="${4:-8790}"
-[ -n "$RUN" ] || { echo "Usage: scripts/desk-round.sh <new run dir> <workers> [example dir] [port]"; exit 1; }
+RUN="$1"; [[ "$RUN" == */* ]] || RUN="${DESK_RUNS:-$HOME/claude-projects/desk}/$RUN"; N="${2:-3}"; FROM="${3:-examples/desk/round1}"; PORT="${4:-8790}"
+[ -n "$1" ] || { echo "Usage: scripts/desk-round.sh <run name or dir> <workers> [example dir] [port]"; exit 1; }
 if lsof -ti ":$PORT" >/dev/null 2>&1; then echo "Port $PORT is busy (an old desk?). Stop it: lsof -ti :$PORT | xargs kill"; exit 1; fi
 echo "Code: $(git log -1 --format='%h %s')"
 K=$(security find-generic-password -s anthropic-key -w 2>/dev/null) && export ANTHROPIC_API_KEY="$K"

@@ -246,7 +246,11 @@ function report(dir) {
   const workers = [...new Set(evs.filter(e => e.ev === 'leased').map(e => e.worker))];
   const per = workers.map(w => `${w}: ${evs.filter(e => e.ev === 'accepted' && e.worker === w).length} accepted of ${evs.filter(e => e.ev === 'leased' && e.worker === w).length} taken`);
   const count = s => board.tasks.filter(t => t.status === s).length;
+  // The run's folder and first event, so a pasted report can be matched to
+  // the files it came from (24 Nov: a report and a folder turned out to be
+  // two different runs).
   const lines = [
+    `Run: ${path.resolve(dir)}, first event ${evs.length ? evs[0].at : 'none'}`,
     `Goal: ${board.goal}`,
     `Tasks: ${board.tasks.length} (done ${count('done')}, waiting for review ${count('review')}, stuck ${count('stuck')}, open ${count('open') + count('leased')})`,
     `Leases taken ${n('leased')}, accepted ${n('accepted')}, rejected ${n('rejected')}, given back ${n('released')}, ran out ${n('expired')}`,
