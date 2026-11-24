@@ -265,3 +265,18 @@ test('a task with a check is judged whatever the agent answers, even "STUCK: no,
     expect(prompts).not.toContain('start your answer with STUCK:');
   } finally { d.stop(); }
 });
+
+test('a worker started before the desk waits for it instead of failing', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'late-'));
+  const dir = path.join(tmp, 'run');
+  execFileSync('node', [DESK, 'init', dir, '--from', path.join(ROOT, 'examples', 'desk', 'round1')]);
+  const goalFile = path.join(dir, 'goal.json');
+  fs.writeFileSync(goalFile, JSON.stringify({ ...JSON.parse(fs.readFileSync(goalFile, 'utf8')), settings: { budget_usd: 0 } }));
+  const port = nextPort++;
+  const worker = promisify(execFile)('node', [WORKER, dir, '--name', 'early', '--desk', `http://127.0.0.1:${port}`], { env: { ...process.env, DESK_RETRY_MS: '200' }, encoding: 'utf8' });
+  await sleep(500);
+  const server = spawn('node', [DESK, 'serve', dir, '--port', String(port)], { stdio: 'ignore' });
+  try {
+    expect((await worker).stdout).toContain('early: stopping, the desk says budget.');
+  } finally { server.kill(); }
+});

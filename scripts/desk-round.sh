@@ -19,7 +19,8 @@ else node desk.js init "$RUN" --from "$FROM"; fi
 node desk.js serve "$RUN" --port "$PORT" &
 DESK_PID=$!
 trap 'kill $DESK_PID 2>/dev/null' EXIT
-sleep 1
+for i in $(seq 1 20); do curl -s "http://127.0.0.1:$PORT/board" >/dev/null && break; sleep 0.5; done
+curl -s "http://127.0.0.1:$PORT/board" >/dev/null || { echo "The desk did not start on port $PORT."; exit 1; }
 echo "Board: http://127.0.0.1:$PORT"
 PIDS=()
 for i in $(seq 1 "$N"); do

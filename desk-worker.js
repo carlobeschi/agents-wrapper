@@ -29,9 +29,18 @@ const MAX_TASKS = Number(opt('--max-tasks', '100')), MODEL = opt('--model', 'cla
 const POLL_MS = Number(process.env.DESK_POLL_MS || 10000), IDLE_MS = Number(process.env.DESK_IDLE_MS || 30 * 60000);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// A desk that is still starting, or busy for a moment, is retried: 6 tries
+// over about 30 seconds before the worker gives up.
 async function call(method, route, payload) {
-  const r = await fetch(DESK + route, { method, headers: { 'content-type': 'application/json' }, body: payload ? JSON.stringify(payload) : undefined });
-  return { code: r.status, json: await r.json().catch(() => ({})) };
+  for (let i = 0; ; i++) {
+    try {
+      const r = await fetch(DESK + route, { method, headers: { 'content-type': 'application/json' }, body: payload ? JSON.stringify(payload) : undefined });
+      return { code: r.status, json: await r.json().catch(() => ({})) };
+    } catch (e) {
+      if (i >= 5) throw new Error(`the desk at ${DESK} does not answer (${e.cause && e.cause.code || e.message})`);
+      await sleep(Number(process.env.DESK_RETRY_MS || 2000) * (i + 1));
+    }
+  }
 }
 
 function prompt(job) {
