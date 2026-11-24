@@ -11,8 +11,11 @@ set -e
 cd "$(dirname "$0")/.."
 RUN="$1"; N="${2:-3}"; FROM="${3:-examples/desk/round1}"; PORT="${4:-8790}"
 [ -n "$RUN" ] || { echo "Usage: scripts/desk-round.sh <new run dir> <workers> [example dir] [port]"; exit 1; }
+if lsof -ti ":$PORT" >/dev/null 2>&1; then echo "Port $PORT is busy (an old desk?). Stop it: lsof -ti :$PORT | xargs kill"; exit 1; fi
+echo "Code: $(git log -1 --format='%h %s')"
 K=$(security find-generic-password -s anthropic-key -w 2>/dev/null) && export ANTHROPIC_API_KEY="$K"
-[ -f "$RUN/desk.json" ] || node desk.js init "$RUN" --from "$FROM"
+if [ -f "$RUN/desk.json" ]; then echo "Continuing the run already in $RUN (delete the folder for a fresh one)"
+else node desk.js init "$RUN" --from "$FROM"; fi
 node desk.js serve "$RUN" --port "$PORT" &
 DESK_PID=$!
 trap 'kill $DESK_PID 2>/dev/null' EXIT
