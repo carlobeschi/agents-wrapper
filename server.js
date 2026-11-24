@@ -138,12 +138,13 @@ function launchBackground(agent, prompt, cwd, runDir, runId) {
   const entry = { status: 'running', started: Date.now(), log, pid: child.pid };
   runs.get(runId).agents[agent.id] = entry;
   child.on('error', e => { fs.appendFileSync(log, `\n[dispatch] ${e.message}\n`); entry.status = 'failed'; });
-  child.on('close', code => {
+  child.on('close', (code, signal) => {
     fs.closeSync(out);
     entry.status = code === 0 ? 'done' : 'failed';
     entry.code = code;
+    entry.signal = signal;
     entry.finished = Date.now();
-    console.log(`  ${code === 0 ? '✓' : '✗'} ${runId} ${agent.id}: exit ${code}`);
+    console.log(`  ${code === 0 ? '✓' : '✗'} ${runId} ${agent.id}: ${signal ? `signal ${signal}` : `exit ${code}`}`);
   });
   return { log };
 }
@@ -197,7 +198,7 @@ function listRuns() {
   return [...runs.values()].reverse().slice(0, 20).map(r => ({
     runId: r.runId, cwd: r.cwd, mode: r.mode, prompt: r.prompt,
     agents: Object.fromEntries(Object.entries(r.agents).map(([id, a]) => [id, {
-      status: a.status, code: a.code, error: a.error, hasLog: !!a.log,
+      status: a.status, code: a.code, signal: a.signal, error: a.error, hasLog: !!a.log,
       seconds: Math.round(((a.finished || Date.now()) - a.started) / 1000),
     }])),
   }));
