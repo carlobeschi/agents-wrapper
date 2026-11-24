@@ -12,7 +12,8 @@
     "final_check": [
       "node",
       "../checks/run-suite.js",
-      "--all"
+      "--all",
+      "--skip-keywords=format,contentEncoding,contentMediaType,contentSchema,properties,additionalProperties,propertyNames,dependentSchemas,items,prefixItems,contains,minContains,maxContains,uniqueItems,allOf,anyOf,oneOf,not,if,then,else,$ref,$id,$anchor,$defs,definitions,$dynamicRef,$dynamicAnchor,unevaluatedItems,unevaluatedProperties"
     ]
   },
   "tasks": [

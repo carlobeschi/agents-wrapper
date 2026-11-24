@@ -35,7 +35,10 @@ fs.writeFileSync(path.join(OUT, 'checks', 'all.md'), `# all: Everything together
 const goal = {
   ...full,
   goal: full.goal.replace('Write a JSON Schema validator for draft 2020-12', 'Write the simple part of a JSON Schema validator for draft 2020-12 (no $ref, no applicators such as allOf or properties)'),
-  settings: { ...full.settings, budget_usd: 2 },
+  // The final check skips the same cases as "all": with them in, a validator
+  // that ignores an outside keyword (say properties) still passed most of
+  // them, so the total said less than it seemed (24 Nov, mini runs).
+  settings: { ...full.settings, budget_usd: 2, final_check: ['node', '../checks/run-suite.js', '--all', `--skip-keywords=${outside.join(',')}`] },
   tasks,
 };
 fs.writeFileSync(path.join(OUT, 'goal.json'), JSON.stringify(goal, null, 2) + '\n');
