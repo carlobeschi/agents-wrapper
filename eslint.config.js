@@ -26,7 +26,7 @@ module.exports = [
   },
   {
     // Code passed to page.evaluate() runs in the browser.
-    files: ['tests/**/*.js', '*card.js'],
+    files: ['tests/**/*.js', '*card.js', 'brainstorm/page.js'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
 ];
