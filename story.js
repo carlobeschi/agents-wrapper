@@ -16,6 +16,7 @@ const path   = require('path');
 const { spawn } = require('child_process');
 const { parseFiles, saveFiles, withFiles, attachedBytes } = require('./attach');
 const { noteCall } = require('./config');
+const { watchProcess } = require('./agent-process');
 const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, refusedTool, skippedText, MAX_REPLY, take, cutAt, cutNote, inert, newTag, untag, heading, SPEAKERS, modelLine } = require('./talk');
 
 const MAX_DAYS     = 7;    // to start with; "Another day" can go past it
@@ -214,12 +215,13 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
       child = spawn(cmd, args, { cwd: st.cwd, env: agentEnv(st.me.env), shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
     } catch (e) { return fail(s, `${st.me.label}: ${e.message}`); }
     cur.child = child;
-    const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, STEP_TIMEOUT);
-    child.stdout.on('data', c => take(cur, c));
-    child.stderr.on('data', c => { cur.err = (cur.err + c).slice(-64000); });
-    child.on('error', e => { cur.spawnError = e.message; });
-    child.on('close', code => {
-      clearTimeout(timer);
+    watchProcess({
+      child, timeout: STEP_TIMEOUT,
+      onTimeout: () => { cur.timedOut = true; },
+      onStdout: c => take(cur, c),
+      onStderr: c => { cur.err = (cur.err + c).slice(-64000); },
+      onError: e => { cur.spawnError = e.message; },
+      onClose: code => {
       cur.child = null;
       if (cur.err) fs.writeFileSync(base + (retry ? '.retry' : '') + '.stderr.txt', cur.err);
       if (s.stopRequested) return next(s);
@@ -262,6 +264,7 @@ function createStories({ loadConfig, fill, agentEnv, stamp, dir }) {
       save(s);
       console.log(`  ☾ ${s.id} day ${st.day.n} ${st.kind} ${st.me.id}: ${text.length} chars`);
       next(s);
+      },
     });
   }
 

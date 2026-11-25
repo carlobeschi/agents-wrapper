@@ -15,6 +15,7 @@ const path   = require('path');
 const { spawn } = require('child_process');
 const { parseFiles, saveFiles, withFiles, attachedBytes } = require('./attach');
 const { stdinOf, feed, noteCall } = require('./config');
+const { killTree, watchProcess } = require('./agent-process');
 
 const MAX_TURNS    = 50;
 const MAX_ROUNDS   = Math.floor(MAX_TURNS / 3);
@@ -27,13 +28,6 @@ const USER         = 'You';
 const MAX_REPLY    = 32 * 1024;
 // Free turns: the most messages one agent can send in a row by choosing "Next: me".
 const MAX_RUN      = 3;
-
-// Terminal colour and cursor codes, which some CLIs print even into a pipe.
-// Kill the agent and anything it started: a CLI's own child holding stdout open
-// would otherwise keep the turn alive after the CLI itself is gone.
-function killTree(child) {
-  try { process.kill(-child.pid, 'SIGTERM'); } catch { try { child.kill('SIGTERM'); } catch {} }
-}
 
 // Append a chunk of stdout, keeping at most cur.max (MAX_REPLY) characters.
 function take(cur, chunk) {
@@ -374,12 +368,13 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
       feed(me, child, prompt);
     } catch (e) { return fail(t, `${me.label}: ${e.message}`); }
     cur.child = child;
-    const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, TURN_TIMEOUT);
-    child.stdout.on('data', d => take(cur, d));
-    child.stderr.on('data', d => { cur.err = (cur.err + d).slice(-64000); });
-    child.on('error', e => { cur.spawnError = e.message; });
-    child.on('close', code => {
-      clearTimeout(timer);
+    watchProcess({
+      child, timeout: TURN_TIMEOUT,
+      onTimeout: () => { cur.timedOut = true; },
+      onStdout: d => take(cur, d),
+      onStderr: d => { cur.err = (cur.err + d).slice(-64000); },
+      onError: e => { cur.spawnError = e.message; },
+      onClose: code => {
       cur.child = null;
       if (cur.err) fs.writeFileSync(base + (retry ? '.retry' : '') + '.stderr.txt', cur.err);
       if (t.stopRequested) return next(t);
@@ -443,6 +438,7 @@ function createTalks({ loadConfig, fill, agentEnv, stamp, dir, savedDir }) {
       save(t);
       console.log(`  ↔ ${t.id} ${me.id}: ${text.length} chars`);
       next(t);
+      },
     });
   }
 
