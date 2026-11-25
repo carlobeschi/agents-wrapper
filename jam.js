@@ -56,7 +56,8 @@ const CODEX_SAFE = ['--skip-git-repo-check', '--ignore-user-config', '--ignore-r
 const AGY = deny => JSON.stringify({ toolPermission: 'request-review', allowNonWorkspaceAccess: false, enableTerminalSandbox: true,
   permissions: { ...(deny.includes('write_file(*)') ? {} : { allow: ['read_file(*)', 'write_file(*)'] }), deny } });
 const AGY_DENY = ['command(*)', 'mcp(*)', 'read_url(*)', 'execute_url(*)', 'download_url(*)'];
-const VIBE_READ = ['--enabled-tools', 'read_file', '--enabled-tools', 'grep'];
+// Vibe has no separate search tool (it searches with bash, which stays off).
+const VIBE_READ = ['--enabled-tools', 'read_file'];
 const VIBE_WRITE = [...VIBE_READ, '--enabled-tools', 'write_file', '--enabled-tools', 'search_replace'];
 
 const LABS = {

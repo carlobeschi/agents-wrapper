@@ -44,7 +44,7 @@ test('the real commands: read-only to read, file edits only to build, no looseni
   expect(agyRead.permissions.deny).toContain('write_file(*)');
   expect(agyBuild.permissions.deny).toEqual(expect.arrayContaining(['command(*)', 'read_url(*)']));
   const vibe = commandFor(LABS.mistral, 'build', { price: 2, steps: '/s' });
-  expect(vibe.filter((s, i) => vibe[i - 1] === '--enabled-tools')).toEqual(['read_file', 'grep', 'write_file', 'search_replace']);
+  expect(vibe.filter((s, i) => vibe[i - 1] === '--enabled-tools')).toEqual(['read_file', 'write_file', 'search_replace']);
   expect(vibe).not.toContain('--model');
   expect(vibe.join(' ')).toContain('--max-price 2');
   for (const l of Object.values(LABS)) for (const m of ['read', 'build']) expect(l[m].join(' ')).not.toMatch(/dangerously|bypass|yolo|auto-approve|full-access/);
