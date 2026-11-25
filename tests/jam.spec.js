@@ -64,6 +64,13 @@ test('the real commands: read-only to read, file edits only to build, no looseni
   expect(toml).toContain('api_key_env_var = "OPENROUTER_API_KEY"');
   expect(toml).toContain('name = "deepseek/');
   expect(toml).toContain('input_price = 1');
+  // Without the key in the shell, the jam stops before starting instead of running on without DeepSeek.
+  const cfg = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'jam-key-')), 'jam.json');
+  fs.writeFileSync(cfg, JSON.stringify({ title: 't', repo: 'none', game: 'g.html' }));
+  const env = { ...process.env }; delete env.OPENROUTER_API_KEY;
+  let out = '';
+  try { execFileSync(process.execPath, [path.join(__dirname, '..', 'jam.js'), cfg, '--labs=deepseek', '--check'], { env, stdio: 'pipe' }); } catch (e) { out = String(e.stderr); expect(e.status).toBe(2); }
+  expect(out).toContain('needs OPENROUTER_API_KEY');
 });
 
 test('a whole jam with three fake labs: ideas, vote, a branch each, vote on builds, summary', () => {

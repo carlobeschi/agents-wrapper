@@ -377,6 +377,9 @@ async function main() {
   if (!file) { console.error('usage: node jam.js <jam.json> [--out=<folder>] [--labs=a,b] [--until=ideas|vote1|build|vote2] [--check]'); process.exit(2); }
   const c = { ideas_per_lab: 3, build_top: 2, build_minutes: 40, read_minutes: 15, mistral_max_price: 2, ...JSON.parse(fs.readFileSync(file, 'utf8')) };
   const labs = labsFor(c, opt('labs')?.split(','));
+  // A lab routed through OpenRouter needs the key in this shell; without it the lab fails every step in a second and the jam runs on without it.
+  const noKey = labs.filter(l => l.routed && !process.env.OPENROUTER_API_KEY).map(l => l.label);
+  if (noKey.length) { console.error(`${noKey.join(', ')} needs OPENROUTER_API_KEY in this shell (export it first).`); process.exit(2); }
   for (const l of labs) { l.price = c.mistral_max_price; l.tokens = { ...TOKENS, ...(c.mistral_max_tokens || {}) }; }
   if (argv.includes('--check')) return check(labs);
   const until = opt('until') || 'vote2';
