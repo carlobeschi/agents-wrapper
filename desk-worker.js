@@ -14,6 +14,9 @@
 // edit, search): no shell, no web, no MCP. --permission-mode acceptEdits lets
 // it write without asking inside work/ only; anything else would need a
 // question, which headless means no. (dontAsk refused even writes in work/.)
+// --safe-mode starts it without the machine's customisations (hooks, skills,
+// plugins, CLAUDE.md): on 25 Nov a tool's hooks in ~/.claude/settings.json
+// were found running inside every worker and writing .nwave/ into work/.
 // It never sees the checks: the desk runs them. It runs on ANTHROPIC_API_KEY if set, else on the Claude
 // Code sign-in of the machine.
 
@@ -68,7 +71,7 @@ function runClaude(text) {
   const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !['GH_TOKEN', 'GITHUB_TOKEN'].includes(k)));
   return new Promise(resolve => {
     execFile(cmd, ['-p', '--model', MODEL, '--max-turns', '40', '--tools', 'Read,Write,Edit,Glob,Grep',
-      '--permission-mode', 'acceptEdits', '--strict-mcp-config', '--output-format', 'json', '--', text],
+      '--permission-mode', 'acceptEdits', '--strict-mcp-config', '--safe-mode', '--output-format', 'json', '--', text],
     { cwd: path.join(dir, 'work'), env, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: Number(process.env.DESK_AGENT_TIMEOUT_MS || 40 * 60000) },
     (err, stdout) => {
       try {

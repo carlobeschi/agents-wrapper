@@ -73,7 +73,7 @@ test('two workers borrow every task in dependency order and the checks accept th
     // The agent: file tools only, in work/, without the GitHub token; it sees the
     // judging test and the board, not the checks folder.
     const seen = JSON.parse(fs.readFileSync(path.join(d.side, 'args.json'), 'utf8'));
-    expect(seen.args).toEqual(['-p', '--model', 'claude-opus-5-5', '--max-turns', '40', '--tools', 'Read,Write,Edit,Glob,Grep', '--permission-mode', 'acceptEdits', '--strict-mcp-config', '--output-format', 'json', '--']);
+    expect(seen.args).toEqual(['-p', '--model', 'claude-opus-5-5', '--max-turns', '40', '--tools', 'Read,Write,Edit,Glob,Grep', '--permission-mode', 'acceptEdits', '--strict-mcp-config', '--safe-mode', '--output-format', 'json', '--']);
     expect(fs.realpathSync(seen.cwd)).toBe(fs.realpathSync(path.join(d.dir, 'work')));
     expect(seen.gh).toBe(null);
     const prompts = fs.readFileSync(path.join(d.side, 'prompts.txt'), 'utf8');
