@@ -26,7 +26,7 @@
 // { "title": "...", "repo": "<git URL or folder>", "game": "you-are-a-cat.html",
 //   "about": "one paragraph on the game, for every prompt",
 //   "labs": ["claude", "codex", "gemini", "mistral"], "ideas_per_lab": 3, "build_top": 2,
-//   "build_minutes": 40, "check_clicks": ["GO!"], "mistral_max_price": 2, "models": { "mistral": "..." } }
+//   "build_minutes": 40, "check_clicks": ["GO!"], "mistral_max_price": 2, "mistral_max_tokens": { "read": 1500000, "build": 6000000 }, "models": { "mistral": "..." } }
 // Models: Claude, Gemini and Codex use the model of "claude", "antigravity" and
 // "codex" in agents.json (the config AGENT_DISPATCH_CONFIG names); "models"
 // overrides them. "commands" replaces a lab's commands (for tests), and is
@@ -78,8 +78,8 @@ const LABS = {
   },
   mistral: {
     label: 'Mistral', from: null, env: ['MISTRAL_API_KEY', 'VIBE_HOME'],
-    read:  ['vibe', '--prompt', '{prompt}', '--model', '{model}', ...VIBE_READ, '--max-price', '{price}', '--output', 'text', '--output-dir', '{steps}'],
-    build: ['vibe', '--prompt', '{prompt}', '--model', '{model}', ...VIBE_WRITE, '--max-price', '{price}', '--output', 'text', '--output-dir', '{steps}'],
+    read:  ['vibe', '--prompt', '{prompt}', '--model', '{model}', ...VIBE_READ, '--max-price', '{price}', '--max-tokens', '{tokens_read}', '--output', 'text', '--output-dir', '{steps}'],
+    build: ['vibe', '--prompt', '{prompt}', '--model', '{model}', ...VIBE_WRITE, '--max-price', '{price}', '--max-tokens', '{tokens_build}', '--output', 'text', '--output-dir', '{steps}'],
   },
 };
 
@@ -90,11 +90,16 @@ function refuseLoose(cmd, where) {
   if (cmd.includes('--enabled-tools') && cmd.some((s, i) => cmd[i - 1] === '--enabled-tools' && /bash|shell/i.test(s))) throw new Error(`${where}: no shell tool for Vibe.`);
 }
 
+// Vibe reports a price of 0 for Mistral models, so --max-price never stops it: a token budget
+// does (round 1, 25 Nov: one 40-minute build read 17.6M tokens, about 5 euros a round in all).
+const TOKENS = { read: 1500000, build: 6000000 };
+
 // The lab's command, with {model} (or "-m {model}" dropped when there is no model), {price} and {steps} filled in.
-function commandFor(lab, mode, { model = '', price = 2, steps = '' } = {}) {
+function commandFor(lab, mode, { model = '', price = 2, steps = '', tokens = TOKENS } = {}) {
   const cmd = lab[mode].slice();
   if (!model) for (let i = cmd.length - 1; i > 0; i--) if (cmd[i] === '{model}') { cmd.splice(i - 1, 2); i--; }
-  const out = cmd.map(s => s.split('{price}').join(String(price)).split('{steps}').join(steps));
+  const out = cmd.map(s => s.split('{price}').join(String(price)).split('{steps}').join(steps)
+    .split('{tokens_read}').join(String(tokens.read)).split('{tokens_build}').join(String(tokens.build)));
   return fill(out, '{prompt}', model);
 }
 
@@ -148,7 +153,7 @@ async function step(dir, name, lab, mode, prompt, cwd, ms) {
   fs.mkdirSync(path.dirname(base), { recursive: true });
   if (fs.existsSync(base + '.reply.md')) return fs.readFileSync(base + '.reply.md', 'utf8');
   fs.writeFileSync(base + '.prompt.md', prompt);
-  const extra = { price: lab.price ?? 2, steps: base + '.vibe' };
+  const extra = { price: lab.price ?? 2, steps: base + '.vibe', tokens: lab.tokens || TOKENS };
   let r = await runOnce(lab, mode, prompt, cwd, ms, extra);
   if (r.why && r.why !== 'timed out' && mode !== 'build') {
     console.warn(`  ↻ ${name}: ${r.why}, once more`);
@@ -352,7 +357,7 @@ async function main() {
   if (!file) { console.error('usage: node jam.js <jam.json> [--out=<folder>] [--labs=a,b] [--until=ideas|vote1|build|vote2] [--check]'); process.exit(2); }
   const c = { ideas_per_lab: 3, build_top: 2, build_minutes: 40, read_minutes: 15, mistral_max_price: 2, ...JSON.parse(fs.readFileSync(file, 'utf8')) };
   const labs = labsFor(c, opt('labs')?.split(','));
-  for (const l of labs) l.price = c.mistral_max_price;
+  for (const l of labs) { l.price = c.mistral_max_price; l.tokens = { ...TOKENS, ...(c.mistral_max_tokens || {}) }; }
   if (argv.includes('--check')) return check(labs);
   const until = opt('until') || 'vote2';
   if (!PHASES.includes(until)) throw new Error(`--until must be one of ${PHASES.join(', ')}`);

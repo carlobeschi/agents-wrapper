@@ -47,6 +47,8 @@ test('the real commands: read-only to read, file edits only to build, no looseni
   expect(vibe.filter((s, i) => vibe[i - 1] === '--enabled-tools')).toEqual(['read_file', 'write_file', 'search_replace']);
   expect(vibe).not.toContain('--model');
   expect(vibe.join(' ')).toContain('--max-price 2');
+  expect(vibe.join(' ')).toContain('--max-tokens 6000000');
+  expect(commandFor(LABS.mistral, 'read', { tokens: { read: 9, build: 8 } }).join(' ')).toContain('--max-tokens 9');
   for (const l of Object.values(LABS)) for (const m of ['read', 'build']) expect(l[m].join(' ')).not.toMatch(/dangerously|bypass|yolo|auto-approve|full-access/);
   expect(() => labsFor({ labs: ['codex'], commands: { codex: { read: ['codex', 'exec', '--dangerously-bypass-approvals-and-sandbox'], build: ['x'] } } })).toThrow(/refused/);
   expect(() => labsFor({ labs: ['mistral'], commands: { mistral: { read: ['vibe', '--enabled-tools', 'bash'], build: ['x'] } } })).toThrow(/refused|shell/);
