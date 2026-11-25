@@ -300,11 +300,12 @@ function parseScores(text, prefix, count) {
 const parseBest = text => { const m = /^[\s>*_#|-]*BEST\s*[*_]*\s*[:\-–]\s*[*_]*\s*([A-Z])\b[*_]*\s*[-–:]?\s*(.*)$/im.exec(String(text)); return m ? { letter: m[1].toUpperCase(), why: m[2].trim() } : null; };
 
 // Each item's scores from the others and its average; best first. Ties: more scores, then the order given.
-function tally(items, votes) {
+// Ties go by number of votes, then by a draw seeded with the run (never by lab order, which would favour the first lab).
+function tally(items, votes, seed = '') {
   const rows = items.map((it, k) => {
     const by = Object.fromEntries(Object.entries(votes).map(([voter, v]) => [voter, v[it.key]]).filter(([, s]) => s));
     const scores = Object.values(by).map(s => s.score);
-    return { ...it, by, n: scores.length, mean: scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null, order: k };
+    return { ...it, by, n: scores.length, mean: scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null, order: seedOf(`${seed}:${it.id ?? k}`) };
   });
   return rows.sort((a, b) => (b.mean ?? -1) - (a.mean ?? -1) || b.n - a.n || a.order - b.order);
 }
@@ -417,7 +418,7 @@ async function main() {
     R.ballots = { ...(R.ballots || {}), [l.id]: shown.map(i => i.id) };
   }));
   R.votes1 = votes1;
-  R.ranking = tally(ideas, votes1).map(r => ({ id: r.id, lab: r.lab, title: r.title, mean: r.mean, n: r.n, by: r.by }));
+  R.ranking = tally(ideas, votes1, seed).map(r => ({ id: r.id, lab: r.lab, title: r.title, mean: r.mean, n: r.n, by: r.by }));
   const winners = R.ranking.slice(0, c.build_top).map(r => ideas.find(i => i.id === r.id));
   R.winners = winners.map(i => i.id);
   save();
@@ -476,7 +477,7 @@ async function main() {
   }));
   R.votes2 = votes2;
   R.best = best;
-  R.build_ranking = tally(built, votes2).map(r => ({ lab: r.lab, mean: r.mean, n: r.n, by: r.by }));
+  R.build_ranking = tally(built, votes2, `${seed}:b`).map(r => ({ lab: r.lab, mean: r.mean, n: r.n, by: r.by }));
   R.finished = new Date().toISOString();
   save();
   done(dir);

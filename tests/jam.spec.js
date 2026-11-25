@@ -31,6 +31,10 @@ test('a voter never sees its own ideas, sees no names, and the tally ranks by av
   expect(p).toContain('none of them is yours');
   const t = tally(items, { b: { 0: { score: 4 }, 1: { score: 8 } }, c: { 0: { score: 6 }, 1: { score: 8 }, 2: { score: 9 } } });
   expect(t.map(r => [r.key, r.mean, r.n])).toEqual([[2, 9, 1], [1, 8, 2], [0, 5, 2], [3, null, 0]]);
+  // A tie is not settled by lab order: across seeds, the later item comes first sometimes.
+  const tied = [{ key: 0, id: 'claude-1', lab: 'claude' }, { key: 1, id: 'deepseek-1', lab: 'deepseek' }];
+  const firsts = new Set(Array.from({ length: 20 }, (_, i) => tally(tied, { x: { 0: { score: 8 }, 1: { score: 8 } } }, `run${i}`)[0].id));
+  expect([...firsts].sort()).toEqual(['claude-1', 'deepseek-1']);
 });
 
 test('the real commands: read-only to read, file edits only to build, no loosening flags, models filled or dropped', () => {
@@ -93,8 +97,9 @@ test('a whole jam with three fake labs: ideas, vote, a branch each, vote on buil
   const R = JSON.parse(fs.readFileSync(path.join(out, 'results.json'), 'utf8'));
   expect(R.ideas).toHaveLength(9);
   expect(R.ideas[0]).toMatchObject({ id: 'a-1', lab: 'a', title: 'a idea 1', what: 'the child taps and smiles 1.' });
-  // Every "idea 2" got 9 from both others; they tie on average and count, so the first ones win.
-  expect(R.winners).toEqual(['a-2', 'b-2']);
+  // Every "idea 2" got 9 from both others; they tie on average and count, so a seeded draw picks two of them.
+  expect(R.winners).toHaveLength(2);
+  for (const w of R.winners) expect(['a-2', 'b-2', 'c-2']).toContain(w);
   for (const [v, got] of Object.entries(R.votes1)) for (const k of Object.keys(got)) expect(R.ideas[Number(k)].lab).not.toBe(v);
   expect(R.builds.a.files.sort()).toEqual(['extra.txt', 'g.html']);
   expect(R.builds.a.outside).toEqual(['extra.txt']);
@@ -109,7 +114,7 @@ test('a whole jam with three fake labs: ideas, vote, a branch each, vote on buil
   expect(R.votes2.a).not.toHaveProperty('a');
   expect(R.build_ranking[0]).toMatchObject({ lab: 'a', mean: 8, n: 2 });
   const md = fs.readFileSync(path.join(out, 'summary.md'), 'utf8');
-  expect(md).toContain('| 1 ✓ | a idea 2 | A | 9.0 | (own) | 9 | 9 |');
+  expect(md).toMatch(/\| 1 ✓ \| [abc] idea 2 \| [ABC] \| 9\.0 \|/);
   expect(md).toContain('| A | 8.0 | (own) | 8 | 8 |');
   // A second run with the same folder reuses every reply.
   const again = run();
