@@ -1,0 +1,53 @@
+[
+ {
+  "description": "validation of non-string ipv6 values",
+  "schema": {
+   "format": "ipv6"
+  },
+  "tests": [
+   {
+    "description": "all string formats ignore integers",
+    "data": 12,
+    "valid": true
+   },
+   {
+    "description": "all string formats ignore floats",
+    "data": 13.7,
+    "valid": true
+   },
+   {
+    "description": "all string formats ignore objects",
+    "data": {},
+    "valid": true
+   },
+   {
+    "description": "all string formats ignore arrays",
+    "data": [],
+    "valid": true
+   },
+   {
+    "description": "all string formats ignore booleans",
+    "data": false,
+    "valid": true
+   },
+   {
+    "description": "all string formats ignore nulls",
+    "data": null,
+    "valid": true
+   }
+  ]
+ },
+ {
+  "description": "ipv6 format",
+  "schema": {
+   "format": "ipv6"
+  },
+  "tests": [
+   {
+    "description": "invalid ipv6 string is only an annotation by default",
+    "data": "12345::",
+    "valid": true
+   }
+  ]
+ }
+]
