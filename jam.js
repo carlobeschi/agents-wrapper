@@ -552,7 +552,8 @@ async function check(labs) {
     console.log(`${l.label}${l.model ? ` (${l.model})` : ''}: read ${readOk ? 'ok' : `FAILED (${r.why || 'wrong reply'})`}, write ${wrote ? 'ok' : `FAILED (${w.why || 'no file'})`}`);
     if (!readOk || !wrote) console.log(`  ${stripAnsi((r.err || w.err || r.text || w.text || '').trim()).split('\n').slice(-3).join('\n  ')}`);
   }));
-  fs.rmSync(scratch, { recursive: true, force: true });
+  // An agent's background process can still be writing in the scratch folder; a failed clean-up must not stop the run.
+  try { fs.rmSync(scratch, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 }); } catch (e) { console.log(`(could not remove ${scratch}: ${e.code || e.message})`); }
   if (bad) process.exitCode = 1;
 }
 
