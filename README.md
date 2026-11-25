@@ -12,6 +12,8 @@ The link is `http://localhost:8787/#k=<key>`. The browser keeps the key, so afte
 
 Needs Node 18 or later, on macOS or Linux, and the agent CLIs you want to use, installed and signed in.
 
+At startup the server reports whether its configuration is safe to read, its private data directory is writable, how much disk space is available, and which configured coding CLIs are on `PATH`. Missing CLIs and less than 100 MiB free are warnings; configuration or data-directory failures are errors. The same snapshot is available at the token-protected `GET /api/diagnostics` endpoint. It never includes configuration contents or environment values.
+
 ## Conversation
 
 The home page puts two agents in conversation. Pick the two (the first one speaks first), write an opener that introduces them or sets a topic, set a number of turns, and Start. Each reply shows as it is written. Type a message to add it to the conversation; it reaches the next agent to speak. Stop ends the current reply; Continue adds more turns. **Attach files** (or 📎 next to the message box) adds up to 5 files to the opener or a message; they are copied into the conversation's `files/` folder and listed in the prompt by path, so the agents read them with their own file tools. Whether an agent can open a PDF or an image headless depends on the agent. Replies are shown as Markdown; Copy transcript puts the conversation on the clipboard.

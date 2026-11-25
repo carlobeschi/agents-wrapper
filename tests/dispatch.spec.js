@@ -135,6 +135,20 @@ test('API refuses a request without the page token, or for a foreign Host', asyn
   expect(badHost.status()).toBe(403);
 });
 
+test('startup diagnostics report configuration, storage, disk space, and unavailable CLIs', async ({ request }) => {
+  const response = await request.get(BASE + '/api/diagnostics', { headers: { 'X-Dispatch-Token': key } });
+  expect(response.status()).toBe(200);
+  const diagnostics = await response.json();
+  expect(diagnostics.status).toBe('warning');
+  expect(diagnostics.checks).toContainEqual(expect.objectContaining({ name: 'configuration', status: 'pass' }));
+  expect(diagnostics.checks).toContainEqual(expect.objectContaining({ name: 'data-directory', status: 'pass' }));
+  expect(diagnostics.checks.some(check => check.name === 'disk-space' && ['pass', 'warn'].includes(check.status))).toBe(true);
+  const disk = diagnostics.checks.find(check => check.name === 'disk-space');
+  if (disk.availableBytes !== undefined) expect(disk.availableBytes).toEqual(expect.any(Number));
+  expect(diagnostics.checks).toContainEqual(expect.objectContaining({ name: 'agent-cli', agent: 'gone', status: 'warn' }));
+  expect(JSON.stringify(diagnostics)).not.toContain(key);
+});
+
 test('API refuses a foreign Origin even with the token; pages cannot be framed; home is private', async ({ request }) => {
   const page = await request.get(BASE + '/dispatch');
   expect(page.headers()['x-frame-options']).toBe('DENY');

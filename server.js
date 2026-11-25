@@ -63,7 +63,9 @@ const runs = new Map();
 // Resolve a bare command name against PATH, without spawning `which`.
 function onPath(cmd) {
   if (!cmd) return false;
-  if (cmd.includes('/')) return fs.existsSync(cmd);
+  if (cmd.includes('/')) {
+    try { fs.accessSync(cmd, fs.constants.X_OK); return true; } catch { return false; }
+  }
   return (process.env.PATH || '').split(path.delimiter).some(dir => {
     try { fs.accessSync(path.join(dir, cmd), fs.constants.X_OK); return true; } catch { return false; }
   });
@@ -80,6 +82,75 @@ function describeAgents(cfg) {
     modes: a.type === 'url' ? ['browser']
          : ['terminal', 'background'].filter(m => (m === 'terminal' ? a.interactive : a.headless)),
   }));
+}
+
+function startupDiagnostics() {
+  const checks = [];
+  let cfg;
+  try {
+    const candidate = loadConfig();
+    const commandList = value => value === undefined || (Array.isArray(value) && value.every(arg => typeof arg === 'string'));
+    if (!candidate.agents.every(agent => agent && typeof agent.id === 'string'
+        && commandList(agent.interactive) && commandList(agent.headless))) throw new Error('invalid structure');
+    cfg = candidate;
+    checks.push({ name: 'configuration', status: 'pass', message: 'Configuration is readable and permissions are safe.' });
+  } catch (e) {
+    const unsafe = String(e.message).includes('can be changed by other users');
+    checks.push({
+      name: 'configuration',
+      status: 'fail',
+      message: unsafe
+        ? 'Configuration permissions are too broad; make it yours and run chmod go-w on it.'
+        : 'Configuration is invalid or unreadable; inspect agents.json and correct it.',
+    });
+  }
+
+  try {
+    const st = fs.statSync(HOME_DIR);
+    if (!st.isDirectory()) throw new Error('not a directory');
+    fs.accessSync(HOME_DIR, fs.constants.W_OK);
+    checks.push({ name: 'data-directory', status: 'pass', message: 'The private data directory is writable.' });
+  } catch {
+    checks.push({ name: 'data-directory', status: 'fail', message: 'The private data directory is not writable; check its owner and permissions.' });
+  }
+
+  if (typeof fs.statfsSync === 'function') {
+    try {
+      const { bavail, bsize } = fs.statfsSync(HOME_DIR);
+      const availableBytes = bavail * bsize;
+      checks.push({
+        name: 'disk-space',
+        status: availableBytes < 100 * 1024 * 1024 ? 'warn' : 'pass',
+        availableBytes,
+        message: availableBytes < 100 * 1024 * 1024
+          ? 'Less than 100 MiB is available for prompts, logs, and transcripts.'
+          : 'Disk space is available for prompts, logs, and transcripts.',
+      });
+    } catch {
+      checks.push({ name: 'disk-space', status: 'warn', message: 'Free disk space could not be measured.' });
+    }
+  } else {
+    checks.push({ name: 'disk-space', status: 'warn', message: 'Free disk space cannot be measured by this Node.js version.' });
+  }
+
+  if (cfg) {
+    for (const agent of cfg.agents.filter(a => a.type !== 'url')) {
+      const cmd = (agent.interactive || agent.headless || [])[0];
+      const available = onPath(cmd);
+      checks.push({
+        name: 'agent-cli',
+        agent: agent.id,
+        status: available ? 'pass' : 'warn',
+        message: available
+          ? `${agent.label || agent.id} CLI is available.`
+          : `The configured CLI for ${agent.label || agent.id} is not executable or not on PATH.`,
+      });
+    }
+  }
+
+  const status = checks.some(c => c.status === 'fail') ? 'error'
+    : checks.some(c => c.status === 'warn') ? 'warning' : 'ok';
+  return { status, checks };
 }
 
 // POSIX single-quote, for the one place a value has to sit inside a shell script.
@@ -279,6 +350,7 @@ const server = http.createServer((req, res) => {
       const cfg = loadConfig();
       return json(res, 200, { agents: describeAgents(cfg), defaultCwd: cfg.defaultCwd || '', config: CONFIG, runsDir: RUNS_DIR });
     }
+    if (req.method === 'GET' && url.pathname === '/api/diagnostics') return json(res, 200, DIAGNOSTICS);
     if (req.method === 'GET' && url.pathname === '/api/runs') return json(res, 200, { runs: listRuns() });
     if (req.method === 'GET' && url.pathname === '/api/log') {
       const text = readLog(url.searchParams.get('run'), url.searchParams.get('agent'));
@@ -323,6 +395,11 @@ function loadKey() {
   return Buffer.from(key);
 }
 const TOKEN = loadKey();
+const DIAGNOSTICS = startupDiagnostics();
+
+for (const check of DIAGNOSTICS.checks) {
+  console.log(`  ${check.status === 'pass' ? 'PASS' : check.status.toUpperCase()} ${check.name}: ${check.message}`);
+}
 
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`Agent dispatch on http://localhost:${PORT}/#k=${TOKEN}`);
