@@ -58,11 +58,13 @@
       h('option', { value: 'shared' }, 'Yes, and everyone reads everyone\'s findings'),
       h('option', { value: 'own' }, 'Yes, but each agent keeps its own findings'));
     research.value = saved.research || 'off';
+    const instr = h('select', { id: 'instructions' }, info.instructions.map(x => h('option', { value: x.id }, x.label)));
+    instr.value = info.instructions.some(x => x.id === saved.instructions) ? saved.instructions : 'claude';
     const criteria = h('textarea', { id: 'criteria', rows: '3', style: 'min-height:80px', placeholder: 'One per line, for example:\nValue for the people who will use it\nCan be built well in the time given\nOriginality' });
     criteria.value = saved.criteria || '';
     const msg = h('span', { class: 'msg' }), checkOut = h('div', { class: 'note' });
     const read = () => ({ problem: problem.value, context: context.value, agents: boxes.map(b => b.querySelector('input')).filter(i => i.checked).map(i => i.value),
-      ideas_per_agent: Number(ideas.value), top: Number(top.value), build_minutes: Number(mins.value), research: research.value, criteria: criteria.value });
+      ideas_per_agent: Number(ideas.value), top: Number(top.value), build_minutes: Number(mins.value), research: research.value, criteria: criteria.value, instructions: instr.value });
     const go = h('button', { class: 'go', onclick: async () => {
       const body = read();
       try { localStorage.setItem('brainstorm-form', JSON.stringify(body)); } catch {}
@@ -83,6 +85,7 @@
       h('label', {}, 'Agents ', h('small', {}, `from ${info.file}`)), h('div', { class: 'agents' }, boxes),
       h('label', { for: 'research' }, 'Research first? ', h('small', {}, 'each agent looks into the problem alone (the web where it can, read-only) and brings a few findings with sources')), research,
       h('label', { for: 'criteria' }, 'Voting criteria ', h('small', {}, 'optional: each agent scores every idea on each one, with a sentence why; leave empty for a single score with a reason')), criteria,
+      h('label', { for: 'instructions' }, 'Instructions written by ', h('small', {}, 'which agent wrote the prompts for every step; add one with node brainstorm/write-prompts.js <agent>')), instr,
       h('div', { class: 'row' },
         h('div', {}, h('label', { for: 'ideas' }, 'Ideas per agent'), ideas),
         h('div', {}, h('label', { for: 'top' }, 'Ideas to carry forward'), top),
@@ -136,7 +139,7 @@
         ['failed', 'stopped'].includes(S.phase) ? h('span', { class: 'ph now' }, PH[S.phase]) : null),
       S.error ? h('p', { class: 'msg' }, S.error) : null,
       h('div', { class: 'problem' }, S.problem),
-      h('p', { class: 'note' }, `${S.agents.map(a => a.label + (a.model ? ` (${a.model})` : '')).join(', ')} · ${S.ideas_per_agent} ideas each · ${S.top} carried forward · ${R ? 'research ' + S.research_mode + ' · ' : ''}${S.criteria && S.criteria.length ? 'criteria: ' + S.criteria.join('; ') + ' · ' : ''}${S.context ? 'context: ' + S.context : 'no context'} · folder: ${S.dir}`),
+      h('p', { class: 'note' }, `${S.agents.map(a => a.label + (a.model ? ` (${a.model})` : '')).join(', ')} · ${S.ideas_per_agent} ideas each · ${S.top} carried forward · ${R ? 'research ' + S.research_mode + ' · ' : ''}instructions by ${S.instructions_label || 'Claude'} · ${S.criteria && S.criteria.length ? 'criteria: ' + S.criteria.join('; ') + ' · ' : ''}${S.context ? 'context: ' + S.context : 'no context'} · folder: ${S.dir}`),
       ['done', 'failed', 'stopped'].includes(S.phase) ? null : h('button', { onclick: async () => { await call('POST', `/api/runs/${encodeURIComponent(S.id)}/stop`); } }, 'Stop this run'),
     ];
 

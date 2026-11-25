@@ -118,7 +118,73 @@ const contextLine = (S, where) => S.context
 
 const MAX_NOTES = 6000;
 
+// ---- Instruction sets ----
+// The prompts below were written by Claude (this app's author). Another agent can
+// write its own set (write-prompts.js), from the purpose of each step only: a JSON
+// file with one template per step, using {placeholders}. The reply format each step
+// needs (so the app can read the replies) is always added by the app, below the template.
+
+const INSTR_DIR = () => process.env.BRAINSTORM_INSTRUCTIONS || path.join(os.homedir(), '.agent-dispatch', 'brainstorm-instructions');
+const STEPS = {
+  research: ['problem', 'agents', 'context', 'web', 'sharing'],
+  ideas: ['problem', 'agents', 'context', 'notes', 'ideas_per_agent', 'top'],
+  vote: ['problem', 'context', 'ideas', 'count', 'top', 'criteria'],
+  build: ['problem', 'notes', 'winners', 'folder', 'can_run'],
+};
+const NEEDED = { research: ['problem'], ideas: ['problem', 'notes', 'ideas_per_agent'], vote: ['problem', 'ideas'], build: ['problem', 'notes', 'winners'] };
+
+// Throws if a set lacks a step or a placeholder the step cannot do without.
+function checkInstructions(set) {
+  if (!set || typeof set !== 'object') throw new Error('not an object');
+  for (const [step, need] of Object.entries(NEEDED)) {
+    if (typeof set[step] !== 'string' || set[step].trim().length < 40) throw new Error(`"${step}" is missing or too short`);
+    for (const v of need) if (!set[step].includes(`{${v}}`)) throw new Error(`"${step}" does not use {${v}}`);
+  }
+  return set;
+}
+
+// The sets on this machine: Claude's (built in) and every valid file in the folder.
+function instructionSets() {
+  const out = [{ id: 'claude', label: 'Claude (built in)' }];
+  try {
+    for (const f of fs.readdirSync(INSTR_DIR()).filter(f => /^[\w-]+\.json$/.test(f)).sort()) {
+      try {
+        const set = checkInstructions(JSON.parse(fs.readFileSync(path.join(INSTR_DIR(), f), 'utf8')));
+        const id = f.replace(/\.json$/, '');
+        if (id !== 'claude') out.push({ id, label: `${set.author || id}${set.model ? ` (${set.model})` : ''}`, set });
+      } catch {}
+    }
+  } catch {}
+  return out;
+}
+
+const fillVars = (t, vars) => t.replace(/\{(\w+)\}/g, (m, k) => k in vars ? String(vars[k]) : m);
+
+// The prompt from the run's instruction set, or null to use Claude's built-in one.
+function custom(S, step, vars) {
+  const t = S.instruction_set && S.instruction_set[step];
+  return t ? `${fillVars(t, vars)}\n\n${FORMAT[step](S).join('\n')}` : null;
+}
+
+// Plain facts for the placeholders.
+const contextFact = S => S.context ? `a copy of ${S.context_kind === 'git' ? 'a git repository' : 'a folder'}, in the current folder` : 'none (the current folder is empty)';
+const notesText = (S, agentId, seed) => notesFor(S, agentId, seed).join('\n').trim() || 'none';
+
+// The reply formats the app reads. Always the same, whoever wrote the instructions.
+const FORMAT = {
+  research: () => ['Write exactly like this, and nothing else:', 'FINDING: one or two sentences', 'SOURCE: a link, a file in the folder, or "own knowledge"', '(repeat for each finding)', 'SURPRISE: one or two sentences', 'SOURCE: as above'],
+  ideas: () => ['Write each idea exactly like this, and nothing else:', 'IDEA: a short title', 'WHAT: two to four sentences: what it is and what it would produce', 'WHY: one sentence'],
+  vote: S => S.criteria && S.criteria.length
+    ? ['Reply with one block per idea and nothing else, like this:', 'I1', ...S.criteria.map((_, k) => `C${k + 1}: 7 - why, in one sentence`)]
+    : ['Reply with one line per idea and nothing else, like this:', 'I1: 7 - why, in one sentence'],
+  build: () => ['When you are done, reply with:', 'WHAT I BUILT: a few sentences', 'HOW TO SEE IT: which files to open, for each idea', 'NOT DONE: anything you left out, or "nothing"'],
+};
+
 function researchPrompt(S, web) {
+  const c = custom(S, 'research', { problem: S.problem, agents: S.agents.length, context: contextFact(S),
+    web: web ? 'yes: you can search the web and read web pages (nothing else)' : 'no: use what you know, and the folder',
+    sharing: S.research_mode === 'shared' ? 'every agent will read every agent\'s findings, without names' : 'only you will read your findings' });
+  if (c) return c;
   return [
     `You are one of ${S.agents.length} AI agents, possibly from different AI labs, about to explore a problem together. First, research it, alone.`,
     '', 'THE PROBLEM', S.problem, '',
@@ -151,6 +217,8 @@ function notesFor(S, agentId, seed) {
 }
 
 function ideasPrompt(S, agentId = '', seed = '') {
+  const c = custom(S, 'ideas', { problem: S.problem, agents: S.agents.length, context: contextFact(S), notes: notesText(S, agentId, seed), ideas_per_agent: S.ideas_per_agent, top: S.top });
+  if (c) return c;
   return [
     `You are one of ${S.agents.length} AI agents, possibly from different AI labs, asked to explore a problem together.`,
     '', 'THE PROBLEM', S.problem, '',
@@ -168,6 +236,10 @@ function ideasPrompt(S, agentId = '', seed = '') {
 }
 
 function votePrompt(S, shown) {
+  const c = custom(S, 'vote', { problem: S.problem, context: contextFact(S), count: shown.length, top: S.top,
+    ideas: shown.map((i, k) => `I${k + 1}. ${anonymise(i.title)}\n    What: ${anonymise(i.what)}\n    Why: ${anonymise(i.why)}`).join('\n'),
+    criteria: S.criteria && S.criteria.length ? S.criteria.map((c, k) => `C${k + 1}. ${c}`).join('\n') : 'none: give each idea one overall score' });
+  if (c) return c;
   return [
     'You are one of several AI agents, possibly from different AI labs, exploring a problem together.',
     '', 'THE PROBLEM', S.problem, '',
@@ -215,6 +287,11 @@ function parseCriteriaScores(text, count, nCrit) {
 }
 
 function buildPrompt(S, winners, canRun, agentId = '', seed = '') {
+  const c = custom(S, 'build', { problem: S.problem, notes: notesText(S, agentId, seed),
+    winners: winners.map((i, k) => `${k + 1}. ${i.title}\n   What: ${i.what}\n   Why: ${i.why}`).join('\n'),
+    folder: S.context ? 'a git branch only for you, holding a copy of the material' : 'a git branch only for you, empty',
+    can_run: canRun ? 'yes, in this folder, with no network' : 'no' });
+  if (c) return c;
   return [
     'You are one of several AI agents, possibly from different AI labs, exploring a problem together.',
     '', 'THE PROBLEM', S.problem, '',
@@ -286,7 +363,7 @@ const slug = s => String(s).toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g,
 
 class Run {
   /**
-   * @param {{ problem: string, context?: string, agents: any[], ideas_per_agent: number, top: number, build_minutes?: number, read_minutes?: number, research?: string, criteria?: string[], out: string, seed?: string }} o
+   * @param {{ problem: string, context?: string, agents: any[], ideas_per_agent: number, top: number, build_minutes?: number, read_minutes?: number, research?: string, criteria?: string[], instructions?: string, out: string, seed?: string }} o
    */
   constructor(o) {
     const ctx = resolveContext(o.context);
@@ -298,6 +375,7 @@ class Run {
       id, problem: String(o.problem).trim(), context: ctx.src, context_kind: ctx.kind,
       agents: o.agents.map(a => ({ id: a.id, label: a.label, model: a.model || null })),
       ideas_per_agent: o.ideas_per_agent, top: o.top,
+      instructions: 'claude', instruction_set: null,
       criteria: (o.criteria || []).map(c => String(c).trim()).filter(Boolean).slice(0, 6),
       research_mode: ['shared', 'own'].includes(o.research || '') ? o.research : 'off', research: null,
       build_minutes: o.build_minutes ?? 30, read_minutes: o.read_minutes ?? 15,
@@ -305,6 +383,13 @@ class Run {
       dir: this.dir, started: new Date().toISOString(), finished: null,
     };
     this.agents = o.agents;
+    if (o.instructions && o.instructions !== 'claude') {
+      const found = instructionSets().find(x => x.id === o.instructions);
+      if (!found) throw new Error(`no instructions "${o.instructions}" in ${INSTR_DIR()}`);
+      this.S.instructions = found.id;
+      this.S.instruction_set = found.set;
+      this.S.instructions_label = found.label;
+    }
     this.seed = o.seed ?? id;
     fs.mkdirSync(this.dir, { recursive: true });
     this.save();
@@ -462,4 +547,4 @@ async function checkAgents(agents) {
   } finally { fs.rmSync(scratch, { recursive: true, force: true }); }
 }
 
-module.exports = { PHASES, AGENTS_FILE, loadAgents, commandFor, resolveContext, researchPrompt, notesFor, ideasPrompt, votePrompt, parseCriteriaScores, buildPrompt, Run, pastRuns, checkAgents, slug };
+module.exports = { PHASES, AGENTS_FILE, loadAgents, commandFor, resolveContext, STEPS, NEEDED, FORMAT, INSTR_DIR, checkInstructions, instructionSets, fillVars, researchPrompt, notesFor, ideasPrompt, votePrompt, parseCriteriaScores, buildPrompt, Run, pastRuns, checkAgents, slug };

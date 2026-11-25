@@ -18,6 +18,15 @@ process.stdin.on('end', () => {
     if (/Open the web page/.test(p)) return console.log('Example Domain');
     return console.log(`FINDING: ${name} fact one\nSOURCE: own knowledge\nFINDING: ${name} fact two\nSOURCE: notes.md\nSURPRISE: ${name} surprise\nSOURCE: own knowledge`);
   }
+  if (/writing the instructions/.test(p)) {
+    if (name === 'bad') return console.log('I would rather not.');
+    return console.log('```json\n' + JSON.stringify({
+      research: 'CUSTOM research by the writer. Problem: {problem}. Web: {web}. Readers: {sharing}.',
+      ideas: 'CUSTOM ideas by the writer. Problem: {problem}. Notes: {notes}. Propose exactly {ideas_per_agent} ideas; {top} go forward.',
+      vote: 'CUSTOM vote by the writer. Problem: {problem}. Score every idea below.\n{ideas}\nCriteria: {criteria}',
+      build: 'CUSTOM build by the writer. Problem: {problem}. Notes: {notes}. Develop:\n{winners}\nCommands: {can_run}.',
+    }) + '\n```');
+  }
   if (/word\.txt/.test(p)) return console.log(fs.readFileSync('word.txt', 'utf8'));
   if (/Propose exactly (\d+)/.test(p)) {
     const n = Number(/Propose exactly (\d+)/.exec(p)[1]);

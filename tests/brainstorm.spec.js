@@ -3,7 +3,7 @@
 // server, the agent catalogue's permission checks, and a whole run driven from
 // the page (ideas, anonymous vote, a branch each). No model is called.
 const { test, expect } = require('@playwright/test');
-const { spawn } = require('child_process');
+const { spawn, execFileSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -22,9 +22,9 @@ test.beforeAll(async () => {
   ctx = path.join(home, 'context');
   fs.mkdirSync(ctx);
   fs.writeFileSync(path.join(ctx, 'notes.md'), 'some notes\n');
-  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [fake('a'), { ...fake('b'), clean_home: true }, fake('c'), { id: 'gone', read: ['no-such-agent-binary'], build: ['no-such-agent-binary'] }] }));
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [fake('a'), { ...fake('b'), clean_home: true }, fake('c'), fake('bad'), { id: 'gone', read: ['no-such-agent-binary'], build: ['no-such-agent-binary'] }] }));
   server = spawn('node', [path.join(__dirname, '..', 'brainstorm', 'server.js')], {
-    env: { ...process.env, BRAINSTORM_PORT: String(PORT), BRAINSTORM_OUT: out, BRAINSTORM_AGENTS: path.join(home, 'agents.json'), AGENT_DISPATCH_CONFIG: path.join(home, 'none.json') },
+    env: { ...process.env, BRAINSTORM_INSTRUCTIONS: path.join(home, 'instr'), BRAINSTORM_PORT: String(PORT), BRAINSTORM_OUT: out, BRAINSTORM_AGENTS: path.join(home, 'agents.json'), AGENT_DISPATCH_CONFIG: path.join(home, 'none.json') },
     stdio: ['ignore', 'pipe', 'inherit'],
   });
   key = await new Promise((resolve, reject) => {
@@ -45,7 +45,7 @@ test('the server wants its key, its own host and origin, and serves run files on
   expect(page.headers.get('content-security-policy')).toContain("script-src 'self'");
   expect(page.headers.get('x-frame-options')).toBe('DENY');
   const agents = await (await api('/api/agents')).json();
-  expect(agents.agents.map(a => [a.id, a.available])).toEqual([['a', true], ['b', true], ['c', true], ['gone', false]]);
+  expect(agents.agents.map(a => [a.id, a.available])).toEqual([['a', true], ['b', true], ['c', true], ['bad', true], ['gone', false]]);
   const bad = async body => (await (await api('/api/runs', { method: 'POST', body: JSON.stringify(body) })).json()).error;
   expect(await bad({ problem: '', agents: ['a', 'b'] })).toMatch(/problem/);
   expect(await bad({ problem: 'x', agents: ['a'] })).toMatch(/two agents/);
@@ -85,6 +85,7 @@ test('a whole brainstorm from the page: ideas, anonymous vote, every agent build
   await page.fill('#problem', 'How could a small team share one agent?');
   await page.fill('#context', ctx);
   await page.locator('.agent', { hasText: 'Agent C' }).locator('input').uncheck();
+  await page.locator('.agent', { hasText: 'bad' }).locator('input').uncheck();
   await page.fill('#ideas', '2');
   await page.fill('#top', '2');
   await page.selectOption('#research', 'shared');
@@ -152,6 +153,34 @@ test('voting on criteria: every agent scores each criterion with a reason, the p
   await page.goto(`${BASE}/#k=${key}`);
   await page.locator('.runlink', { hasText: 'Criteria?' }).click();
   await expect(page.locator('td .why', { hasText: 'Feasible in time: 5. because 2' }).first()).toBeVisible();
+});
+
+test('another agent writes the instructions from the purpose only, and a run can use them', async () => {
+  const env = { ...process.env, BRAINSTORM_AGENTS: path.join(home, 'agents.json'), BRAINSTORM_INSTRUCTIONS: path.join(home, 'instr'), AGENT_DISPATCH_CONFIG: path.join(home, 'none.json') };
+  const script = path.join(__dirname, '..', 'brainstorm', 'write-prompts.js');
+  expect(() => execFileSync('node', [script, 'bad'], { env, stdio: 'pipe' })).toThrow();
+  execFileSync('node', [script, 'c'], { env, stdio: 'pipe' });
+  const set = JSON.parse(fs.readFileSync(path.join(home, 'instr', 'c.json'), 'utf8'));
+  expect(set.author).toBe('Agent C');
+  // The writer saw the purpose of each step, never the built-in prompts.
+  expect(set.brief).toContain('Must use: {problem}, {notes}, {ideas_per_agent}');
+  expect(set.brief).not.toMatch(/Prefer specific and checkable|would not develop it|Leave a short BRAINSTORM.md in the folder saying/);
+  const agents = await (await api('/api/agents')).json();
+  expect(agents.instructions.map(x => x.id)).toEqual(['claude', 'c']);
+  const { id } = await (await api('/api/runs', { method: 'POST', body: JSON.stringify({ problem: 'Whose words?', agents: ['a', 'b'], ideas_per_agent: 2, top: 1, research: 'shared', instructions: 'c' }) })).json();
+  let S;
+  for (let i = 0; i < 100; i++) { S = await (await api(`/api/runs/${id}`)).json(); if (['done', 'failed'].includes(S.phase)) break; await new Promise(r => setTimeout(r, 200)); }
+  expect(S.phase).toBe('done');
+  expect(S.instructions_label).toBe('Agent C');
+  const vote = fs.readFileSync(path.join(S.dir, 'steps', 'vote', 'a.prompt.md'), 'utf8');
+  expect(vote).toMatch(/^CUSTOM vote by the writer\. Problem: Whose words\?/);
+  expect(vote).toContain('Criteria: none');
+  expect(vote).toContain('I1: 7 - why, in one sentence');
+  expect(fs.readFileSync(path.join(S.dir, 'steps', 'ideas', 'b.prompt.md'), 'utf8')).toContain('a fact one');
+  expect(fs.readFileSync(path.join(S.dir, 'steps', 'research', 'a.prompt.md'), 'utf8')).toContain('Web: yes');
+  expect(Object.keys(S.votes.a)).toHaveLength(2);
+  expect(S.builds.a.files.length).toBeGreaterThan(0);
+  expect((await (await api('/api/runs', { method: 'POST', body: JSON.stringify({ problem: 'x', agents: ['a', 'b'], instructions: 'nope' }) })).json()).error).toMatch(/no instructions/);
 });
 
 test('research kept to oneself: each agent sees only its own notes, and named labs are taken out', () => {

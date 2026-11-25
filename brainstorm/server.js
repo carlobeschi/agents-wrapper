@@ -17,7 +17,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { loadAgents, Run, pastRuns, checkAgents, AGENTS_FILE } = require('./engine');
+const { loadAgents, Run, pastRuns, checkAgents, AGENTS_FILE, instructionSets } = require('./engine');
 
 const PORT = Number(process.env.BRAINSTORM_PORT) || 8795;
 const OUT = path.resolve((process.env.BRAINSTORM_OUT || path.join(os.homedir(), '.agent-dispatch', 'brainstorm')).replace(/^~(?=\/|$)/, os.homedir()));
@@ -53,7 +53,7 @@ const int = (v, lo, hi, def) => { const n = Math.round(Number(v)); return Number
 async function api(req, res, url) {
   const parts = url.pathname.split('/').filter(Boolean); // api, ...
   if (req.method === 'GET' && parts[1] === 'agents') {
-    return send(res, 200, { file: AGENTS_FILE(), out: OUT, agents: loadAgents().map(a => ({ id: a.id, label: a.label, model: a.model || null, available: a.available, web: a.web })) });
+    return send(res, 200, { file: AGENTS_FILE(), out: OUT, instructions: instructionSets().map(x => ({ id: x.id, label: x.label })), agents: loadAgents().map(a => ({ id: a.id, label: a.label, model: a.model || null, available: a.available, web: a.web })) });
   }
   if (parts[1] === 'check' && req.method === 'POST') {
     const body = await readBody(req);
@@ -76,7 +76,7 @@ async function api(req, res, url) {
     if (top > ideas * (agents.length - 1)) return send(res, 400, { error: `Carrying ${top} forward needs more ideas: each agent only sees the others' ideas.` });
     let run;
     try {
-      run = new Run({ problem, context: b.context, agents, ideas_per_agent: ideas, top, build_minutes: int(b.build_minutes, 1, 180, 30), research: String(b.research || 'off'), criteria: String(b.criteria || '').split('\n').map(s => s.replace(/^[\s*•\d.)-]+/, '').trim().slice(0, 200)).filter(Boolean), out: OUT });
+      run = new Run({ problem, context: b.context, agents, ideas_per_agent: ideas, top, build_minutes: int(b.build_minutes, 1, 180, 30), research: String(b.research || 'off'), instructions: String(b.instructions || 'claude'), criteria: String(b.criteria || '').split('\n').map(s => s.replace(/^[\s*•\d.)-]+/, '').trim().slice(0, 200)).filter(Boolean), out: OUT });
     } catch (e) { return send(res, 400, { error: String(e.message || e) }); }
     runs.set(run.S.id, run);
     run.run();
