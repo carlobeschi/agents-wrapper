@@ -90,7 +90,7 @@ test('a whole brainstorm from the page: ideas, anonymous vote, every agent build
   await page.fill('#top', '2');
   await page.selectOption('#research', 'shared');
   await page.getByRole('button', { name: 'Start' }).click();
-  await expect(page.locator('.ph.past', { hasText: 'Done' })).toBeVisible({ timeout: 60000 });
+  await expect(page.locator('.ph.past', { hasText: /^\W*Done/ })).toBeVisible({ timeout: 60000 });
   await expect(page.locator('.idea b').first()).toContainText('(read notes.md)');
   await expect(page.locator('h2', { hasText: 'Research' })).toBeVisible();
   await expect(page.locator('summary', { hasText: '2 findings' })).toHaveCount(2);
