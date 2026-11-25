@@ -1,0 +1,13 @@
+{
+  "title": "You Are a Cat",
+  "repo": "https://github.com/carlobeschi/carolina-the-cat",
+  "game": "you-are-a-cat.html",
+  "about": "A tap-to-play browser game for young children (about 4 to 8), made by a parent, from an idea and drawings by their daughter. You are a cat: you wake up, eat, wander the house, the city and beyond, earn hearts, play, and go to bed; it has seasons, parties, holidays, a school with lessons by school year, a diary and a bedtime story. It works on phones, tablets and laptops and can be installed as an app.",
+  "labs": ["claude", "codex", "gemini", "mistral"],
+  "ideas_per_lab": 3,
+  "build_top": 2,
+  "build_minutes": 40,
+  "read_minutes": 15,
+  "mistral_max_price": 2,
+  "check_clicks": ["GO!"]
+}

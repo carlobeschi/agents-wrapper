@@ -1,0 +1,28 @@
+{
+  "_about": "The agents the brainstorm app can use. Copy this file to ~/.agent-dispatch/brainstorm-agents.json (or point BRAINSTORM_AGENTS at a file) to add your own. Each agent has two commands: \"read\" may only read files in its folder (ideas and votes), \"build\" may also edit them (building the winning ideas). The prompt goes on stdin unless a command has {prompt}. {model} is filled from \"model\", or from the agent \"model_from\" names in agents.json; with no model, the flag before {model} is dropped. {price} is \"max_price\". \"clean_home\": true runs the agent with an empty home folder, so it loads none of the user's own skills or settings. Commands with flags that loosen permissions are refused. \"research\" (optional) is the command for the research step: read-only, and with \"web\": true it may also search and read the web, nothing else; without it the research step uses \"read\" (what the agent knows, and the folder).",
+  "agents": [
+    {
+      "id": "claude", "label": "Claude", "model_from": "claude", "env": ["ANTHROPIC_API_KEY", "CLAUDE_CONFIG_DIR"], "web": true,
+      "read": ["claude", "-p", "--model", "{model}", "--tools", "Read,Glob,Grep", "--permission-mode", "dontAsk", "--strict-mcp-config", "--safe-mode"],
+      "research": ["claude", "-p", "--model", "{model}", "--tools", "Read,Glob,Grep,WebSearch,WebFetch", "--permission-mode", "dontAsk", "--strict-mcp-config", "--safe-mode", "--settings", "{\"permissions\":{\"allow\":[\"WebSearch\",\"WebFetch\"]}}"],
+      "build": ["claude", "-p", "--model", "{model}", "--tools", "Read,Edit,Write,Glob,Grep", "--permission-mode", "acceptEdits", "--strict-mcp-config", "--safe-mode"]
+    },
+    {
+      "id": "codex", "label": "Codex", "model_from": "codex", "env": ["OPENAI_API_KEY", "CODEX_HOME"], "can_run": true, "web": true,
+      "read": ["codex", "exec", "-s", "read-only", "--skip-git-repo-check", "--ignore-user-config", "--ignore-rules", "-m", "{model}", "-"],
+      "research": ["codex", "exec", "-s", "read-only", "--skip-git-repo-check", "--ignore-user-config", "--ignore-rules", "-c", "web_search=\"live\"", "-m", "{model}", "-"],
+      "build": ["codex", "exec", "-s", "workspace-write", "--skip-git-repo-check", "--ignore-user-config", "--ignore-rules", "-c", "sandbox_workspace_write.network_access=false", "-m", "{model}", "-"]
+    },
+    {
+      "id": "gemini", "label": "Gemini", "model_from": "antigravity", "env": ["GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_CLOUD_PROJECT"], "web": true,
+      "read": ["agy", "--model", "{model}", "--sandbox", "--settings", "{\"toolPermission\":\"request-review\",\"allowNonWorkspaceAccess\":false,\"enableTerminalSandbox\":true,\"permissions\":{\"deny\":[\"write_file(*)\",\"command(*)\",\"mcp(*)\",\"read_url(*)\",\"execute_url(*)\",\"download_url(*)\"]}}", "--disable-slash-commands", "-p", "{prompt}"],
+      "research": ["agy", "--model", "{model}", "--sandbox", "--settings", "{\"toolPermission\":\"request-review\",\"allowNonWorkspaceAccess\":false,\"enableTerminalSandbox\":true,\"permissions\":{\"allow\":[\"read_file(*)\",\"read_url(*)\"],\"deny\":[\"write_file(*)\",\"command(*)\",\"mcp(*)\",\"execute_url(*)\",\"download_url(*)\"]}}", "--disable-slash-commands", "-p", "{prompt}"],
+      "build": ["agy", "--model", "{model}", "--sandbox", "--settings", "{\"toolPermission\":\"request-review\",\"allowNonWorkspaceAccess\":false,\"enableTerminalSandbox\":true,\"permissions\":{\"allow\":[\"read_file(*)\",\"write_file(*)\"],\"deny\":[\"command(*)\",\"mcp(*)\",\"read_url(*)\",\"execute_url(*)\",\"download_url(*)\"]}}", "--disable-slash-commands", "-p", "{prompt}"]
+    },
+    {
+      "id": "mistral", "label": "Mistral", "env": ["MISTRAL_API_KEY"], "max_price": 2, "clean_home": true,
+      "read": ["vibe", "--prompt", "{prompt}", "--model", "{model}", "--enabled-tools", "read_file", "--max-price", "{price}", "--output", "text"],
+      "build": ["vibe", "--prompt", "{prompt}", "--model", "{model}", "--enabled-tools", "read_file", "--enabled-tools", "write_file", "--enabled-tools", "search_replace", "--max-price", "{price}", "--output", "text"]
+    }
+  ]
+}

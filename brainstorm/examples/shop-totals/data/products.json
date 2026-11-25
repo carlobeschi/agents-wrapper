@@ -1,0 +1,6 @@
+{
+  "mug": { "name": "Cat mug", "price": 12.99 },
+  "poster": { "name": "Poster", "price": 8.5 },
+  "socks": { "name": "Cat socks", "price": 6.25 },
+  "book": { "name": "Craft book", "price": 19.9 }
+}
