@@ -4,6 +4,8 @@
 const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
+const { fill, stdinOf, feed } = require('../config');
+const { PassThrough } = require('stream');
 
 const ROOT = path.join(__dirname, '..');
 const configs = [
@@ -52,6 +54,25 @@ test('shipped headless commands retain explicit permission boundaries', () => {
   }
 });
 
+test('shipped headless command templates match the reviewed invocations', () => {
+  const expected = {
+    claude: ['claude', '-p', '--model', '{model}', '--tools', 'Read,Glob,Grep', '--permission-mode', 'dontAsk', '--strict-mcp-config', '--', '{prompt}'],
+    antigravity: ['agy', '--model', '{model}', '--sandbox', '--settings', '{"toolPermission":"request-review","allowNonWorkspaceAccess":false,"enableTerminalSandbox":true,"permissions":{"deny":["write_file(*)","command(*)","mcp(*)","read_url(*)","execute_url(*)","download_url(*)"]}}', '--disable-slash-commands', '-p', '{prompt}'],
+    codex: [
+      ['codex', 'exec', '--sandbox', 'read-only', '--skip-git-repo-check', '-'],
+      ['codex', 'exec', '--sandbox', 'read-only', '--skip-git-repo-check', '-m', '{model}', '-'],
+    ],
+    cursor: ['cursor-agent', '--mode', 'ask', '-p', '{prompt}'],
+  };
+  for (const config of configs) {
+    for (const [id, template] of Object.entries(expected)) {
+      const actual = agent(config, id).headless;
+      if (id === 'codex') expect(template).toContainEqual(actual);
+      else expect(actual, `${id} headless command`).toEqual(template);
+    }
+  }
+});
+
 test('only the configured environment variables reach each shipped CLI', () => {
   const expected = {
     claude: ['ANTHROPIC_API_KEY', 'CLAUDE_CONFIG_DIR'],
@@ -76,6 +97,30 @@ test('every configured model is passed to both CLI modes', () => {
         const modelFlag = command.findIndex(arg => arg === '--model' || arg === '-m');
         expect(modelFlag, `${entry.id} ${mode} model flag`).toBeGreaterThanOrEqual(0);
         expect(command[modelFlag + 1]).toBe('{model}');
+      }
+    }
+  }
+});
+
+test('headless prompts are passed as one argv value or through stdin', async () => {
+  const prompt = 'Keep spaces, quotes "and" --flags intact.';
+  for (const config of configs) {
+    for (const entry of config.agents.filter(agent => Array.isArray(agent.headless))) {
+      const args = fill(entry.headless, prompt, entry.model);
+      if (entry.stdin) {
+        expect(args).not.toContain(prompt);
+        expect(stdinOf(entry)).toBe('pipe');
+        const child = { stdin: new PassThrough() };
+        let received = '';
+        child.stdin.on('data', chunk => { received += chunk; });
+        const ended = new Promise(resolve => child.stdin.on('end', resolve));
+        feed(entry, child, prompt);
+        await ended;
+        expect(received).toBe(prompt);
+        expect(args[args.length - 1]).toBe('-');
+      } else {
+        expect(args.filter(arg => arg === prompt), `${entry.id} prompt argv`).toHaveLength(1);
+        expect(stdinOf(entry)).toBe('ignore');
       }
     }
   }

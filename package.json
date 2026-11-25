@@ -9,6 +9,7 @@
     "test": "playwright test",
     "lint": "eslint .",
     "typecheck": "tsc -p jsconfig.json",
+    "check:agent-clis": "node scripts/check-agent-clis.js",
     "check": "npm run lint && npm run typecheck && npm test"
   },
   "repository": {
