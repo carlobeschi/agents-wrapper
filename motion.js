@@ -20,7 +20,8 @@ const { spawn, execFileSync } = require('child_process');
 const { HOME_DIR, loadConfig, fill, agentEnv, stdinOf, feed, stamp, redactor, noteCall } = require('./config');
 const { inertForSite, plain, yaml, unyaml, uninert } = require('./frontmatter');
 const { openGuardedPullRequest } = require('./publish');
-const { killTree, stripAnsi, retryNote, failureNote, UNATTENDED, MAX_REPLY, take, cutNote, inert, newTag, untag, heading, SPEAKERS, modelLine } = require('./talk');
+const { watchProcess } = require('./agent-process');
+const { stripAnsi, retryNote, failureNote, UNATTENDED, MAX_REPLY, take, cutNote, inert, newTag, untag, heading, SPEAKERS, modelLine } = require('./talk');
 
 // A step that runs longer is stopped; AGENT_DISPATCH_STEP_TIMEOUT_MS overrides it.
 const stepTimeout = () => Number(process.env.AGENT_DISPATCH_STEP_TIMEOUT_MS) || 10 * 60 * 1000;
@@ -196,15 +197,17 @@ function runOnce(agent, prompt, cwd) {
       child = spawn(cmd, args, { cwd, env: agentEnv(agent.env), shell: false, detached: true, stdio: [stdinOf(agent), 'pipe', 'pipe'] });
       feed(agent, child, prompt);
     } catch (e) { return resolve({ why: e.message, err: '' }); }
-    const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, stepTimeout());
-    child.stdout.on('data', c => take(cur, c));
-    child.stderr.on('data', c => { cur.err = (cur.err + c).slice(-64000); });
-    child.on('error', e => { cur.spawnError = e.message; });
-    child.on('close', code => {
-      clearTimeout(timer);
+    watchProcess({
+      child, timeout: stepTimeout(),
+      onTimeout: () => { cur.timedOut = true; },
+      onStdout: c => take(cur, c),
+      onStderr: c => { cur.err = (cur.err + c).slice(-64000); },
+      onError: e => { cur.spawnError = e.message; },
+      onClose: code => {
       const text = stripAnsi(cur.out).trim() && stripAnsi(cur.out).trim() + cutNote(cur);
       const why = cur.spawnError || (cur.timedOut ? 'timed out' : code !== 0 ? `exit ${code}` : !text ? 'empty reply' : null);
       resolve({ text, why, err: cur.err, fatal: !!(cur.spawnError || cur.timedOut) });
+      },
     });
   });
 }
