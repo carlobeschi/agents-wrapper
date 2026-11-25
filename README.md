@@ -212,6 +212,8 @@ The headless commands that ship here are capped: Claude Code gets only its file-
 
 See [Agent CLI compatibility](docs/agent-cli-compatibility.md) for the tested command shapes, version evidence, prerequisites and known uncertainties. `npm run check:agent-clis` optionally checks installed CLI versions and help output only; it does not make model calls or require credentials.
 
+Study and room configs also support `local:<model>` through the local Ollama API; this is separate from the coding CLIs in `agents.json`. The compatibility page distinguishes this adapter from the study-specific llama.cpp probe and lists what is still unverified.
+
 **Models.** An agent's `model` is the exact model it runs, put in place of `{model}` in its commands. The shipped config pins Claude Code to `claude-opus-5-5` and Antigravity to `gemini-4-argon-medium`, so they do not follow changing CLI defaults. Check Antigravity names with `agy models`: a bare `gemini-4-argon` resolves to the medium tier, so the record would not say which ran. Cursor is intentionally not pinned and uses the installed Cursor CLI's selected default model. A command that uses `{model}` without a `model` is refused. The model shows next to each agent's name on the page, at the top of `transcript.md` and `story.md` (`Models: …`), and in `meta.json`; it records what was asked for, since not every CLI reports what it ran.
 
 **Prompts on stdin.** An agent with `"stdin": true` gets the prompt on stdin, and its headless command has no `{prompt}`. The shipped Codex entry uses it (`codex exec … -`): on macOS, Codex is killed without a word when a prompt of more than about 900 bytes is passed as an argument.

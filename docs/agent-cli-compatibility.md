@@ -58,6 +58,32 @@ that environment, and Cursor's currently linked documentation did not expose a
 CLI flag reference. No real model call or end-to-end permission test has been
 performed for any CLI.
 
+## Local model backend (separate from CLI agents)
+
+The repository does support local inference through **Ollama**, but not as a
+generic CLI entry in `agents.json`. Room and study configs accept
+`local:<model>`; `room.js` resolves that name to a text-only adapter that runs
+the repository's `openrouter.js` process, feeds prompts on stdin, and calls
+Ollama's local `/api/chat` endpoint. The default base is
+`http://127.0.0.1:11434/v1` (override with `OLLAMA_BASE`); no API key is used.
+The adapter is tested against a fake local HTTP server in
+`tests/swarm.spec.js`, not against a real Ollama daemon or model. No Ollama
+version is pinned or was queried for this update.
+
+There is also a **study-specific llama.cpp probe**, not a general agent
+backend: `llamacpp-probe.js` starts `llama-server` bound to `127.0.0.1`, reads
+the selected model file from Ollama by default, and uses `llama-cvector-generator`
+for its probe. Its installer is `scripts/install-llamacpp.sh`. The probe is
+not part of `agents.json` or the room agent resolver, and no real inference
+was run for this compatibility update.
+
+Thus, local model support exists in a bounded study/room path (Ollama API) and
+a separate experiment (llama.cpp server), not as a general local coding CLI.
+For a future smoke check, first identify the exact runtime/product (`Ollama`,
+`llama.cpp`/`llama-server`, or another server), its version, the serving
+endpoint, and the model ID. Do not assume that “llama” identifies a particular
+runtime.
+
 ## Mistral Vibe observed locally (not integrated)
 
 The local executable is `vibe`, identified by its help output as **Mistral
