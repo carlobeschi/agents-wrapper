@@ -57,3 +57,22 @@ builds, not a support-range guarantee. Cursor could not be version-checked in
 that environment, and Cursor's currently linked documentation did not expose a
 CLI flag reference. No real model call or end-to-end permission test has been
 performed for any CLI.
+
+## Mistral Vibe observed locally (not integrated)
+
+The local executable is `vibe`, identified by its help output as **Mistral
+Vibe**, version `3.1.5` (`env -i PATH="$PATH" vibe --version`, 2026-11-25).
+Its credential-free `--help` advertises a headless `--prompt` / `-p` option,
+`--model`, `--workdir`, and `--time-limit`; it also exposes approval-policy
+and tool allow/deny options. The upstream project identifies Vibe as Mistral's
+CLI coding agent: [mistralai/mistral-vibe](https://github.com/mistralai/mistral-vibe).
+
+Vibe is **not configured in `agents.json` or
+`examples/setup/agents.shows.json`**, so there is no supported
+agents-wrapper invocation or command-construction test for it. Although its
+help lists headless operation, we have not established a safe, least-privilege
+configuration for the wrapper, tested whether required approval behavior works
+non-interactively, or verified prompt/output/exit handling. Treat it as
+unverified and unsupported here until that work is done. Only version/help
+were run, in an environment stripped to `PATH`; no API key, prompt, or model
+call was provided.
