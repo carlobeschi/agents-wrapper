@@ -1,0 +1,14 @@
+2026-11-12T09:14:03Z order=0981 items=3 code=SAVE10 subtotal=€45.48 charged=€40.93 gateway=ok
+2026-11-12T11:40:51Z order=0982 items=1 code=- subtotal=€19.90 charged=€19.90 gateway=ok
+2026-11-13T15:02:17Z order=0983 items=2 code=WELCOME subtotal=€21.49 charged=€18.49 gateway=ok
+2026-11-14T08:55:40Z order=0984 items=4 code=FIVEOFF subtotal=€47.64 charged=€42.64 gateway=ok
+2026-11-16T10:21:09Z deploy version=2.4.0
+2026-11-16T12:03:44Z order=0985 items=2 code=- subtotal=€25.98 charged=€25.98 gateway=timeout retry=1 gateway=ok
+2026-11-16T18:30:12Z order=0986 items=3 code=FIVEOFF subtotal=€33.74 charged=€0.00 gateway=ok
+2026-11-17T07:12:55Z order=0987 items=1 code=SAVE10 subtotal=€12.99 charged=€11.69 gateway=ok
+2026-11-17T13:48:21Z order=0988 items=2 code=WELCOME subtotal=€14.75 charged=€0.00 gateway=ok
+2026-11-18T09:01:02Z order=0989 items=1 code=- subtotal=€8.50 charged=€8.50 gateway=timeout retry=1 gateway=timeout
+2026-11-18T09:01:33Z order=0989 payment failed: gateway timeout (customer told to try again)
+2026-11-19T16:20:47Z order=0990 items=5 code=FIVEOFF subtotal=€58.62 charged=€0.00 gateway=ok
+2026-11-19T19:44:02Z order=0991 items=1 code=save10 subtotal=€19.90 charged=€19.90 gateway=ok
+2026-11-20T10:05:19Z order=0992 items=2 code=SAVE10 subtotal=€26.15 charged=€23.54 gateway=ok

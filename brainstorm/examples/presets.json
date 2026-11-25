@@ -1,0 +1,69 @@
+{
+  "_about": "Ready-made software scenarios for the brainstorm page. A context starting with @examples/ is a folder next to this file; @app is the brainstorm app's own folder. Each one gives the agents a different kind of work.",
+  "presets": [
+    {
+      "id": "small-ui",
+      "label": "A small interface improvement (this app's start form)",
+      "why": "You can see whether the change is understandable and whether what worked still works.",
+      "problem": "Improve the start form of this brainstorm app (index.html and page.js in the current folder: the form() function). A person filling it in for the first time should understand each setting and pick sensible values quickly. Keep every existing setting and its element id, keep agent text shown as text only, and change nothing in server.js or engine.js.",
+      "context": "@app",
+      "research": "shared",
+      "criteria": [
+        "A first-time user would understand it without help",
+        "Nothing that works today breaks",
+        "Small enough to build well in the time"
+      ],
+      "ideas_per_agent": 3,
+      "top": 2,
+      "build_minutes": 20
+    },
+    {
+      "id": "bug-hunt",
+      "label": "An unfamiliar bug, evidence spread across files and logs",
+      "why": "The clues are in the code, the data, the changelog and the log: agents may gain from sharing what they find, not just ideas.",
+      "problem": "Read README.md: support reports that some customers paid nothing for their order, and some say their discount code did nothing. Find the cause or causes, using the code, the data, CHANGELOG.md and logs/orders.log, then fix them with a test for each. Say what in the log is not related.",
+      "context": "@examples/shop-totals",
+      "research": "shared",
+      "criteria": [
+        "Explains the evidence in the log",
+        "Fix is small and correct",
+        "Adds a test that would have caught it"
+      ],
+      "ideas_per_agent": 2,
+      "top": 2,
+      "build_minutes": 20
+    },
+    {
+      "id": "constrained-feature",
+      "label": "A constrained feature in an existing project",
+      "why": "Shows how ideas survive a real codebase, its tests and its rules.",
+      "problem": "Add tags to notes in this command-line notebook (read README.md): a person can tag a note when adding it and list only the notes with a tag. Constraints: existing notes files (version 1) must still load and other scripts must still read the files; no new dependencies; the existing tests keep passing; add tests for the new behaviour.",
+      "context": "@examples/notes-cli",
+      "research": "off",
+      "criteria": [
+        "Fits the existing code and file format",
+        "Easy to use from the command line",
+        "Tested"
+      ],
+      "ideas_per_agent": 3,
+      "top": 2,
+      "build_minutes": 20
+    },
+    {
+      "id": "open-brief",
+      "label": "An open brief: easier for a first-time user",
+      "why": "Shows whether different agents notice different problems before proposing solutions.",
+      "problem": "Make this brainstorm tool (its code is in the current folder) easier for a first-time user. Start from what a newcomer would find hard, then propose changes.",
+      "context": "@app",
+      "research": "own",
+      "criteria": [
+        "Addresses a real difficulty a newcomer would meet",
+        "Clear benefit for the effort",
+        "Can be built well in the time"
+      ],
+      "ideas_per_agent": 3,
+      "top": 2,
+      "build_minutes": 20
+    }
+  ]
+}

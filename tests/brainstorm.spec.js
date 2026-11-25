@@ -7,7 +7,7 @@ const { spawn, execFileSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { loadAgents, commandFor, resolveContext, ideasPrompt, notesFor, parseCriteriaScores } = require('../brainstorm/engine');
+const { loadAgents, commandFor, resolveContext, ideasPrompt, notesFor, parseCriteriaScores, adjust, wordsOf, setHuman, FORMAT } = require('../brainstorm/engine');
 
 const FAKE = path.join(__dirname, 'fixtures', 'brainstorm', 'fake.js');
 const PORT = 8796;
@@ -192,4 +192,108 @@ test('research kept to oneself: each agent sees only its own notes, and named la
   const shared = notesFor({ ...S, research_mode: 'shared' }, 'a', 's').join('\n');
   expect(shared).toContain('FINDING: y');
   expect(shared).toContain('an agent says x');
+});
+
+const waitDone = async id => {
+  let S;
+  for (let i = 0; i < 150; i++) { S = await (await api(`/api/runs/${id}`)).json(); if (['done', 'failed'].includes(S.phase)) break; await new Promise(r => setTimeout(r, 200)); }
+  return S;
+};
+
+test('scores corrected for generous voters, idea lengths, and an optional word limit', () => {
+  // A gives 8s, B gives 4s: a's idea only meets B, b's only meets A. Raw: b ahead; corrected: level.
+  const rows = adjust([
+    { id: 'b-1', by: { a: { score: 8 } } }, { id: 'a-1', by: { b: { score: 4 } } }, { id: 'c-1', by: { a: { score: 8 }, b: { score: 4 } } },
+  ]);
+  expect(rows.voter_means).toEqual({ a: 8, b: 4 });
+  expect(rows.rows.map(r => r.adj)).toEqual([6, 6, 6]);
+  expect(wordsOf({ title: 'Two words', what: 'and three more', why: '—' })).toBe(5);
+  const S = { agents: [{}, {}], problem: 'P?', context: '', ideas_per_agent: 1, top: 1, max_words: 40 };
+  expect(ideasPrompt(S)).toContain('at most 40 words');
+  expect(FORMAT.ideas(S).join('\n')).toContain('at most 40 words');
+  expect(ideasPrompt({ ...S, max_words: 0 })).not.toContain('at most');
+});
+
+test('the person\'s own look: checks on the pick and the ratings', () => {
+  const S = { top: 2, phase: 'vote', ideas: [{ id: 'a-1' }, { id: 'b-1' }, { id: 'b-2' }], agents: [{ id: 'a' }, { id: 'b' }], human: { blind: true, pick: null, ratings: null } };
+  expect(setHuman(S, { pick: { ids: ['a-1', 'b-1', 'b-2'] } })).toMatch(/between 1 and 2/);
+  expect(setHuman(S, { pick: { ids: ['zz'] } })).toMatch(/Unknown/);
+  expect(setHuman(S, { ratings: {} })).toMatch(/nothing built/);
+  expect(setHuman(S, { pick: { ids: ['b-2'], why: 'short' } })).toBeNull();
+  expect(S.human.pick).toMatchObject({ ids: ['b-2'], why: 'short', votes_seen: false, phase: 'vote' });
+  expect(setHuman(S, { pick: { skip: true } })).toMatch(/already/);
+  Object.assign(S, { builds: { a: {}, b: {} }, winners: ['a-1', 'b-1'] });
+  expect(setHuman(S, { ratings: { ideas: { 'a-1': { score: 11 } } } })).toMatch(/1 to 10/);
+  expect(setHuman(S, { ratings: { reports: { a: { match: 'lies' } } } })).toMatch(/Unknown answer/);
+  expect(setHuman(S, { ratings: { ideas: { 'a-1': { score: '7', note: 'n' } }, builds: { b: { 'b-1': { score: 3 } } }, reports: { b: { match: 'claims more', note: 'bug' } } } })).toBeNull();
+  expect(S.human.ratings.ideas).toEqual({ 'a-1': { score: 7, note: 'n' }, 'b-1': { score: null, note: '' } });
+  expect(S.human.ratings.builds.b['b-1'].score).toBe(3);
+  expect(S.human.ratings.reports).toEqual({ a: { match: 'not checked', note: '' }, b: { match: 'claims more', note: 'bug' } });
+});
+
+test('a blind run from the page: the pick comes first, then votes (raw and adjusted), rooms, and ratings', async ({ page }) => {
+  test.setTimeout(90000);
+  await page.goto(`${BASE}/#k=${key}`);
+  // An example fills in the form.
+  await page.selectOption('#example', 'bug-hunt');
+  await expect(page.locator('#context')).toHaveValue('@examples/shop-totals');
+  await page.fill('#problem', 'Blind pick please');
+  await page.fill('#context', '');
+  await page.locator('.agent', { hasText: 'Agent C' }).locator('input').uncheck();
+  await page.locator('.agent', { hasText: 'bad' }).locator('input').uncheck();
+  await page.fill('#ideas', '2');
+  await page.fill('#top', '2');
+  await page.selectOption('#research', 'off');
+  await page.fill('#maxwords', '40');
+  await page.check('#blind');
+  await page.getByRole('button', { name: 'Start' }).click();
+  await expect(page.locator('.ph.past', { hasText: /^\W*Done/ })).toBeVisible({ timeout: 60000 });
+  // Nothing about authors or votes yet: only the shuffled ideas.
+  await expect(page.locator('h2', { hasText: 'Your blind pick' })).toBeVisible();
+  await expect(page.locator('label.pick')).toHaveCount(4);
+  await expect(page.locator('table.vote')).toHaveCount(0);
+  await expect(page.locator('#sec-results')).toHaveCount(0);
+  await expect(page.locator('label.pick', { hasText: 'Agent' })).toHaveCount(0);
+  await page.locator('label.pick', { hasText: 'a idea 1' }).locator('input').check();
+  await page.fill('#pickwhy', 'it reads well');
+  await page.getByRole('button', { name: 'Save my pick and show the vote' }).click();
+  await expect(page.locator('table.vote')).toBeVisible();
+  await expect(page.locator('.mypick')).toContainText('a idea 1');
+  await expect(page.locator('.mypick')).toContainText('(blind)');
+  await expect(page.locator('small.adj').first()).toContainText('adjusted');
+  await expect(page.locator('.who .rt', { hasText: 'runs commands' }).first()).toBeVisible();
+  // Ratings: the idea and each build apart, and each report against what was found.
+  await page.locator('[data-f="rt:i:a-2"]').selectOption('8');
+  await page.locator('[data-f="rt:r:b"]').selectOption('claims more');
+  await page.locator('[data-f="rt:rn:b"]').fill('the plan file is empty');
+  await page.locator('[data-f="rtsave"]').click();
+  await expect(page.locator('#sec-rate')).toContainText('last saved');
+  const runs = await (await api('/api/runs')).json();
+  const S = await (await api(`/api/runs/${runs.find(r => r.problem === 'Blind pick please').id}`)).json();
+  expect(S.human.pick).toMatchObject({ ids: ['a-1'], why: 'it reads well', votes_seen: false });
+  expect(S.human.ratings.ideas['a-2'].score).toBe(8);
+  expect(S.human.ratings.reports.b).toEqual({ match: 'claims more', note: 'the plan file is empty' });
+  expect(S.ideas.every(i => i.words > 0)).toBe(true);
+  expect(S.ranking.every(r => typeof r.adj === 'number')).toBe(true);
+  expect(S.agents.map(a => [a.id, a.web, a.clean_home])).toEqual([['a', true, false], ['b', true, true]]);
+  expect(fs.readFileSync(path.join(S.dir, 'steps', 'ideas', 'a.prompt.md'), 'utf8')).toContain('at most 40 words');
+  // b's first build failed before it changed anything: shown as a retry.
+  await expect(page.locator('.who li', { hasText: 'Agent B' }).locator('.rt', { hasText: 'build: retried' })).toBeVisible();
+});
+
+test('ready-made software scenarios: presets, their small projects, and @ contexts', async () => {
+  const { presets } = await (await api('/api/agents')).json();
+  expect(presets.map(p => p.id)).toEqual(['small-ui', 'bug-hunt', 'constrained-feature', 'open-brief']);
+  const ex = path.join(__dirname, '..', 'brainstorm', 'examples');
+  // The example projects' own tests pass, and the shop bug is really there (a fixed code empties the order).
+  for (const d of ['shop-totals', 'notes-cli']) execFileSync('node', ['--test'], { cwd: path.join(ex, d), stdio: 'pipe' });
+  const out = execFileSync('node', ['-e', 'const {total}=require("./src/cart");console.log(total({items:[{sku:"book",qty:1}],code:"FIVEOFF"}).total + "")'], { cwd: path.join(ex, 'shop-totals'), encoding: 'utf8' });
+  expect(out.trim()).toBe('0');
+  expect((await (await api('/api/runs', { method: 'POST', body: JSON.stringify({ problem: 'x', agents: ['a', 'b'], context: '@nope' }) })).json()).error).toMatch(/unknown context/);
+  expect((await (await api('/api/runs', { method: 'POST', body: JSON.stringify({ problem: 'x', agents: ['a', 'b'], context: '@examples/none' }) })).json()).error).toMatch(/no example/);
+  const { id } = await (await api('/api/runs', { method: 'POST', body: JSON.stringify({ problem: 'Bug hunt', agents: ['a', 'b'], ideas_per_agent: 1, top: 1, context: '@examples/shop-totals', example: 'bug-hunt' }) })).json();
+  const S = await waitDone(id);
+  expect(S.phase).toBe('done');
+  expect(S.example).toBe('bug-hunt');
+  expect(fs.existsSync(path.join(S.dir, 'build', 'a', 'logs', 'orders.log'))).toBe(true);
 });

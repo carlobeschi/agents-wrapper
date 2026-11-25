@@ -72,9 +72,26 @@
     instr.value = info.instructions.some(x => x.id === saved.instructions) ? saved.instructions : 'claude';
     const criteria = h('textarea', { id: 'criteria', rows: '3', style: 'min-height:80px', placeholder: 'One per line, for example:\nValue for the people who will use it\nCan be built well in the time given\nOriginality' });
     criteria.value = saved.criteria || '';
+    const maxWords = num('maxwords', saved.max_words || 0, 0, 500);
+    const blind = h('input', { type: 'checkbox', id: 'blind' });
+    blind.checked = !!saved.blind;
+    let example = saved.example || '';
+    const presets = info.presets || [];
+    const exSel = h('select', { id: 'example' }, h('option', { value: '' }, 'None: write your own'), presets.map(x => h('option', { value: x.id }, x.label)));
+    exSel.value = presets.some(x => x.id === example) ? example : '';
+    const exWhy = h('small', { class: 'note' }, (presets.find(x => x.id === exSel.value) || {}).why || '');
+    exSel.addEventListener('change', () => {
+      const x = presets.find(p => p.id === exSel.value);
+      example = x ? x.id : '';
+      exWhy.textContent = x ? x.why || '' : '';
+      if (!x) return;
+      problem.value = x.problem; context.value = x.context || ''; research.value = x.research || 'off';
+      criteria.value = (x.criteria || []).join('\n'); ideas.value = String(x.ideas_per_agent || 3); top.value = String(x.top || 2); mins.value = String(x.build_minutes || 30);
+    });
     const msg = h('span', { class: 'msg' }), checkOut = h('div', { class: 'note' });
     const read = () => ({ problem: problem.value, context: context.value, agents: boxes.map(b => b.querySelector('input')).filter(i => i.checked).map(i => i.value),
-      ideas_per_agent: Number(ideas.value), top: Number(top.value), build_minutes: Number(mins.value), research: research.value, criteria: criteria.value, instructions: instr.value });
+      ideas_per_agent: Number(ideas.value), top: Number(top.value), build_minutes: Number(mins.value), research: research.value, criteria: criteria.value, instructions: instr.value,
+      max_words: Number(maxWords.value) || 0, blind: blind.checked, example });
     const go = h('button', { class: 'go', onclick: async () => {
       const body = read();
       try { localStorage.setItem('brainstorm-form', JSON.stringify(body)); } catch {}
@@ -90,6 +107,7 @@
       test.disabled = false;
     } }, 'Test the agents first');
     view.replaceChildren(
+      ...(presets.length ? [h('label', { for: 'example' }, 'Start from an example ', h('small', {}, 'ready-made software scenarios; they fill in the fields below, which you can still change')), exSel, exWhy] : []),
       h('label', { for: 'problem' }, 'The problem ', h('small', {}, 'what you want explored')), problem,
       h('label', { for: 'context' }, 'Context ', h('small', {}, 'a folder on this computer or a git link the agents can read; they work on a copy')), context,
       h('label', {}, 'Agents ', h('small', {}, `from ${info.file}`)), h('div', { class: 'agents' }, boxes),
@@ -99,7 +117,9 @@
       h('div', { class: 'row' },
         h('div', {}, h('label', { for: 'ideas' }, 'Ideas per agent'), ideas),
         h('div', {}, h('label', { for: 'top' }, 'Ideas to carry forward'), top),
-        h('div', {}, h('label', { for: 'mins' }, 'Minutes to build'), mins)),
+        h('div', {}, h('label', { for: 'mins' }, 'Minutes to build'), mins),
+        h('div', {}, h('label', { for: 'maxwords' }, 'Words per idea, at most ', h('small', {}, '0 = no limit')), maxWords)),
+      h('label', { class: 'check' }, blind, ' Let me pick my favourite ideas blind, before I see the votes ', h('small', {}, 'the page hides authors, votes and builds until you have picked or skipped; your pick is saved with the run')),
       h('div', { class: 'actions' }, go, test, msg),
       checkOut,
       h('p', { class: 'note' }, `Each agent reads (and later edits) only a copy in the run folder: ${info.out}. Nothing is pushed or published.`));
@@ -112,13 +132,15 @@
   const runRoot = h('div', { id: 'run' });
   const fileBox = h('div', { id: 'file' });
   let lastJSON = '', openFiles = [], lastSay = '';
+  // What the person is typing in the run's own forms, kept across redraws.
+  const drafts = new Map();
 
   async function openRun(id) {
     const fresh = current !== id;
     const my = ++seq;
     current = id; clearTimeout(timer);
     if (fresh) {
-      lastJSON = ''; openFiles = []; fileBox.replaceChildren();
+      lastJSON = ''; openFiles = []; fileBox.replaceChildren(); drafts.clear();
       runRoot.replaceChildren(h('p', { class: 'note' }, 'Loading…'));
     }
     if (!view.contains(runRoot)) view.replaceChildren(notice, runRoot, fileBox);
@@ -297,7 +319,8 @@
         h('div', { class: 'problem' }, S.problem),
         h('ul', { class: 'settings note' },
           h('li', {}, 'Agents: ', S.agents.map(a => a.label + (a.model ? ` (${a.model})` : '')).join(', ')),
-          h('li', {}, `${S.ideas_per_agent} ideas each · ${S.top} carried forward · ${S.build_minutes} minutes to build`),
+          h('li', {}, `${S.ideas_per_agent} ideas each · ${S.top} carried forward · ${S.build_minutes} minutes to build${S.max_words ? ` · at most ${S.max_words} words per idea` : ''}${S.human && S.human.blind ? ' · blind pick first' : ''}`),
+          S.example ? h('li', {}, 'Example: ' + S.example) : null,
           h('li', {}, R ? `Research: ${S.research_mode === 'shared' ? 'shared with everyone' : 'each agent keeps its own'}` : 'No research step'),
           S.criteria && S.criteria.length ? h('li', {}, 'Criteria: ' + S.criteria.join('; ')) : null,
           h('li', {}, `Instructions by ${S.instructions_label || 'Claude'}`),
@@ -371,8 +394,25 @@
         what = S.phase === 'done' ? `finished · ${ph.toLowerCase()} took ${dur(st.ms)}` : `${ph}: done in ${dur(st.ms)}${behind ? ' · waiting for the others' : ''}`;
       }
       return h('li', { class: state }, h('span', { class: 'dot', 'aria-hidden': 'true' }), h('b', {}, a.label), h('span', { class: 'what' }, what),
-        bar, line ? h('span', { class: 'line', title: line }, line) : null);
+        bar, line ? h('span', { class: 'line', title: line }, line) : null, room(S, a));
     }));
+  }
+
+  // The agent's "room": what it could do in this run, and what went wrong on the way.
+  // Agents with different tools work in different rooms: that limits what a run says about the model.
+  function room(S, a) {
+    if (!('web' in a)) return null; // runs from before the room was recorded
+    const R = S.research_mode && S.research_mode !== 'off';
+    const steps = Object.entries(S.steps).filter(([k]) => k.endsWith('/' + a.id));
+    const retried = steps.filter(([, st]) => st.tries > 1), failed = steps.filter(([, st]) => st.status === 'failed');
+    const tag = (ok, text, title) => h('span', { class: 'rt ' + (ok ? 'yes' : 'no'), title }, (ok ? '✓ ' : '✗ ') + text);
+    return h('span', { class: 'room' },
+      R ? tag(a.web, 'web', a.web ? 'could search and read the web while researching' : 'researched from its own knowledge and the folder') : null,
+      tag(true, 'edits files', 'could change files in its own copy when building'),
+      tag(a.can_run, 'runs commands', a.can_run ? 'could run commands in its copy, with no network' : 'could not run anything: no tests, no browser'),
+      a.clean_home ? h('span', { class: 'rt', title: 'ran with an empty home folder of its own' }, 'own home') : null,
+      retried.map(([k, st]) => h('span', { class: 'rt warn', title: `first try failed (${st.first_why}); tried again` }, `${k.split('/')[0]}: retried`)),
+      failed.map(([k, st]) => h('span', { class: 'rt no', title: st.why || '' }, `${k.split('/')[0]}: failed`)));
   }
 
   function statusBox(S, prog) {
@@ -441,15 +481,16 @@
     const ideaOf = id => (S.ideas || []).find(i => i.id === id) || {};
     return h('div', { class: 'scrollx stack', 'data-s': 'votetable' },
       h('table', { class: 'vote' },
-        h('thead', {}, h('tr', {}, h('th', {}, '#'), h('th', {}, 'Idea'), h('th', {}, 'Average'), S.agents.map(a => h('th', {}, a.label)))),
+        h('thead', {}, h('tr', {}, h('th', {}, '#'), h('th', {}, 'Idea'), h('th', {}, 'Average'), S.agents.map(a => h('th', {}, a.label + (S.voter_means && S.voter_means[a.id] != null ? ` (gives ${S.voter_means[a.id].toFixed(1)})` : ''))))),
         h('tbody', {}, S.ranking.map((r, k) => {
           const win = S.winners.includes(r.id), idea = ideaOf(r.id);
           return h('tr', { class: win ? 'win' : '', 'data-a': 'v:' + r.id },
             h('td', { class: 'rank' }, String(k + 1), win ? ' ✓' : ''),
-            h('td', { class: 'name' }, h('span', { class: 't' }, r.title), h('small', { class: 'by' }, 'by ' + label(S, r.agent)),
+            h('td', { class: 'name' }, h('span', { class: 't' }, r.title), h('small', { class: 'by' }, 'by ' + label(S, r.agent) + (idea.words ? ` · ${idea.words} words` : '')),
               win && idea.what ? h('div', { class: 'what' }, idea.what) : null),
             h('td', { class: 'avg', 'data-label': 'Average' }, r.mean == null ? '–'
-              : h('span', {}, h('b', {}, r.mean.toFixed(1)), h('span', { class: 'meter', 'aria-hidden': 'true' }, h('i', { style: `width:${Math.max(0, Math.min(100, r.mean * 10))}%` })), h('small', { class: 'note' }, plural(r.n, 'vote')))),
+              : h('span', {}, h('b', {}, r.mean.toFixed(1)), h('span', { class: 'meter', 'aria-hidden': 'true' }, h('i', { style: `width:${Math.max(0, Math.min(100, r.mean * 10))}%` })), h('small', { class: 'note' }, plural(r.n, 'vote')),
+                r.adj != null ? h('small', { class: 'adj', title: 'the average after taking out how generous each voter was overall' }, `adjusted ${r.adj.toFixed(1)}`) : null)),
             S.agents.map(a => h('td', { class: 'sc', 'data-label': a.label }, a.id === r.agent ? h('span', { class: 'note' }, 'own idea') : r.by[a.id] ? voteCell(S, r, a, r.by[a.id]) : '–')));
         }))));
   }
@@ -514,12 +555,104 @@
     return h('div', { class: 'scrollx plain', 'data-s': 'buildgrid' }, h('div', { class: 'compare', style: `--n:${A.length}` }, cells));
   }
 
+  // ---- The person's own look ----
+  // A form field whose value survives the 2-second redraws.
+  function field(tag, key, attrs, saved, ...kids) {
+    const e = h(tag, { ...attrs, 'data-f': key }, ...kids);
+    const v = drafts.has(key) ? drafts.get(key) : saved;
+    if (e.type === 'checkbox') e.checked = !!v; else if (v != null) e.value = String(v);
+    e.addEventListener(e.type === 'checkbox' || tag === 'select' ? 'change' : 'input', () => drafts.set(key, e.type === 'checkbox' ? e.checked : e.value));
+    return e;
+  }
+  const blindNow = S => !!(S.human && S.human.blind && !S.human.pick);
+  // A fixed shuffle per run, so the order does not hint at the author.
+  const shuffled = (S, list) => list.map(x => {
+    let n = 2166136261;
+    for (const c of S.id + ':' + x.id) n = Math.imul(n ^ c.charCodeAt(0), 16777619);
+    n ^= n >>> 15; n = Math.imul(n, 2246822507); n ^= n >>> 13; n = Math.imul(n, 3266489909); n ^= n >>> 16;
+    return [n >>> 0, x];
+  }).sort((a, b) => a[0] - b[0]).map(p => p[1]);
+  async function saveHuman(S, body, msg) {
+    try { await call('POST', `/api/runs/${encodeURIComponent(S.id)}/human`, body); msg.textContent = 'Saved.'; lastJSON = ''; openRun(S.id); } catch (e) { msg.textContent = e.message; }
+  }
+
+  // Before the votes: every idea, without author or score, in a fixed shuffled order.
+  function blindPick(S) {
+    if (!S.ideas) return h('section', { class: 'sec', id: 'sec-ideas', 'data-a': 'sec-ideas' }, h('h2', {}, 'Your blind pick', h('span', { class: 'n' }, 'the ideas appear here when every agent has proposed its own')));
+    const msg = h('span', { class: 'msg' });
+    const ideas = shuffled(S, S.ideas);
+    return h('section', { class: 'sec blind', id: 'sec-ideas', 'data-a': 'sec-ideas' },
+      h('h2', {}, 'Your blind pick', h('span', { class: 'n' }, `choose up to ${S.top} before you see who wrote what and how the agents voted`)),
+      h('div', { class: 'cards one' }, ideas.map((i, k) => h('label', { class: 'idea pick', 'data-a': 'p:' + i.id },
+        field('input', 'pick:' + i.id, { type: 'checkbox' }, false),
+        h('span', {}, h('b', {}, `${String.fromCharCode(65 + k % 26)}${k >= 26 ? Math.floor(k / 26) : ''}. ${i.title}`), h('small', { class: 'note' }, ` · ${i.words || ''} words`), h('p', {}, i.what), i.why ? h('p', { class: 'why' }, i.why) : null)))),
+      h('label', { for: 'pickwhy' }, 'Why these? ', h('small', {}, 'a line or two, for later')),
+      field('textarea', 'pickwhy', { id: 'pickwhy', rows: '3' }, ''),
+      h('div', { class: 'actions' },
+        h('button', { class: 'go', 'data-f': 'picksave', onclick: () => saveHuman(S, { pick: { ids: S.ideas.filter(i => drafts.get('pick:' + i.id)).map(i => i.id), why: drafts.get('pickwhy') || '' } }, msg) }, 'Save my pick and show the vote'),
+        h('button', { 'data-f': 'pickskip', onclick: () => saveHuman(S, { pick: { skip: true } }, msg) }, 'Skip'), msg));
+  }
+
+  // After the pick: what the person chose, next to what the agents carried forward.
+  function pickSummary(S) {
+    const p = S.human && S.human.pick;
+    if (!p || p.skipped || !S.ideas) return null;
+    const t = id => (S.ideas.find(i => i.id === id) || {}).title || id;
+    const went = S.winners ? p.ids.filter(id => S.winners.includes(id)).length : null;
+    return h('div', { class: 'mypick', 'data-a': 'mypick' }, h('b', {}, 'Your pick' + (p.votes_seen ? ' (made after the votes were shown)' : ' (blind)') + ': '),
+      p.ids.map(t).join(' · '), went != null ? h('span', { class: 'note' }, ` · ${went} of ${p.ids.length} also carried forward by the agents`) : null,
+      p.why ? h('div', { class: 'note' }, p.why) : null);
+  }
+
+  // After the builds: the idea and its execution scored apart, and each report set against what the person found.
+  function ratings(S) {
+    if (!S.builds || !S.winners || !ENDED.includes(S.phase)) return null;
+    const R = (S.human && S.human.ratings) || { ideas: {}, builds: {}, reports: {} };
+    const msg = h('span', { class: 'msg' });
+    const t = id => (S.ideas.find(i => i.id === id) || {}).title || id;
+    const scoreSel = (key, v) => field('select', key, { 'aria-label': 'score' }, v == null ? '' : v, h('option', { value: '' }, '–'), Array.from({ length: 10 }, (_, k) => h('option', { value: String(k + 1) }, String(k + 1))));
+    const MATCH = { matches: 'matches what I found', 'claims more': 'claims more than I found', 'claims less': 'claims less than I found', 'not checked': 'not checked' };
+    const collect = () => {
+      const g = k => drafts.has(k) ? drafts.get(k) : undefined;
+      const val = (k, old) => g(k) !== undefined ? g(k) : old;
+      const out = { ideas: {}, builds: {}, reports: {}, note: val('rt:note', R.note || '') };
+      for (const id of S.winners) out.ideas[id] = { score: val(`rt:i:${id}`, (R.ideas[id] || {}).score ?? ''), note: val(`rt:in:${id}`, (R.ideas[id] || {}).note || '') };
+      for (const a of S.agents) {
+        out.builds[a.id] = {};
+        for (const id of S.winners) { const o = (R.builds[a.id] || {})[id] || {}; out.builds[a.id][id] = { score: val(`rt:b:${a.id}:${id}`, o.score ?? ''), note: val(`rt:bn:${a.id}:${id}`, o.note || '') }; }
+        const o = R.reports[a.id] || {};
+        out.reports[a.id] = { match: val(`rt:r:${a.id}`, o.match || 'not checked'), note: val(`rt:rn:${a.id}`, o.note || '') };
+      }
+      return out;
+    };
+    return h('section', { class: 'sec rate', id: 'sec-rate', 'data-a': 'sec-rate' },
+      h('h2', {}, 'Your look at the results', h('span', { class: 'n' }, 'the idea and its execution scored apart; all optional, saved with the run')),
+      h('div', { class: 'scrollx', 'data-s': 'rate' }, h('table', { class: 'rate' },
+        h('thead', {}, h('tr', {}, h('th', {}, ''), S.winners.map(id => h('th', {}, t(id))))),
+        h('tbody', {},
+          h('tr', { class: 'ideasrow' }, h('th', {}, 'The idea itself'), S.winners.map(id => h('td', {}, scoreSel(`rt:i:${id}`, (R.ideas[id] || {}).score), field('input', `rt:in:${id}`, { type: 'text', placeholder: 'note' }, (R.ideas[id] || {}).note || '')))),
+          S.agents.map(a => h('tr', {}, h('th', {}, `${a.label}'s build`), S.winners.map(id => {
+            const o = (R.builds[a.id] || {})[id] || {};
+            return h('td', {}, scoreSel(`rt:b:${a.id}:${id}`, o.score), field('input', `rt:bn:${a.id}:${id}`, { type: 'text', placeholder: 'note' }, o.note || ''));
+          })))))),
+      h('h3', {}, 'Report against reality', h('small', { class: 'note' }, ' does each build report match what you found when you tried it? This records a gap, not a judgement: the agent may not have noticed.')),
+      h('div', { class: 'reports' }, S.agents.map(a => {
+        const o = R.reports[a.id] || {};
+        return h('div', {}, h('b', {}, a.label), ' ', field('select', `rt:r:${a.id}`, {}, o.match || 'not checked', Object.entries(MATCH).map(([v, l]) => h('option', { value: v }, l))),
+          field('input', `rt:rn:${a.id}`, { type: 'text', placeholder: 'what differs' }, o.note || ''));
+      })),
+      field('textarea', 'rt:note', { rows: '2', placeholder: 'Anything else: what surprised you, what you would do next' }, R.note || ''),
+      h('div', { class: 'actions' }, h('button', { class: 'go', 'data-f': 'rtsave', onclick: () => saveHuman(S, { ratings: collect() }, msg) }, 'Save'), msg,
+        S.human && S.human.ratings ? h('span', { class: 'note' }, ` last saved ${S.human.ratings.at.slice(0, 16).replace('T', ' ')}`) : null));
+  }
+
   // ---- The whole run ----
   function render(S) {
     const R = S.research_mode && S.research_mode !== 'off';
     const prog = progress(S);
     const sec = (id, title, sub, ...kids) => h('section', { class: 'sec', id: 'sec-' + id, 'data-a': 'sec-' + id }, h('h2', {}, title, sub ? h('span', { class: 'n' }, sub) : null), kids);
-    const kids = [head(S), phasePills(S, prog), statusBox(S, prog), results(S)];
+    const blind = blindNow(S);
+    const kids = [head(S), phasePills(S, prog), statusBox(S, prog), blind ? null : results(S), blind ? null : pickSummary(S)];
 
     if (R) {
       kids.push(sec('research', 'Research', S.research_mode === 'shared' ? 'every agent then read everyone\'s findings, without names' : 'each agent then saw only its own findings',
@@ -529,7 +662,8 @@
         }))));
     }
 
-    kids.push(sec('ideas', 'Ideas', `${S.ideas_per_agent} from each agent`, h('div', { class: 'cards' }, S.agents.map(a => {
+    if (blind) kids.push(blindPick(S));
+    else kids.push(sec('ideas', 'Ideas', `${S.ideas_per_agent} from each agent`, h('div', { class: 'cards' }, S.agents.map(a => {
       const mine = (S.ideas || []).filter(i => i.agent === a.id);
       const st = S.steps[`ideas/${a.id}`];
       const rankOf = id => S.ranking ? S.ranking.findIndex(r => r.id === id) : -1;
@@ -544,7 +678,7 @@
       return stepCard(S, `ideas/${a.id}`, a.label, body);
     }))));
 
-    if (!['research', 'ideas'].includes(S.phase) && S.ideas) {
+    if (!blind && !['research', 'ideas'].includes(S.phase) && S.ideas) {
       const voted = a => S.steps[`vote/${a.id}`] && S.steps[`vote/${a.id}`].status === 'done' ? `${Object.keys(S.votes[a.id] || {}).length} of ${(S.ballots[a.id] || []).length} scores read` : null;
       kids.push(sec('vote', 'Vote', 'each agent scored the others\' ideas from 1 to 10, without names; never its own',
         S.ranking
@@ -553,13 +687,15 @@
             return h('span', { class: st ? 'is-' + st.status : '' }, h('b', {}, a.label), ' ', st && st.status === 'failed' ? `failed: ${st.why}` : voted(a) || 'did not vote');
           }))
           : h('div', { class: 'cards' }, S.agents.map(a => stepCard(S, `vote/${a.id}`, a.label, voted(a) ? h('div', { class: 'note' }, voted(a)) : null))),
-        S.ranking ? [voteTable(S), h('p', { class: 'note' }, '✓ = carried forward: every agent builds these. Click a reason to read all of it.', S.tie_at_cut ? ' There was a tie at the cut: it was broken by lot.' : '')] : null));
+        S.ranking ? [voteTable(S), h('p', { class: 'note' }, '✓ = carried forward: every agent builds these. Click a reason to read all of it.', S.tie_at_cut ? ' There was a tie at the cut: it was broken by lot.' : '',
+          S.voter_means ? ' Nobody scores their own ideas, so each author is judged by a different panel: "gives" is a voter\'s own average, and "adjusted" takes it out. The cut uses the plain average.' : '')] : null));
     }
 
-    if (S.builds) {
+    if (!blind && S.builds) {
       kids.push(sec('build', 'Build', `each agent alone, in its own branch, side by side · ${S.build_minutes} minutes each`, buildGrid(S)));
     }
 
+    if (!blind) kids.push(ratings(S));
     runRoot.replaceChildren(...kids.filter(Boolean));
 
     // Screen readers hear about phase changes only (a stable region, outside the redraw).

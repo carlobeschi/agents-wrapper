@@ -1,0 +1,5 @@
+{
+  "SAVE10": { "type": "percent", "value": 10 },
+  "FIVEOFF": { "type": "fixed", "value": 500 },
+  "WELCOME": { "type": "fixed", "value": 300 }
+}
