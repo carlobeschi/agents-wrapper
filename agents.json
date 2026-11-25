@@ -14,7 +14,7 @@
       "label": "Antigravity CLI",
       "model": "gemini-4-argon-medium",
       "interactive": ["agy", "--model", "{model}", "-i", "{prompt}"],
-      "headless": ["agy", "--model", "{model}", "--sandbox", "--disable-slash-commands", "-p", "{prompt}"],
+      "headless": ["agy", "--model", "{model}", "--sandbox", "--settings", "{\"toolPermission\":\"request-review\",\"allowNonWorkspaceAccess\":false,\"enableTerminalSandbox\":true,\"permissions\":{\"deny\":[\"write_file(*)\",\"command(*)\",\"mcp(*)\",\"read_url(*)\",\"execute_url(*)\",\"download_url(*)\"]}}", "--disable-slash-commands", "-p", "{prompt}"],
       "env": ["GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_CLOUD_PROJECT"]
     },
     {
@@ -29,7 +29,7 @@
       "id": "cursor",
       "label": "Cursor Agent",
       "interactive": ["cursor-agent", "{prompt}"],
-      "headless": ["cursor-agent", "-p", "{prompt}"],
+      "headless": ["cursor-agent", "--mode", "ask", "-p", "{prompt}"],
       "env": ["CURSOR_API_KEY"]
     },
     {
