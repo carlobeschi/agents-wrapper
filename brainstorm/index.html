@@ -19,9 +19,10 @@
   .runlink small { color:var(--mute); display:block; }
   section#view { padding:20px 28px; max-width: 1100px; }
   label { display:block; font-weight:600; margin:14px 0 6px; } label small { font-weight:400; color:var(--mute); }
-  textarea, input[type=text], input[type=number] { width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); font:inherit; }
+  textarea, select, input[type=text], input[type=number] { width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); font:inherit; }
   textarea { min-height:140px; resize:vertical; }
   input[type=number] { width:90px; }
+  select { width:auto; }
   .row { display:flex; gap:28px; flex-wrap:wrap; }
   .agents { display:flex; gap:10px; flex-wrap:wrap; }
   .agent { border:1px solid var(--line); border-radius:8px; padding:8px 12px; background:var(--card); display:flex; gap:8px; align-items:center; }
@@ -41,6 +42,7 @@
   .card h3 { margin:0 0 6px; font-size:14px; display:flex; justify-content:space-between; gap:8px; }
   .st { font-size:12px; font-weight:500; } .st.running { color:var(--accent); } .st.done { color:var(--ok); } .st.failed { color:var(--bad); }
   pre { white-space:pre-wrap; word-break:break-word; font:12px/1.45 ui-monospace, Menlo, monospace; background:var(--soft); padding:8px; border-radius:6px; max-height:320px; overflow:auto; margin:6px 0 0; }
+  td .why { color:var(--mute); font-size:12px; margin-top:2px; }
   .idea { margin:8px 0; } .idea b { display:block; } .idea .why { color:var(--mute); font-style:italic; }
   table { border-collapse:collapse; width:100%; font-size:13px; }
   th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }

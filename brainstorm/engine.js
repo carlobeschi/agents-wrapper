@@ -3,8 +3,13 @@
 // problem, picks the agents, how many ideas each brings and how many of the
 // best go forward. Then, with no one in the loop:
 //
+//   research (optional) every agent researches the problem alone (the web,
+//           if its research command allows it, read-only; else what it
+//           knows) and brings a few findings with sources and one surprise.
+//           "shared": every agent then sees everyone's notes, without names;
+//           "own": each sees only its own (to compare the two).
 //   ideas   every agent proposes N ideas, alone, after reading the context
-//           folder if there is one.
+//           folder if there is one, and the research notes it may see.
 //   vote    every agent scores the other agents' ideas from 1 to 10, without
 //           names and in its own shuffled order; it never sees its own.
 //   build   every agent develops the top K ideas, alone, in its own git branch
@@ -30,7 +35,7 @@ const AGENTS_FILE = () => process.env.BRAINSTORM_AGENTS
   || [path.join(os.homedir(), '.agent-dispatch', 'brainstorm-agents.json')].find(f => fs.existsSync(f))
   || path.join(__dirname, 'agents.json');
 
-const PHASES = ['ideas', 'vote', 'build'];
+const PHASES = ['research', 'ideas', 'vote', 'build'];
 const MAX_REPLY = 200000;
 
 // ---- Agents ----
@@ -54,14 +59,18 @@ function loadAgents(file = AGENTS_FILE()) {
       if (!Array.isArray(a[m]) || !a[m].length) throw new Error(`${file}: agent ${a.id} has no "${m}" command`);
       refuseLoose(a[m], `agent ${a.id} ${m}`);
     }
+    if (a.research != null) {
+      if (!Array.isArray(a.research) || !a.research.length) throw new Error(`${file}: agent ${a.id}: "research" must be a command`);
+      refuseLoose(a.research, `agent ${a.id} research`);
+    }
     const model = a.model ?? (a.model_from ? main.agents.find(x => x.id === a.model_from)?.model : '') ?? '';
-    return { ...a, label: a.label || a.id, model: model || '', env: Array.isArray(a.env) ? a.env : [], available: onPath(a.read[0]) };
+    return { ...a, label: a.label || a.id, model: model || '', env: Array.isArray(a.env) ? a.env : [], web: !!(a.research && a.web), available: onPath(a.read[0]) };
   });
 }
 
 // The command, with {model} (or the flag before it dropped when there is none) and {price} filled in.
 function commandFor(agent, mode) {
-  const cmd = agent[mode].slice();
+  const cmd = (agent[mode] || (mode === 'research' ? agent.read : null)).slice();
   if (!agent.model) for (let i = cmd.length - 1; i > 0; i--) if (cmd[i] === '{model}') { cmd.splice(i - 1, 2); i--; }
   return fill(cmd.map(s => String(s).split('{price}').join(String(agent.max_price ?? 2))), '{prompt}', agent.model);
 }
@@ -107,12 +116,47 @@ const contextLine = (S, where) => S.context
   ? `The ${where} holds material for this (${S.context_kind === 'git' ? 'a copy of a git repository' : 'a copy of a folder'}). Read what you need of it.`
   : `The ${where} is empty: there is no material beyond the problem above.`;
 
-function ideasPrompt(S) {
+const MAX_NOTES = 6000;
+
+function researchPrompt(S, web) {
+  return [
+    `You are one of ${S.agents.length} AI agents, possibly from different AI labs, about to explore a problem together. First, research it, alone.`,
+    '', 'THE PROBLEM', S.problem, '',
+    contextLine(S, 'current folder'),
+    web ? 'You can search the web and read web pages. You cannot change anything.' : 'You cannot browse the web here: use what you know, and the folder.',
+    '',
+    'Bring back at most 6 findings that would help the group come up with good ideas: facts, numbers, examples of what others have done, what the people concerned need, known pitfalls. Prefer specific and checkable to general. Then one surprise: what you found that most people working on this would not expect.',
+    S.research_mode === 'shared' ? 'Every agent will read every agent\'s findings, without names, before proposing ideas.' : 'Only you will read your findings, before proposing ideas.',
+    '',
+    'Write exactly like this, and nothing else:',
+    'FINDING: one or two sentences',
+    'SOURCE: a link, a file in the folder, or "own knowledge"',
+    '(repeat for each finding)',
+    'SURPRISE: one or two sentences',
+    'SOURCE: as above',
+  ].join('\n');
+}
+
+// The research notes an agent may see: everyone's (shared, without names, shuffled) or its own.
+function notesFor(S, agentId, seed) {
+  if (!S.research || S.research_mode === 'off') return [];
+  const cut = t => { const s = anonymise(String(t).trim()); return s.length > MAX_NOTES ? s.slice(0, MAX_NOTES) + '\n[cut]' : s; };
+  if (S.research_mode === 'own') {
+    const mine = S.research[agentId];
+    return mine ? ['YOUR RESEARCH (before this step you researched the problem; only you see these notes)', cut(mine), ''] : [];
+  }
+  const all = ballot(Object.entries(S.research).filter(([, t]) => t).map(([lab, t]) => ({ lab, t })), '', `${seed}:notes:${agentId}`);
+  return all.length ? ['THE GROUP\'S RESEARCH (before this step every agent researched the problem alone; here are all the notes, without names, in a random order; yours are among them)',
+    ...all.map((n, k) => `--- Notes ${k + 1} ---\n${cut(n.t)}`), ''] : [];
+}
+
+function ideasPrompt(S, agentId = '', seed = '') {
   return [
     `You are one of ${S.agents.length} AI agents, possibly from different AI labs, asked to explore a problem together.`,
     '', 'THE PROBLEM', S.problem, '',
     contextLine(S, 'current folder'),
     '',
+    ...notesFor(S, agentId, seed),
     `Propose exactly ${S.ideas_per_agent} distinct idea${S.ideas_per_agent > 1 ? 's' : ''}. Each should address the problem well, and be something one AI agent can develop in one session by working on files in a folder (a prototype, a change to the material, a document, code), with no network.`,
     `Afterwards every agent will score every other agent's ideas, without knowing who proposed them, and the ${S.top} best will be developed by every agent, each on its own.`,
     '',
@@ -133,16 +177,48 @@ function votePrompt(S, shown) {
     '',
     ...shown.map((i, k) => `I${k + 1}. ${anonymise(i.title)}\n    What: ${anonymise(i.what)}\n    Why: ${anonymise(i.why)}`),
     '',
-    `Score every idea from 1 (would not develop it) to 10 (must develop it): how well it addresses the problem, how much it adds, and whether one agent can develop it well in one session. The ${S.top} ideas with the best average score will be developed.`,
-    'Reply with one line per idea and nothing else, like this:',
-    'I1: 7 - a reason in a few words',
+    ...(S.criteria && S.criteria.length ? [
+      `Score every idea on each of these criteria, from 1 (poor) to 10 (excellent), with one sentence on why:`,
+      ...S.criteria.map((c, k) => `C${k + 1}. ${c}`),
+      `An idea's score is the average of its criteria; the ${S.top} ideas with the best average over all agents will be developed.`,
+      'Reply with one block per idea and nothing else, like this:',
+      'I1',
+      ...S.criteria.map((_, k) => `C${k + 1}: 7 - why, in one sentence`),
+    ] : [
+      `Score every idea from 1 (would not develop it) to 10 (must develop it): how well it addresses the problem, how much it adds, and whether one agent can develop it well in one session. The ${S.top} ideas with the best average score will be developed.`,
+      'Reply with one line per idea and nothing else, like this:',
+      'I1: 7 - why, in one sentence',
+    ]),
   ].join('\n');
 }
 
-function buildPrompt(S, winners, canRun) {
+// Blocks of "I3" then "C1: 7 - why" lines. An idea's score is the mean of the criteria read (at least one).
+function parseCriteriaScores(text, count, nCrit) {
+  const out = {};
+  let cur = null;
+  for (const line of String(text).split('\n')) {
+    const i = /^[\s>*_#|-]*I(\d+)\b[*_]*\s*[:.)\-–]?\s*[*_]*(.*)$/i.exec(line);
+    const c = /^[\s>*_#|-]*C(\d+)\b[*_]*\s*[:|.)\-–]+\s*[*_]*\s*(\d{1,2})(?:\s*\/\s*10)?[*_]*\s*[|\-–:]*\s*(.*)$/i.exec(line);
+    if (i && !c) { const n = Number(i[1]); cur = n >= 1 && n <= count && !(n in out) ? (out[n] = { criteria: [] }) : null; continue; }
+    if (c && cur) {
+      const k = Number(c[1]), score = Number(c[2]);
+      if (k >= 1 && k <= nCrit && score >= 1 && score <= 10 && !cur.criteria[k - 1]) cur.criteria[k - 1] = { score, why: c[3].replace(/[*_]+/g, '').trim() };
+    }
+  }
+  const res = {};
+  for (const [n, v] of Object.entries(out)) {
+    const got = v.criteria.filter(Boolean);
+    if (!got.length) continue;
+    res[n] = { score: Math.round(got.reduce((a, b) => a + b.score, 0) / got.length * 100) / 100, why: got.map(g => g.why).filter(Boolean).join(' / '), criteria: Array.from({ length: nCrit }, (_, k) => v.criteria[k] || null) };
+  }
+  return res;
+}
+
+function buildPrompt(S, winners, canRun, agentId = '', seed = '') {
   return [
     'You are one of several AI agents, possibly from different AI labs, exploring a problem together.',
     '', 'THE PROBLEM', S.problem, '',
+    ...notesFor(S, agentId, seed),
     `In a vote among the agents, these ${winners.length} ideas came top. Develop ${winners.length > 1 ? 'all of them' : 'it'}:`,
     ...winners.map((i, k) => `${k + 1}. ${i.title}\n   What: ${i.what}\n   Why: ${i.why}`),
     '',
@@ -210,7 +286,7 @@ const slug = s => String(s).toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g,
 
 class Run {
   /**
-   * @param {{ problem: string, context?: string, agents: any[], ideas_per_agent: number, top: number, build_minutes?: number, read_minutes?: number, out: string, seed?: string }} o
+   * @param {{ problem: string, context?: string, agents: any[], ideas_per_agent: number, top: number, build_minutes?: number, read_minutes?: number, research?: string, criteria?: string[], out: string, seed?: string }} o
    */
   constructor(o) {
     const ctx = resolveContext(o.context);
@@ -222,6 +298,8 @@ class Run {
       id, problem: String(o.problem).trim(), context: ctx.src, context_kind: ctx.kind,
       agents: o.agents.map(a => ({ id: a.id, label: a.label, model: a.model || null })),
       ideas_per_agent: o.ideas_per_agent, top: o.top,
+      criteria: (o.criteria || []).map(c => String(c).trim()).filter(Boolean).slice(0, 6),
+      research_mode: ['shared', 'own'].includes(o.research || '') ? o.research : 'off', research: null,
       build_minutes: o.build_minutes ?? 30, read_minutes: o.read_minutes ?? 15,
       phase: 'setup', error: null, steps: {}, ideas: null, ballots: {}, votes: {}, ranking: null, winners: null, tie_at_cut: false, builds: null,
       dir: this.dir, started: new Date().toISOString(), finished: null,
@@ -282,9 +360,21 @@ class Run {
     const repo = path.join(this.dir, 'repo');
     setupRepo({ kind: S.context_kind, src: S.context }, repo);
 
+    // 0. Research (optional)
+    if (S.research_mode !== 'off') {
+      S.phase = 'research'; S.research = {}; this.save();
+      await Promise.all(A.map(async a => {
+        const text = await this.step(`research/${a.id}`, a, 'research', researchPrompt(S, !!a.web), repo, readMs);
+        S.research[a.id] = text || '';
+      }));
+      if (this.stopped) return;
+      fs.writeFileSync(path.join(this.dir, 'research.md'), A.map(a => `# ${a.label}\n\n${S.research[a.id] || '(nothing)'}\n`).join('\n'));
+      this.save();
+    }
+
     // 1. Ideas
     S.phase = 'ideas'; this.save();
-    const replies = await Promise.all(A.map(a => this.step(`ideas/${a.id}`, a, 'read', ideasPrompt(S), repo, readMs)));
+    const replies = await Promise.all(A.map(a => this.step(`ideas/${a.id}`, a, 'read', ideasPrompt(S, a.id, this.seed), repo, readMs)));
     if (this.stopped) return;
     const ideas = [];
     A.forEach((a, k) => parseIdeas(replies[k] || '').slice(0, S.ideas_per_agent)
@@ -301,7 +391,7 @@ class Run {
       if (!shown.length) return;
       S.ballots[a.id] = shown.map(i => i.id);
       const text = await this.step(`vote/${a.id}`, a, 'read', votePrompt(S, shown), repo, readMs);
-      const got = parseScores(text || '', 'I', shown.length);
+      const got = S.criteria.length ? parseCriteriaScores(text || '', shown.length, S.criteria.length) : parseScores(text || '', 'I', shown.length);
       S.votes[a.id] = Object.fromEntries(Object.entries(got).map(([n, s]) => [shown[Number(n) - 1].key, s]));
     }));
     if (this.stopped) return;
@@ -321,7 +411,7 @@ class Run {
     await Promise.all(A.map(async a => {
       const wt = path.join(this.dir, 'build', a.id);
       if (!fs.existsSync(wt)) git(repo, 'worktree', 'add', '-q', '-b', `brainstorm/${a.id}`, wt, base);
-      const text = await this.step(`build/${a.id}`, a, 'build', buildPrompt(S, winners, !!a.can_run), wt, S.build_minutes * 60000);
+      const text = await this.step(`build/${a.id}`, a, 'build', buildPrompt(S, winners, !!a.can_run, a.id, this.seed), wt, S.build_minutes * 60000);
       git(wt, 'add', '-A');
       if (git(wt, 'status', '--porcelain')) git(wt, ...BOT, 'commit', '-q', '-m', `brainstorm: ${a.label} develops ${winners.map(i => i.title).join(' + ')}`);
       const stat = git(wt, 'diff', '--numstat', base, 'HEAD').split('\n').filter(Boolean).map(s => s.split('\t'));
@@ -347,6 +437,8 @@ function pastRuns(out) {
 }
 
 // A tiny read and a tiny write per agent, in a scratch folder, to see that its commands work.
+const WEB_PROBE = process.env.BRAINSTORM_WEB_PROBE || 'https://example.com';
+
 async function checkAgents(agents) {
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'brainstorm-check-'));
   const children = new Set();
@@ -360,11 +452,14 @@ async function checkAgents(agents) {
       const w = await runOnce(cheap, 'build', 'Create a file named hello.txt in the current folder containing exactly the word hi. Do nothing else.', d, 5 * 60000, { out: '', err: '' }, children);
       const read = /pineapple/i.test(r.text || '');
       const wrote = fs.existsSync(path.join(d, 'hello.txt')) && /hi/i.test(fs.readFileSync(path.join(d, 'hello.txt'), 'utf8'));
-      const why = !read ? `read: ${r.why || 'wrong reply'}` : !wrote ? `write: ${w.why || 'no file'}` : null;
-      const tail = why ? stripAnsi((r.err || w.err || r.text || w.text || '').trim()).split('\n').slice(-3).join('\n') : '';
-      return { id: a.id, read, wrote, why, tail };
+      // With a research command that reaches the web: one page, read-only.
+      const g = a.web ? await runOnce(cheap, 'research', `Open the web page ${WEB_PROBE} and reply with its main heading, nothing else.`, d, 5 * 60000, { out: '', err: '' }, children) : null;
+      const web = g ? /example domain/i.test(g.text || '') : null;
+      const why = !read ? `read: ${r.why || 'wrong reply'}` : !wrote ? `write: ${w.why || 'no file'}` : web === false ? `web: ${g?.why || 'wrong reply'}` : null;
+      const tail = why ? stripAnsi(((web === false ? g?.err || g?.text : '') || r.err || w.err || r.text || w.text || '').trim()).split('\n').slice(-3).join('\n') : '';
+      return { id: a.id, read, wrote, web, why, tail };
     }));
   } finally { fs.rmSync(scratch, { recursive: true, force: true }); }
 }
 
-module.exports = { PHASES, AGENTS_FILE, loadAgents, commandFor, resolveContext, ideasPrompt, votePrompt, buildPrompt, Run, pastRuns, checkAgents, slug };
+module.exports = { PHASES, AGENTS_FILE, loadAgents, commandFor, resolveContext, researchPrompt, notesFor, ideasPrompt, votePrompt, parseCriteriaScores, buildPrompt, Run, pastRuns, checkAgents, slug };

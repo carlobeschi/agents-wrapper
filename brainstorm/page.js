@@ -26,7 +26,7 @@
     return data;
   }
 
-  const PH = { setup: 'Getting ready', ideas: 'Ideas', vote: 'Vote', build: 'Build', done: 'Done', failed: 'Stopped by an error', stopped: 'Stopped' };
+  const PH = { setup: 'Getting ready', research: 'Research', ideas: 'Ideas', vote: 'Vote', build: 'Build', done: 'Done', failed: 'Stopped by an error', stopped: 'Stopped' };
   const ago = ms => ms == null ? '' : ms < 60000 ? `${Math.round(ms / 1000)} s` : `${Math.round(ms / 6000) / 10} min`;
 
   // ---- Runs list ----
@@ -49,13 +49,20 @@
     const boxes = info.agents.map(a => {
       const cb = h('input', { type: 'checkbox', value: a.id, disabled: !a.available });
       cb.checked = a.available && (saved.agents ? saved.agents.includes(a.id) : true);
-      return h('label', { class: 'agent' + (a.available ? '' : ' off') }, cb, h('span', {}, a.label, ' ', h('small', {}, a.available ? (a.model || 'default model') : 'not installed')));
+      return h('label', { class: 'agent' + (a.available ? '' : ' off') }, cb, h('span', {}, a.label, ' ', h('small', {}, a.available ? `${a.model || 'default model'}${a.web ? ' · web' : ''}` : 'not installed')));
     });
     const num = (id, v, min, max) => { const i = h('input', { type: 'number', id, min, max }); i.value = String(v); return i; };
     const ideas = num('ideas', saved.ideas_per_agent || 3, 1, 10), top = num('top', saved.top || 2, 1, 10), mins = num('mins', saved.build_minutes || 30, 1, 180);
+    const research = h('select', { id: 'research' },
+      h('option', { value: 'off' }, 'No: start from the ideas'),
+      h('option', { value: 'shared' }, 'Yes, and everyone reads everyone\'s findings'),
+      h('option', { value: 'own' }, 'Yes, but each agent keeps its own findings'));
+    research.value = saved.research || 'off';
+    const criteria = h('textarea', { id: 'criteria', rows: '3', style: 'min-height:80px', placeholder: 'One per line, for example:\nValue for the people who will use it\nCan be built well in the time given\nOriginality' });
+    criteria.value = saved.criteria || '';
     const msg = h('span', { class: 'msg' }), checkOut = h('div', { class: 'note' });
     const read = () => ({ problem: problem.value, context: context.value, agents: boxes.map(b => b.querySelector('input')).filter(i => i.checked).map(i => i.value),
-      ideas_per_agent: Number(ideas.value), top: Number(top.value), build_minutes: Number(mins.value) });
+      ideas_per_agent: Number(ideas.value), top: Number(top.value), build_minutes: Number(mins.value), research: research.value, criteria: criteria.value });
     const go = h('button', { class: 'go', onclick: async () => {
       const body = read();
       try { localStorage.setItem('brainstorm-form', JSON.stringify(body)); } catch {}
@@ -66,7 +73,7 @@
       test.disabled = true; checkOut.textContent = 'Asking each agent to read one file and write one file… (up to a few minutes)';
       try {
         const { results } = await call('POST', '/api/check', { agents: read().agents });
-        checkOut.replaceChildren(...results.map(r => h('div', {}, `${r.id}: ${r.why ? '✗ ' + r.why : '✓ reads and writes'}`, r.tail ? h('pre', {}, r.tail) : null)));
+        checkOut.replaceChildren(...results.map(r => h('div', {}, `${r.id}: ${r.why ? '✗ ' + r.why : `✓ reads and writes${r.web ? ', and reads the web' : ''}`}`, r.tail ? h('pre', {}, r.tail) : null)));
       } catch (e) { checkOut.textContent = e.message; }
       test.disabled = false;
     } }, 'Test the agents first');
@@ -74,6 +81,8 @@
       h('label', { for: 'problem' }, 'The problem ', h('small', {}, 'what you want explored')), problem,
       h('label', { for: 'context' }, 'Context ', h('small', {}, 'a folder on this computer or a git link the agents can read; they work on a copy')), context,
       h('label', {}, 'Agents ', h('small', {}, `from ${info.file}`)), h('div', { class: 'agents' }, boxes),
+      h('label', { for: 'research' }, 'Research first? ', h('small', {}, 'each agent looks into the problem alone (the web where it can, read-only) and brings a few findings with sources')), research,
+      h('label', { for: 'criteria' }, 'Voting criteria ', h('small', {}, 'optional: each agent scores every idea on each one, with a sentence why; leave empty for a single score with a reason')), criteria,
       h('div', { class: 'row' },
         h('div', {}, h('label', { for: 'ideas' }, 'Ideas per agent'), ideas),
         h('div', {}, h('label', { for: 'top' }, 'Ideas to carry forward'), top),
@@ -110,17 +119,35 @@
       st && st.status !== 'running' && st.live && st.live.err ? h('details', { 'data-k': name + ':err' }, h('summary', {}, 'what the agent printed while working'), h('pre', {}, st.live.err)) : null);
   }
 
+  // One agent's vote on one idea: the score, then why (per criterion when there are criteria).
+  function voteCell(S, v) {
+    const crit = S.criteria && S.criteria.length && v.criteria;
+    return h('div', {}, h('b', {}, String(Math.round(v.score * 10) / 10)),
+      crit ? v.criteria.map((c, k) => c ? h('div', { class: 'why' }, `${S.criteria[k]}: ${c.score}. ${c.why}`) : null)
+        : v.why ? h('div', { class: 'why' }, v.why) : null);
+  }
+
   function render(S) {
-    const order = ['ideas', 'vote', 'build', 'done'];
-    const at = S.phase === 'done' ? 3 : order.indexOf(S.phase);
+    const R = S.research_mode && S.research_mode !== 'off';
+    const names = [...(S.research_mode && S.research_mode !== 'off' ? ['Research'] : []), 'Ideas', 'Vote', 'Build', 'Done'];
+    const at = S.phase === 'done' ? names.length - 1 : names.map(n => n.toLowerCase()).indexOf(S.phase);
     const kids = [
-      h('div', { class: 'phases' }, ['Ideas', 'Vote', 'Build', 'Done'].map((p, k) => h('span', { class: 'ph' + (k < at || S.phase === 'done' ? ' past' : k === at ? ' now' : '') }, p)),
+      h('div', { class: 'phases' }, names.map((p, k) => h('span', { class: 'ph' + (k < at || S.phase === 'done' ? ' past' : k === at ? ' now' : '') }, p)),
         ['failed', 'stopped'].includes(S.phase) ? h('span', { class: 'ph now' }, PH[S.phase]) : null),
       S.error ? h('p', { class: 'msg' }, S.error) : null,
       h('div', { class: 'problem' }, S.problem),
-      h('p', { class: 'note' }, `${S.agents.map(a => a.label + (a.model ? ` (${a.model})` : '')).join(', ')} · ${S.ideas_per_agent} ideas each · ${S.top} carried forward · ${S.context ? 'context: ' + S.context : 'no context'} · folder: ${S.dir}`),
+      h('p', { class: 'note' }, `${S.agents.map(a => a.label + (a.model ? ` (${a.model})` : '')).join(', ')} · ${S.ideas_per_agent} ideas each · ${S.top} carried forward · ${R ? 'research ' + S.research_mode + ' · ' : ''}${S.criteria && S.criteria.length ? 'criteria: ' + S.criteria.join('; ') + ' · ' : ''}${S.context ? 'context: ' + S.context : 'no context'} · folder: ${S.dir}`),
       ['done', 'failed', 'stopped'].includes(S.phase) ? null : h('button', { onclick: async () => { await call('POST', `/api/runs/${encodeURIComponent(S.id)}/stop`); } }, 'Stop this run'),
     ];
+
+    // Research
+    if (R) {
+      kids.push(h('h2', {}, '0. Research'), h('p', { class: 'note' }, S.research_mode === 'shared' ? 'Every agent then read everyone\'s findings, without names.' : 'Each agent then saw only its own findings.'));
+      kids.push(h('div', { class: 'cards' }, S.agents.map(a => {
+        const t = S.research && S.research[a.id];
+        return stepCard(S, `research/${a.id}`, a.label, t ? h('details', { 'data-k': 'r:' + a.id }, h('summary', {}, `${(t.match(/^\W*FINDING/gim) || []).length} findings`), h('pre', {}, t)) : null);
+      })));
+    }
 
     // Ideas
     kids.push(h('h2', {}, '1. Ideas'), h('div', { class: 'cards' }, S.agents.map(a => {
@@ -132,7 +159,7 @@
     })));
 
     // Vote
-    if (S.phase !== 'ideas' && S.ideas) {
+    if (!['research', 'ideas'].includes(S.phase) && S.ideas) {
       kids.push(h('h2', {}, '2. Vote'), h('p', { class: 'note' }, 'Each agent scored the others\' ideas from 1 to 10, without names, in its own order. It never saw its own.'));
       kids.push(h('div', { class: 'cards' }, S.agents.map(a => stepCard(S, `vote/${a.id}`, a.label, S.steps[`vote/${a.id}`] && S.steps[`vote/${a.id}`].status === 'done' ? h('div', { class: 'note' }, `${Object.keys(S.votes[a.id] || {}).length} of ${(S.ballots[a.id] || []).length} scores read`) : null))));
       if (S.ranking) {
@@ -141,9 +168,7 @@
           S.ranking.map((r, k) => h('tr', { class: S.winners.includes(r.id) ? 'win' : '' },
             h('td', {}, String(k + 1), S.winners.includes(r.id) ? ' ✓' : ''), h('td', {}, r.title), h('td', {}, label(S, r.agent)),
             h('td', {}, r.mean == null ? '–' : r.mean.toFixed(1)),
-            S.agents.map(a => h('td', { title: (r.by[a.id] || {}).why || '' }, a.id === r.agent ? 'own' : r.by[a.id] ? String(r.by[a.id].score) : '–'))))));
-        kids.push(h('details', { 'data-k': 'reasons' }, h('summary', {}, 'the reasons given'), h('ul', {},
-          S.ranking.flatMap(r => Object.entries(r.by).map(([v, s]) => h('li', {}, `${label(S, v)} on "${r.title}": ${s.score}, ${s.why}`))))));
+            S.agents.map(a => h('td', {}, a.id === r.agent ? 'own' : r.by[a.id] ? voteCell(S, r.by[a.id]) : '–'))))));
         kids.push(h('p', { class: 'note' }, '✓ = carried forward: every agent builds these.', S.tie_at_cut ? ' There was a tie at the cut: it was broken by lot.' : ''));
       }
     }

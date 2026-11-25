@@ -14,6 +14,10 @@ process.stdin.on('end', () => {
     fs.writeFileSync('BRAINSTORM.md', `built by ${name} home ${require('path').basename(process.env.HOME || '')}\n`);
     return console.log(`WHAT I BUILT: a plan, by ${name} (Claude).\nHOW TO SEE IT: open plan-${name}.md\nNOT DONE: nothing`);
   }
+  if (mode === 'research') {
+    if (/Open the web page/.test(p)) return console.log('Example Domain');
+    return console.log(`FINDING: ${name} fact one\nSOURCE: own knowledge\nFINDING: ${name} fact two\nSOURCE: notes.md\nSURPRISE: ${name} surprise\nSOURCE: own knowledge`);
+  }
   if (/word\.txt/.test(p)) return console.log(fs.readFileSync('word.txt', 'utf8'));
   if (/Propose exactly (\d+)/.test(p)) {
     const n = Number(/Propose exactly (\d+)/.exec(p)[1]);
@@ -22,6 +26,9 @@ process.stdin.on('end', () => {
   }
   if (/Score every idea/.test(p)) {
     const lines = p.split('\n').filter(l => /^I\d+\. /.test(l));
+    const crit = p.split('\n').filter(l => /^C\d+\. /.test(l)).length;
+    // With criteria: a block per idea; the first criterion carries the preference, the others get 5.
+    if (crit) return console.log(lines.map(l => { const n = l.match(/^I(\d+)/)[1]; const s = /idea 2/.test(l) ? 9 : /idea 1/.test(l) ? 6 : 3; return [`**I${n}**`, ...Array.from({ length: crit }, (_, k) => `- C${k + 1}: ${k ? 5 : s} - because ${k + 1}`)].join('\n'); }).join('\n\n'));
     return console.log(lines.map(l => { const n = l.match(/^I(\d+)/)[1]; return `I${n}: ${/idea 2/.test(l) ? 9 : /idea 1/.test(l) ? 6 : 3} - ok`; }).join('\n'));
   }
   console.log('?');
