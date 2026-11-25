@@ -54,6 +54,24 @@ function save(dir, board) {
 
 function log(dir, ev) {
   fs.appendFileSync(path.join(dir, 'events.jsonl'), JSON.stringify({ at: iso(now()), ...ev }) + '\n');
+  snapshot(dir, ev);
+}
+
+// A git snapshot of work/ at every event, in <dir>/snap.git (outside work/,
+// so the agents do not see it): which lines each worker touched, and what
+// changed between an acceptance and a break. Made at init when git is there;
+// without it the desk runs the same, with no snapshots. Never pushed. With
+// several workers at once, a snapshot taken at one worker's event can hold
+// another's unfinished edits: attribution is by event, not by keystroke.
+function snapshot(dir, ev) {
+  const gitDir = path.join(dir, 'snap.git');
+  if (!fs.existsSync(gitDir)) return;
+  const git = a => execFileSync('git', ['--git-dir', gitDir, '--work-tree', path.join(dir, 'work'), '-c', 'user.name=desk', '-c', 'user.email=desk@localhost', '-c', 'commit.gpgsign=false', ...a], { stdio: 'ignore' });
+  const who = ev.worker || ev.by;
+  try {
+    git(['add', '-A']);
+    git(['commit', '-q', '--allow-empty', '--no-verify', '-m', [ev.ev, ev.task, who].filter(Boolean).join(' '), ...(who ? ['--author', `${who} <${who}@desk>`] : [])]);
+  } catch { /* a snapshot is a record, never a reason to stop the desk */ }
 }
 
 // A lease ends lease_seconds after the last renewal, and never more than
@@ -287,6 +305,10 @@ function init(dir, from) {
     if (!a.startsWith(path.resolve(dir) + path.sep) || !b.startsWith(path.resolve(dir, 'work') + path.sep)) die(`work_files: ${to} must stay inside the run folder`);
     fs.cpSync(a, b, { recursive: true });
   }
+  try {
+    execFileSync('git', ['--git-dir', path.join(dir, 'snap.git'), 'init', '-q'], { stdio: 'ignore' });
+    fs.writeFileSync(path.join(dir, 'snap.git', 'info', 'exclude'), [...Object.keys(goal.work_files || {}), '.nwave/'].map(x => `/${x}`).join('\n') + '\n');
+  } catch { fs.rmSync(path.join(dir, 'snap.git'), { recursive: true, force: true }); }
   console.log(`Ready: ${dir}. Next: node desk.js serve ${dir}`);
 }
 

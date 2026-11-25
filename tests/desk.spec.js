@@ -63,6 +63,16 @@ test('two workers borrow every task in dependency order and the checks accept th
     expect(board.tasks.map(t => t.status)).toEqual(['done', 'done', 'done', 'done', 'done', 'done']);
     expect(board.spent_usd).toBeCloseTo(0.6);
 
+    // A git snapshot of work/ per event, outside work/, by the worker named.
+    const snaps = execFileSync('git', ['--git-dir', path.join(d.dir, 'snap.git'), 'log', '--format=%an|%s'], { encoding: 'utf8' }).trim().split('\n');
+    const nEvents = fs.readFileSync(path.join(d.dir, 'events.jsonl'), 'utf8').trim().split('\n').length;
+    expect(snaps.length).toBe(nEvents);
+    expect(snaps.some(s => /^w[12]\|leased t1 w[12]$/.test(s))).toBe(true);
+    expect(snaps.some(s => /^w[12]\|accepted t6 w[12]$/.test(s))).toBe(true);
+    expect(fs.existsSync(path.join(d.dir, 'work', '.git'))).toBe(false);
+    const files = execFileSync('git', ['--git-dir', path.join(d.dir, 'snap.git'), 'ls-tree', '-r', '--name-only', 'HEAD'], { encoding: 'utf8' });
+    expect(files).toContain('sheet.js');
+
     // A task that needs others is never lent before they are accepted.
     const evs = fs.readFileSync(path.join(d.dir, 'events.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
     const at = (ev, task) => evs.findIndex(e => e.ev === ev && e.task === task);
@@ -307,4 +317,47 @@ test('JSON Schema mini plain: the same round with a goal that says nothing about
   expect(plain.goal).not.toMatch(/README|agree|structure|Several workers/);
   expect(plain.tasks).toEqual(mini.tasks);
   expect(plain.settings).toEqual(mini.settings);
+});
+
+test('overlap round: contract tasks open from the start, and every keyword is judged in the contracts validate.js offers', () => {
+  const goal = JSON.parse(fs.readFileSync(path.join(ROOT, 'examples', 'desk', 'jsonschema-overlap', 'goal.json'), 'utf8'));
+  const byId = Object.fromEntries(goal.tasks.map(t => [t.id, t]));
+  for (const id of ['errors', 'strict', 'compile']) {
+    expect(byId[id].needs).toEqual(['core']);
+    expect(byId[id].check).toContain(`--require=${id}`);
+    expect(byId[id].check).toContain('--only-working');
+  }
+  expect(byId.enum.check).toContain('--contracts');
+  expect(byId.all.needs).toEqual(expect.arrayContaining(['errors', 'strict', 'compile', 'enum']));
+  expect(goal.settings.final_check).toContain('--require=errors,strict,compile');
+  expect(goal.goal).not.toMatch(/README|agree|Several workers/);
+
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'desk-overlap-'));
+  const dir = path.join(tmp, 'run');
+  execFileSync('node', [DESK, 'init', dir, '--from', path.join(ROOT, 'examples', 'desk', 'jsonschema-overlap')]);
+  const work = path.join(dir, 'work');
+  const ref = fs.readFileSync(path.join(__dirname, 'fixtures', 'desk-jsonschema-ref', 'validate.js'), 'utf8');
+  const judge = id => { try { return { ok: true, out: execFileSync(byId[id].check[0], byId[id].check.slice(1), { cwd: work, encoding: 'utf8' }) }; } catch (e) { return { ok: false, out: String(e.stdout) }; } };
+
+  // The reference offers all three contracts and passes every task.
+  fs.writeFileSync(path.join(work, 'validate.js'), ref);
+  for (const t of goal.tasks) expect(judge(t.id).ok, `${t.id}: ${judge(t.id).out}`).toBe(true);
+  expect(judge('enum').out).toContain('Contracts judged: errors, strict, compile');
+
+  // Without compile: the compile task fails, the keyword tasks do not.
+  fs.writeFileSync(path.join(work, 'validate.js'), ref.replace('module.exports = { validate, compile };', 'module.exports = { validate };'));
+  expect(judge('compile').ok).toBe(false);
+  expect(judge('compile').out).toContain('does not offer');
+  expect(judge('enum').ok).toBe(true);
+
+  // A keyword that ignores the errors contract fails its own task once errors exists.
+  fs.writeFileSync(path.join(work, 'validate.js'), ref.replace("if (out) out.push({ keyword: k, instancePath: path }); else return false;", "if (out && k !== 'enum') out.push({ keyword: k, instancePath: path }); else if (!out) return false;"));
+  expect(judge('enum').ok).toBe(false);
+  expect(judge('enum').out).toContain('no error names a keyword');
+  expect(judge('type').ok).toBe(true);
+
+  // A contract task judges only cases plain validate already gets right.
+  fs.writeFileSync(path.join(work, 'validate.js'), ref.replace('enum: (v, d) => v.some(x => equal(x, d)),', 'enum: () => true,'));
+  expect(judge('errors').ok).toBe(true);
+  expect(judge('errors').out).toMatch(/cases plain validate does not get right yet/);
 });
