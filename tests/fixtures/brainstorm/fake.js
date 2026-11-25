@@ -7,8 +7,11 @@ process.stdin.on('data', c => { p += c; });
 process.stdin.on('end', () => {
   if (mode === 'build') {
     if (/hello\.txt/.test(p)) { fs.writeFileSync('hello.txt', 'hi'); return console.log('done'); }
+    // Agent b fails once, before touching anything, as a provider error would.
+    const mark = require('path').join(require('os').tmpdir(), `bs-fake-${require('crypto').createHash('md5').update(process.cwd()).digest('hex')}`);
+    if (name === 'b' && !fs.existsSync(mark)) { fs.writeFileSync(mark, 'x'); console.error('provider error'); process.exit(2); }
     fs.writeFileSync(`plan-${name}.md`, `# ${name}\n`);
-    fs.writeFileSync('BRAINSTORM.md', `built by ${name}\n`);
+    fs.writeFileSync('BRAINSTORM.md', `built by ${name} home ${require('path').basename(process.env.HOME || '')}\n`);
     return console.log(`WHAT I BUILT: a plan, by ${name} (Claude).\nHOW TO SEE IT: open plan-${name}.md\nNOT DONE: nothing`);
   }
   if (/word\.txt/.test(p)) return console.log(fs.readFileSync('word.txt', 'utf8'));

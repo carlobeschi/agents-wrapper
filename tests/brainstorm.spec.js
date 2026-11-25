@@ -22,7 +22,7 @@ test.beforeAll(async () => {
   ctx = path.join(home, 'context');
   fs.mkdirSync(ctx);
   fs.writeFileSync(path.join(ctx, 'notes.md'), 'some notes\n');
-  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [fake('a'), fake('b'), fake('c'), { id: 'gone', read: ['no-such-agent-binary'], build: ['no-such-agent-binary'] }] }));
+  fs.writeFileSync(path.join(home, 'agents.json'), JSON.stringify({ agents: [fake('a'), { ...fake('b'), clean_home: true }, fake('c'), { id: 'gone', read: ['no-such-agent-binary'], build: ['no-such-agent-binary'] }] }));
   server = spawn('node', [path.join(__dirname, '..', 'brainstorm', 'server.js')], {
     env: { ...process.env, BRAINSTORM_PORT: String(PORT), BRAINSTORM_OUT: out, BRAINSTORM_AGENTS: path.join(home, 'agents.json'), AGENT_DISPATCH_CONFIG: path.join(home, 'none.json') },
     stdio: ['ignore', 'pipe', 'inherit'],
@@ -102,7 +102,10 @@ test('a whole brainstorm from the page: ideas, anonymous vote, every agent build
   expect(vp).not.toMatch(/\ba idea/);
   expect(S.builds.a.files.map(f => f.path).sort()).toEqual(['BRAINSTORM.md', 'plan-a.md']);
   expect(S.builds.a.report).toContain('WHAT I BUILT');
+  // b failed once before changing anything, was tried again, and ran with an empty home of its own.
   expect(fs.readFileSync(path.join(S.dir, 'patches', 'b.patch'), 'utf8')).toContain('plan-b.md');
+  expect(fs.readFileSync(path.join(S.dir, 'patches', 'b.patch'), 'utf8')).toContain('home brainstorm-home-b');
+  expect(fs.readFileSync(path.join(S.dir, 'patches', 'a.patch'), 'utf8')).not.toContain('home brainstorm-home');
   // The context folder itself is untouched: the agents worked on a copy.
   expect(fs.readdirSync(ctx)).toEqual(['notes.md']);
   // Files outside the run are not served.

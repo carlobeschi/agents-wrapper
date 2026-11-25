@@ -79,7 +79,11 @@ function runOnce(agent, mode, prompt, cwd, ms, live, children) {
     let child;
     try {
       noteCall(bin);
-      child = spawn(bin, args, { cwd, env: agentEnv(agent.env), shell: false, detached: true, stdio: [viaArg ? 'ignore' : 'pipe', 'pipe', 'pipe'] });
+      // "clean_home": the agent gets an empty home folder of its own, so it loads none of
+      // the user's skills, plugins or settings (Vibe reads ~/.agents/skills, for one).
+      const env = agentEnv(agent.env);
+      if (agent.clean_home) { env.HOME = path.join(os.tmpdir(), `brainstorm-home-${agent.id}`); fs.mkdirSync(env.HOME, { recursive: true, mode: 0o700 }); }
+      child = spawn(bin, args, { cwd, env, shell: false, detached: true, stdio: [viaArg ? 'ignore' : 'pipe', 'pipe', 'pipe'] });
       if (!viaArg && child.stdin) { child.stdin.on('error', () => {}); child.stdin.end(prompt); }
     } catch (e) { return resolve({ text: '', why: e.message, err: '', ms: 0 }); }
     children.add(child);
@@ -242,7 +246,9 @@ class Run {
     fs.writeFileSync(base + '.prompt.md', prompt);
     const st = this.S.steps[name] = { agent: agent.id, mode, status: 'running', started: Date.now(), ms: null, why: null, reply: '', live: { out: '', err: '' } };
     let r = await runOnce(agent, mode, prompt, cwd, ms, st.live, this.children);
-    if (r.why && r.why !== 'timed out' && mode !== 'build' && !this.stopped) {
+    // A build is tried again only if it failed (not ran out of time) before changing anything.
+    const untouched = () => { try { return !git(cwd, 'status', '--porcelain'); } catch { return false; } };
+    if (r.why && r.why !== 'timed out' && !this.stopped && (mode !== 'build' || untouched())) {
       st.live = { out: '', err: '' };
       r = await runOnce(agent, mode, prompt, cwd, ms, st.live, this.children);
     }

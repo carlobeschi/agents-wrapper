@@ -1,5 +1,5 @@
 {
-  "_about": "The agents the brainstorm app can use. Copy this file to ~/.agent-dispatch/brainstorm-agents.json (or point BRAINSTORM_AGENTS at a file) to add your own. Each agent has two commands: \"read\" may only read files in its folder (ideas and votes), \"build\" may also edit them (building the winning ideas). The prompt goes on stdin unless a command has {prompt}. {model} is filled from \"model\", or from the agent \"model_from\" names in agents.json; with no model, the flag before {model} is dropped. {price} is \"max_price\". Commands with flags that loosen permissions are refused.",
+  "_about": "The agents the brainstorm app can use. Copy this file to ~/.agent-dispatch/brainstorm-agents.json (or point BRAINSTORM_AGENTS at a file) to add your own. Each agent has two commands: \"read\" may only read files in its folder (ideas and votes), \"build\" may also edit them (building the winning ideas). The prompt goes on stdin unless a command has {prompt}. {model} is filled from \"model\", or from the agent \"model_from\" names in agents.json; with no model, the flag before {model} is dropped. {price} is \"max_price\". \"clean_home\": true runs the agent with an empty home folder, so it loads none of the user's own skills or settings. Commands with flags that loosen permissions are refused.",
   "agents": [
     {
       "id": "claude", "label": "Claude", "model_from": "claude", "env": ["ANTHROPIC_API_KEY", "CLAUDE_CONFIG_DIR"],
@@ -17,7 +17,7 @@
       "build": ["agy", "--model", "{model}", "--sandbox", "--settings", "{\"toolPermission\":\"request-review\",\"allowNonWorkspaceAccess\":false,\"enableTerminalSandbox\":true,\"permissions\":{\"allow\":[\"read_file(*)\",\"write_file(*)\"],\"deny\":[\"command(*)\",\"mcp(*)\",\"read_url(*)\",\"execute_url(*)\",\"download_url(*)\"]}}", "--disable-slash-commands", "-p", "{prompt}"]
     },
     {
-      "id": "mistral", "label": "Mistral", "env": ["MISTRAL_API_KEY", "VIBE_HOME"], "max_price": 2,
+      "id": "mistral", "label": "Mistral", "env": ["MISTRAL_API_KEY"], "max_price": 2, "clean_home": true,
       "read":  ["vibe", "--prompt", "{prompt}", "--model", "{model}", "--enabled-tools", "read_file", "--max-price", "{price}", "--output", "text"],
       "build": ["vibe", "--prompt", "{prompt}", "--model", "{model}", "--enabled-tools", "read_file", "--enabled-tools", "write_file", "--enabled-tools", "search_replace", "--max-price", "{price}", "--output", "text"]
     }
