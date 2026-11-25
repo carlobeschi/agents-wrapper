@@ -41,7 +41,14 @@ function site() {
   fs.writeFileSync(path.join(repo, 'README.md'), 'site\n');
   sh(repo, 'add', '.'); sh(repo, 'commit', '-q', '-m', 'start'); sh(repo, 'push', '-q', 'origin', 'main');
   const gh = path.join(root, 'gh');
-  fs.writeFileSync(gh, `#!/bin/sh\nprintf '%s\\n' "$@" > "${root}/gh-args"\necho https://example.test/pr/1\n`, { mode: 0o755 });
+  fs.writeFileSync(gh, `#!/bin/sh
+if [ "$1" = "pr" ] && [ "$2" = "list" ]; then
+  if [ -f "${root}/open-pr" ]; then cat "${root}/open-pr"; fi
+  exit 0
+fi
+printf '%s\\n' "$@" > "${root}/gh-args"
+echo https://example.test/pr/1
+`, { mode: 0o755 });
   return { root, origin, repo, gh };
 }
 
@@ -92,6 +99,48 @@ test('scrubs private terms from the title, body and commit message', () => {
   const message = sh(s.origin, 'log', '-1', '--format=%B', 'episode/1');
   for (const t of terms) { expect(args).not.toContain(t); expect(message).not.toContain(t); }
   expect(args).toContain('Episode for [redacted]');
+});
+
+test('resumes when PR creation succeeded remotely but the command failed', () => {
+  const s = site();
+  fs.writeFileSync(s.gh, `#!/bin/sh
+if [ "$1" = "pr" ] && [ "$2" = "list" ]; then
+  if [ -f "${s.root}/open-pr" ]; then cat "${s.root}/open-pr"; fi
+  exit 0
+fi
+if [ -f "${s.root}/created" ]; then exit 2; fi
+touch "${s.root}/created"
+echo https://example.test/pr/1 > "${s.root}/open-pr"
+exit 1
+`, { mode: 0o755 });
+  const options = {
+    repo: s.repo, github: 'o/r', branch: 'episode/1', gh: s.gh, terms,
+    files: [{ rel: 'e.md', text: 'fine' }],
+    title: 'Episode 1', body: 'ok', commit: 'Episode 1',
+  };
+  expect(() => withBareRepositoryAllowed(() => openGuardedPullRequest(options))).toThrow();
+  const firstCommit = sh(s.origin, 'rev-parse', 'episode/1');
+  const url = withBareRepositoryAllowed(() => openGuardedPullRequest(options));
+  expect(url).toBe('https://example.test/pr/1');
+  expect(sh(s.origin, 'rev-parse', 'episode/1')).toBe(firstCommit);
+});
+
+test('refuses to overwrite a remote branch with different content', () => {
+  const s = site();
+  sh(s.repo, 'checkout', '-b', 'episode/1');
+  fs.writeFileSync(path.join(s.repo, 'other.md'), 'different publication\n');
+  sh(s.repo, 'add', 'other.md');
+  sh(s.repo, 'commit', '-q', '-m', 'other publication');
+  sh(s.repo, 'push', '-q', 'origin', 'episode/1');
+  sh(s.repo, 'checkout', 'main');
+  const original = sh(s.origin, 'rev-parse', 'episode/1');
+  expect(() => withBareRepositoryAllowed(() => openGuardedPullRequest({
+    repo: s.repo, github: 'o/r', branch: 'episode/1', gh: s.gh, terms,
+    files: [{ rel: 'e.md', text: 'fine' }],
+    title: 'Episode 1', body: 'ok', commit: 'Episode 1',
+  }))).toThrow(/refusing to overwrite/);
+  expect(sh(s.origin, 'rev-parse', 'episode/1')).toBe(original);
+  expect(fs.existsSync(path.join(s.root, 'gh-args'))).toBe(false);
 });
 
 test('the guard always knows the home folder and user name', () => {

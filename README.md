@@ -260,6 +260,8 @@ Env: `AGENT_DISPATCH_PORT` (8787), `AGENT_DISPATCH_HOME` (`~/.agent-dispatch`), 
 
 Everything that goes public is one pull request: an episode file on a show repo, or a code change here. To take it back, revert that pull request on GitHub; the site rebuilds on its own. Nothing here has a database. A Motion episode that was held is not published: its file and the reason stay on the show repo's `queue` branch.
 
+If publication stops after pushing its branch, rerun it with the same inputs: a matching branch is reused and an already-open pull request is returned. A branch with different content is left untouched rather than force-pushed.
+
 ## Tests
 
 ```

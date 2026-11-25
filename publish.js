@@ -64,6 +64,10 @@ function openGuardedPullRequest({ repo, github, branch, files, title, body, comm
   if (found.size) throw new Error(`Not published: ${found.size} private term(s) still in the episode, title, body or commit. Nothing was pushed.`);
 
   git(repo, 'fetch', 'origin', 'main');
+  const remoteBranch = git(repo, 'ls-remote', '--heads', 'origin', `refs/heads/${branch}`);
+  if (remoteBranch) {
+    git(repo, 'fetch', 'origin', `refs/heads/${branch}:refs/remotes/origin/${branch}`);
+  }
   git(repo, 'checkout', '-B', branch, 'origin/main');
   for (const f of files) {
     const to = path.join(repo, f.rel);
@@ -77,7 +81,18 @@ function openGuardedPullRequest({ repo, github, branch, files, title, body, comm
     git(repo, 'checkout', '-q', '--detach', 'origin/main');
     throw new Error('Not published: the commit is not under the public identity. Nothing was pushed.');
   }
-  git(repo, 'push', '-u', 'origin', branch, '--force-with-lease');
+  if (remoteBranch) {
+    const localTree = git(repo, 'rev-parse', 'HEAD^{tree}');
+    const remoteTree = git(repo, 'rev-parse', `refs/remotes/origin/${branch}^{tree}`);
+    if (localTree !== remoteTree) {
+      throw new Error(`Not published: remote branch ${branch} has different content; refusing to overwrite it. Nothing was pushed.`);
+    }
+  } else {
+    git(repo, 'push', '-u', 'origin', branch);
+  }
+  const existingPr = execFileSync(gh, ['pr', 'list', '--repo', github, '--head', branch, '--base', 'main',
+    '--state', 'open', '--json', 'url', '--jq', '.[0].url // empty'], { cwd: repo, encoding: 'utf8' }).trim();
+  if (existingPr) return existingPr;
   return execFileSync(gh, ['pr', 'create', '--repo', github, '--head', branch, '--base', 'main',
     '--title', title, '--body', body], { cwd: repo, encoding: 'utf8' }).trim();
 }
