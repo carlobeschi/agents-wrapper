@@ -82,6 +82,24 @@ const LABS = {
     build: ['vibe', '--prompt', '{prompt}', '--model', '{model}', ...VIBE_WRITE, '--max-price', '{price}', '--max-tokens', '{tokens_build}', '--output', 'text', '--output-dir', '{steps}'],
   },
 };
+// DeepSeek: the same Vibe agent and tools as Mistral, with an open model through
+// OpenRouter. Vibe gets its own home folder in the run folder (vibeHome), whose
+// config.toml names OpenRouter and the model with its prices, so that
+// --max-price really stops it (with Mistral's own models Vibe sees a price of 0).
+LABS.deepseek = { ...LABS.mistral, label: 'DeepSeek', env: ['OPENROUTER_API_KEY'], vibe: true };
+LABS.mistral.vibe = true;
+const OPENROUTER_MODELS = { deepseek: { id: 'deepseek/deepseek-v4-pro-0813', input: 0.6, cached: 0.15, output: 2.4 } };
+
+// The config.toml for a Vibe that talks to OpenRouter only. Prices in dollars per million tokens.
+function vibeConfig(m) {
+  return [
+    'active_model = "jam"', '',
+    '[[providers]]', 'name = "openrouter"', 'api_base = "https://openrouter.ai/api/v1"', 'api_key_env_var = "OPENROUTER_API_KEY"',
+    'api_style = "openai"', 'backend = "generic"', '',
+    '[[models]]', `name = ${JSON.stringify(m.id)}`, 'provider = "openrouter"', 'alias = "jam"',
+    `input_price = ${m.input}`, `cached_input_price = ${m.cached}`, `output_price = ${m.output}`, '',
+  ].join('\n');
+}
 
 // Flags that would loosen what an agent may do. A command with any of them is refused.
 const LOOSE = /dangerously|bypass|yolo|auto-approve|full-access|danger-full|--allowedTools|--allowed-tools|^bash$|run_command/i;
@@ -113,6 +131,8 @@ function labsFor(c, only) {
     const lab = { id, ...(base || { label: id, env: [] }), ...(over || {}) };
     for (const m of ['read', 'build']) { if (!Array.isArray(lab[m])) throw new Error(`lab ${id}: no "${m}" command`); refuseLoose(lab[m], `lab ${id} ${m}`); }
     lab.model = c.models?.[id] ?? (base?.from ? cfg.agents.find(a => a.id === base.from)?.model : '') ?? '';
+    const routed = OPENROUTER_MODELS[id];
+    if (routed) { lab.routed = { ...routed, ...(c.openrouter_models?.[id] || {}) }; lab.model = 'jam'; }
     return lab;
   });
 }
@@ -131,7 +151,7 @@ function runOnce(lab, mode, prompt, cwd, ms, extra) {
     let child;
     try {
       noteCall(bin);
-      child = spawn(bin, args, { cwd, env: agentEnv(lab.env), shell: false, detached: true, stdio: [viaArg ? 'ignore' : 'pipe', 'pipe', 'pipe'] });
+      child = spawn(bin, args, { cwd, env: { ...agentEnv(lab.env), ...(lab.vibeHome ? { VIBE_HOME: lab.vibeHome } : {}) }, shell: false, detached: true, stdio: [viaArg ? 'ignore' : 'pipe', 'pipe', 'pipe'] });
       if (!viaArg && child.stdin) { child.stdin.on('error', () => {}); child.stdin.end(prompt); }
     } catch (e) { return resolve({ text: '', why: e.message, err: '', ms: 0 }); }
     const timer = setTimeout(() => { cur.timedOut = true; killTree(child); }, ms);
@@ -363,6 +383,7 @@ async function main() {
   if (!PHASES.includes(until)) throw new Error(`--until must be one of ${PHASES.join(', ')}`);
   const dir = path.resolve(opt('out') || path.join(HOME_DIR, 'jam', stamp()));
   fs.mkdirSync(dir, { recursive: true });
+  homesFor(labs, dir);
   console.log(`Run folder: ${dir}\nLabs: ${labs.map(l => `${l.label}${l.model ? ` (${l.model})` : ''}`).join(', ')}`);
   const repo = setupRepo(c, dir);
   const seed = c.seed ?? path.basename(dir);
@@ -506,8 +527,18 @@ function summaryMd(c, R) {
 
 // ---- --check: one tiny read and one tiny write per lab ----
 
+// A Vibe home with its own config for each lab whose model goes through OpenRouter.
+function homesFor(labs, dir) {
+  for (const l of labs.filter(x => x.routed)) {
+    l.vibeHome = path.join(dir, 'vibe-home', l.id);
+    fs.mkdirSync(l.vibeHome, { recursive: true });
+    fs.writeFileSync(path.join(l.vibeHome, 'config.toml'), vibeConfig(l.routed));
+  }
+}
+
 async function check(labs) {
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'jam-check-'));
+  homesFor(labs, scratch);
   let bad = 0;
   await Promise.all(labs.map(async l => {
     const d = path.join(scratch, l.id);
@@ -525,6 +556,6 @@ async function check(labs) {
   if (bad) process.exitCode = 1;
 }
 
-module.exports = { LABS, commandFor, labsFor, refuseLoose, parseIdeas, parseScores, parseBest, tally, ballot, anonymise, ideasPrompt, vote1Prompt, vote2Prompt, buildPrompt, summaryMd };
+module.exports = { LABS, vibeConfig, OPENROUTER_MODELS, commandFor, labsFor, refuseLoose, parseIdeas, parseScores, parseBest, tally, ballot, anonymise, ideasPrompt, vote1Prompt, vote2Prompt, buildPrompt, summaryMd };
 
 if (require.main === module) main().catch(e => { console.error(e.message || e); process.exit(1); });

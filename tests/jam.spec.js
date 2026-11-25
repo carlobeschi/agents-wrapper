@@ -7,7 +7,7 @@ const { execFileSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { LABS, commandFor, labsFor, parseIdeas, parseScores, parseBest, tally, ballot, anonymise, vote1Prompt } = require('../jam');
+const { LABS, vibeConfig, commandFor, labsFor, parseIdeas, parseScores, parseBest, tally, ballot, anonymise, vote1Prompt } = require('../jam');
 
 const FAKE = path.join(__dirname, 'fixtures', 'jam', 'fake.js');
 
@@ -53,6 +53,17 @@ test('the real commands: read-only to read, file edits only to build, no looseni
   expect(() => labsFor({ labs: ['codex'], commands: { codex: { read: ['codex', 'exec', '--dangerously-bypass-approvals-and-sandbox'], build: ['x'] } } })).toThrow(/refused/);
   expect(() => labsFor({ labs: ['mistral'], commands: { mistral: { read: ['vibe', '--enabled-tools', 'bash'], build: ['x'] } } })).toThrow(/refused|shell/);
   expect(labsFor({ labs: ['mistral'], models: { mistral: 'devstral-x' } })[0].model).toBe('devstral-x');
+  // DeepSeek: Vibe's tools, OpenRouter's key only, its own config with real prices so --max-price works.
+  const ds = labsFor({ labs: ['deepseek'], openrouter_models: { deepseek: { input: 1 } } })[0];
+  expect(ds.env).toEqual(['OPENROUTER_API_KEY']);
+  expect(ds.model).toBe('jam');
+  expect(ds.routed.input).toBe(1);
+  expect(commandFor(ds, 'build', { model: ds.model }).filter((s, i, a) => a[i - 1] === '--enabled-tools')).toEqual(['read_file', 'write_file', 'search_replace']);
+  const toml = vibeConfig(ds.routed);
+  expect(toml).toContain('active_model = "jam"');
+  expect(toml).toContain('api_key_env_var = "OPENROUTER_API_KEY"');
+  expect(toml).toContain('name = "deepseek/');
+  expect(toml).toContain('input_price = 1');
 });
 
 test('a whole jam with three fake labs: ideas, vote, a branch each, vote on builds, summary', () => {
