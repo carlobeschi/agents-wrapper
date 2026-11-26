@@ -1,0 +1,53 @@
+{
+  "title": "Sample: a consulting interview, solo vs panel (fake models)",
+  "version": 1,
+  "seed": 11,
+  "repeats": 1,
+  "spend": { "run_usd": 1, "session_usd": 0.25 },
+  "prices": {
+    "fake:alpha": { "in_per_mtok": 1, "out_per_mtok": 5, "as_of": "2026-11-26" },
+    "fake:beta": { "in_per_mtok": 2, "out_per_mtok": 8, "as_of": "2026-11-26" },
+    "fake:gamma": { "in_per_mtok": 1, "out_per_mtok": 4, "as_of": "2026-11-26" }
+  },
+  "limits": { "turns": 6, "max_output_tokens": 800, "timeout_s": 60, "retries": 2 },
+  "roles": {
+    "interviewer": {
+      "kind": "interviewer", "prompt_version": "interviewer-v1", "sees": ["task", "materials", "secret"],
+      "prompt": "You are the interviewer in a case interview. Open with a short client situation and ask the candidate to clarify the objective and outline an approach. Then answer the candidate's questions with the case facts, one piece at a time, only when the question targets that topic; say when a fact is not available, and never invent one. Never quote the reference notes. Ask one focused follow-up each time. After a recommendation with brief support, close the interview."
+    },
+    "candidate": {
+      "kind": "candidate", "prompt_version": "candidate-v1", "sees": [],
+      "prompt": "You are the candidate in a case interview. Ask for the facts you need, state assumptions when information is unavailable, and recommend."
+    },
+    "expert": {
+      "kind": "expert", "prompt_version": "expert-v1", "sees": [], "temperature": 0.2,
+      "prompt": "You are one expert on a panel that answers a case interviewer together. Propose the panel's next reply."
+    },
+    "moderator": {
+      "kind": "moderator", "prompt_version": "moderator-v1", "sees": ["transcript"], "temperature": 0,
+      "prompt": "You moderate a panel that answers a case interviewer. Read the experts' proposals and write the panel's one reply."
+    }
+  },
+  "cases": [
+    {
+      "id": "ferry",
+      "task": "A regional ferry operator is losing money on its winter timetable. The interviewer will tell you more.",
+      "materials": {
+        "facts.md": "Winter crossings run at 22% occupancy. Fuel is 40% of the cost of a crossing. Two of the six daily crossings carry 70% of winter passengers. A freight contract requires the 06:00 crossing."
+      },
+      "secret": "Reference: cut the four low-occupancy winter crossings except the 06:00 freight crossing; keep the two busy ones.",
+      "never_disclose": ["cut the four low-occupancy winter crossings"],
+      "final_answer": { "marker": "FINAL RECOMMENDATION:" }
+    }
+  ],
+  "conditions": [
+    { "id": "interview-solo", "pattern": "interview", "seats": { "interviewer": "fake:gamma", "candidate": "fake:alpha" }, "max_messages": 12 },
+    { "id": "interview-panel", "pattern": "interview", "seats": { "interviewer": "fake:gamma", "expert": ["fake:alpha", "fake:beta", "fake:alpha"], "moderator": "fake:beta" }, "max_messages": 12 }
+  ],
+  "adaptations": [
+    "Fictional case written for this sample; not from the EnterpriseBench casebook.",
+    "Expert proposals and the moderator's reply are plain text, not the structured JSON the original asks for.",
+    "Experts are called at the same time, not one after another; none sees another's proposal of the same round, as in the original.",
+    "Interviewer hints are asked to start with HINT: so that each one is counted; the original has no such marker."
+  ]
+}

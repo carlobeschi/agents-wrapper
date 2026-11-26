@@ -45,6 +45,12 @@ function writeReport(run) {
     `- Prompt versions: ${Object.entries(study.roles).map(([r, x]) => `${r} ${x.prompt_version}`).join(', ')}`,
     `- Prices: ${Object.entries(study.prices || {}).map(([m, p]) => `${m} $${p.in_per_mtok}/$${p.out_per_mtok} per M tokens (as of ${p.as_of})`).join('; ') || 'none (fake models only)'}`,
     `- Models that answered: ${returned.join('; ') || 'none'}`,
+    `- Interviews: ${study.conditions.filter(c => c.pattern === 'interview').map(c => `${c.id} at most ${c.max_messages || 12} messages, end token ${c.end_token || '<|CASE_INTERVIEW_END|>'}, hint marker ${c.hint_marker === null ? 'none' : (c.hint_marker || 'HINT:')}${c.last_turn_notice ? ', last-turn notice' : ''}`).join('; ') || 'none'}`,
+    `- Temperatures: ${Object.entries(study.roles).filter(([, r]) => typeof r.temperature === 'number').map(([n, r]) => `${n} ${r.temperature}`).join(', ') || 'provider defaults'}`,
+    '',
+    '## Adaptations',
+    '',
+    ...((study.adaptations || []).length ? study.adaptations.map(a => `- ${a}`) : ['- none listed in the study file']),
     '',
     '## Sessions per condition',
     '',
@@ -60,7 +66,7 @@ function writeReport(run) {
   for (const [k, s] of sessions) {
     if (!s.outcome) { lines.push(`| ${k} | not finished | stopped before its outcome | | | ${s.attempts.length} | | |`); continue; }
     const o = JSON.parse(fs.readFileSync(path.join(run, s.outcome.path, 'outcome.json'), 'utf8'));
-    lines.push(`| ${k} | ${o.status} | ${o.reason || ''} | ${o.seats.map(x => `${x.label}: ${x.model}`).join(', ')} | ${o.turns} | ${s.attempts.length} | ${$(o.cost.total_usd)} (${$(o.cost.estimated_usd)}) | ${s.outcome.path}/ |`);
+    lines.push(`| ${k} | ${o.status} | ${[o.reason, o.ended_by && o.ended_by !== o.reason ? `ended by ${o.ended_by}` : null, o.hints && o.hints.length ? `${o.hints.length} hint(s)` : null].filter(Boolean).join('; ')} | ${o.seats.map(x => `${x.label}: ${x.model}`).join(', ')} | ${o.turns} | ${s.attempts.length} | ${$(o.cost.total_usd)} (${$(o.cost.estimated_usd)}) | ${s.outcome.path}/ |`);
   }
   lines.push('', '## Cost', '',
     `${$(t.total_usd)} of the ${$(study.spend.run_usd)} cap: reported by providers ${$(t.reported_usd)}, computed from reported tokens ${$(t.computed_usd)}, estimated (cost unknown, charged at the full reservation) ${$(t.estimated_usd)}${t.held_usd ? `, still held ${$(t.held_usd)}` : ''}.`,

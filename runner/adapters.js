@@ -92,6 +92,8 @@ async function send(url, headers, body, signal) {
   return { j, raw, request_id };
 }
 
+// A role's temperature, when the study sets one; otherwise the provider's default.
+const temp = (req) => typeof req.temperature === 'number' ? { temperature: req.temperature } : {};
 const systemText = (messages) => messages.filter(m => m.role === 'system').map(m => m.content).join('\n\n');
 const turns = (messages) => messages.filter(m => m.role !== 'system');
 
@@ -103,7 +105,7 @@ function anthropic(env) {
     const sys = systemText(req.messages);
     const { j, raw, request_id } = await send(`${baseOf('anthropic', env)}/messages`,
       { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-      { model: req.model, max_tokens: req.max_output_tokens, ...(sys ? { system: sys } : {}), messages: turns(req.messages).map(m => ({ role: m.role, content: m.content })) },
+      { model: req.model, max_tokens: req.max_output_tokens, ...temp(req), ...(sys ? { system: sys } : {}), messages: turns(req.messages).map(m => ({ role: m.role, content: m.content })) },
       signal);
     if (!Array.isArray(j.content)) throw new ProviderError('malformed', 'reply has no content list', { raw });
     // Only text blocks are the answer; thinking blocks are kept in raw.
@@ -121,8 +123,8 @@ function chat(provider, env) {
     if (!key) throw new ProviderError('auth', `${KEYS[provider][0]} is not set`);
     const seed = Number.isInteger(req.seed) ? { seed: req.seed } : {};
     const body = provider === 'openai'
-      ? { model: req.model, messages: req.messages, max_completion_tokens: req.max_output_tokens, ...seed }
-      : { model: req.model, messages: req.messages, max_tokens: req.max_output_tokens, usage: { include: true }, ...seed };
+      ? { model: req.model, messages: req.messages, max_completion_tokens: req.max_output_tokens, ...temp(req), ...seed }
+      : { model: req.model, messages: req.messages, max_tokens: req.max_output_tokens, usage: { include: true }, ...temp(req), ...seed };
     const { j, raw, request_id } = await send(`${baseOf(provider, env)}/chat/completions`, { authorization: `Bearer ${key}` }, body, signal);
     // OpenRouter can answer 200 with an error inside.
     if (j.error) throw new ProviderError(kindOf(Number(j.error.code) || 500), `error in reply: ${j.error.message || 'unknown'}`, { raw });
@@ -147,7 +149,7 @@ function google(env) {
     const { j, raw, request_id } = await send(`${baseOf('google', env)}/models/${encodeURIComponent(req.model)}:generateContent`, { 'x-goog-api-key': key }, {
       ...(sys ? { systemInstruction: { parts: [{ text: sys }] } } : {}),
       contents: turns(req.messages).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
-      generationConfig: { maxOutputTokens: req.max_output_tokens, ...seed },
+      generationConfig: { maxOutputTokens: req.max_output_tokens, ...temp(req), ...seed },
     }, signal);
     const u = j.usageMetadata || {};
     // Thinking is billed as output: count it with the answer.

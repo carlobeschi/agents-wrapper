@@ -24,7 +24,7 @@ const sleepMs = (ms) => new Promise(r => setTimeout(r, ms));
  *   session_id: string, role: string, seat: string, model: string,
  *   messages: { role: 'system'|'user'|'assistant', content: string }[],
  *   prompt_version: string, max_output_tokens: number, timeout_s: number, retries: number,
- *   seed?: number|null, parent_id?: string|null,
+ *   seed?: number|null, temperature?: number|null, parent_id?: string|null,
  *   reply_visible_to: string[], evaluator_visible: boolean,
  *   backoff_ms?: number, sleep?: (ms: number) => Promise<any>
  * }} o
@@ -55,13 +55,13 @@ async function callModel(o) {
     }
     const call = o.log.append({ ...base, kind: 'call', parent_id: parent, visible_to: [], evaluator_visible: false,
       seat: o.seat, provider, model: o.model, prompt_version: o.prompt_version, prompt_ref, max_output_tokens: o.max_output_tokens,
-      seed: o.seed ?? null, attempt: n + 1, reserved_usd: reservation.usd, reservation_id: reservation.reservation_id });
+      seed: o.seed ?? null, temperature: o.temperature ?? null, attempt: n + 1, reserved_usd: reservation.usd, reservation_id: reservation.reservation_id });
 
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), o.timeout_s * 1000);
     const started = Date.now();
     try {
-      const req = { model: name, messages: o.messages, max_output_tokens: o.max_output_tokens, ...(o.seed != null ? { seed: o.seed } : {}) };
+      const req = { model: name, messages: o.messages, max_output_tokens: o.max_output_tokens, ...(o.seed != null ? { seed: o.seed } : {}), ...(o.temperature != null ? { temperature: o.temperature } : {}) };
       const race = new Promise((_, reject) => ctl.signal.addEventListener('abort', () => reject(new ProviderError('timeout', `no reply in ${o.timeout_s} s`)), { once: true }));
       const r = await Promise.race([adapter(req, { signal: ctl.signal }), race]);
       clearTimeout(timer);

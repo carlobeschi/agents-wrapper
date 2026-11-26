@@ -103,7 +103,8 @@ test('google: key in x-goog-api-key, thinking counted as output and left out of 
     expect(s.seen[0].headers['x-goog-api-key']).toBe(KEYS.GEMINI_API_KEY);
     expect(s.seen[0].body).toEqual({ systemInstruction: { parts: [{ text: 'Be brief.' }] }, contents: [{ role: 'user', parts: [{ text: 'Hello?' }] }],
       generationConfig: { maxOutputTokens: 256, seed: 7 } });
-    expect((await a(req)).stop).toBe('length');
+    expect((await a({ ...req, temperature: 0.2 })).stop).toBe('length');
+    expect(s.seen[1].body.generationConfig.temperature).toBe(0.2);
     expect((await a(req)).stop).toBe('refusal');
   } finally { s.close(); }
 });
