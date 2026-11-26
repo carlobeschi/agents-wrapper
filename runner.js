@@ -16,6 +16,12 @@
 //   node runner.js rate <export folder> <packet> <dimension> <score> <rationale> --by <name>   a person's rating
 //   node runner.js adjudicate <export folder> <packet> <dimension> <score> <note> --by <name>  a person settles a disagreement
 //   node runner.js ratings <export folder> [--unblind]  every score, spread, what a person should look at
+//   node runner.js props-freeze <export folder> <inventory.json> --by <name> [--codebook <file>]   freeze the shared proposition inventory
+//   node runner.js props-kit <export folder> <out folder>          a coding kit for one coder (packets, inventory, codebook)
+//   node runner.js props-code <export folder> <coder> <rows.jsonl> [--suggestions <file>]   check and freeze one coder's rows
+//   node runner.js props-agreement <export folder>                 agreement between the two frozen codings
+//   node runner.js props-adjudicate <export folder> <item> <field> <value> <rationale> --by <name> [--evidence <text>]
+//   node runner.js props-unblind <export folder>                   counts per condition, once every difference is adjudicated
 //
 // Models are "provider:model": anthropic, openai, google, openrouter, or fake
 // (tests and dry runs). Keys come from the environment only: ANTHROPIC_API_KEY,
@@ -34,6 +40,7 @@ const { HOME_DIR, stamp } = require('./config');
 const { writeReport } = require('./runner/report');
 const { exportPackets } = require('./runner/export');
 const { judgePackets, summarize, addHumanRating, adjudicate } = require('./runner/judging');
+const props = require('./runner/propositions');
 
 const keyFileOf = (exportDir) => path.join(path.dirname(path.resolve(exportDir)), `${path.basename(path.resolve(exportDir))}.key.json`);
 
@@ -111,6 +118,31 @@ if (cmd === 'check' && target) {
     console.log('\nPer condition (mean score, n packets). Few packets per condition: do not read these as effects.');
     for (const [c, dims] of Object.entries(s.byCondition)) console.log(`  ${c}: ${Object.entries(dims).map(([d, x]) => `${d} ${x.mean} (n=${x.n})`).join(', ')}`);
   }
+} else if (cmd === 'props-freeze' && target && args[2] && opt('--by')) {
+  try {
+    const codebook = opt('--codebook') ? JSON.parse(fs.readFileSync(String(opt('--codebook')), 'utf8')) : undefined;
+    const r = props.freezeInventory(target, args[2], { by: String(opt('--by')), codebook });
+    console.log(`Frozen: ${r.propositions} proposition(s) in ${r.packets} packet(s), sha256 ${r.sha256}.`);
+  } catch (e) { die(e.message); }
+} else if (cmd === 'props-kit' && target && args[2]) {
+  try { props.codingKit(target, args[2]); console.log(`Coding kit: ${args[2]} (no key, no other coder's labels).`); } catch (e) { die(e.message); }
+} else if (cmd === 'props-code' && target && args[2] && args[3]) {
+  try { const r = props.importCoding(target, args[2], args[3], { suggestions: opt('--suggestions') }); console.log(`Frozen: ${r.rows} row(s) by ${args[2]}.`); } catch (e) { die(e.message); }
+} else if (cmd === 'props-agreement' && target) {
+  let r;
+  try { r = props.agreement(target); } catch (e) { die(e.message); }
+  console.log(`${r.items} item(s), coders ${r.coders.join(' and ')}, codebook ${r.codebook}. Excluded: ${r.exclusions.length}.`);
+  for (const [f, x] of Object.entries(r.fields)) console.log(`  ${f}: ${x.agree}/${x.n} agree (${x.raw}), kappa ${x.kappa ?? 'not meaningful'}; differ: ${x.differ.length}`);
+  console.log(r.note);
+} else if (cmd === 'props-adjudicate' && target && args.length >= 6 && opt('--by')) {
+  const [item_id, field, value, rationale] = args.slice(2, 6);
+  try { props.adjudicateProposition(target, { item_id, field, value, rationale, by: String(opt('--by')), evidence: opt('--evidence') }); } catch (e) { die(e.message); }
+  console.log('Saved.');
+} else if (cmd === 'props-unblind' && target) {
+  let r;
+  try { r = props.unblindPropositions(target, keyFileOf(target)); } catch (e) { die(e.message); }
+  console.log('Per condition (final value counts). Similar wording is not evidence of cause; few packets per condition: do not read these as effects.');
+  for (const [c, x] of Object.entries(r)) console.log(`  ${c} (${x.packets} packet(s)): ${Object.entries(x.fields).map(([f, v]) => `${f} ${Object.entries(v).map(([k, n]) => `${k}=${n}`).join('/')}`).join('; ')}`);
 } else {
-  die('usage: node runner.js check | run | budget | report | export | judge | rate | adjudicate | ratings (see the top of runner.js)');
+  die('usage: node runner.js check | run | budget | report | export | judge | rate | adjudicate | ratings | props-freeze | props-kit | props-code | props-agreement | props-adjudicate | props-unblind (see the top of runner.js)');
 }
