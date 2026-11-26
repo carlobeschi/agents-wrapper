@@ -173,7 +173,7 @@ If the Mac is asleep at 18:00, launchd runs it at the next wake.
 
 ## Research runner
 
-`runner.js` and `runner/` are a small experiment tool for comparing ways of working together: sessions with models from different providers, each role shown only what the study allows, every call recorded and every dollar counted. It is being built in steps; there is no real provider yet, so only `fake:` models run and nothing here calls a model.
+`runner.js` and `runner/` are a small experiment tool for comparing ways of working together: sessions with models from different providers, each role shown only what the study allows, every call recorded and every dollar counted. It is being built in steps. Models are named `provider:model`: `anthropic:`, `openai:`, `google:`, `openrouter:` (DeepSeek, Mistral, Qwen and others), or `fake:` for dry runs, which call nothing.
 
 `node runner.js run <study.json> [--out <folder>]` runs every session (each case, under each condition, each repeat) into a run folder (default `~/.agent-dispatch/runner/<date>-<title>/`) and prints a line per session: complete, ended early, or incomplete with its reason. Run the same command on the same folder to resume: a session with an outcome is kept as it is, a session the process was stopped in runs again as a new attempt with a new id, and the record says which attempt it retries. `--run-usd N` raises the spend cap for a run that stopped on it; `--retry-errors` also runs again the sessions that failed on a provider error. The study file may not change between runs of one folder.
 
@@ -184,7 +184,11 @@ If the Mac is asleep at 18:00, launchd runs it at the next wake.
 - **The budget**: one ledger (`ledger.jsonl`) for all sessions, parallel calls and retries. Each call reserves its worst case before it starts and is refused if that does not fit; afterwards it is charged at the cost the provider reported, or from its tokens, or, if neither is known, at the full reservation, marked estimated. A call cut off by a stop counts in full when the run resumes. `node runner.js budget <run folder>` shows how much is reported, computed and estimated.
 - **One call**: a time limit, and at most `limits.retries` retries for a rate limit, a timeout, a server error or a malformed reply, each attempt with its own id, record and charge. A reply cut by the output limit is kept and marked truncated, never retried or counted as complete.
 
-Keys will come from environment variables only (on the Mac, from the Keychain), never from the study file, and are never written to the record. Run folders stay out of the repo.
+- **Providers**: each is called directly over HTTPS (no vendor libraries), so the reply is kept exactly as it arrived: Anthropic's Messages API, OpenAI's chat completions, Google's Gemini API, OpenRouter. Replies are put into one shape (text, stop: complete / length / refusal / other, tokens, reported cost, the model that answered, request id), and errors into the same kinds (rate limit with its wait, timeout, server, malformed, auth, bad request). Only text is the answer: thinking blocks are kept in the raw reply, and Gemini's thinking tokens are counted as output, as they are billed. The study's seed is sent to OpenAI, Google and OpenRouter (honoured at best, depending on the model) and not to Anthropic, which has none; every reply records whether it was sent.
+- **Keys**: from the environment only, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY` (or `GOOGLE_API_KEY`), `OPENROUTER_API_KEY`, never from the study file, and never written to the record. `runner.js run` stops before any call if a key the study needs is not set. On the Mac, export them in the shell from the Keychain, for example `export OPENROUTER_API_KEY=$(security find-generic-password -s openrouter-key -w)`. Keys are sent only to the four official endpoints; `RUNNER_<PROVIDER>_BASE` may point elsewhere only on this computer (127.0.0.1, for the tests).
+- **Structured replies** (`runner/structured.js`, for actions and scores, not discussion): one JSON object, asked for the same way from every provider and checked against a small schema; an invalid or cut-off reply is asked for again, at most `tries` times, each try an ordinary recorded and charged call. A cut-off reply is never repaired into a valid one.
+
+Run folders stay out of the repo.
 
 ## Night queue
 
