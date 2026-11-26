@@ -24,7 +24,7 @@ const sleepMs = (ms) => new Promise(r => setTimeout(r, ms));
  *   session_id: string, role: string, seat: string, model: string,
  *   messages: { role: 'system'|'user'|'assistant', content: string }[],
  *   prompt_version: string, max_output_tokens: number, timeout_s: number, retries: number,
- *   seed?: number|null, temperature?: number|null, parent_id?: string|null,
+ *   seed?: number|null, temperature?: number|null, parent_id?: string|null, json_mode?: boolean,
  *   reply_visible_to: string[], evaluator_visible: boolean,
  *   backoff_ms?: number, sleep?: (ms: number) => Promise<any>
  * }} o
@@ -55,19 +55,19 @@ async function callModel(o) {
     }
     const call = o.log.append({ ...base, kind: 'call', parent_id: parent, visible_to: [], evaluator_visible: false,
       seat: o.seat, provider, model: o.model, prompt_version: o.prompt_version, prompt_ref, max_output_tokens: o.max_output_tokens,
-      seed: o.seed ?? null, temperature: o.temperature ?? null, attempt: n + 1, reserved_usd: reservation.usd, reservation_id: reservation.reservation_id });
+      seed: o.seed ?? null, temperature: o.temperature ?? null, json_mode: !!o.json_mode, attempt: n + 1, reserved_usd: reservation.usd, reservation_id: reservation.reservation_id });
 
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), o.timeout_s * 1000);
     const started = Date.now();
     try {
-      const req = { model: name, messages: o.messages, max_output_tokens: o.max_output_tokens, ...(o.seed != null ? { seed: o.seed } : {}), ...(o.temperature != null ? { temperature: o.temperature } : {}) };
+      const req = { model: name, messages: o.messages, max_output_tokens: o.max_output_tokens, ...(o.seed != null ? { seed: o.seed } : {}), ...(o.temperature != null ? { temperature: o.temperature } : {}), ...(o.json_mode ? { json_mode: true } : {}) };
       const race = new Promise((_, reject) => ctl.signal.addEventListener('abort', () => reject(new ProviderError('timeout', `no reply in ${o.timeout_s} s`)), { once: true }));
       const r = await Promise.race([adapter(req, { signal: ctl.signal }), race]);
       clearTimeout(timer);
       const cost = o.ledger.settle(reservation.reservation_id, { input_tokens: r.input_tokens, output_tokens: r.output_tokens, cost_usd: r.cost_usd });
       const reply = o.log.append({ ...base, kind: 'reply', parent_id: call.event_id, visible_to: o.reply_visible_to, evaluator_visible: o.evaluator_visible,
-        seat: o.seat, model: o.model, model_returned: r.model_returned, request_id: r.request_id, seed_sent: r.seed_sent,
+        seat: o.seat, model: o.model, model_returned: r.model_returned, request_id: r.request_id, seed_sent: r.seed_sent, json_mode_sent: r.json_mode_sent ?? null,
         text_ref: o.log.put(r.text), raw_ref: o.log.put(r.raw), stop: r.stop, truncated: r.stop === 'length',
         input_tokens: r.input_tokens, output_tokens: r.output_tokens, cost_usd: cost.usd, cost_basis: cost.basis, ms: Date.now() - started });
       attempts.push({ attempt_id, ok: true });

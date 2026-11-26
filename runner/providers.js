@@ -56,7 +56,7 @@ function checkResult(r) {
   return {
     text: r.text, stop: r.stop,
     input_tokens: r.input_tokens ?? null, output_tokens: r.output_tokens ?? null, cost_usd: r.cost_usd ?? null,
-    model_returned: r.model_returned ?? null, request_id: r.request_id ?? null, seed_sent: typeof r.seed_sent === 'boolean' ? r.seed_sent : null, raw: typeof r.raw === 'string' ? r.raw : JSON.stringify(r.raw ?? null),
+    model_returned: r.model_returned ?? null, request_id: r.request_id ?? null, seed_sent: typeof r.seed_sent === 'boolean' ? r.seed_sent : null, json_mode_sent: typeof r.json_mode_sent === 'boolean' ? r.json_mode_sent : null, raw: typeof r.raw === 'string' ? r.raw : JSON.stringify(r.raw ?? null),
   };
 }
 

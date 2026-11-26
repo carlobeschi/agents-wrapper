@@ -122,7 +122,7 @@ function exportPackets(o) {
         return { label: x.label, text: clean(reply ? log.get(reply.text_ref) : '') };
       }) : [];
     }
-    if (sees.includes('dialogue')) packet.dialogue = outcome.dialogue ? outcome.dialogue.map(d => ({ n: d.n, actor: d.actor, text: clean(d.text), truncated: d.truncated })) : null;
+    if (sees.includes('dialogue')) packet.dialogue = outcome.dialogue ? outcome.dialogue.map(d => ({ n: d.n, actor: d.actor, text: clean(d.text), truncated: d.truncated, ...(d.fallback ? { fallback: true } : {}) })) : null;
     fs.writeFileSync(path.join(packetsDir, `${packet_id}.json`), JSON.stringify(packet, null, 2), { mode: 0o600 });
     key.packets.push({ packet_id, key: k, session_id: s.outcome.session_id, case: outcome.case, condition: outcome.condition, repeat: outcome.repeat,
       models: outcome.seats.map(x => x.model), families: [...new Set(outcome.seats.map(x => familyOf(x.model)))], status: s.outcome.status, labels_removed: removed });
