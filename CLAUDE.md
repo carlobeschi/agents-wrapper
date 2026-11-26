@@ -21,6 +21,7 @@ The tests run the real code against fake agents (shell one-liners in the tests, 
 - `agents.json`: default agents and their headless commands. A user copy in `~/.agent-dispatch/agents.json` overrides it.
 - `examples/`: config files for shows and studies. `examples/night/queue.json` is the night queue, read by `night.js` every evening after a `git pull`, so a merged change to it takes effect that night.
 - `scripts/`: shell wrappers and launchd plists for the Mac (night queue, The Motion daily, The Trap weekly, laptop setup).
+- `runner.js` + `runner/`: the research runner (README, Research runner). Its tests use the fake provider in `runner/providers.js`, never a real one.
 - `study15/`: Python for study 15 (Modal, vLLM). Versions are pinned in `phase0_modal.py` on purpose; read the comment before changing them.
 - `tests/`: one `<script>.spec.js` per script.
 - Run outputs live in `~/.agent-dispatch/` on the Mac, never in the repo.

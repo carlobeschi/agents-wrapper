@@ -1,0 +1,47 @@
+{
+  "title": "Sample: two cases, solo vs same family vs mixed (fake models)",
+  "version": 1,
+  "seed": 7,
+  "repeats": 1,
+  "spend": { "run_usd": 1, "session_usd": 0.25 },
+  "prices": {
+    "fake:alpha": { "in_per_mtok": 1, "out_per_mtok": 5, "as_of": "2026-11-26" },
+    "fake:beta": { "in_per_mtok": 2, "out_per_mtok": 8, "as_of": "2026-11-26" }
+  },
+  "limits": { "turns": 6, "max_output_tokens": 800, "timeout_s": 60, "retries": 2 },
+  "roles": {
+    "expert": {
+      "kind": "expert", "prompt_version": "expert-v1", "sees": ["task", "materials"],
+      "prompt": "You are one of the experts on this case. Read the task and the materials, then give your analysis in plain text."
+    },
+    "moderator": {
+      "kind": "moderator", "prompt_version": "moderator-v1", "sees": ["task", "transcript"],
+      "prompt": "You lead the discussion. Read the experts' analyses and decide."
+    },
+    "judge": {
+      "kind": "judge", "prompt_version": "judge-v1", "sees": ["task", "secret", "transcript"],
+      "prompt": "Score the final recommendation against the reference notes."
+    }
+  },
+  "cases": [
+    {
+      "id": "bakery",
+      "task": "A neighbourhood bakery's sales fell 20% in a year. Recommend what it should do first.",
+      "materials": { "facts.md": "Foot traffic unchanged. A chain cafe opened next door. Prices rose 15%." },
+      "secret": "Reference: the price rise, not the cafe, explains most of the drop.",
+      "final_answer": { "marker": "FINAL RECOMMENDATION:" }
+    },
+    {
+      "id": "clinic",
+      "task": "A small clinic has long waits on Mondays only. Recommend one change.",
+      "materials": { "facts.md": "Same staff every day. Monday has twice the walk-ins." },
+      "secret": "Reference: move one weekday booking block to Monday walk-ins.",
+      "final_answer": { "marker": "FINAL RECOMMENDATION:" }
+    }
+  ],
+  "conditions": [
+    { "id": "solo", "pattern": "solo", "seats": { "expert": "fake:alpha" } },
+    { "id": "same-family", "pattern": "experts_moderator", "seats": { "expert": ["fake:alpha", "fake:alpha"], "moderator": "fake:alpha" } },
+    { "id": "mixed", "pattern": "experts_moderator", "seats": { "expert": ["fake:alpha", "fake:beta"], "moderator": "fake:alpha" }, "peer_consultation": false }
+  ]
+}
