@@ -10,7 +10,9 @@
 //        [--retry-errors]    on resume, run again the sessions that failed on a provider error
 //   node runner.js budget <run folder>                money used so far: reported, computed, estimated
 //
-// Only "fake:" models can run so far (real provider adapters come next).
+// Models are "provider:model": anthropic, openai, google, openrouter, or fake
+// (tests and dry runs). Keys come from the environment only: ANTHROPIC_API_KEY,
+// OPENAI_API_KEY, GEMINI_API_KEY, OPENROUTER_API_KEY (README, Research runner).
 // Run folders default to ~/.agent-dispatch/runner/<date>-<title words>/.
 
 const fs = require('fs');
@@ -19,6 +21,8 @@ const { checkStudy } = require('./runner/study');
 const { Ledger } = require('./runner/budget');
 const { runStudy } = require('./runner/run');
 const { fakeProvider, defaultFakeStep } = require('./runner/providers');
+const { realAdapters, missingKeys } = require('./runner/adapters');
+const { providerOf } = require('./runner/study');
 const { HOME_DIR, stamp } = require('./config');
 
 const args = process.argv.slice(2);
@@ -47,8 +51,13 @@ if (cmd === 'check' && target) {
   const out = opt('--out') || path.join(HOME_DIR, 'runner', `${stamp()}-${words}`);
   const runUsd = opt('--run-usd') !== undefined ? Number(opt('--run-usd')) : undefined;
   if (runUsd !== undefined && !(runUsd > 0)) die('--run-usd: a number more than 0');
+  const needed = [...new Set(s.conditions.flatMap(c => Object.values(c.seats).flat().map(providerOf)))];
+  const noKey = missingKeys(needed);
+  if (noKey.length) die(`Not set: ${noKey.join(', ')}. Export them in this shell first (on the Mac, from the Keychain); they are never read from a file.`);
+  let adapters;
+  try { adapters = { ...realAdapters(), fake: fakeProvider(defaultFakeStep).adapter }; } catch (e) { die(e.message); }
   console.log(`Run folder: ${out}`);
-  runStudy({ study: raw, out, adapters: { fake: fakeProvider(defaultFakeStep).adapter }, retry_errors: args.includes('--retry-errors'),
+  runStudy({ study: raw, out, adapters, retry_errors: args.includes('--retry-errors'),
     run_usd: runUsd, say: (line) => console.log(line) })
     .catch(e => die(e.message));
 } else if (cmd === 'budget' && target) {
