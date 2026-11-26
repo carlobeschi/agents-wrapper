@@ -8,6 +8,6 @@
     "types": ["node"],
     "skipLibCheck": true
   },
-  "include": ["*.js"],
+  "include": ["*.js", "runner/*.js"],
   "exclude": ["node_modules", "eslint.config.js", "playwright.config.js"]
 }
