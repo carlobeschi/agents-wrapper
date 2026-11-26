@@ -33,7 +33,8 @@
 const { callModel } = require('./call');
 const { BudgetError } = require('./budget');
 const { ProviderError } = require('./providers');
-const { view, finalOf, shuffled, SecretLeak } = require('./view');
+const { view, guard, finalOf, shuffled, SecretLeak } = require('./view');
+const paper = require('./enterprisebench-prompts');
 
 const label = (kind, i, n) => n === 1 && kind !== 'expert' ? kind[0].toUpperCase() + kind.slice(1) : `${kind[0].toUpperCase() + kind.slice(1)} ${i + 1}`;
 
@@ -64,11 +65,11 @@ async function runSession(o) {
   const marker = kase.final_answer.marker;
   let turns = 0;
 
-  const ask = (seat, messages, reply_visible_to, parent_id = null) => callModel({
+  const ask = (seat, messages, reply_visible_to, parent_id = null, json_mode = false) => callModel({
     log, ledger: o.ledger, adapters: o.adapters, session_id, role: seat.roleName, seat: seat.seat, model: seat.model, messages,
     prompt_version: seat.role.prompt_version, max_output_tokens: seat.role.max_output_tokens || limits.max_output_tokens,
     timeout_s: limits.timeout_s, retries: limits.retries, seed: study.seed ?? null, temperature: seat.role.temperature ?? null, parent_id,
-    reply_visible_to, evaluator_visible: true, sleep: o.sleep, backoff_ms: o.backoff_ms,
+    reply_visible_to, evaluator_visible: true, sleep: o.sleep, backoff_ms: o.backoff_ms, json_mode,
   });
 
   // The closing loop: the same seat asked again until it closes or turns run out.
@@ -108,15 +109,22 @@ async function runSession(o) {
     const experts = seats.filter(s => s.role.kind === 'expert');
     const moderator = seats.find(s => s.role.kind === 'moderator');
     const facing = candidate ? [candidate.seat] : [...experts.map(s => s.seat), moderator.seat];
-    const candRule = `When you give your final recommendation, put it after a line that starts with "${marker}". If you cannot go on, write a line that starts with "EARLY END:" and say why.`;
+    const candRule = condition.candidate_marker_instruction === false ? null : `When you give your final recommendation, put it after a line that starts with "${marker}". If you cannot go on, write a line that starts with "EARLY END:" and say why.`;
     let ended_by = 'turn_limit';
     let last = null;
     while (dialogue.length < max) {
       turns++;
       const ivExtra = [said(), `You are the interviewer. Write your next message to the candidate. When the interview is over, write ${END}.`
         + (HINT ? ` If you give the candidate a hint, put it on a line that starts with "${HINT}".` : '')];
-      const q = await ask(interviewer, view({ role: interviewer.role, roleName: interviewer.roleName, kase, extra: ivExtra }), facing, last ? last.event_id : null);
+      const paperHistory = dialogue.map(d => ({ role: d.actor.toLowerCase(), content: d.text }));
+      const ivMessages = condition.paper_prompts ? [
+        { role: 'system', content: interviewer.role.prompt },
+        { role: 'user', content: paper.interviewerUser(kase.secret, kase.paper_opening || 'The interviewer briefly describes the client\'s situation and objective.', paperHistory, max - dialogue.length) }
+      ] : view({ role: interviewer.role, roleName: interviewer.roleName, kase, extra: ivExtra });
+      if (condition.paper_prompts) guard(ivMessages, interviewer.role, interviewer.roleName, kase);
+      const q = await ask(interviewer, ivMessages, facing, last ? last.event_id : null);
       dialogue.push({ n: dialogue.length + 1, actor: 'Interviewer', text: q.text, truncated: q.truncated, event_id: q.event_id });
+      if (condition.paper_prompts && (q.stop !== 'complete' || !q.text.trim())) throw new ProviderError('malformed', 'paper interviewer output incomplete or empty');
       if (HINT) for (const l of q.text.split('\n')) if (l.trim().startsWith(HINT)) hints.push({ n: dialogue.length, text: l.trim().slice(HINT.length).trim() });
       if (q.text.includes(END)) { ended_by = 'interviewer_end'; break; }
       if (dialogue.length >= max) break;
@@ -124,21 +132,62 @@ async function runSession(o) {
       const notice = condition.last_turn_notice && lastTurn ? ['This is your last reply in this interview: give your final recommendation now.'] : [];
       let a;
       turns++;
-      if (candidate) {
-        a = await ask(candidate, view({ role: candidate.role, roleName: candidate.roleName, kase, extra: [said(), 'Write your next reply to the interviewer.', ...notice, candRule] }), [interviewer.seat], q.event_id);
+      if (condition.paper_prompts) {
+        const history = dialogue.map(d => ({ role: d.actor.toLowerCase(), content: d.text }));
+        const context = paper.dialogue(history); const question = q.text;
+        if (candidate) {
+          const messages = [{ role: 'system', content: candidate.role.prompt }, { role: 'user', content: paper.cotUser(kase.id, history) }];
+          guard(messages, candidate.role, candidate.roleName, kase);
+          const raw = await ask(candidate, messages, [interviewer.seat], q.event_id, true);
+          if (!['complete', 'length'].includes(raw.stop)) throw new ProviderError('malformed', 'paper candidate output refused or unavailable');
+          let text = raw.text.trim();
+          if (!text.startsWith('{') && text.includes('{')) text = text.slice(text.indexOf('{'));
+          if (!text.endsWith('}') && text.includes('}')) text = text.slice(0, text.lastIndexOf('}') + 1);
+          let parsed; try { parsed = JSON.parse(text); } catch { parsed = {}; }
+          const fallback = 'Let me first structure the key issues and then outline a hypothesis-driven approach to address the client\'s problem.';
+          const usedFallback = !parsed || typeof parsed.reply !== 'string' || !parsed.reply.trim();
+          if (usedFallback) log.append({ kind: 'note', session_id, visible_to: [], evaluator_visible: true, what: 'paper candidate fallback', stop: raw.stop });
+          a = { ...raw, text: usedFallback ? fallback : parsed.reply.trim() };
+        } else {
+          const proposals = [];
+          for (let i = 0; i < experts.length; i++) {
+            const seat = experts[i]; const messages = [{ role: 'user', content: paper.expertUser(i + 1, question, context) }];
+            guard(messages, seat.role, seat.roleName, kase);
+            const reply = await ask(seat, messages, [moderator.seat], q.event_id, true);
+            if (reply.stop !== 'complete' || !reply.text.trim()) throw new ProviderError('malformed', 'paper expert output incomplete or empty');
+            proposals.push(reply);
+          }
+          const text = proposals.map((r, i) => `[ROUND 1] Expert ${i + 1}:\n${r.text}`).join('\n\n');
+          log.append({ kind: 'note', session_id, visible_to: [], evaluator_visible: true, what: 'moderator order', message_n: dialogue.length + 1,
+            order: proposals.map((r, i) => ({ label: `Expert ${i + 1}`, seat: experts[i].seat, from_event: r.event_id, truncated: r.truncated })) });
+          const messages = [{ role: 'user', content: paper.moderatorUser(question, context, text) }];
+          guard(messages, moderator.role, moderator.roleName, kase);
+          const raw = await ask(moderator, messages, [interviewer.seat, ...experts.map(s => s.seat)], q.event_id, true);
+          if (raw.stop !== 'complete') throw new ProviderError('malformed', 'paper moderator output incomplete');
+          let parsed; try { parsed = JSON.parse(raw.text); } catch { throw new ProviderError('malformed', 'paper moderator output invalid JSON'); }
+          const extracted = parsed && (parsed.final_answer || parsed.reply);
+          // The released discussion agent falls back to the complete response
+          // when the extracted field is not a nonempty string.
+          const textReply = typeof extracted === 'string' && extracted.trim() ? extracted : raw.text.trim();
+          if (!textReply) throw new ProviderError('malformed', 'paper moderator response empty');
+          if (!(typeof extracted === 'string' && extracted.trim())) log.append({ kind: 'note', session_id, visible_to: [], evaluator_visible: true, what: 'paper moderator raw fallback', output_type: Array.isArray(extracted) ? 'array' : typeof extracted });
+          a = { ...raw, text: textReply.trim() };
+        }
+      } else if (candidate) {
+        a = await ask(candidate, view({ role: candidate.role, roleName: candidate.roleName, kase, extra: [said(), 'Write your next reply to the interviewer.', ...notice, ...(candRule ? [candRule] : [])] }), [interviewer.seat], q.event_id);
       } else {
         const proposals = await Promise.all(experts.map(s => ask(s, view({ role: s.role, roleName: s.roleName, kase,
-          extra: [said(), 'You are one of several experts. The candidate is the panel; a moderator writes its reply. Propose the candidate\'s next reply to the interviewer\'s last message.', ...notice, candRule] }), [moderator.seat], q.event_id)));
-        const order = shuffled(proposals.map((_, i) => i), `${study.seed ?? 0}:${session_id}:${dialogue.length + 1}`);
+          extra: [said(), 'You are one of several experts. The candidate is the panel; a moderator writes its reply. Propose the candidate\'s next reply to the interviewer\'s last message.', ...notice, ...(candRule ? [candRule] : [])] }), [moderator.seat], q.event_id)));
+        const order = condition.expert_order === 'fixed' ? proposals.map((_, i) => i) : shuffled(proposals.map((_, i) => i), `${study.seed ?? 0}:${session_id}:${dialogue.length + 1}`);
         log.append({ kind: 'note', session_id, visible_to: [], evaluator_visible: true, what: 'moderator order', message_n: dialogue.length + 1,
           order: order.map((i, k) => ({ label: `Expert ${k + 1}`, seat: experts[i].seat, from_event: proposals[i].event_id, truncated: proposals[i].truncated })) });
         const transcript = order.map((i, k) => ({ label: `Expert ${k + 1}`, text: proposals[i].text + (proposals[i].truncated ? '\n\n[cut off by the length limit]' : '') }));
         a = await ask(moderator, view({ role: moderator.role, roleName: moderator.roleName, kase, transcript,
-          extra: [said(), 'You are the moderator. Read the experts\' proposals and write the one reply the interviewer will get.', ...notice, candRule] }), [interviewer.seat, ...experts.map(s => s.seat)], q.event_id);
+          extra: [said(), 'You are the moderator. Read the experts\' proposals and write the one reply the interviewer will get.', ...notice, ...(candRule ? [candRule] : [])] }), [interviewer.seat, ...experts.map(s => s.seat)], q.event_id);
       }
       dialogue.push({ n: dialogue.length + 1, actor: 'Candidate', text: a.text, truncated: a.truncated, event_id: a.event_id });
       last = a;
-      if (!a.truncated && finalOf(a.text, marker).kind === 'early') { ended_by = 'candidate_early_end'; break; }
+      if (!condition.paper_prompts && !a.truncated && finalOf(a.text, marker).kind === 'early') { ended_by = 'candidate_early_end'; break; }
     }
     const closing = candidate || moderator;
     // The latest candidate reply with the final line, not cut off, is the answer.

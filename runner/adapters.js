@@ -102,6 +102,7 @@ function anthropic(env) {
   return async (/** @type {any} */ req, /** @type {{ signal?: AbortSignal }} */ { signal } = {}) => {
     const key = keyOf('anthropic', env);
     if (!key) throw new ProviderError('auth', 'ANTHROPIC_API_KEY is not set');
+    if (req.json_mode) throw new ProviderError('bad_request', 'native JSON mode is not implemented for this adapter');
     const sys = systemText(req.messages);
     const { j, raw, request_id } = await send(`${baseOf('anthropic', env)}/messages`,
       { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
@@ -123,8 +124,8 @@ function chat(provider, env) {
     if (!key) throw new ProviderError('auth', `${KEYS[provider][0]} is not set`);
     const seed = Number.isInteger(req.seed) ? { seed: req.seed } : {};
     const body = provider === 'openai'
-      ? { model: req.model, messages: req.messages, max_completion_tokens: req.max_output_tokens, ...temp(req), ...seed }
-      : { model: req.model, messages: req.messages, max_tokens: req.max_output_tokens, usage: { include: true }, ...temp(req), ...seed };
+      ? { model: req.model, messages: req.messages, max_completion_tokens: req.max_output_tokens, ...temp(req), ...seed, ...(req.json_mode ? { response_format: { type: 'json_object' } } : {}) }
+      : { model: req.model, messages: req.messages, max_tokens: req.max_output_tokens, usage: { include: true }, ...temp(req), ...seed, ...(req.json_mode ? { response_format: { type: 'json_object' } } : {}) };
     const { j, raw, request_id } = await send(`${baseOf(provider, env)}/chat/completions`, { authorization: `Bearer ${key}` }, body, signal);
     // OpenRouter can answer 200 with an error inside.
     if (j.error) throw new ProviderError(kindOf(Number(j.error.code) || 500), `error in reply: ${j.error.message || 'unknown'}`, { raw });
@@ -144,6 +145,7 @@ function google(env) {
   return async (/** @type {any} */ req, /** @type {{ signal?: AbortSignal }} */ { signal } = {}) => {
     const key = keyOf('google', env);
     if (!key) throw new ProviderError('auth', 'GEMINI_API_KEY is not set');
+    if (req.json_mode) throw new ProviderError('bad_request', 'native JSON mode is not implemented for this adapter');
     const sys = systemText(req.messages);
     const seed = Number.isInteger(req.seed) ? { seed: req.seed } : {};
     const { j, raw, request_id } = await send(`${baseOf('google', env)}/models/${encodeURIComponent(req.model)}:generateContent`, { 'x-goog-api-key': key }, {

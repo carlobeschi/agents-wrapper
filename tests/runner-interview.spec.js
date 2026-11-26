@@ -127,6 +127,20 @@ test('an interviewer that passes on hidden text stops the session before the can
   expect(fake.seen.filter(q => !isInterviewer(q)).every(q => !body(q).includes('cut the four'))).toBe(true);
 });
 
+test('fixed-order and no marker-prompt mode preserves unmarked partial outcome', async () => {
+  const never = (req) => isInterviewer(req) ? { text: 'Go on.' } : { text: 'My analysis continues.' };
+  const { fake, out, outcome } = await run(never, (s) => {
+    s.conditions = [{ ...s.conditions[1], max_messages: 4, candidate_marker_instruction: false, expert_order: 'fixed', hint_marker: null }];
+    return s;
+  });
+  expect(outcome('ferry--interview-panel--r1')).toMatchObject({ status: 'incomplete', reason: 'turn_limit', ended_by: 'turn_limit', turns: 4 });
+  for (const q of fake.seen.filter(q => !isInterviewer(q))) expect(body(q)).not.toContain('FINAL RECOMMENDATION:');
+  const events = fs.readFileSync(path.join(out, 'events.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+  expect(events.filter(e => e.what === 'moderator order').map(e => e.order.map(x => x.seat))).toEqual([
+    ['expert#1', 'expert#2', 'expert#3'], ['expert#1', 'expert#2', 'expert#3']
+  ]);
+});
+
 test('a provider error mid-interview ends it incomplete with the dialogue so far; the last-turn notice reaches only the last candidate turn', async () => {
   const { ProviderError } = require('../runner/providers');
   const fails = (req) => { if (!isInterviewer(req) && sofar(req) === 3) throw new ProviderError('auth', 'key revoked'); return isInterviewer(req) ? { text: 'Go on.' } : { text: 'Thinking.' }; };

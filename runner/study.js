@@ -169,6 +169,15 @@ function checkStudy(s) {
       need(c.end_token === undefined || (typeof c.end_token === 'string' && c.end_token.trim()), `${at}.end_token: text`);
       need(c.hint_marker === undefined || c.hint_marker === null || (typeof c.hint_marker === 'string' && c.hint_marker.trim()), `${at}.hint_marker: text, or null for none`);
       need(c.last_turn_notice === undefined || typeof c.last_turn_notice === 'boolean', `${at}.last_turn_notice: true or false`);
+      need(c.candidate_marker_instruction === undefined || typeof c.candidate_marker_instruction === 'boolean', `${at}.candidate_marker_instruction: true or false`);
+      need(c.expert_order === undefined || ['fixed', 'shuffled'].includes(c.expert_order), `${at}.expert_order: fixed or shuffled`);
+      need(c.paper_prompts === undefined || typeof c.paper_prompts === 'boolean', `${at}.paper_prompts: true or false`);
+      if (c.paper_prompts) {
+        need(iv[0] && iv[0].role && iv[0].role.sees.includes('secret'), `${at}: paper interviewer must see the full case secret`);
+        need(c.end_token === undefined || c.end_token === '<|CASE_INTERVIEW_END|>', `${at}: paper end token must match the renderer`);
+        need(!c.last_turn_notice && c.candidate_marker_instruction === false && c.hint_marker === null, `${at}: paper prompts require no added final notice, marker or hint marker`);
+        need(!experts.length || experts.reduce((sum, x) => sum + x.n, 0) === 3, `${at}: paper discussion requires three experts`);
+      }
     }
     need(c && (c.peer_consultation === undefined || typeof c.peer_consultation === 'boolean'), `${at}.peer_consultation: true or false`);
   }
