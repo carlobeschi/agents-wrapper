@@ -106,4 +106,18 @@ function fakeProvider(script) {
   return { adapter, seen };
 }
 
-module.exports = { ProviderError, checkResult, fakeProvider, RETRYABLE };
+/**
+ * The fake used by `node runner.js run` for "fake:" models: a short analysis,
+ * and the final-answer line when the prompt asks for one. RUNNER_FAKE_DELAY_MS
+ * slows every reply (for interruption tests).
+ * @param {any} req
+ */
+function defaultFakeStep(req) {
+  const prompt = req.messages.map(m => m.content).join('\n');
+  const m = /starts with "([^"]+)" followed by your final answer/.exec(prompt);
+  const text = m ? `Having read everything, the main cause is clear.\n${m[1]} Act on the main cause first.`
+    : `Analysis (${req.model}): the main cause is most likely the change listed first in the materials.`;
+  return { text, delay_ms: Number(process.env.RUNNER_FAKE_DELAY_MS || 0) };
+}
+
+module.exports = { ProviderError, checkResult, fakeProvider, defaultFakeStep, RETRYABLE };
