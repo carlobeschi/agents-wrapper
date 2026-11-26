@@ -23,6 +23,14 @@
 //   line; how it ended (interviewer_end, turn_limit, candidate_early_end) is
 //   recorded either way. Interviewer lines starting with the hint marker
 //   (default "HINT:") are listed as hints.
+//   With paper_prompts, the interviewer, candidate, experts and moderator get
+//   the prompts rendered by runner/enterprisebench-prompts.js instead (the
+//   interviewer's case text is the case's secret; experts and moderator get no
+//   system prompt; experts are asked one after another, in a fixed order; JSON
+//   replies are asked for natively where the provider can). A candidate reply
+//   that is not usable JSON is replaced, as in the released code, with a fixed
+//   fallback sentence: the dialogue marks it, it is counted, and it is never
+//   an answer.
 //
 // A session is complete only when the closing reply has the final-answer
 // line, or ended early when it says "EARLY END: <reason>". A reply cut by the
@@ -56,7 +64,7 @@ function seatsOf(study, condition) {
  * status is complete, ended_early or incomplete.
  * @returns {Promise<{ status: string, reason: string|null, final: string|null,
  *           closing_text: string|null, closing_seat: string|null, turns: number, ended_by?: string|null,
- *           dialogue?: { n: number, actor: string, text: string, truncated: boolean, event_id: string }[], hints?: { n: number, text: string }[] }>}
+ *           dialogue?: { n: number, actor: string, text: string, truncated: boolean, event_id: string, fallback?: boolean }[], hints?: { n: number, text: string }[], fallbacks?: number }>}
  */
 async function runSession(o) {
   const { study, kase, condition, session_id, log } = o;
@@ -95,7 +103,7 @@ async function runSession(o) {
   }
 
   // The interview: one message at a time, interviewer first.
-  /** @type {{ n: number, actor: string, text: string, truncated: boolean, event_id: string }[]} */
+  /** @type {{ n: number, actor: string, text: string, truncated: boolean, event_id: string, fallback?: boolean }[]} */
   const dialogue = [];
   /** @type {{ n: number, text: string }[]} */
   const hints = [];
@@ -147,7 +155,7 @@ async function runSession(o) {
           const fallback = 'Let me first structure the key issues and then outline a hypothesis-driven approach to address the client\'s problem.';
           const usedFallback = !parsed || typeof parsed.reply !== 'string' || !parsed.reply.trim();
           if (usedFallback) log.append({ kind: 'note', session_id, visible_to: [], evaluator_visible: true, what: 'paper candidate fallback', stop: raw.stop });
-          a = { ...raw, text: usedFallback ? fallback : parsed.reply.trim() };
+          a = { ...raw, text: usedFallback ? fallback : parsed.reply.trim(), fallback: usedFallback };
         } else {
           const proposals = [];
           for (let i = 0; i < experts.length; i++) {
@@ -164,13 +172,16 @@ async function runSession(o) {
           guard(messages, moderator.role, moderator.roleName, kase);
           const raw = await ask(moderator, messages, [interviewer.seat, ...experts.map(s => s.seat)], q.event_id, true);
           if (raw.stop !== 'complete') throw new ProviderError('malformed', 'paper moderator output incomplete');
-          let parsed; try { parsed = JSON.parse(raw.text); } catch { throw new ProviderError('malformed', 'paper moderator output invalid JSON'); }
+          // As the released agent: parse the JSON (fenced or not); if it does not
+          // parse, or has no usable field, the moderator's whole reply is used, and noted.
+          const body = raw.text.trim().replace(/^```(?:json)?\s*\n([\s\S]*?)\n```$/i, '$1');
+          let parsed; try { parsed = JSON.parse(body); } catch { parsed = null; }
           const extracted = parsed && (parsed.final_answer || parsed.reply);
           // The released discussion agent falls back to the complete response
           // when the extracted field is not a nonempty string.
           const textReply = typeof extracted === 'string' && extracted.trim() ? extracted : raw.text.trim();
           if (!textReply) throw new ProviderError('malformed', 'paper moderator response empty');
-          if (!(typeof extracted === 'string' && extracted.trim())) log.append({ kind: 'note', session_id, visible_to: [], evaluator_visible: true, what: 'paper moderator raw fallback', output_type: Array.isArray(extracted) ? 'array' : typeof extracted });
+          if (!(typeof extracted === 'string' && extracted.trim())) log.append({ kind: 'note', session_id, visible_to: [], evaluator_visible: true, what: 'paper moderator raw fallback', output_type: parsed === null ? 'not JSON' : Array.isArray(extracted) ? 'array' : typeof extracted });
           a = { ...raw, text: textReply.trim() };
         }
       } else if (candidate) {
@@ -185,15 +196,22 @@ async function runSession(o) {
         a = await ask(moderator, view({ role: moderator.role, roleName: moderator.roleName, kase, transcript,
           extra: [said(), 'You are the moderator. Read the experts\' proposals and write the one reply the interviewer will get.', ...notice, ...(candRule ? [candRule] : [])] }), [interviewer.seat, ...experts.map(s => s.seat)], q.event_id);
       }
-      dialogue.push({ n: dialogue.length + 1, actor: 'Candidate', text: a.text, truncated: a.truncated, event_id: a.event_id });
+      dialogue.push({ n: dialogue.length + 1, actor: 'Candidate', text: a.text, truncated: a.truncated, event_id: a.event_id, ...(a.fallback ? { fallback: true } : {}) });
       last = a;
       if (!condition.paper_prompts && !a.truncated && finalOf(a.text, marker).kind === 'early') { ended_by = 'candidate_early_end'; break; }
     }
     const closing = candidate || moderator;
     // The latest candidate reply with the final line, not cut off, is the answer.
-    const finals = dialogue.filter(d => d.actor === 'Candidate' && !d.truncated && finalOf(d.text, marker).kind === 'final');
+    const finals = dialogue.filter(d => d.actor === 'Candidate' && !d.truncated && !d.fallback && finalOf(d.text, marker).kind === 'final');
     const lastCand = dialogue.filter(d => d.actor === 'Candidate').pop() || null;
-    const base = { closing_seat: closing.seat, turns: dialogue.length, ended_by, dialogue, hints };
+    const fallbacks = dialogue.filter(d => d.fallback).length;
+    const base = { closing_seat: closing.seat, turns: dialogue.length, ended_by, dialogue, hints, fallbacks };
+    // Without the final-line instruction (paper prompts), the interview is complete
+    // when the interviewer ends it after a candidate reply that was not cut off and
+    // was not the canned fallback; that reply is the answer. A turn limit never is.
+    if (condition.candidate_marker_instruction === false && ended_by === 'interviewer_end' && lastCand && !lastCand.truncated && !lastCand.fallback) {
+      return { ...base, status: 'complete', reason: null, final: lastCand.text, closing_text: lastCand.text };
+    }
     if (ended_by === 'candidate_early_end') return { ...base, status: 'ended_early', reason: finalOf(lastCand.text, marker).answer || 'no reason given', final: null, closing_text: lastCand.text };
     if (finals.length) { const f = finals[finals.length - 1]; return { ...base, status: 'complete', reason: null, final: finalOf(f.text, marker).answer, closing_text: f.text }; }
     const why = ended_by === 'interviewer_end' ? 'interviewer ended without a final answer' : 'turn_limit';
@@ -249,7 +267,7 @@ async function runSession(o) {
     if (e instanceof SecretLeak) log.append({ kind: 'note', session_id, visible_to: [], evaluator_visible: true, what: 'secret guard', message: e.message });
     if (condition.pattern === 'interview') {
       const lastCand = dialogue.filter(d => d.actor === 'Candidate').pop() || null;
-      return { status: 'incomplete', reason, final: null, closing_text: lastCand ? lastCand.text : null, closing_seat: null, turns: dialogue.length, ended_by: 'stopped', dialogue, hints };
+      return { status: 'incomplete', reason, final: null, closing_text: lastCand ? lastCand.text : null, closing_seat: null, turns: dialogue.length, ended_by: 'stopped', dialogue, hints, fallbacks: dialogue.filter(d => d.fallback).length };
     }
     return { status: 'incomplete', reason, final: null, closing_text: null, closing_seat: null, turns };
   }

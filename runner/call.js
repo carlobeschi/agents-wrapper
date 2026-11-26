@@ -67,7 +67,7 @@ async function callModel(o) {
       clearTimeout(timer);
       const cost = o.ledger.settle(reservation.reservation_id, { input_tokens: r.input_tokens, output_tokens: r.output_tokens, cost_usd: r.cost_usd });
       const reply = o.log.append({ ...base, kind: 'reply', parent_id: call.event_id, visible_to: o.reply_visible_to, evaluator_visible: o.evaluator_visible,
-        seat: o.seat, model: o.model, model_returned: r.model_returned, request_id: r.request_id, seed_sent: r.seed_sent,
+        seat: o.seat, model: o.model, model_returned: r.model_returned, request_id: r.request_id, seed_sent: r.seed_sent, json_mode_sent: r.json_mode_sent ?? null,
         text_ref: o.log.put(r.text), raw_ref: o.log.put(r.raw), stop: r.stop, truncated: r.stop === 'length',
         input_tokens: r.input_tokens, output_tokens: r.output_tokens, cost_usd: cost.usd, cost_basis: cost.basis, ms: Date.now() - started });
       attempts.push({ attempt_id, ok: true });

@@ -110,6 +110,7 @@ function checkStudy(s) {
     need(c && typeof c.task === 'string' && c.task.trim(), `${at}.task: required (what every participant is told)`);
     need(c && (c.materials === undefined || (typeof c.materials === 'object' && Object.values(c.materials).every(v => typeof v === 'string'))), `${at}.materials: { name: text }`);
     need(c && (c.secret === undefined || typeof c.secret === 'string'), `${at}.secret: text`);
+    need(c && (c.paper_opening === undefined || (typeof c.paper_opening === 'string' && c.paper_opening.trim())), `${at}.paper_opening: text (the opening the interviewer starts from, with paper prompts)`);
     need(c && (c.never_disclose === undefined || (Array.isArray(c.never_disclose) && c.never_disclose.every(x => typeof x === 'string' && x.trim()))),
       `${at}.never_disclose: a list of texts from the hidden material that must not reach a participant`);
     const fa = c && c.final_answer;
@@ -177,6 +178,7 @@ function checkStudy(s) {
         need(c.end_token === undefined || c.end_token === '<|CASE_INTERVIEW_END|>', `${at}: paper end token must match the renderer`);
         need(!c.last_turn_notice && c.candidate_marker_instruction === false && c.hint_marker === null, `${at}: paper prompts require no added final notice, marker or hint marker`);
         need(!experts.length || experts.reduce((sum, x) => sum + x.n, 0) === 3, `${at}: paper discussion requires three experts`);
+        for (const k of cases) need(k && typeof k.secret === 'string' && k.secret.trim(), `${at}: paper prompts show the interviewer the case's secret as its case text; case "${k && k.id}" has none`);
       }
     }
     need(c && (c.peer_consultation === undefined || typeof c.peer_consultation === 'boolean'), `${at}.peer_consultation: true or false`);

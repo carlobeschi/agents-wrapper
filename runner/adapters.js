@@ -102,7 +102,8 @@ function anthropic(env) {
   return async (/** @type {any} */ req, /** @type {{ signal?: AbortSignal }} */ { signal } = {}) => {
     const key = keyOf('anthropic', env);
     if (!key) throw new ProviderError('auth', 'ANTHROPIC_API_KEY is not set');
-    if (req.json_mode) throw new ProviderError('bad_request', 'native JSON mode is not implemented for this adapter');
+    // The Messages API has no plain JSON mode: a JSON request is sent as an
+    // ordinary one (the prompt asks for JSON) and recorded as json_mode_sent: false.
     const sys = systemText(req.messages);
     const { j, raw, request_id } = await send(`${baseOf('anthropic', env)}/messages`,
       { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
@@ -113,7 +114,7 @@ function anthropic(env) {
     const text = j.content.filter(b => b && b.type === 'text').map(b => b.text).join('');
     const stop = { end_turn: 'complete', stop_sequence: 'complete', max_tokens: 'length', refusal: 'refusal' }[j.stop_reason] || 'other';
     return checkResult({ text, stop, input_tokens: j.usage?.input_tokens ?? null, output_tokens: j.usage?.output_tokens ?? null, cost_usd: null,
-      model_returned: j.model ?? null, request_id: request_id || j.id || null, raw, seed_sent: false });
+      model_returned: j.model ?? null, request_id: request_id || j.id || null, raw, seed_sent: false, json_mode_sent: req.json_mode ? false : null });
   };
 }
 
@@ -136,7 +137,7 @@ function chat(provider, env) {
     const stop = refused ? 'refusal' : { stop: 'complete', length: 'length', content_filter: 'refusal' }[c.finish_reason] || 'other';
     return checkResult({ text, stop, input_tokens: j.usage?.prompt_tokens ?? null, output_tokens: j.usage?.completion_tokens ?? null,
       cost_usd: provider === 'openrouter' && typeof j.usage?.cost === 'number' ? j.usage.cost : null,
-      model_returned: j.model ?? null, request_id: request_id || j.id || null, raw, seed_sent: 'seed' in seed });
+      model_returned: j.model ?? null, request_id: request_id || j.id || null, raw, seed_sent: 'seed' in seed, json_mode_sent: req.json_mode ? true : null });
   };
 }
 
@@ -145,19 +146,19 @@ function google(env) {
   return async (/** @type {any} */ req, /** @type {{ signal?: AbortSignal }} */ { signal } = {}) => {
     const key = keyOf('google', env);
     if (!key) throw new ProviderError('auth', 'GEMINI_API_KEY is not set');
-    if (req.json_mode) throw new ProviderError('bad_request', 'native JSON mode is not implemented for this adapter');
     const sys = systemText(req.messages);
     const seed = Number.isInteger(req.seed) ? { seed: req.seed } : {};
+    const json = req.json_mode ? { responseMimeType: 'application/json' } : {};
     const { j, raw, request_id } = await send(`${baseOf('google', env)}/models/${encodeURIComponent(req.model)}:generateContent`, { 'x-goog-api-key': key }, {
       ...(sys ? { systemInstruction: { parts: [{ text: sys }] } } : {}),
       contents: turns(req.messages).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
-      generationConfig: { maxOutputTokens: req.max_output_tokens, ...temp(req), ...seed },
+      generationConfig: { maxOutputTokens: req.max_output_tokens, ...temp(req), ...seed, ...json },
     }, signal);
     const u = j.usageMetadata || {};
     // Thinking is billed as output: count it with the answer.
     const out = Number.isFinite(u.candidatesTokenCount) || Number.isFinite(u.thoughtsTokenCount) ? (u.candidatesTokenCount || 0) + (u.thoughtsTokenCount || 0) : null;
     const base = { input_tokens: u.promptTokenCount ?? null, output_tokens: out, cost_usd: null, model_returned: j.modelVersion ?? req.model,
-      request_id: request_id || j.responseId || null, raw, seed_sent: 'seed' in seed };
+      request_id: request_id || j.responseId || null, raw, seed_sent: 'seed' in seed, json_mode_sent: req.json_mode ? true : null };
     if (j.promptFeedback?.blockReason && !j.candidates?.length) return checkResult({ ...base, text: '', stop: 'refusal' });
     const c = Array.isArray(j.candidates) ? j.candidates[0] : null;
     if (!c) throw new ProviderError('malformed', 'reply has no candidates', { raw });

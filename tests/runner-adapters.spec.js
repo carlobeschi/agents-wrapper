@@ -216,3 +216,24 @@ test('one call through a real adapter records the model that answered and whethe
     expect(log.all().find(e => e.kind === 'reply')).toMatchObject({ model: 'openai:gpt-x', model_returned: 'gpt-x-2026-11-01', seed_sent: true, cost_basis: 'computed' });
   } finally { s.close(); }
 });
+
+test('JSON requests: OpenAI and OpenRouter get response_format, Gemini responseMimeType; Anthropic, which has no plain JSON mode, is sent the request as it is', async () => {
+  const ok = { body: { id: 'c', model: 'x', choices: [{ finish_reason: 'stop', message: { content: '{}' } }], usage: { prompt_tokens: 1, completion_tokens: 1 } } };
+  for (const p of ['openai', 'openrouter']) {
+    const s = await standIn([ok]);
+    try {
+      expect((await realAdapters(envFor(p, s.base))[p]({ ...req, json_mode: true })).json_mode_sent).toBe(true);
+      expect(s.seen[0].body.response_format).toEqual({ type: 'json_object' });
+    } finally { s.close(); }
+  }
+  const g = await standIn([{ body: { usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1 }, candidates: [{ finishReason: 'STOP', content: { parts: [{ text: '{}' }] } }] } }]);
+  try {
+    expect((await realAdapters(envFor('google', g.base)).google({ ...req, json_mode: true })).json_mode_sent).toBe(true);
+    expect(g.seen[0].body.generationConfig.responseMimeType).toBe('application/json');
+  } finally { g.close(); }
+  const a = await standIn([{ body: { id: 'm', model: 'c', stop_reason: 'end_turn', usage: { input_tokens: 1, output_tokens: 1 }, content: [{ type: 'text', text: '{}' }] } }]);
+  try {
+    expect((await realAdapters(envFor('anthropic', a.base)).anthropic({ ...req, json_mode: true })).json_mode_sent).toBe(false);
+    expect(Object.keys(a.seen[0].body).sort()).toEqual(['max_tokens', 'messages', 'model', 'system']);
+  } finally { a.close(); }
+});

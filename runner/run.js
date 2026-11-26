@@ -91,9 +91,9 @@ async function runStudy(o) {
     const result = { key, session_id, case: kase.id, condition: condition.id, repeat, seats, ...outcome, cost: money };
     writeJSON(path.join(dir, 'outcome.json'), result);
     if (outcome.closing_text != null) fs.writeFileSync(path.join(dir, 'closing.md'), outcome.closing_text, { mode: 0o600 });
-    if (outcome.dialogue) fs.writeFileSync(path.join(dir, 'dialogue.md'), outcome.dialogue.map(d => `## ${d.n}. ${d.actor}${d.truncated ? ' (cut by the length limit)' : ''}\n\n${d.text}`).join('\n\n') + '\n', { mode: 0o600 });
+    if (outcome.dialogue) fs.writeFileSync(path.join(dir, 'dialogue.md'), outcome.dialogue.map(d => `## ${d.n}. ${d.actor}${d.truncated ? ' (cut by the length limit)' : ''}${d.fallback ? ' (not the model\'s words: the fixed fallback, its reply was not usable JSON)' : ''}\n\n${d.text}`).join('\n\n') + '\n', { mode: 0o600 });
     log.append({ kind: 'outcome', session_id, parent_id: start.event_id, visible_to: [], evaluator_visible: true, key,
-      status: outcome.status, reason: outcome.reason, ended_by: outcome.ended_by ?? null, hints: outcome.hints ? outcome.hints.length : null, turns: outcome.turns, closing_seat: outcome.closing_seat,
+      status: outcome.status, reason: outcome.reason, ended_by: outcome.ended_by ?? null, hints: outcome.hints ? outcome.hints.length : null, fallbacks: outcome.fallbacks ?? null, turns: outcome.turns, closing_seat: outcome.closing_seat,
       final_ref: outcome.final != null ? log.put(outcome.final) : null, cost_usd: money.total_usd, cost_estimated_usd: money.estimated_usd });
     attempts[attempts.length - 1].ended = new Date().toISOString();
     state.sessions[key] = { attempts, outcome: { status: outcome.status, reason: outcome.reason, session_id, path: path.relative(o.out, dir) } };
