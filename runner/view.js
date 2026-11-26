@@ -73,10 +73,12 @@ function view({ role, roleName, kase, transcript = [], closing = false, extra = 
  * @param {{ content: string }[]} messages @param {any} role @param {string} roleName @param {any} kase
  */
 function guard(messages, role, roleName, kase) {
-  const secret = kase.secret && kase.secret.trim();
-  if (!secret || role.sees.includes('secret')) return;
-  if (messages.some(m => m.content.includes(secret))) {
-    throw new SecretLeak(`the secret of case ${kase.id} would reach ${roleName} (${role.kind}); the call was not made`);
+  if (role.sees.includes('secret')) return;
+  const hidden = [kase.secret, ...(kase.never_disclose || [])].map(x => x && String(x).trim()).filter(Boolean);
+  for (const h of hidden) {
+    if (messages.some(m => m.content.includes(h))) {
+      throw new SecretLeak(`${h === String(kase.secret).trim() ? 'the secret' : 'a never_disclose text'} of case ${kase.id} would reach ${roleName} (${role.kind}); the call was not made`);
+    }
   }
 }
 

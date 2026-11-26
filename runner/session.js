@@ -9,6 +9,21 @@
 //   revises. The moderator then reads the analyses (shuffled with the seed,
 //   labelled "Expert 1", "Expert 2"...) and must close with the final line.
 //
+// - interview (after EnterpriseBench's consulting interview): an interviewer
+//   who holds the whole case talks with one candidate, one message at a
+//   time; interviewer and candidate messages both count towards
+//   max_messages (default 12). The interviewer opens, answers the candidate's
+//   questions and asks follow-ups, as its prompt says, and ends with the end
+//   token (default <|CASE_INTERVIEW_END|>). The candidate is either one model
+//   or a panel: at every candidate turn each expert, alone and at the same
+//   time, proposes the next reply from the dialogue so far (and what its role
+//   may see), and the moderator reads the proposals (shuffled, "Expert 1"...)
+//   and writes the one reply the interviewer gets. The interview is complete
+//   when a candidate reply, not cut by the length limit, has the final-answer
+//   line; how it ended (interviewer_end, turn_limit, candidate_early_end) is
+//   recorded either way. Interviewer lines starting with the hint marker
+//   (default "HINT:") are listed as hints.
+//
 // A session is complete only when the closing reply has the final-answer
 // line, or ended early when it says "EARLY END: <reason>". A reply cut by the
 // output limit never counts, even if the line is in it. When the turns run
@@ -39,7 +54,8 @@ function seatsOf(study, condition) {
  *           adapters: Record<string, any>, sleep?: (ms: number) => Promise<any>, backoff_ms?: number }} o
  * status is complete, ended_early or incomplete.
  * @returns {Promise<{ status: string, reason: string|null, final: string|null,
- *           closing_text: string|null, closing_seat: string|null, turns: number }>}
+ *           closing_text: string|null, closing_seat: string|null, turns: number, ended_by?: string|null,
+ *           dialogue?: { n: number, actor: string, text: string, truncated: boolean, event_id: string }[], hints?: { n: number, text: string }[] }>}
  */
 async function runSession(o) {
   const { study, kase, condition, session_id, log } = o;
@@ -51,7 +67,7 @@ async function runSession(o) {
   const ask = (seat, messages, reply_visible_to, parent_id = null) => callModel({
     log, ledger: o.ledger, adapters: o.adapters, session_id, role: seat.roleName, seat: seat.seat, model: seat.model, messages,
     prompt_version: seat.role.prompt_version, max_output_tokens: seat.role.max_output_tokens || limits.max_output_tokens,
-    timeout_s: limits.timeout_s, retries: limits.retries, seed: study.seed ?? null, parent_id,
+    timeout_s: limits.timeout_s, retries: limits.retries, seed: study.seed ?? null, temperature: seat.role.temperature ?? null, parent_id,
     reply_visible_to, evaluator_visible: true, sleep: o.sleep, backoff_ms: o.backoff_ms,
   });
 
@@ -77,7 +93,66 @@ async function runSession(o) {
       final: null, closing_text: last ? last.text : null, closing_seat: seat.seat, turns };
   }
 
+  // The interview: one message at a time, interviewer first.
+  /** @type {{ n: number, actor: string, text: string, truncated: boolean, event_id: string }[]} */
+  const dialogue = [];
+  /** @type {{ n: number, text: string }[]} */
+  const hints = [];
+  const said = () => dialogue.length ? '## The interview so far\n\n' + dialogue.map(d => `### ${d.actor} (message ${d.n})\n\n${d.text}`).join('\n\n') : '## The interview so far\n\nNothing yet.';
+  async function interview() {
+    const max = condition.max_messages || 12;
+    const END = condition.end_token || '<|CASE_INTERVIEW_END|>';
+    const HINT = condition.hint_marker === undefined ? 'HINT:' : condition.hint_marker;
+    const interviewer = seats.find(s => s.role.kind === 'interviewer');
+    const candidate = seats.find(s => s.role.kind === 'candidate');
+    const experts = seats.filter(s => s.role.kind === 'expert');
+    const moderator = seats.find(s => s.role.kind === 'moderator');
+    const facing = candidate ? [candidate.seat] : [...experts.map(s => s.seat), moderator.seat];
+    const candRule = `When you give your final recommendation, put it after a line that starts with "${marker}". If you cannot go on, write a line that starts with "EARLY END:" and say why.`;
+    let ended_by = 'turn_limit';
+    let last = null;
+    while (dialogue.length < max) {
+      turns++;
+      const ivExtra = [said(), `You are the interviewer. Write your next message to the candidate. When the interview is over, write ${END}.`
+        + (HINT ? ` If you give the candidate a hint, put it on a line that starts with "${HINT}".` : '')];
+      const q = await ask(interviewer, view({ role: interviewer.role, roleName: interviewer.roleName, kase, extra: ivExtra }), facing, last ? last.event_id : null);
+      dialogue.push({ n: dialogue.length + 1, actor: 'Interviewer', text: q.text, truncated: q.truncated, event_id: q.event_id });
+      if (HINT) for (const l of q.text.split('\n')) if (l.trim().startsWith(HINT)) hints.push({ n: dialogue.length, text: l.trim().slice(HINT.length).trim() });
+      if (q.text.includes(END)) { ended_by = 'interviewer_end'; break; }
+      if (dialogue.length >= max) break;
+      const lastTurn = dialogue.length + 1 >= max;
+      const notice = condition.last_turn_notice && lastTurn ? ['This is your last reply in this interview: give your final recommendation now.'] : [];
+      let a;
+      turns++;
+      if (candidate) {
+        a = await ask(candidate, view({ role: candidate.role, roleName: candidate.roleName, kase, extra: [said(), 'Write your next reply to the interviewer.', ...notice, candRule] }), [interviewer.seat], q.event_id);
+      } else {
+        const proposals = await Promise.all(experts.map(s => ask(s, view({ role: s.role, roleName: s.roleName, kase,
+          extra: [said(), 'You are one of several experts. The candidate is the panel; a moderator writes its reply. Propose the candidate\'s next reply to the interviewer\'s last message.', ...notice, candRule] }), [moderator.seat], q.event_id)));
+        const order = shuffled(proposals.map((_, i) => i), `${study.seed ?? 0}:${session_id}:${dialogue.length + 1}`);
+        log.append({ kind: 'note', session_id, visible_to: [], evaluator_visible: true, what: 'moderator order', message_n: dialogue.length + 1,
+          order: order.map((i, k) => ({ label: `Expert ${k + 1}`, seat: experts[i].seat, from_event: proposals[i].event_id, truncated: proposals[i].truncated })) });
+        const transcript = order.map((i, k) => ({ label: `Expert ${k + 1}`, text: proposals[i].text + (proposals[i].truncated ? '\n\n[cut off by the length limit]' : '') }));
+        a = await ask(moderator, view({ role: moderator.role, roleName: moderator.roleName, kase, transcript,
+          extra: [said(), 'You are the moderator. Read the experts\' proposals and write the one reply the interviewer will get.', ...notice, candRule] }), [interviewer.seat, ...experts.map(s => s.seat)], q.event_id);
+      }
+      dialogue.push({ n: dialogue.length + 1, actor: 'Candidate', text: a.text, truncated: a.truncated, event_id: a.event_id });
+      last = a;
+      if (!a.truncated && finalOf(a.text, marker).kind === 'early') { ended_by = 'candidate_early_end'; break; }
+    }
+    const closing = candidate || moderator;
+    // The latest candidate reply with the final line, not cut off, is the answer.
+    const finals = dialogue.filter(d => d.actor === 'Candidate' && !d.truncated && finalOf(d.text, marker).kind === 'final');
+    const lastCand = dialogue.filter(d => d.actor === 'Candidate').pop() || null;
+    const base = { closing_seat: closing.seat, turns: dialogue.length, ended_by, dialogue, hints };
+    if (ended_by === 'candidate_early_end') return { ...base, status: 'ended_early', reason: finalOf(lastCand.text, marker).answer || 'no reason given', final: null, closing_text: lastCand.text };
+    if (finals.length) { const f = finals[finals.length - 1]; return { ...base, status: 'complete', reason: null, final: finalOf(f.text, marker).answer, closing_text: f.text }; }
+    const why = ended_by === 'interviewer_end' ? 'interviewer ended without a final answer' : 'turn_limit';
+    return { ...base, status: 'incomplete', reason: lastCand && lastCand.truncated ? `${why} (last reply cut by the length limit)` : why, final: null, closing_text: lastCand ? lastCand.text : null };
+  }
+
   try {
+    if (condition.pattern === 'interview') return await interview();
     if (condition.pattern === 'solo') {
       const seat = seats.find(s => ['candidate', 'expert'].includes(s.role.kind));
       return await close(seat, []);
@@ -123,6 +198,10 @@ async function runSession(o) {
       : e instanceof SecretLeak ? 'secret_guard' : null;
     if (!reason) throw e;
     if (e instanceof SecretLeak) log.append({ kind: 'note', session_id, visible_to: [], evaluator_visible: true, what: 'secret guard', message: e.message });
+    if (condition.pattern === 'interview') {
+      const lastCand = dialogue.filter(d => d.actor === 'Candidate').pop() || null;
+      return { status: 'incomplete', reason, final: null, closing_text: lastCand ? lastCand.text : null, closing_seat: null, turns: dialogue.length, ended_by: 'stopped', dialogue, hints };
+    }
     return { status: 'incomplete', reason, final: null, closing_text: null, closing_seat: null, turns };
   }
 }

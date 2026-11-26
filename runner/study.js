@@ -24,16 +24,24 @@
 //     { "id": "solo",  "pattern": "solo",              "seats": { "expert": "anthropic:claude-opus-5-5" } },
 //     { "id": "mixed", "pattern": "experts_moderator", "seats": { "expert": ["openai:gpt-6-luna", "google:gemini-4-argon-medium"],
 //                                                                 "moderator": "anthropic:claude-opus-5-5" },
-//       "peer_consultation": false }
-//   ]
+//       "peer_consultation": false },
+//     { "id": "interview-solo", "pattern": "interview", "seats": { "interviewer": "openai:...", "candidate": "anthropic:..." },
+//       "max_messages": 12, "end_token": "<|CASE_INTERVIEW_END|>", "hint_marker": "HINT:", "last_turn_notice": false }
+//   ],
+//   "adaptations": ["how this study differs from the one it follows, printed in the report"]
 // }
+//
+// A case may list "never_disclose": pieces of the hidden material (the
+// reference solution, interviewer notes) that must not reach a participant,
+// checked before every call like the secret itself. A role may set
+// "temperature" (sent to every provider; left out, the provider's default).
 //
 // What a role may see ("sees") is the only way information reaches a prompt.
 // "secret" may be seen by an interviewer or a judge only; a study that shows it
 // to a candidate, an expert or a moderator is refused here, before any call.
 
 const KINDS = ['candidate', 'expert', 'moderator', 'interviewer', 'judge'];
-const PATTERNS = ['solo', 'experts_moderator'];
+const PATTERNS = ['solo', 'experts_moderator', 'interview'];
 const SOURCES = ['task', 'materials', 'secret', 'transcript'];
 const SECRET_OK = ['interviewer', 'judge'];
 const PROVIDERS = ['anthropic', 'openai', 'google', 'openrouter', 'fake'];
@@ -87,7 +95,9 @@ function checkStudy(s) {
       errs.push(`${at}: a ${r.kind} may not see "secret" (only ${SECRET_OK.join(' or ')})`);
     }
     need(!r || r.max_output_tokens === undefined || (Number.isInteger(r.max_output_tokens) && r.max_output_tokens >= 1), `${at}.max_output_tokens: a whole number from 1`);
+    need(!r || r.temperature === undefined || (num(r.temperature) && r.temperature <= 2), `${at}.temperature: 0 to 2, or left out (the provider's default)`);
   }
+  need(s.adaptations === undefined || (Array.isArray(s.adaptations) && s.adaptations.every(a => typeof a === 'string')), 'adaptations: a list of texts (how this study differs from the one it follows)');
 
   const cases = Array.isArray(s.cases) ? s.cases : [];
   need(cases.length > 0, 'cases: at least one');
@@ -100,6 +110,8 @@ function checkStudy(s) {
     need(c && typeof c.task === 'string' && c.task.trim(), `${at}.task: required (what every participant is told)`);
     need(c && (c.materials === undefined || (typeof c.materials === 'object' && Object.values(c.materials).every(v => typeof v === 'string'))), `${at}.materials: { name: text }`);
     need(c && (c.secret === undefined || typeof c.secret === 'string'), `${at}.secret: text`);
+    need(c && (c.never_disclose === undefined || (Array.isArray(c.never_disclose) && c.never_disclose.every(x => typeof x === 'string' && x.trim()))),
+      `${at}.never_disclose: a list of texts from the hidden material that must not reach a participant`);
     const fa = c && c.final_answer;
     need(fa && typeof fa.marker === 'string' && fa.marker.trim(), `${at}.final_answer.marker: required (the text that starts a complete final answer)`);
     if (c && typeof c.secret === 'string' && c.secret.trim()) {
@@ -142,6 +154,21 @@ function checkStudy(s) {
       const kinds = Object.keys(seats).map(r => roles[r] && roles[r].kind);
       need(kinds.includes('expert'), `${at}: experts_moderator needs an expert seat`);
       need(kinds.includes('moderator'), `${at}: experts_moderator needs a moderator seat`);
+    }
+    if (c && c.pattern === 'interview') {
+      const kinds = Object.entries(seats).map(([r, m]) => ({ kind: roles[r] && roles[r].kind, n: [m].flat().length, role: roles[r] }));
+      const iv = kinds.filter(k => k.kind === 'interviewer');
+      need(iv.length === 1 && iv[0].n === 1, `${at}: interview needs exactly one interviewer seat with one model`);
+      const solo = kinds.filter(k => k.kind === 'candidate');
+      const experts = kinds.filter(k => k.kind === 'expert');
+      const mods = kinds.filter(k => k.kind === 'moderator');
+      need((solo.length === 1 && solo[0].n === 1 && !experts.length && !mods.length) || (!solo.length && experts.length >= 1 && mods.length === 1 && mods[0].n === 1),
+        `${at}: interview needs either one candidate seat (one model), or expert seats and one moderator seat (one model)`);
+      for (const m of mods) need(m.role && m.role.sees.includes('transcript'), `${at}: the moderator of an interview panel must see "transcript" (the experts' proposals)`);
+      need(c.max_messages === undefined || (Number.isInteger(c.max_messages) && c.max_messages >= 2), `${at}.max_messages: a whole number from 2 (interviewer and candidate messages both count)`);
+      need(c.end_token === undefined || (typeof c.end_token === 'string' && c.end_token.trim()), `${at}.end_token: text`);
+      need(c.hint_marker === undefined || c.hint_marker === null || (typeof c.hint_marker === 'string' && c.hint_marker.trim()), `${at}.hint_marker: text, or null for none`);
+      need(c.last_turn_notice === undefined || typeof c.last_turn_notice === 'boolean', `${at}.last_turn_notice: true or false`);
     }
     need(c && (c.peer_consultation === undefined || typeof c.peer_consultation === 'boolean'), `${at}.peer_consultation: true or false`);
   }

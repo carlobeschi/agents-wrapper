@@ -57,7 +57,7 @@ test('a blinded export has no condition or model labels in fields, values or fil
   expect(all).toContain('[model]');
   const p = JSON.parse(fs.readFileSync(path.join(x.packetsDir, files[0]), 'utf8'));
   expect(Object.keys(p).sort()).toEqual(['answer', 'case', 'discussion', 'materials', 'packet_id', 'reference', 'shown', 'status', 'task']);
-  expect(p.shown).toEqual({ source: true, answer: true, discussion: true });
+  expect(p.shown).toEqual({ source: true, answer: true, discussion: true, dialogue: false });
   // The key says which packet is which, and how many labels were taken out.
   const key = JSON.parse(fs.readFileSync(x.keyFile, 'utf8'));
   expect(key.packets.map(k => k.condition).sort()).toEqual(['mixed', 'mixed', 'same-family', 'same-family', 'solo', 'solo']);

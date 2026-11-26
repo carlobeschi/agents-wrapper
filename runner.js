@@ -10,7 +10,7 @@
 //        [--retry-errors]    on resume, run again the sessions that failed on a provider error
 //   node runner.js budget <run folder>                money used so far: reported, computed, estimated
 //   node runner.js report <run folder>                writes report.md: sessions, models, status, cost, evidence
-//   node runner.js export <run folder> [--sees answer,discussion,source] [--only-complete]
+//   node runner.js export <run folder> [--sees answer,discussion,source,dialogue] [--only-complete]
 //                                                     blinded packets for judges, and a separate key
 //   node runner.js judge <export folder> <judges.json>  model judges score the packets (never their own family)
 //   node runner.js rate <export folder> <packet> <dimension> <score> <rationale> --by <name>   a person's rating

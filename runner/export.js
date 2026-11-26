@@ -8,7 +8,9 @@
 //
 // A packet holds the case's task and, as chosen with "sees": "source" (the
 // materials and the reference notes), "answer" (the closing reply) and
-// "discussion" (the analyses the moderator read, as "Expert 1", "Expert 2").
+// "discussion" (the analyses the moderator read, as "Expert 1", "Expert 2";
+// in an interview, the proposals for the last candidate reply) and "dialogue"
+// (an interview's messages, exactly as the candidate and interviewer saw them).
 // Every packet records what was shown, so each rating can say what its judge saw.
 // Packet ids are random; the order is shuffled with the seed. Model ids and
 // vendor names are taken out of every text and listed in the key, not in the
@@ -22,12 +24,13 @@ const { EventLog } = require('./events');
 const { shuffled } = require('./view');
 
 const VENDORS = ['Anthropic', 'Claude', 'OpenAI', 'ChatGPT', 'GPT', 'Codex', 'Google', 'Gemini', 'DeepMind', 'DeepSeek', 'Mistral', 'Qwen', 'Alibaba', 'Meta', 'Llama', 'OpenRouter', 'Opus', 'Sonnet', 'Haiku', 'Fable'];
-const SEES = ['source', 'answer', 'discussion'];
+const SEES = ['source', 'answer', 'discussion', 'dialogue'];
 const RESIDUAL = [
   'Writing style, length and habits can still show which model wrote an answer.',
   'A packet with a discussion comes from a team condition; one without may be solo. Showing the discussion reveals the pattern.',
   'What a role could see shapes what it writes: an answer that quotes materials the condition did not show is a clue.',
   'Only model ids and vendor names are removed from the text; a model may describe itself in other words.',
+  'In an interview, a dialogue whose candidate replies read as a synthesis of several voices may show a panel.',
 ];
 
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -113,12 +116,13 @@ function exportPackets(o) {
     if (sees.includes('source')) { packet.materials = kase.materials || {}; packet.reference = kase.secret || null; }
     if (sees.includes('answer')) packet.answer = outcome.closing_text == null ? null : clean(outcome.closing_text);
     if (sees.includes('discussion')) {
-      const order_ev = events.find(e => e.session_id === s.outcome.session_id && e.what === 'moderator order');
+      const order_ev = events.filter(e => e.session_id === s.outcome.session_id && e.what === 'moderator order').pop();
       packet.discussion = order_ev ? order_ev.order.map(x => {
         const reply = events.find(e => e.event_id === x.from_event);
         return { label: x.label, text: clean(reply ? log.get(reply.text_ref) : '') };
       }) : [];
     }
+    if (sees.includes('dialogue')) packet.dialogue = outcome.dialogue ? outcome.dialogue.map(d => ({ n: d.n, actor: d.actor, text: clean(d.text), truncated: d.truncated })) : null;
     fs.writeFileSync(path.join(packetsDir, `${packet_id}.json`), JSON.stringify(packet, null, 2), { mode: 0o600 });
     key.packets.push({ packet_id, key: k, session_id: s.outcome.session_id, case: outcome.case, condition: outcome.condition, repeat: outcome.repeat,
       models: outcome.seats.map(x => x.model), families: [...new Set(outcome.seats.map(x => familyOf(x.model)))], status: s.outcome.status, labels_removed: removed });
